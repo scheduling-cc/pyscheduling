@@ -1,0 +1,10 @@
+/.vscode
+**/__pycache__
+**/build
+**/.ipynb_checkpoints
+**/execs
+**/input
+**/tmp
+**/Romeo
+**.code-workspace
+**.pyc
