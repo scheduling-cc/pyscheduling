@@ -1,15 +1,16 @@
-from abc import ABC, abstractclassmethod, abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
-import string
 
 
 @dataclass
 class Instance(ABC):
 
-    name: string
+    name: str
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def read_txt(path: Path):
         """Read an instance from a txt file according to the problem's format
 
@@ -25,8 +26,9 @@ class Instance(ABC):
         """
         pass
 
-    @abstractclassmethod
-    def generate_random(protocol: string = None):
+    @classmethod
+    @abstractmethod
+    def generate_random(protocol: str = None):
         """Generate a random instance according to a predefined protocol
 
         Args:
@@ -74,3 +76,28 @@ class Solution(ABC):
     def plot(self) -> None:
         """Plot the solution in an appropriate diagram"""
         pass
+
+
+class SolveStatus(Enum):
+    INFEASIBLE = 1
+    FEASIBLE = 2
+    OPTIMAL = 3
+
+
+@dataclass
+class SolveResult:
+
+    all_solutions = list[Solution]
+    best_solution = Solution  # Needs to be consistent with "all_solutions" list
+    solve_status = SolveStatus
+    runtime = float
+    kpis = dict[str, object]  # Other metrics that are problem / solver specific
+
+    @property
+    def nb_solutions(self) -> int:
+        """Returns the number of solutions as an instance attribute (property)
+
+        Returns:
+            int: number of solutions
+        """
+        return len(self.all_solutions)
