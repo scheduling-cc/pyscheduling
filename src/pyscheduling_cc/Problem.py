@@ -159,3 +159,22 @@ class LSProcedure:
             curr_sol = operator.search(curr_sol)
 
         return curr_sol
+
+
+@dataclass
+class Solver(ABC):
+
+    ls_procedure: LSProcedure
+
+    @abstractmethod
+    def solve(self, instance: Instance) -> SolveResult:
+        """Solves the instance and returns the corresponding solve result
+
+        Args:
+            instance (Instance): instance to be solved
+
+        Returns:
+            SolveResult: object containing information about the solving process
+                        and result
+        """
+        pass
