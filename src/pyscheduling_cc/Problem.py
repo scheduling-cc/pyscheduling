@@ -1,9 +1,14 @@
 from abc import ABC, abstractclassmethod, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 import string
 
 
+@dataclass
 class Instance(ABC):
+
+    name: string
+
     @abstractclassmethod
     def read_txt(path: Path):
         """Read an instance from a txt file according to the problem's format
@@ -39,4 +44,33 @@ class Instance(ABC):
         Args:
             path (Path): path to the resulting txt file
         """
+        pass
+
+
+@dataclass
+class Solution(ABC):
+
+    instance: Instance
+
+    @abstractmethod
+    def get_objective(self) -> int:
+        """Return the objective value of the solution
+
+        Returns:
+            int: objective value
+        """
+        pass
+
+    @abstractmethod
+    def to_txt(self, path: Path) -> None:
+        """Export the solution to a txt file
+
+        Args:
+            path (Path): path to the resulting txt file
+        """
+        pass
+
+    @abstractmethod
+    def plot(self) -> None:
+        """Plot the solution in an appropriate diagram"""
         pass
