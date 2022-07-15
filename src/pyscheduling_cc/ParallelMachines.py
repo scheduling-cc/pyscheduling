@@ -50,60 +50,47 @@ class ParallelInstance(Problem.Instance,ABC):
         pass
 
     def read_P(self,content : list(str),n : int, m : int,startIndex : int):
+        P = []  # Matrix P_jk : Execution time of job j on machine k
         i = startIndex
-        k = 0
-        ligne = []
-        Pjob = []  # Table : Execution time of job j on machines 1..m
-        P = []  # Matrix : Execution time of job j on machine i
-
-        while k < n:
-            ligne = content[i].split('\t')
-            for j in range(2, len(ligne), 2):
-                Pjob.append(int(ligne[j]))
-
-            P.append(Pjob)
-            ligne = []
-            Pjob = []
+        for _ in range(n): 
+            ligne = content[i].strip().split('\t')
+            P_k = [int(ligne[j]) for j in range(1,2*m,2) ]
+            P.append(P_k)
             i += 1
-            k += 1
-
-        return (P,i+1)
+        return (P,i)
 
     def read_R(self,content : list(str),n : int, m : int,startIndex : int):
-        i = startIndex
+        i = startIndex + 1
         ligne = content[i].split('\t')
         ri = [] # Table : Release time of job i
         for j in range(2, len(ligne), 2):
             ri.append(int(ligne[j]))
-        return (ri,i+3)
+        return (ri,i+1)
     
     def read_S(self,content : list(str),n : int, m : int,startIndex : int):
         i = startIndex
-        k = 0
-        S = [] # Table of Matrixes : Setup time between jobs j and k on machine i
-        Si = [] # Matrix : Setup time between jobs j and k on the machine i
-        Sij = [] # Table : Setup time between jobs k and job j on the machine i
+        S = [] # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        i += 1 # Skip SSD
         while content[i] != '':
-            if (k != n):
-                ligne = content[i].split('\t')
-                for j in range(len(ligne)):
-                    Sij.append(int(ligne[j]))
+            i = i+1 # Skip Mk
+            Si = []
+            for k in range(n):
+                ligne = content[i].strip().split('\t')
+                Sij = [int(ligne[j]) for j in range(n)]
                 Si.append(Sij)
-                Sij = []
-                k += 1
-            else:
-                
-                k = 0
-                S.append(Si)
-                Si = []
-            i += 1
-
-        S.append(Si)
+                i += 1
+            S.append(Si)
         return (S,i)
     
     def read_D(self,content : list(str),n : int, m : int,startIndex : int):
-        pass
+        i = startIndex + 1
+        ligne = content[i].split('\t')
+        di = [] # Table : Due time of job i
+        for j in range(2, len(ligne), 2):
+            di.append(int(ligne[j]))
+        return (di,i+1)
 
+@dataclass
 class Machine:
 
     machine_num : int
@@ -129,7 +116,6 @@ class Machine:
     @staticmethod
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"],machine_dict["completion_time"],machine_dict["last_job"],machine_dict["job_schedule"])
-
 
 @dataclass
 class ParallelSolution(Problem.Solution,ABC):
@@ -180,28 +166,6 @@ class ParallelSolution(Problem.Solution,ABC):
             Solution: copy of the current solution
         """
         pass
-
-@dataclass
-class LSProcedure:
-
-    operators: list[Problem.LSOperator]
-    copy_solution: bool = False  # by default for performance reasons
-
-    def improve(self, solution: Problem.Solution) -> Problem.Solution:
-        """Improves a solution by iteratively calling local search operators
-
-        Args:
-            solution (Solution): current solution
-
-        Returns:
-            Solution: improved solution
-        """
-        curr_sol = solution.copy() if self.copy_solution else solution
-        for operator in self.operators:
-            curr_sol = operator.search(curr_sol)
-
-        return curr_sol
-
 
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
