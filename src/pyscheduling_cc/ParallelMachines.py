@@ -7,6 +7,9 @@ import Problem
 @dataclass
 class ParallelInstance(Problem.Instance,ABC):
     
+    n : int # n : Number of Machines 
+    m : int # m : Number of Jobs
+
     @classmethod
     @abstractmethod
     def read_txt(cls,path: Path):
@@ -46,13 +49,67 @@ class ParallelInstance(Problem.Instance,ABC):
         """
         pass
 
+    def read_P(self,content : list(str),n : int, m : int,startIndex : int):
+        i = startIndex
+        k = 0
+        ligne = []
+        Pjob = []  # Table : Execution time of job j on machines 1..m
+        P = []  # Matrix : Execution time of job j on machine i
+
+        while k < n:
+            ligne = content[i].split('\t')
+            for j in range(2, len(ligne), 2):
+                Pjob.append(int(ligne[j]))
+
+            P.append(Pjob)
+            ligne = []
+            Pjob = []
+            i += 1
+            k += 1
+
+        return (P,i+1)
+
+    def read_R(self,content : list(str),n : int, m : int,startIndex : int):
+        i = startIndex
+        ligne = content[i].split('\t')
+        ri = [] # Table : Release time of job i
+        for j in range(2, len(ligne), 2):
+            ri.append(int(ligne[j]))
+        return (ri,i+3)
+    
+    def read_S(self,content : list(str),n : int, m : int,startIndex : int):
+        i = startIndex
+        k = 0
+        S = [] # Table of Matrixes : Setup time between jobs j and k on machine i
+        Si = [] # Matrix : Setup time between jobs j and k on the machine i
+        Sij = [] # Table : Setup time between jobs k and job j on the machine i
+        while content[i] != '':
+            if (k != n):
+                ligne = content[i].split('\t')
+                for j in range(len(ligne)):
+                    Sij.append(int(ligne[j]))
+                Si.append(Sij)
+                Sij = []
+                k += 1
+            else:
+                
+                k = 0
+                S.append(Si)
+                Si = []
+            i += 1
+
+        S.append(Si)
+        return (S,i)
+    
+    def read_D(self,content : list(str),n : int, m : int,startIndex : int):
+        pass
+
 class Machine:
 
-    def __init__(self,machine_num,completion_time=0,last_job=-1,job_schedule=[]):
-        self.machine_num = machine_num
-        self.completion_time = completion_time
-        self.last_job = last_job
-        self.job_schedule = job_schedule
+    machine_num : int
+    completion_time = 0
+    last_job = -1
+    job_schedule = []
     
     def __str__(self):
         return "M" + str(self.machine_num + 1) + " [" + ", ".join(map(str,self.job_schedule)) + " Ci : " + str(self.completion_time) + " ]"
@@ -124,9 +181,6 @@ class ParallelSolution(Problem.Solution,ABC):
         """
         pass
 
-
-
-
 @dataclass
 class LSProcedure:
 
@@ -152,8 +206,6 @@ class LSProcedure:
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
 
-    ls_procedure: LSProcedure
-
     @abstractmethod
     def solve(self, instance: Problem.Instance) -> Problem.SolveResult:
         """Solves the instance and returns the corresponding solve result
@@ -169,8 +221,6 @@ class PaarallelGA(Problem.Solver,ABC):
 
 @dataclass
 class PaarallelSA(Problem.Solver,ABC):
-
-    ls_procedure: LSProcedure
 
     @abstractmethod
     def solve(self, instance: Problem.Instance) -> Problem.SolveResult:
