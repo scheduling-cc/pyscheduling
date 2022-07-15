@@ -11,7 +11,7 @@ class Instance(ABC):
 
     @classmethod
     @abstractmethod
-    def read_txt(path: Path):
+    def read_txt(cls,path: Path):
         """Read an instance from a txt file according to the problem's format
 
         Args:
@@ -28,7 +28,7 @@ class Instance(ABC):
 
     @classmethod
     @abstractmethod
-    def generate_random(protocol: str = None):
+    def generate_random(cls,protocol: str = None):
         """Generate a random instance according to a predefined protocol
 
         Args:
@@ -56,7 +56,7 @@ class Solution(ABC):
 
     @classmethod
     @abstractmethod
-    def read_txt(path: Path):
+    def read_txt(cls,path: Path):
         """Read a solution from a txt file
 
         Args:
