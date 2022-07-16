@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
 import ParallelMachines
+
 @dataclass
 class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
-    P : List[List[int]] # Processing time
-    S : List[List[List[int]]] # Setup time
+    P : list[list[int]] = field(default_factory=list)# Processing time
+    S : list[list[list[int]]] = field(default_factory=list) # Setup time
 
     @classmethod
     def read_txt(cls,path: Path):
@@ -27,7 +27,7 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         n = int(ligne0[0]) # number of machines
         m = int(ligne0[2]) # number of jobs
         i = 2
-        instance = cls("test",n,m,[],[])
+        instance = cls("test",n,m)
         instance.P,i = instance.read_P(content,i)
         instance.S,i = instance.read_S(content,i)
         return instance
@@ -52,14 +52,19 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         """
         f = open(path, "w")
         f.write(str(self.n)+" "+str(self.m)+"\n")
+        f.write(str(self.m)+"\n")
         for i in range(self.n): 
             for j in range(self.m):
-                f.write(str(self.P[i][j])+" ")
+                f.write(str(self.P[i][j])+"\t")
             f.write("\n")
+        f.write("SSD\n")
         for i in range(self.m): 
             f.write("M"+str(i)+"\n")
             for j in range(self.n):
                 for k in range(self.n):
-                    f.write(str(self.S[i][j][k])+" ")
+                    f.write(str(self.S[i][j][k])+"\t")
                 f.write("\n")
         f.close()
+
+instance = RmSijkCmax_Instance.read_txt("RmSijkCmax_test")
+instance.to_txt("InstanceCopy.txt")

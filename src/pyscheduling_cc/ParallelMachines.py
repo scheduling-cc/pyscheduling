@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from pathlib import Path
-from typing import List
 import Problem
 
 @dataclass
@@ -50,7 +49,7 @@ class ParallelInstance(Problem.Instance,ABC):
         """
         pass
 
-    def read_P(self,content : List[str],startIndex : int):
+    def read_P(self,content : list[str],startIndex : int):
         P = []  # Matrix P_jk : Execution time of job j on machine k
         i = startIndex
         for _ in range(self.n): 
@@ -60,7 +59,7 @@ class ParallelInstance(Problem.Instance,ABC):
             i += 1
         return (P,i)
 
-    def read_R(self,content : List[str],startIndex : int):
+    def read_R(self,content : list[str],startIndex : int):
         i = startIndex + 1
         ligne = content[i].split('\t')
         ri = [] # Table : Release time of job i
@@ -68,7 +67,7 @@ class ParallelInstance(Problem.Instance,ABC):
             ri.append(int(ligne[j]))
         return (ri,i+1)
     
-    def read_S(self,content : List[str],startIndex : int):
+    def read_S(self,content : list[str],startIndex : int):
         i = startIndex
         S = [] # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
         i += 1 # Skip SSD
@@ -83,7 +82,7 @@ class ParallelInstance(Problem.Instance,ABC):
             S.append(Si)
         return (S,i)
     
-    def read_D(self,content : List[str],startIndex : int):
+    def read_D(self,content : list[str],startIndex : int):
         i = startIndex + 1
         ligne = content[i].split('\t')
         di = [] # Table : Due time of job i
@@ -95,7 +94,7 @@ class ParallelInstance(Problem.Instance,ABC):
 class Machine:
 
     machine_num : int
-    job_schedule : List[int]
+    job_schedule : list[int] = field(default_factory=list)
     completion_time : int = 0
     last_job : int = -1
     
@@ -121,7 +120,7 @@ class Machine:
 @dataclass
 class ParallelSolution(Problem.Solution,ABC):
 
-    Configuration : List[Machine]
+    configuration : list[Machine]
 
     @classmethod
     @abstractmethod
@@ -132,7 +131,7 @@ class ParallelSolution(Problem.Solution,ABC):
             path (Path): path to the solution's txt file of type Path from pathlib
 
         Returns:
-            Solution:
+            ParallelSolution:
         """
         pass
 
