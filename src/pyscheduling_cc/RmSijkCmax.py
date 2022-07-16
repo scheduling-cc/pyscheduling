@@ -44,6 +44,13 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         """
         pass
 
+    @classmethod
+    def random_generation(cls,protocol : ParallelMachines.GenerationProtocol,jobs_number : int, machines_number : int):
+        instance = cls("test",jobs_number,machines_number)
+        instance.P = instance.generate_P(protocol,10,100)
+        instance.S = instance.generate_S(protocol,instance.P,2)
+        return instance
+
     def to_txt(self,path : Path) -> None:
         """Export an instance to a txt file
 
@@ -66,5 +73,7 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
                 f.write("\n")
         f.close()
 
-instance = RmSijkCmax_Instance.read_txt("RmSijkCmax_test")
-instance.to_txt("InstanceCopy.txt")
+#instance = RmSijkCmax_Instance.read_txt("RmSijkCmax_test")
+#instance.to_txt("InstanceCopy.txt")
+instance = RmSijkCmax_Instance.random_generation(ParallelMachines.GenerationProtocol.UNIFORM,20,4)
+instance.to_txt("RandomInstance.txt")

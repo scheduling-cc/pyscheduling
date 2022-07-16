@@ -2,7 +2,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import random
+import numpy as np
+from enum import Enum
 import Problem
+
+class GenerationProtocol(Enum):
+    UNIFORM = 1
+    NORMAL = 2
 
 @dataclass
 class ParallelInstance(Problem.Instance,ABC):
@@ -89,6 +96,74 @@ class ParallelInstance(Problem.Instance,ABC):
         for j in range(2, len(ligne), 2):
             di.append(int(ligne[j]))
         return (di,i+1)
+
+    def generate_P(self,protocol: GenerationProtocol,p0,p1):
+        P = [] 
+        for j in range(self.n):
+            Pj = []
+            for i in range(self.m):
+                if protocol.name == "UNIFORM":  # Generate uniformly
+                    n = int(random.uniform(p0, p1))
+                elif protocol.name == "NORMAL":  # Use normal law
+                    value = np.random.normal(0, 1)
+                    n = int(abs(p0+p1*value))
+                    while n < p0 or n > p1:
+                        value = np.random.normal(0, 1)
+                        n = int(abs(p0+p1*value))
+                Pj.append(n)
+            P.append(Pj)
+
+        return P
+
+    def generate_R(self,protocol: GenerationProtocol,PJobs : list[list[float]],p0,p1,alpha):
+        ri = []
+        for j in range(self.n):
+            sum_p = sum(PJobs[j])
+            if protocol.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(0, alpha * (sum_p / self.m)))
+
+            elif protocol.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(p0+p1*value))
+                while n < p0 or n > p1:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(p0+p1*value))
+
+            ri.append(n)
+        
+        return ri
+
+    def generate_S(self,protocol: GenerationProtocol,PJobs : list[list[float]],gamma):
+        S = []
+        for i in range(self.m):
+            Si = []
+            for j in range(self.n):
+                Sij = []
+                for k in range(self.n):
+                    if j == k:
+                        Sij.append(0)  # check space values
+                    else:
+                        if protocol.name == "UNIFORM":  # Use uniform law
+                            min_p = min(PJobs[k][i],PJobs[j][i])
+                            max_p = max(PJobs[k][i],PJobs[j][i])
+                            s0 = int(gamma * min_p)
+                            s1 = int(gamma * max_p)
+                            Sij.append(int(random.uniform(s0, s1)))
+
+                        elif protocol.name == "NORMAL":  # Use normal law
+                            value = np.random.normal(0, 1)
+                            setup = int(abs(s0+s1*value))
+                            while setup < s0 or setup > s1:
+                                value = np.random.normal(0, 1)
+                                setup = int(abs(s0+s1*value))
+                            Sij.append(setup)
+                Si.append(Sij)
+            S.append(Si)
+
+        return S
+        
+    def generate_D(self,protocol: GenerationProtocol,p0,p1):
+        pass
 
 @dataclass
 class Machine:
