@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from random import randint, uniform
 import ParallelMachines
 
 @dataclass
@@ -33,16 +34,16 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         return instance
 
     @classmethod
-    def generate_random(cls,protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            ParallelInstance:
-        """
-        pass
+    def generate_random(cls,jobs_number : int, machines_number : int,protocol : ParallelMachines.GenerationProtocol = ParallelMachines.GenerationProtocol.VALLADA,law : ParallelMachines.GenerationLaw = ParallelMachines.GenerationLaw.UNIFORM, Pmin : int = -1, Pmax : int = -1, Gamma : float = 0.0, Smin :  int = -1, Smax : int = -1, InstanceName : str = ""):
+        if(Pmin == -1): Pmin = randint(1,100)
+        if(Pmax == -1): Pmax = randint(Pmin,100)
+        if(Gamma == 0.0): Gamma = round(uniform(33.33, 66.66), 2)
+        if(Smin == -1): Smin = randint(1,100)
+        if(Smax == -1): Smax = randint(Smin,100)
+        instance = cls(InstanceName,jobs_number,machines_number)
+        instance.P = instance.generate_P(protocol,law,Pmin,Pmax)
+        instance.S = instance.generate_S(protocol,law,instance.P,Gamma,Smin,Smax)
+        return instance
 
     def to_txt(self,path : Path) -> None:
         """Export an instance to a txt file
@@ -65,6 +66,3 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
                     f.write(str(self.S[i][j][k])+"\t")
                 f.write("\n")
         f.close()
-
-instance = RmSijkCmax_Instance.read_txt("RmSijkCmax_test")
-instance.to_txt("InstanceCopy.txt")
