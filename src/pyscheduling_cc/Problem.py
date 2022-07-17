@@ -53,6 +53,7 @@ class Instance(ABC):
 class Solution(ABC):
 
     instance: Instance
+    objective_value : int
 
     @classmethod
     @abstractmethod
@@ -67,14 +68,14 @@ class Solution(ABC):
         """
         pass
 
-    @abstractmethod
+    @property
     def get_objective(self) -> int:
         """Return the objective value of the solution
 
         Returns:
             int: objective value
         """
-        pass
+        return self.objective_value
 
     @abstractmethod
     def to_txt(self, path: Path) -> None:
