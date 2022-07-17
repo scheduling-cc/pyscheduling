@@ -33,22 +33,10 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         return instance
 
     @classmethod
-    def generate_random(cls,protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            ParallelInstance:
-        """
-        pass
-
-    @classmethod
-    def random_generation(cls,protocol : ParallelMachines.GenerationProtocol,jobs_number : int, machines_number : int):
+    def generate_random(cls,protocol : ParallelMachines.GenerationProtocol,law : ParallelMachines.GenerationLaw,jobs_number : int, machines_number : int, Pmin : int, Pmax : int, Gamma : int, Smin :  int = 0, Smax : int = 0):
         instance = cls("test",jobs_number,machines_number)
-        instance.P = instance.generate_P(protocol,10,100)
-        instance.S = instance.generate_S(protocol,instance.P,2)
+        instance.P = instance.generate_P(protocol,law,Pmin,Pmax)
+        instance.S = instance.generate_S(protocol,law,instance.P,Gamma,Smin,Smax)
         return instance
 
     def to_txt(self,path : Path) -> None:
@@ -75,5 +63,5 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
 
 #instance = RmSijkCmax_Instance.read_txt("RmSijkCmax_test")
 #instance.to_txt("InstanceCopy.txt")
-instance = RmSijkCmax_Instance.random_generation(ParallelMachines.GenerationProtocol.UNIFORM,20,4)
+instance = RmSijkCmax_Instance.generate_random(ParallelMachines.GenerationProtocol.VALLADA,ParallelMachines.GenerationLaw.NORMAL,20,4,10,100,2)
 instance.to_txt("RandomInstance.txt")

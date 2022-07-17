@@ -8,6 +8,9 @@ from enum import Enum
 import Problem
 
 class GenerationProtocol(Enum):
+    VALLADA = 1
+
+class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
@@ -97,14 +100,14 @@ class ParallelInstance(Problem.Instance,ABC):
             di.append(int(ligne[j]))
         return (di,i+1)
 
-    def generate_P(self,protocol: GenerationProtocol,p0,p1):
+    def generate_P(self,protocol: GenerationProtocol,law: GenerationLaw,p0,p1):
         P = [] 
         for j in range(self.n):
             Pj = []
             for i in range(self.m):
-                if protocol.name == "UNIFORM":  # Generate uniformly
+                if law.name == "UNIFORM":  # Generate uniformly
                     n = int(random.uniform(p0, p1))
-                elif protocol.name == "NORMAL":  # Use normal law
+                elif law.name == "NORMAL":  # Use normal law
                     value = np.random.normal(0, 1)
                     n = int(abs(p0+p1*value))
                     while n < p0 or n > p1:
@@ -115,14 +118,14 @@ class ParallelInstance(Problem.Instance,ABC):
 
         return P
 
-    def generate_R(self,protocol: GenerationProtocol,PJobs : list[list[float]],p0,p1,alpha):
+    def generate_R(self,protocol: GenerationProtocol,law: GenerationLaw,PJobs : list[list[float]],p0 : int ,p1 : int ,alpha : float):
         ri = []
         for j in range(self.n):
             sum_p = sum(PJobs[j])
-            if protocol.name == "UNIFORM":  # Generate uniformly
+            if law.name == "UNIFORM":  # Generate uniformly
                 n = int(random.uniform(0, alpha * (sum_p / self.m)))
 
-            elif protocol.name == "NORMAL":  # Use normal law
+            elif law.name == "NORMAL":  # Use normal law
                 value = np.random.normal(0, 1)
                 n = int(abs(p0+p1*value))
                 while n < p0 or n > p1:
@@ -133,7 +136,7 @@ class ParallelInstance(Problem.Instance,ABC):
         
         return ri
 
-    def generate_S(self,protocol: GenerationProtocol,PJobs : list[list[float]],gamma):
+    def generate_S(self,protocol: GenerationProtocol,law: GenerationLaw,PJobs : list[list[float]],gamma : float, s0 : int = 0, s1 : int = 0):
         S = []
         for i in range(self.m):
             Si = []
@@ -143,14 +146,14 @@ class ParallelInstance(Problem.Instance,ABC):
                     if j == k:
                         Sij.append(0)  # check space values
                     else:
-                        if protocol.name == "UNIFORM":  # Use uniform law
+                        if law.name == "UNIFORM":  # Use uniform law
                             min_p = min(PJobs[k][i],PJobs[j][i])
                             max_p = max(PJobs[k][i],PJobs[j][i])
                             s0 = int(gamma * min_p)
                             s1 = int(gamma * max_p)
                             Sij.append(int(random.uniform(s0, s1)))
 
-                        elif protocol.name == "NORMAL":  # Use normal law
+                        elif law.name == "NORMAL":  # Use normal law
                             value = np.random.normal(0, 1)
                             setup = int(abs(s0+s1*value))
                             while setup < s0 or setup > s1:
@@ -162,7 +165,7 @@ class ParallelInstance(Problem.Instance,ABC):
 
         return S
         
-    def generate_D(self,protocol: GenerationProtocol,p0,p1):
+    def generate_D(self,protocol: GenerationProtocol,law: GenerationLaw,p0,p1):
         pass
 
 @dataclass
