@@ -172,12 +172,12 @@ class ParallelInstance(Problem.Instance,ABC):
 class Machine:
 
     machine_num : int
-    job_schedule : list[int] = field(default_factory=list)
     completion_time : int = 0
     last_job : int = -1
+    job_schedule : list[int] = field(default_factory=list)
     
     def __str__(self):
-        return "M" + str(self.machine_num + 1) + " [" + ", ".join(map(str,self.job_schedule)) + " Ci : " + str(self.completion_time) + " ]"
+        return str(self.machine_num + 1) + " | " + ", ".join(map(str,self.job_schedule)) + " | " + str(self.completion_time)
 
     def __eq__(self,other):
         same_machine = other.machine_num == self.machine_num
@@ -198,7 +198,31 @@ class Machine:
 @dataclass
 class ParallelSolution(Problem.Solution,ABC):
 
+    machines_number : int
     configuration : list[Machine]
+
+    def __init__(self,m,instance : ParallelInstance = None):
+        self.machines_number = m
+        self.configuration = []
+        for i in range(m):
+            machine = Machine(i,0,-1,[])
+            self.configuration.append(machine)
+        self.objective_value = 0
+
+    def __str__(self):
+        return "Objective : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule | Completion_time\n" +  "\n".join(map(str,self.configuration))
+
+
+    def copy(self):
+        copy_machines = []
+        for m in self.configuration:
+            copy_machines.append(m.copy())
+        
+        copy_solution = ParallelSolution(self.m)
+        for i in range(self.m):
+            copy_solution.configuration[i] = copy_machines[i]
+        copy_solution.objective_value = self.objective_value
+        return copy_solution
 
     @classmethod
     @abstractmethod
@@ -213,36 +237,24 @@ class ParallelSolution(Problem.Solution,ABC):
         """
         pass
 
-    @abstractmethod
-    def get_objective(self) -> int:
-        """Return the objective value of the solution
-
-        Returns:
-            int: objective value
-        """
-        pass
-
-    @abstractmethod
     def to_txt(self, path: Path) -> None:
         """Export the solution to a txt file
 
         Args:
             path (Path): path to the resulting txt file
         """
-        pass
+        f = open(path, "w")
+        f.write(self.__str__())
+        f.close()
 
     @abstractmethod
     def plot(self) -> None:
         """Plot the solution in an appropriate diagram"""
         pass
 
-    @abstractmethod
-    def copy(self):
-        """Return a copy to the current solution
-
-        Returns:
-            Solution: copy of the current solution
-        """
+class PM_LocalSearch(Problem.LocalSearch):
+    @staticmethod
+    def method1(sol : ParallelSolution):
         pass
 
 @dataclass
