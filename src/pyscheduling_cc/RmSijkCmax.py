@@ -154,3 +154,36 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
             plt.savefig(path)
 
         return
+
+def constructive(instance : RmSijkCmax_Instance):
+    solution = RmSijkCmax_Solution(instance.m)
+    remaining_jobs_list = [i for i in range(instance.n)]
+    while len(remaining_jobs_list) != 0:
+        min_factor = None
+        for i in remaining_jobs_list:
+            for j in range(instance.m):
+                current_machine_schedule = solution.configuration[j]
+                if (current_machine_schedule.last_job == -1):
+                    factor = current_machine_schedule.completion_time + instance.P[i][j]
+                else:
+                    factor = current_machine_schedule.completion_time + instance.P[i][j] + instance.S[j][current_machine_schedule.last_job][i]
+
+                if not min_factor or (min_factor > factor):
+                    min_factor = factor
+                    taken_job = i
+                    taken_machine = j
+        if (current_machine_schedule.last_job == -1):
+            ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] 
+        else:
+            ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
+        solution.configuration[taken_machine].completion_time = ci
+        solution.configuration[taken_machine].last_job = taken_job
+        solution.configuration[taken_machine].job_schedule.append(taken_job)
+        remaining_jobs_list.remove(taken_job)
+        if (ci > solution.objective_value):
+            solution.objective_value = ci
+    return solution
+
+instance = RmSijkCmax_Instance.generate_random(20,4)
+solution = constructive(instance)
+print(solution)
