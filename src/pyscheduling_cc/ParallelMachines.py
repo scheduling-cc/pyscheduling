@@ -177,7 +177,7 @@ class Machine:
     job_schedule : list[int] = field(default_factory=list)
     
     def __str__(self):
-        return "M" + str(self.machine_num + 1) + " [" + ", ".join(map(str,self.job_schedule)) + " | " + str(self.completion_time) + " ]"
+        return str(self.machine_num + 1) + " | " + ", ".join(map(str,self.job_schedule)) + " | " + str(self.completion_time)
 
     def __eq__(self,other):
         same_machine = other.machine_num == self.machine_num
@@ -210,7 +210,7 @@ class ParallelSolution(Problem.Solution,ABC):
         self.objective_value = 0
 
     def __str__(self):
-        return "Objective : " + str(self.objective_value) + "\n" + "\n".join(map(str,self.configuration))
+        return "Objective : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule | Completion_time\n" +  "\n".join(map(str,self.configuration))
 
 
     def copy(self):

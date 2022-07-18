@@ -82,7 +82,7 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         self.objective_value = 0
 
     def __str__(self):
-        return "Cmax : " + str(self.objective_value) + "\n" + "\n".join(map(str,self.configuration))
+        return "Cmax : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule | Completion_time\n" +  "\n".join(map(str,self.configuration))
 
     def read_txt(cls,path: Path):
         """Read a solution from a txt file
@@ -142,3 +142,4 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
             plt.savefig(path)
 
         return
+
