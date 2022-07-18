@@ -252,6 +252,11 @@ class ParallelSolution(Problem.Solution,ABC):
         """Plot the solution in an appropriate diagram"""
         pass
 
+class PM_LocalSearch(Problem.LocalSearch):
+    @staticmethod
+    def method1(sol : ParallelSolution):
+        pass
+
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
 

@@ -92,7 +92,7 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
             path (Path): path to the solution's txt file of type Path from pathlib
 
         Returns:
-            ParallelSolution:
+            RmSijkCmax_Solution:
         """
         f = open(path, "r")
         content = f.read().split('\n')

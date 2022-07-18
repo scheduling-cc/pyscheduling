@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 from enum import Enum
 from pathlib import Path
 
@@ -125,27 +125,26 @@ class SolveResult:
         """
         return len(self.all_solutions)
 
+class LocalSearch():
+    @staticmethod
+    def all_methods():
+        return [getattr(LocalSearch,func) for func in dir(LocalSearch) if not func.startswith("__") and not func == "all_methods"]
 
-class LSOperator(ABC):
-    @abstractmethod
-    def search(self, solution: Solution) -> Solution:
-        """search a new solution using a local search operator
-
-        Args:
-            solution (Solution): solution to be improved
-
-        Returns:
-            Solution: improved solution
-        """
-        pass
-
+@dataclass
 
 @dataclass
 class LSProcedure:
 
-    operators: list[LSOperator]
+    functions : list[object] = field(default_factory=list)
     copy_solution: bool = False  # by default for performance reasons
 
+    def __init__(self ,functions : list[object] = LocalSearch.all_methods(),copy_solution : bool = False):
+        for function in functions:
+            if not callable(function):
+                raise ValueError("Is not a function")
+        self.functions = functions
+        self.copy_solution = copy_solution
+    
     def improve(self, solution: Solution) -> Solution:
         """Improves a solution by iteratively calling local search operators
 
