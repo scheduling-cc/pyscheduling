@@ -84,6 +84,7 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
     def __str__(self):
         return "Cmax : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule | Completion_time\n" +  "\n".join(map(str,self.configuration))
 
+    @classmethod
     def read_txt(cls,path: Path):
         """Read a solution from a txt file
 
@@ -93,7 +94,16 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         Returns:
             ParallelSolution:
         """
-        pass
+        f = open(path, "r")
+        content = f.read().split('\n')
+        objective_value_ = int(content[0].split(':')[1])
+        machines_number = len(content) - 2
+        configuration_ = []
+        for i in range(2,machines_number+2):
+            line_content = content[i].split('|')
+            configuration_.append(ParallelMachines.Machine(int(line_content[0]),int(line_content[2]),job_schedule=[int(job) for job in line_content[1].split(',')]))
+        solution = cls(machines_number,objective_value=objective_value_,configuration=configuration_)
+        return solution
             
     def plot(self, path : Path = None) -> None:
         """Plot the solution in an appropriate diagram"""
@@ -142,4 +152,3 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
             plt.savefig(path)
 
         return
-
