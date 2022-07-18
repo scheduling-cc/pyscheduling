@@ -192,6 +192,3 @@ class Heuristics():
     def all_methods():
         return [getattr(Heuristics,func) for func in dir(Heuristics) if not func.startswith("__") and not func == "all_methods"]
 
-instance = RmSijkCmax_Instance.generate_random(20,4)
-solution = Heuristics.constructive(instance)
-print(solution)
