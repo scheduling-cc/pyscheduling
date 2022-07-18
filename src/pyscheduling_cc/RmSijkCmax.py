@@ -78,7 +78,7 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         if configuration is None:
             self.configuration = []
             for i in range(m):
-                machine = ParallelMachines.Machine(i,0,-1,[i,i+1])
+                machine = ParallelMachines.Machine(i,0,-1,[])
                 self.configuration.append(machine)
         else: self.configuration = configuration
         self.objective_value = 0
