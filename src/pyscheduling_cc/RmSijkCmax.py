@@ -72,13 +72,15 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
 @dataclass
 class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
 
-    def __init__(self,m,instance : RmSijkCmax_Instance = None, configuration : list[ParallelMachines.Machine] = [], objective_value : int = 0):
+    def __init__(self,m,instance : RmSijkCmax_Instance = None, configuration : list[ParallelMachines.Machine] = None, objective_value : int = 0):
         self.instance = instance
         self.machines_number = m
-        self.configuration = []
-        for i in range(m):
-            machine = ParallelMachines.Machine(i,0,-1,[i,i+1])
-            self.configuration.append(machine)
+        if configuration is None:
+            self.configuration = []
+            for i in range(m):
+                machine = ParallelMachines.Machine(i,0,-1,[i,i+1])
+                self.configuration.append(machine)
+        else: self.configuration = configuration
         self.objective_value = 0
 
     def __str__(self):
