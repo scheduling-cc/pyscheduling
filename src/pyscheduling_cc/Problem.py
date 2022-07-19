@@ -126,11 +126,10 @@ class SolveResult:
         return len(self.all_solutions)
 
 class LocalSearch():
-    @staticmethod
-    def all_methods():
-        return [getattr(LocalSearch,func) for func in dir(LocalSearch) if not func.startswith("__") and not func == "all_methods"]
+    @classmethod
+    def all_methods(cls):
+        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-@dataclass
 
 @dataclass
 class LSProcedure:

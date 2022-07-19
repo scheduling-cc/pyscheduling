@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint, uniform
+import sys
 import matplotlib.pyplot as plt
 from statistics import mean 
 import ParallelMachines
@@ -74,12 +75,11 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
 @dataclass
 class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
 
-    def __init__(self,m,instance : RmSijkCmax_Instance = None, configuration : list[ParallelMachines.Machine] = None, objective_value : int = 0):
+    def __init__(self,instance : RmSijkCmax_Instance = None, configuration : list[ParallelMachines.Machine] = None, objective_value : int = 0):
         self.instance = instance
-        self.configuration_number = m
         if configuration is None:
             self.configuration = []
-            for i in range(m):
+            for i in range(instance.m):
                 machine = ParallelMachines.Machine(i,0,-1,[])
                 self.configuration.append(machine)
         else: self.configuration = configuration
@@ -101,67 +101,73 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         f = open(path, "r")
         content = f.read().split('\n')
         objective_value_ = int(content[0].split(':')[1])
-        configuration_number = len(content) - 2
         configuration_ = []
-        for i in range(2,configuration_number+2):
+        for i in range(2,len(content)):
             line_content = content[i].split('|')
-            configuration_.append(ParallelMachines.Machine(int(line_content[0]),int(line_content[2]),job_schedule=[int(job) for job in line_content[1].split(',')]))
-        solution = cls(configuration_number,objective_value=objective_value_,configuration=configuration_)
+            configuration_.append(ParallelMachines.Machine(int(line_content[0]),int(line_content[2]),job_schedule=[ParallelMachines.Job(int(j[0]),int(j[1]),int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[1].split(':')]]))
+        solution = cls(objective_value=objective_value_,configuration=configuration_)
         return solution
             
     def plot(self, path : Path = None) -> None:
         """Plot the solution in an appropriate diagram"""
-        # Add Tasks ID
-        fig, gnt = plt.subplots() 
-        
-        # Setting labels for x-axis and y-axis 
-        gnt.set_xlabel('seconds') 
-        gnt.set_ylabel('configuration') 
-        
-        # Setting ticks on y-axis 
+        if "matplotlib" in sys.modules:
+            if self.instance is not None:
+                # Add Tasks ID
+                fig, gnt = plt.subplots() 
+            
+                # Setting labels for x-axis and y-axis 
+                gnt.set_xlabel('seconds') 
+                gnt.set_ylabel('Machines') 
+                
+                # Setting ticks on y-axis 
 
-        ticks = []
-        ticks_labels = []
-        for i in range(self.configuration_number):
-            ticks.append(10*(i+1) + 5)
-            ticks_labels.append(str(i+1))
+                ticks = []
+                ticks_labels = []
+                for i in range(len(self.configuration)):
+                    ticks.append(10*(i+1) + 5)
+                    ticks_labels.append(str(i+1))
 
-        gnt.set_yticks(ticks) 
-        # Labelling tickes of y-axis 
-        gnt.set_yticklabels(ticks_labels) 
-        
-        # Setting graph attribute 
-        gnt.grid(True) 
-        
-        for j in range(self.configuration_number):
-            schedule = self.configuration[j].job_schedule
-            prev = -1
-            prevEndTime = 0
-            for element in schedule:
-                job_index = element
-                if prev != -1:
-                    # Setup Time
-                    gnt.broken_barh([(prevEndTime, self.instance.S[j][prev][job_index])], ((j+1) * 10, 8), edgecolors='black',linewidth=1, facecolors =('tab:orange'),label="Process")
-                    # Processing Time
-                    gnt.broken_barh([(prevEndTime + self.instance.S[j][prev][job_index], self.instance.P[job_index][j])], ((j+1) * 10, 8), edgecolors='black', linewidth=1, facecolors =('tab:blue'))
-                    prevEndTime = prevEndTime + self.instance.S[j][prev][job_index] + self.instance.P[job_index][j]
+                gnt.set_yticks(ticks) 
+                # Labelling tickes of y-axis 
+                gnt.set_yticklabels(ticks_labels) 
+                
+                # Setting graph attribute 
+                gnt.grid(True) 
+                
+                for j in range(len(self.configuration)):
+                    schedule = self.configuration[j].job_schedule
+                    prev = -1
+                    prevEndTime = 0
+                    for element in schedule:
+                        job_index, startTime, endTime = element
+                        if prevEndTime < startTime:
+                            # Idle Time
+                            gnt.broken_barh([(prevEndTime, startTime - prevEndTime)], ((j+1) * 10, 9), facecolors =('tab:gray')) 
+                        if prev != -1:
+                            # Setup Time
+                            gnt.broken_barh([(startTime, self.instance.S[j][prev][job_index])], ((j+1) * 10, 9), facecolors =('tab:orange'))
+                            # Processing Time
+                            gnt.broken_barh([(startTime + self.instance.S[j][prev][job_index], self.instance.P[job_index][j])], ((j+1) * 10, 9), facecolors =('tab:blue'))
+                        else:
+                            gnt.broken_barh([(startTime, self.instance.P[job_index][j])], ((j+1) * 10, 9), facecolors =('tab:blue'))
+                        prev = job_index
+                        prevEndTime = endTime
+                if path:
+                    plt.savefig(path)
                 else:
-                    gnt.broken_barh([(prevEndTime, self.instance.P[job_index][j])], ((j+1) * 10, 8), edgecolors='black', linewidth=1, facecolors =('tab:blue'))
-                    prevEndTime = prevEndTime + self.instance.P[job_index][j]
-                prev = job_index
-        
-        if path is None:
-            plt.show()
+                    plt.show()
+                return
+            else:
+                print("Please assign the solved instance to the solution object")
         else:
-            plt.savefig(path)
-
-        return
+            print("Matplotlib is not installed, you can't use gant_plot")
+            return
 
 class Heuristics():
 
     @staticmethod
     def constructive(instance : RmSijkCmax_Instance):
-        solution = RmSijkCmax_Solution(instance.m)
+        solution = RmSijkCmax_Solution(instance=instance)
         remaining_jobs_list = [i for i in range(instance.n)]
         while len(remaining_jobs_list) != 0:
             min_factor = None
@@ -183,7 +189,7 @@ class Heuristics():
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
             solution.configuration[taken_machine].completion_time = ci
             solution.configuration[taken_machine].last_job = taken_job
-            solution.configuration[taken_machine].job_schedule.append(taken_job)
+            solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,ci-instance.P[taken_job][taken_machine],ci))
             remaining_jobs_list.remove(taken_job)
             if (ci > solution.objective_value):
                 solution.objective_value = ci
@@ -191,7 +197,7 @@ class Heuristics():
 
     @staticmethod
     def list_heuristic(instance,rule=1,decreasing = False):
-        solution = RmSijkCmax_Solution(instance.m)
+        solution = RmSijkCmax_Solution(instance=instance)
         if rule == 1: # Mean Processings
             remaining_jobs_list = [(i,mean(instance.P[i])) for i in range(instance.n)]
         elif rule == 2: # Min Processings
@@ -299,15 +305,12 @@ class Heuristics():
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
             solution.configuration[taken_machine].completion_time = ci
             solution.configuration[taken_machine].last_job = taken_job
-            solution.configuration[taken_machine].job_schedule.append(taken_job)
+            solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,ci-instance.P[taken_job][taken_machine],ci))
             if (ci > solution.objective_value):
                 solution.objective_value = ci
         return solution
 
-    @staticmethod
-    def all_methods():
-        return [getattr(Heuristics,func) for func in dir(Heuristics) if not func.startswith("__") and not func == "all_methods"]
+    @classmethod
+    def all_methods(cls):
+        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-instance = RmSijkCmax_Instance.generate_random(20,4)
-solution = Heuristics.list_heuristic(instance)
-print(solution)

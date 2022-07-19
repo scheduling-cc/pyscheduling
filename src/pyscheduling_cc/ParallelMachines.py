@@ -2,10 +2,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+from platform import machine
 import random
 import numpy as np
 from enum import Enum
+from collections import namedtuple
 import Problem
+
+Job = namedtuple('Job',['id','start_time','completion_time'])
 
 class GenerationProtocol(Enum):
     VALLADA = 1
@@ -174,10 +178,18 @@ class Machine:
     machine_num : int
     completion_time : int = 0
     last_job : int = -1
-    job_schedule : list[int] = field(default_factory=list)
+    job_schedule : list[Job] = field(default_factory=list)
     
+    def __init__(self,machine_num : int,completion_time : int =0,last_job : int = -1, job_schedule : list[Job] = None) -> None:
+        self.machine_num = machine_num
+        self.completion_time = completion_time
+        self.last_job = last_job
+        if job_schedule is None :
+            self.job_schedule = []
+        else: self.job_schedule = job_schedule
+
     def __str__(self):
-        return str(self.machine_num + 1) + " | " + ", ".join(map(str,self.job_schedule)) + " | " + str(self.completion_time)
+        return str(self.machine_num + 1) + " | " + " : ".join(map(str,[(job.id,job.start_time,job.completion_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
 
     def __eq__(self,other):
         same_machine = other.machine_num == self.machine_num
