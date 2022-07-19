@@ -222,7 +222,7 @@ class ParallelSolution(Problem.Solution,ABC):
         self.objective_value = 0
 
     def __str__(self):
-        return "Objective : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule | Completion_time\n" +  "\n".join(map(str,self.configuration))
+        return "Objective : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" +  "\n".join(map(str,self.configuration))
 
 
     def copy(self):

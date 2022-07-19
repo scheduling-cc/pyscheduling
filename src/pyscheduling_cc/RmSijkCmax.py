@@ -2,8 +2,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint, uniform
 import sys
+from time import time
 import matplotlib.pyplot as plt
 from statistics import mean 
+import Problem
 import ParallelMachines
 
 
@@ -86,7 +88,7 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         self.objective_value = 0
 
     def __str__(self):
-        return "Cmax : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule | Completion_time\n" +  "\n".join(map(str,self.configuration))
+        return "Cmax : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" +  "\n".join(map(str,self.configuration))
 
     @classmethod
     def read_txt(cls,path: Path):
@@ -167,6 +169,15 @@ class Heuristics():
 
     @staticmethod
     def constructive(instance : RmSijkCmax_Instance):
+        """constructive
+
+        Args:
+            instance (RmSijkCmax_Instance): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        start_time = time()
         solution = RmSijkCmax_Solution(instance=instance)
         remaining_jobs_list = [i for i in range(instance.n)]
         while len(remaining_jobs_list) != 0:
@@ -193,10 +204,22 @@ class Heuristics():
             remaining_jobs_list.remove(taken_job)
             if (ci > solution.objective_value):
                 solution.objective_value = ci
-        return solution
+            
+        return Problem.SolveResult(best_solution=solution,runtime=time()-start_time,solutions=[solution])
 
     @staticmethod
     def list_heuristic(instance,rule=1,decreasing = False):
+        """list_heuristic
+
+        Args:
+            instance (_type_): _description_
+            rule (int, optional): _description_. Defaults to 1.
+            decreasing (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
+        start_time = time()
         solution = RmSijkCmax_Solution(instance=instance)
         if rule == 1: # Mean Processings
             remaining_jobs_list = [(i,mean(instance.P[i])) for i in range(instance.n)]
@@ -308,9 +331,8 @@ class Heuristics():
             solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,ci-instance.P[taken_job][taken_machine],ci))
             if (ci > solution.objective_value):
                 solution.objective_value = ci
-        return solution
+        return Problem.SolveResult(best_solution=solution,runtime=time()-start_time,solutions=[solution])
 
     @classmethod
     def all_methods(cls):
         return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
