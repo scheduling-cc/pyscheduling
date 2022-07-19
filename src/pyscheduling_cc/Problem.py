@@ -116,6 +116,20 @@ class SolveResult:
     runtime: float
     kpis: dict[str, object]  # Other metrics that are problem / solver specific
 
+    def __init__(self,best_solution : Solution = None, runtime : float = -1,
+                time_to_best : float = -1, status : SolveStatus = SolveStatus.FEASIBLE,
+                solutions : list[Solution] = None,other_metrics : list[str,object] = None):
+        
+        self.best_solution = best_solution
+        self.runtime = runtime
+        if best_solution:
+            self.solve_status = status
+        else:
+            self.status = "Infeasible"
+        self.time_to_best = time_to_best
+        self.other_metrics = other_metrics
+        self.all_solutions = solutions
+
     @property
     def nb_solutions(self) -> int:
         """Returns the number of solutions as an instance attribute (property)
@@ -125,12 +139,17 @@ class SolveResult:
         """
         return len(self.all_solutions)
 
-class LocalSearch():
-    @staticmethod
-    def all_methods():
-        return [getattr(LocalSearch,func) for func in dir(LocalSearch) if not func.startswith("__") and not func == "all_methods"]
+    def __str__(self):
+        return f'Search stopped with status : {self.solve_status.name}\n ' + \
+                f'Solution is : \n {self.best_solution}s \n' + \
+                f'Runtime is : {self.runtime}s \n'+ \
+                f'time to best is : {self.time_to_best}s \n'
 
-@dataclass
+class LocalSearch():
+    @classmethod
+    def all_methods(cls):
+        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
 
 @dataclass
 class LSProcedure:
@@ -164,10 +183,14 @@ class LSProcedure:
 @dataclass
 class Solver(ABC):
 
-    ls_procedure: LSProcedure
+    method: object
 
-    @abstractmethod
-    def solve(self, instance: Instance) -> SolveResult:
+    def __init__(self,method : object) -> None:
+        if not callable(method):
+            raise ValueError("Is not a function")
+        else: self.method=method
+
+    def solve(self, instance: Instance, **data) -> SolveResult:
         """Solves the instance and returns the corresponding solve result
 
         Args:
@@ -177,4 +200,8 @@ class Solver(ABC):
             SolveResult: object containing information about the solving process
                         and result
         """
+        try:
+           return self.method(instance,**data)
+        except:
+            print("Do correctly use the method as explain below :\n"+self.method.__doc__)
         pass
