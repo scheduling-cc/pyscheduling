@@ -601,6 +601,12 @@ class PM_LocalSearch(Problem.LocalSearch):
             solution.Cmax()
         return solution
 
+    @staticmethod
+    def local_search(solution : ParallelSolution):
+        for method in PM_LocalSearch.all_methods():
+            solution = method(solution)
+        return solution
+
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
 
