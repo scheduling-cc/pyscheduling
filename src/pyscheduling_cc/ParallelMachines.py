@@ -63,6 +63,15 @@ class ParallelInstance(Problem.Instance):
         pass
 
     def read_P(self,content : list[str],startIndex : int):
+        """Read the Processing time matrix from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the processing time matrix
+
+        Returns:
+           (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)
+        """
         P = []  # Matrix P_jk : Execution time of job j on machine k
         i = startIndex
         for _ in range(self.n): 
@@ -73,6 +82,15 @@ class ParallelInstance(Problem.Instance):
         return (P,i)
 
     def read_R(self,content : list[str],startIndex : int):
+        """Read the release time table from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the release time table
+
+        Returns:
+           (list[int],int): (Table of release time, index of the next section of the instance)
+        """
         i = startIndex + 1
         ligne = content[i].split('\t')
         ri = [] # Table : Release time of job i
@@ -81,6 +99,15 @@ class ParallelInstance(Problem.Instance):
         return (ri,i+1)
     
     def read_S(self,content : list[str],startIndex : int):
+        """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the Setup time table of matrices
+
+        Returns:
+           (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
+        """
         i = startIndex
         S = [] # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
         i += 1 # Skip SSD
@@ -96,6 +123,15 @@ class ParallelInstance(Problem.Instance):
         return (S,i)
     
     def read_D(self,content : list[str],startIndex : int):
+        """Read the due time table from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the due time table
+
+        Returns:
+           (list[int],int): (Table of due time, index of the next section of the instance)
+        """
         i = startIndex + 1
         ligne = content[i].split('\t')
         di = [] # Table : Due time of job i
@@ -103,7 +139,18 @@ class ParallelInstance(Problem.Instance):
             di.append(int(ligne[j]))
         return (di,i+1)
 
-    def generate_P(self,protocol: GenerationProtocol,law: GenerationLaw,Pmin,Pmax):
+    def generate_P(self,protocol: GenerationProtocol,law: GenerationLaw,Pmin : int ,Pmax : int):
+        """Random generation of processing time matrix
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Pmin (int): Minimal processing time
+            Pmax (int): Maximal processing time
+
+        Returns:
+           list[list[int]]: Matrix of processing time
+        """
         P = [] 
         for j in range(self.n):
             Pj = []
@@ -122,6 +169,19 @@ class ParallelInstance(Problem.Instance):
         return P
 
     def generate_R(self,protocol: GenerationProtocol,law: GenerationLaw,PJobs : list[list[float]],Pmin : int ,Pmax : int ,alpha : float):
+        """Random generation of release time table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            PJobs (list[list[float]]): Matrix of processing time
+            Pmin (int): Minimal processing time
+            Pmax (int): Maximal processing time
+            alpha (float): _description_
+
+        Returns:
+            list[int]: release time table
+        """
         ri = []
         for j in range(self.n):
             sum_p = sum(PJobs[j])
@@ -140,6 +200,19 @@ class ParallelInstance(Problem.Instance):
         return ri
 
     def generate_S(self,protocol: GenerationProtocol,law: GenerationLaw,PJobs : list[list[float]],gamma : float, Smin : int = 0, Smax : int = 0):
+        """Random generation of setup time table of matrices
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            PJobs (list[list[float]]): Matrix of processing time
+            gamma (float): _description_
+            Smin (int, optional): Minimal setup time . Defaults to 0.
+            Smax (int, optional): Maximal setup time. Defaults to 0.
+
+        Returns:
+            list[list[list[int]]]: Setup time table of matrix
+        """
         S = []
         for i in range(self.m):
             Si = []
@@ -169,6 +242,17 @@ class ParallelInstance(Problem.Instance):
         return S
         
     def generate_D(self,protocol: GenerationProtocol,law: GenerationLaw,Pmin,Pmax):
+        """Random generation of due time table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Pmin (int): Minimal processing time
+            Pmax (int): Maximal processing time
+
+        Returns:
+            list[int]: due time table
+        """
         pass
 
 @dataclass
@@ -180,6 +264,14 @@ class Machine:
     job_schedule : list[Job] = field(default_factory=list)
     
     def __init__(self,machine_num : int,completion_time : int =0,last_job : int = -1, job_schedule : list[Job] = None) -> None:
+        """Constructor of Machine
+
+        Args:
+            machine_num (int): ID of the machine
+            completion_time (int, optional): completion time of the last job of the machine. Defaults to 0.
+            last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
+            job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
+        """
         self.machine_num = machine_num
         self.completion_time = completion_time
         self.last_job = last_job
@@ -207,7 +299,15 @@ class Machine:
         return Machine(machine_dict["machine_num"],machine_dict["completion_time"],machine_dict["last_job"],machine_dict["job_schedule"])
 
     @abstractmethod
-    def compute_completion_time(self,instance):
+    def compute_completion_time(self,instance : ParallelInstance):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time, works with both RmSijkCmax and RmriSijkCmax problems
+
+        Args:
+            instance (ParallelInstance): The instance associated to the machine
+
+        Returns:
+            int: completion_time of the machine
+        """
         ci = 0
         if len(self.job_schedule) >0:
             first_job = self.job_schedule[0][0]
@@ -237,7 +337,13 @@ class ParallelSolution(Problem.Solution):
     machines_number : int
     configuration : list[Machine]
 
-    def __init__(self,m,instance : ParallelInstance = None):
+    def __init__(self,m : int,instance : ParallelInstance = None):
+        """Constructor of ParallelSolution
+
+        Args:
+            m (int): number of machines
+            instance (ParallelInstance, optional): Instance to be solved by the solution. Defaults to None.
+        """
         self.machines_number = m
         self.configuration = []
         for i in range(m):
@@ -247,7 +353,6 @@ class ParallelSolution(Problem.Solution):
 
     def __str__(self):
         return "Objective : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" +  "\n".join(map(str,self.configuration))
-
 
     def copy(self):
         copy_machines = []
@@ -261,6 +366,8 @@ class ParallelSolution(Problem.Solution):
         return copy_solution
 
     def cmax(self):
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax which equals to the maximal completion time of every machine
+        """
         if self.instance != None:
             for k in range(self.instance.m):
                 self.configuration[k].compute_completion_time(self.instance) 
@@ -297,6 +404,14 @@ class ParallelSolution(Problem.Solution):
 class PM_LocalSearch(Problem.LocalSearch):
     @staticmethod
     def _inter_machine_insertion(solution : ParallelSolution):
+        """For every job, verify if rescheduling it on the same machine at a different position or on a whole different machines gives a better solution
+
+        Args:
+            solution (ParallelSolution): The initial solution to be improved
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
         for i in range(solution.instance.m): # For every machine in the system
             for l in range(solution.instance.m): # For all the other machines
                 move = None
@@ -347,6 +462,14 @@ class PM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
     def _internal_swap(solution : ParallelSolution):
+        """Swap between 2 jobs on the same machine whose completion_time is maximal if it gives a better solution
+
+        Args:
+            solution (ParallelSolution): The initial solution to be improved
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
         cmax_machines_list = []
         for m,machine in enumerate(solution.configuration):
             #if machine.completion_time == solution.cmax:
@@ -378,6 +501,14 @@ class PM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
     def _external_swap(solution : ParallelSolution):
+        """Swap between 2 jobs on different machines, where one of the machines has the maximal completion_time among all
+
+        Args:
+            solution (ParallelSolution): The initial solution to be improved
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
         cmax_machines_list = []
         other_machines = []
         for m,machine in enumerate(solution.configuration):
@@ -453,6 +584,14 @@ class PM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
     def _external_insertion(solution : ParallelSolution):
+        """Delete a job from the machine whose completion_time is maximal and insert it on another one
+
+        Args:
+            solution (ParallelSolution): The initial solution to be improved
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
         cmax_machines_list = []
         other_machines = []
         for m,machine in enumerate(solution.configuration):
@@ -530,6 +669,14 @@ class PM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
     def _balance(solution : ParallelSolution):
+        """Reschedule jobs between machines in order to balance their completion_time thus giving a better solution
+
+        Args:
+            solution (ParallelSolution): The initial solution to be improved
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
         change = True
         while change:
             change = False
