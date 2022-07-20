@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint, uniform
 import sys
-from time import time
+from time import perf_counter
 import matplotlib.pyplot as plt
 from statistics import mean 
 import Problem
@@ -177,7 +177,7 @@ class Heuristics():
         Returns:
             _type_: _description_
         """
-        start_time = time()
+        start_time = perf_counter()
         solution = RmSijkCmax_Solution(instance=instance)
         remaining_jobs_list = [i for i in range(instance.n)]
         while len(remaining_jobs_list) != 0:
@@ -207,7 +207,7 @@ class Heuristics():
             if (ci > solution.objective_value):
                 solution.objective_value = ci
             
-        return Problem.SolveResult(best_solution=solution,runtime=time()-start_time,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-start_time,solutions=[solution])
 
     @staticmethod
     def list_heuristic(instance : RmSijkCmax_Instance,rule=1,decreasing = False):
@@ -221,7 +221,7 @@ class Heuristics():
         Returns:
             _type_: _description_
         """
-        start_time = time()
+        start_time = perf_counter()
         solution = RmSijkCmax_Solution(instance=instance)
         if rule == 1: # Mean Processings
             remaining_jobs_list = [(i,mean(instance.P[i])) for i in range(instance.n)]
@@ -333,7 +333,7 @@ class Heuristics():
             solution.configuration[taken_machine].last_job = taken_job
             if (ci > solution.objective_value):
                 solution.objective_value = ci
-        return Problem.SolveResult(best_solution=solution,runtime=time()-start_time,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-start_time,solutions=[solution])
 
     @classmethod
     def all_methods(cls):
