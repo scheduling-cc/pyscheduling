@@ -221,7 +221,7 @@ class Machine:
                 job_i = self.job_schedule[i][0]
 
                 if hasattr(instance,'R'): startTime = max(ci,instance.R[job_i])
-                else: startTime = 0
+                else: startTime = ci
                 setup_time = instance.S[self.machine_num][job_prev_i][job_i]
                 proc_time = instance.P[job_i][self.machine_num]
                 ci = startTime + proc_time + setup_time
