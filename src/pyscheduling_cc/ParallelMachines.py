@@ -519,6 +519,88 @@ class PM_LocalSearch(Problem.LocalSearch):
         solution.Cmax()
         return solution
 
+    @staticmethod
+    def balance(solution : ParallelSolution):
+        change = True
+        while change:
+            change = False
+            cmax_machines_list = []
+            other_machines = []
+            for m,machine in enumerate(solution.configuration):
+                if machine.completion_time == solution.objective_value:
+                    cmax_machines_list.append(machine)
+                else:
+                    other_machines.append(machine)
+            
+
+            for cmax_machine in cmax_machines_list:
+                nb_machine = cmax_machine.machine_num
+                cmax_machine_schedule = cmax_machine.job_schedule
+                old_ci = cmax_machine.completion_time
+                if len(cmax_machine_schedule) > 1:
+                    other_machines = sorted(other_machines,key= lambda machine: machine.completion_time)
+
+                    move = None
+                    l = 0
+                    while not move and l < len(other_machines):
+                        other_machine_index = other_machines[l].machine_num
+                        other_machine = solution.configuration[other_machine_index]
+                        other_machine_schedule = other_machine.job_schedule
+                        
+                        old_cl = other_machine.completion_time
+                        old_cmax = solution.objective_value
+                        best_cmax = old_cmax
+                        best_diff = None
+
+                        j = len(cmax_machine_schedule)-1
+                        for k in range(len(other_machine_schedule)):
+                            new_machine_cmax = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,list(cmax_machine_schedule))
+                            job_cmax = new_machine_cmax.job_schedule.pop(j)
+                        
+                            new_other_machine = Machine(other_machine_index,other_machine.completion_time,other_machine.last_job,list(other_machine_schedule))
+                            new_other_machine.job_schedule.insert(k,job_cmax)
+                            
+                            ci = new_machine_cmax.compute_completion_time(solution.instance,new_machine_cmax.job_schedule)
+                            cl = new_other_machine.compute_completion_time(solution.instance,new_other_machine.job_schedule)
+                            new_machine_cmax.completion_time = ci
+                            new_other_machine.completion_time = cl
+
+                            solution.configuration[nb_machine] = new_machine_cmax
+                            solution.configuration[other_machine_index] = new_other_machine
+
+                            solution.Cmax()
+                            if solution.objective_value < old_cmax:
+                                if not move:
+                                    move = (other_machine_index,j,k,ci,cl)
+                                    best_cmax = solution.objective_value
+                                    #print(1,old_cmax,old_ci,old_cl,move)
+                                elif solution.objective_value < best_cmax:
+                                    move = (other_machine_index,j,k,ci,cl)
+                                    best_cmax = solution.objective_value
+                                    #print(2,old_cmax,old_ci,old_cl,move)
+                            elif solution.objective_value == best_cmax and (ci < old_ci or cl < old_cl):
+                                if not move:
+                                    move = (other_machine_index,j,k,ci,cl)
+                                    best_diff = old_ci - ci + old_cl - cl
+                                    #print(3,old_cmax,old_ci,old_cl,move)
+                                elif (not best_diff or old_ci - ci + old_cl - cl < best_diff) and best_cmax == old_cmax:
+                                    move = (other_machine_index,j,k,ci,cl)
+                                    best_diff = old_ci - ci + old_cl - cl
+                                    #print(4,old_cmax,old_ci,old_cl,move)
+                            solution.configuration[nb_machine] = cmax_machine
+                            solution.configuration[other_machine_index] = other_machine
+                            solution.Cmax()
+                        l+=1
+                    if move: # Apply the best move
+                        change = True
+                        cmax_job = cmax_machine_schedule.pop(move[1]) 
+                        other_machine_schedule.insert(move[2],cmax_job)
+                        cmax_machine.completion_time = move[3]
+                        other_machine.completion_time = move[4]
+                        solution.Cmax()
+            solution.Cmax()
+        return solution
+
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
 
