@@ -336,6 +336,37 @@ class PM_LocalSearch(Problem.LocalSearch):
         solution.Cmax()
         return solution
 
+    @staticmethod
+    def internal_swap(solution : ParallelSolution):
+        cmax_machines_list = []
+        for m,machine in enumerate(solution.configuration):
+            #if machine.completion_time == solution.cmax:
+            cmax_machines_list.append(m)
+        #print("Machines Cmax : " + str(len(cmax_machines_list)))
+        for nb_machine in cmax_machines_list:
+            cmax_machine = solution.configuration[nb_machine]
+            cmax_machine_schedule = cmax_machine.job_schedule
+            move = None
+            for i in range(0,len(cmax_machine_schedule)):
+                for j in range(i+1,len(cmax_machine_schedule)):
+                    job_schedule_copy = list(cmax_machine_schedule)
+                    new_schedule = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,job_schedule_copy)
+                    new_schedule.job_schedule[i],new_schedule.job_schedule[j] = new_schedule.job_schedule[j],new_schedule.job_schedule[i]
+                    new_ci = new_schedule.compute_completion_time(solution.instance,new_schedule.job_schedule)
+                    if new_ci < cmax_machine.completion_time:
+                        if not move:
+                            move = (i,j,new_ci)
+                        elif new_ci < move[2]:
+                            move = (i,j,new_ci)
+            
+            if move:
+                #print(nb_machine,move)
+                cmax_machine_schedule[move[0]],cmax_machine_schedule[move[1]] = cmax_machine_schedule[move[1]],cmax_machine_schedule[move[0]]
+                cmax_machine.completion_time = move[2]
+                solution.Cmax()
+        solution.Cmax()
+        return 
+
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
 
