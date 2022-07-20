@@ -206,14 +206,16 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"],machine_dict["completion_time"],machine_dict["last_job"],machine_dict["job_schedule"])
 
-    def compute_completion_time(self,instance):
+    def compute_completion_time(self,instance,job_schedule = None):
+        if job_schedule is None:
+            job_schedule = self.job_schedule
         ci = 0
-        if len(self.job_schedule) >0:
-            first_job = self.job_schedule[0].id
+        if len(job_schedule) >0:
+            first_job = job_schedule[0].id
             ci = instance.P[first_job][self.machine_num] + instance.S[self.machine_num][first_job][first_job]
-            job_prev_i = self.job_schedule[0].id
-            for i in range(1,len(self.job_schedule)):
-                job_i = self.job_schedule[i].id
+            job_prev_i = job_schedule[0].id
+            for i in range(1,len(job_schedule)):
+                job_i = job_schedule[i].id
                 setup_time = instance.S[self.machine_num][job_prev_i][job_i]
                 proc_time = instance.P[job_i][self.machine_num]
                 ci +=  proc_time + setup_time
@@ -285,8 +287,54 @@ class ParallelSolution(Problem.Solution,ABC):
 
 class PM_LocalSearch(Problem.LocalSearch):
     @staticmethod
-    def method1(sol : ParallelSolution):
-        pass
+    def inter_machine_insertion(solution : ParallelSolution):
+        for i in range(solution.instance.m): # For every machine in the system
+            for l in range(solution.instance.m): # For all the other machines
+                move = None
+                if (l!=i) and len(solution.configuration[i].job_schedule) > 1:
+                    # Machine i
+                    machine_i = solution.configuration[i]
+                    machine_i_schedule = machine_i.job_schedule
+                    old_ci = machine_i.completion_time
+                    # Machine L
+                    machine_l = solution.configuration[l]
+                    machine_l_schedule = machine_l.job_schedule
+                    old_cl = machine_l.completion_time
+                    for k in range(len(machine_i_schedule)): # for every job in the machine
+                        job_schedule_copy = list(machine_i_schedule)
+                        new_schedule = Machine(i,machine_i.completion_time,machine_i.last_job,job_schedule_copy)
+                        job_k = new_schedule.job_schedule.pop(k)
+                        ci = machine_i.compute_completion_time(solution.instance,new_schedule.job_schedule)
+                        for j in range(len(machine_l_schedule)):
+                            job_schedule_copy_l = list(machine_l_schedule)
+                            new_schedule_l = Machine(l,machine_l.completion_time,machine_l.last_job,job_schedule_copy_l)
+                            new_schedule_l.job_schedule.insert(j,job_k)
+                            cl = machine_l.compute_completion_time(solution.instance,new_schedule_l.job_schedule)
+                            
+                            cnd1 = ( ci < old_ci and cl < old_cl )
+                            cnd2 = ( ci < old_ci and cl > old_cl and old_ci - ci >= cl - old_cl and cl != solution.objective_value and cl <= solution.objective_value)
+                            if cnd1:
+                                if not move:
+                                    move = (l,k,j,ci,cl)
+                                elif ci-old_ci+cl-old_cl>=ci-move[3]+cl-move[4]:
+                                    move = (l,k,j,ci,cl)
+                            elif cnd2:
+                                if not move:
+                                    move = (l,k,j,ci,cl)
+                                elif ci-old_ci+cl-old_cl>=ci-move[3]+cl-move[4]:
+                                    move = (l,k,j,ci,cl)
+                if move:
+                    job_k = machine_i_schedule.pop(move[1]) # Remove job k from machine i
+                    machine_l_schedule.insert(move[2],job_k) # Insert job k in machine l in pos j
+                    if machine_i.completion_time == solution.objective_value:
+                        solution.objective_value = move[3]
+                    machine_i.completion_time = move[3] # New completion time for machine i
+                    machine_l.completion_time = move[4] # New completion time for machine j
+                    
+                    #print(solution.cmax)
+                    solution.Cmax()
+        solution.Cmax()
+        return solution
 
 @dataclass
 class PaarallelGA(Problem.Solver,ABC):
