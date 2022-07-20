@@ -41,6 +41,23 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
 
     @classmethod
     def generate_random(cls,jobs_number : int, configuration_number : int,protocol : ParallelMachines.GenerationProtocol = ParallelMachines.GenerationProtocol.VALLADA,law : ParallelMachines.GenerationLaw = ParallelMachines.GenerationLaw.UNIFORM, Pmin : int = -1, Pmax : int = -1, Gamma : float = 0.0, Smin :  int = -1, Smax : int = -1, InstanceName : str = ""):
+        """Random generation of RmSijkCmax problem instance
+
+        Args:
+            jobs_number (int): number of jobs of the instance
+            configuration_number (int): number of machines of the instance
+            protocol (ParallelMachines.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to ParallelMachines.GenerationProtocol.VALLADA.
+            law (ParallelMachines.GenerationLaw, optional): probablistic law of generation. Defaults to ParallelMachines.GenerationLaw.UNIFORM.
+            Pmin (int, optional): Minimal processing time. Defaults to -1.
+            Pmax (int, optional): Maximal processing time. Defaults to -1.
+            Gamma (float, optional): _description_. Defaults to 0.0.
+            Smin (int, optional): Minimal setup time. Defaults to -1.
+            Smax (int, optional): Maximal setup time. Defaults to -1.
+            InstanceName (str, optional): name to give to the instance. Defaults to "".
+
+        Returns:
+            RmSijkCmax_Instance: the randomly generated instance
+        """
         if(Pmin == -1): Pmin = randint(1,100)
         if(Pmax == -1): Pmax = randint(Pmin,100)
         if(Gamma == 0.0): Gamma = round(uniform(1.0, 3.0), 1)
@@ -77,6 +94,13 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
 class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
 
     def __init__(self,instance : RmSijkCmax_Instance = None, configuration : list[ParallelMachines.Machine] = None, objective_value : int = 0):
+        """Constructor of RmSijkCmax_Solution
+
+        Args:
+            instance (RmSijkCmax_Instance, optional): Instance to be solved by the solution. Defaults to None.
+            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
+            objective_value (int, optional): initial objective value of the solution. Defaults to 0.
+        """
         self.instance = instance
         if configuration is None:
             self.configuration = []
@@ -88,6 +112,17 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
 
     def __str__(self):
         return "Cmax : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" +  "\n".join(map(str,self.configuration))
+
+    def copy(self):
+        copy_machines = []
+        for m in self.configuration:
+            copy_machines.append(m.copy())
+        
+        copy_solution = RmSijkCmax_Solution(self.m)
+        for i in range(self.m):
+            copy_solution.configuration[i] = copy_machines[i]
+        copy_solution.objective_value = self.objective_value
+        return copy_solution
 
     @classmethod
     def read_txt(cls,path: Path):
@@ -168,13 +203,13 @@ class Heuristics():
 
     @staticmethod
     def constructive(instance : RmSijkCmax_Instance):
-        """constructive
+        """the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
 
         Args:
-            instance (RmSijkCmax_Instance): _description_
+            instance (RmSijkCmax_Instance): Instance to be solved by the heuristic
 
         Returns:
-            _type_: _description_
+            Problem.SolverResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
         solution = RmSijkCmax_Solution(instance=instance)
@@ -210,15 +245,15 @@ class Heuristics():
 
     @staticmethod
     def list_heuristic(instance : RmSijkCmax_Instance,rule=1,decreasing = False):
-        """list_heuristic
+        """list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution
 
         Args:
-            instance (_type_): _description_
-            rule (int, optional): _description_. Defaults to 1.
+            instance (_type_): Instance to be solved by the heuristic
+            rule (int, optional): ID of the rule to follow by the heuristic. Defaults to 1.
             decreasing (bool, optional): _description_. Defaults to False.
 
         Returns:
-            _type_: _description_
+            Problem.SolverResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
         solution = RmSijkCmax_Solution(instance=instance)
@@ -336,4 +371,9 @@ class Heuristics():
 
     @classmethod
     def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
         return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]

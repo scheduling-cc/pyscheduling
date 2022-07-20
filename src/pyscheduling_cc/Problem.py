@@ -150,7 +150,7 @@ class SolveResult:
 
     def __str__(self):
         return f'Search stopped with status : {self.solve_status.name}\n ' + \
-                f'Solution is : \n {self.best_solution}s \n' + \
+                f'Solution is : \n {self.best_solution} \n' + \
                 f'Runtime is : {self.runtime}s \n'+ \
                 f'time to best is : {self.time_to_best}s \n'
 
