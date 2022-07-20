@@ -151,13 +151,13 @@ class LocalSearch():
     methods : list[object] = field(default_factory=list)
     copy_solution: bool = False  # by default for performance reasons
 
-    @classmethod
-    def instantiate(cls,methods : list[object] = None,copy_solution : bool = False):
-        if methods is None: methods = cls.all_methods()
+    def __init__(self,methods : list[object] = None,copy_solution : bool = False):
+        if methods is None: methods = self.all_methods()
         for method in methods:
             if not callable(method):
                 raise ValueError("Is not a function")
-        return cls(methods,copy_solution)
+        self.methods = methods
+        self.copy_solution = copy_solution
 
     @classmethod
     def all_methods(cls):
