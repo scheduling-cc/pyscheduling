@@ -251,7 +251,7 @@ class ParallelSolution(Problem.Solution):
         copy_solution.objective_value = self.objective_value
         return copy_solution
 
-    def Cmax(self):
+    def cmax(self):
         if self.instance != None:
             for k in range(self.instance.m):
                 self.configuration[k].compute_completion_time(self.instance) 
@@ -332,8 +332,8 @@ class PM_LocalSearch(Problem.LocalSearch):
                     machine_l.completion_time = move[4] # New completion time for machine j
                     
                     #print(solution.cmax)
-                    solution.Cmax()
-        solution.Cmax()
+                    solution.cmax()
+        solution.cmax()
         return solution
 
     @staticmethod
@@ -363,8 +363,8 @@ class PM_LocalSearch(Problem.LocalSearch):
                 #print(nb_machine,move)
                 cmax_machine_schedule[move[0]],cmax_machine_schedule[move[1]] = cmax_machine_schedule[move[1]],cmax_machine_schedule[move[0]]
                 cmax_machine.completion_time = move[2]
-                solution.Cmax()
-        solution.Cmax()
+                solution.cmax()
+        solution.cmax()
         return solution
 
     @staticmethod
@@ -416,7 +416,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                         solution.configuration[nb_machine] = new_machine_cmax
                         solution.configuration[other_machine_index] = new_other_machine
 
-                        solution.Cmax()
+                        solution.cmax()
                         if solution.objective_value < old_cmax:
                             if not move:
                                 move = (other_machine_index,j,k,ci,cl)
@@ -433,13 +433,13 @@ class PM_LocalSearch(Problem.LocalSearch):
                                 best_diff = old_ci - ci + old_cl - cl
                         solution.configuration[nb_machine] = cmax_machine
                         solution.configuration[other_machine_index] = other_machine
-                        solution.Cmax()
+                        solution.cmax()
             if move: # Apply the best move
                 cmax_machine_schedule[move[1]],other_machine_schedule[move[2]] = other_machine_schedule[move[2]],cmax_machine_schedule[move[1]]
                 cmax_machine.completion_time = move[3]
                 other_machine.completion_time = move[4]
-                solution.Cmax()
-        solution.Cmax()
+                solution.cmax()
+        solution.cmax()
         return solution
 
     @staticmethod
@@ -488,7 +488,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                             solution.configuration[nb_machine] = new_machine_cmax
                             solution.configuration[other_machine_index] = new_other_machine
 
-                            solution.Cmax()
+                            solution.cmax()
                             if solution.objective_value < old_cmax:
                                 if not move:
                                     move = (other_machine_index,j,k,ci,cl)
@@ -509,14 +509,14 @@ class PM_LocalSearch(Problem.LocalSearch):
                                     #print(4,old_cmax,old_ci,old_cl,move)
                             solution.configuration[nb_machine] = cmax_machine
                             solution.configuration[other_machine_index] = other_machine
-                            solution.Cmax()
+                            solution.cmax()
                 if move: # Apply the best move
                     cmax_job = cmax_machine_schedule.pop(move[1]) 
                     other_machine_schedule.insert(move[2],cmax_job)
                     cmax_machine.completion_time = move[3]
                     other_machine.completion_time = move[4]
-                    solution.Cmax()
-        solution.Cmax()
+                    solution.cmax()
+        solution.cmax()
         return solution
 
     @staticmethod
@@ -568,7 +568,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                             solution.configuration[nb_machine] = new_machine_cmax
                             solution.configuration[other_machine_index] = new_other_machine
 
-                            solution.Cmax()
+                            solution.cmax()
                             if solution.objective_value < old_cmax:
                                 if not move:
                                     move = (other_machine_index,j,k,ci,cl)
@@ -589,7 +589,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                                     #print(4,old_cmax,old_ci,old_cl,move)
                             solution.configuration[nb_machine] = cmax_machine
                             solution.configuration[other_machine_index] = other_machine
-                            solution.Cmax()
+                            solution.cmax()
                         l+=1
                     if move: # Apply the best move
                         change = True
@@ -597,6 +597,6 @@ class PM_LocalSearch(Problem.LocalSearch):
                         other_machine_schedule.insert(move[2],cmax_job)
                         cmax_machine.completion_time = move[3]
                         other_machine.completion_time = move[4]
-                        solution.Cmax()
-            solution.Cmax()
+                        solution.cmax()
+            solution.cmax()
         return solution
