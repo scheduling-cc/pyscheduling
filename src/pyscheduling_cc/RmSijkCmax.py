@@ -9,7 +9,6 @@ import Problem
 import ParallelMachines
 
 
-
 @dataclass
 class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
     P : list[list[int]] = field(default_factory=list)# Processing time
@@ -338,6 +337,3 @@ class Heuristics():
     @classmethod
     def all_methods(cls):
         return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-localSearch = ParallelMachines.PM_LocalSearch()
-print(localSearch.all_methods())

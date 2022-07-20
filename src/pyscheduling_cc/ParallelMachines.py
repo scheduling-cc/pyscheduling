@@ -206,21 +206,30 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"],machine_dict["completion_time"],machine_dict["last_job"],machine_dict["job_schedule"])
 
-    def compute_completion_time(self,instance,job_schedule = None):
-        if job_schedule is None:
-            job_schedule = self.job_schedule
+    @abstractmethod
+    def compute_completion_time(self,instance):
         ci = 0
-        if len(job_schedule) >0:
-            first_job = job_schedule[0].id
-            ci = instance.P[first_job][self.machine_num] + instance.S[self.machine_num][first_job][first_job]
-            job_prev_i = job_schedule[0].id
-            for i in range(1,len(job_schedule)):
-                job_i = job_schedule[i].id
+        if len(self.job_schedule) >0:
+            first_job = self.job_schedule[0][0]
+            if hasattr(instance,'R'): startTime = max(0,instance.R[first_job])
+            else: startTime = 0 
+            ci = startTime + instance.P[first_job][self.machine_num] + \
+                + instance.S[self.machine_num][first_job][first_job] # Added Sk_ii for rabadi benchmark
+            self.job_schedule[0] = Job(first_job,startTime,ci)
+            job_prev_i = first_job
+            for i in range(1,len(self.job_schedule)):
+                job_i = self.job_schedule[i][0]
+
+                if hasattr(instance,'R'): startTime = max(ci,instance.R[job_i])
+                else: startTime = 0
                 setup_time = instance.S[self.machine_num][job_prev_i][job_i]
                 proc_time = instance.P[job_i][self.machine_num]
-                ci +=  proc_time + setup_time
+                ci = startTime + proc_time + setup_time
+
+                self.job_schedule[i] = Job(job_i,startTime,ci)
                 job_prev_i = job_i
-        return(ci)
+        self.completion_time = ci
+        return ci
 
 @dataclass
 class ParallelSolution(Problem.Solution):
@@ -304,12 +313,12 @@ class PM_LocalSearch(Problem.LocalSearch):
                         job_schedule_copy = list(machine_i_schedule)
                         new_schedule = Machine(i,machine_i.completion_time,machine_i.last_job,job_schedule_copy)
                         job_k = new_schedule.job_schedule.pop(k)
-                        ci = machine_i.compute_completion_time(solution.instance,new_schedule.job_schedule)
+                        ci = machine_i.compute_completion_time(solution.instance)
                         for j in range(len(machine_l_schedule)):
                             job_schedule_copy_l = list(machine_l_schedule)
                             new_schedule_l = Machine(l,machine_l.completion_time,machine_l.last_job,job_schedule_copy_l)
                             new_schedule_l.job_schedule.insert(j,job_k)
-                            cl = machine_l.compute_completion_time(solution.instance,new_schedule_l.job_schedule)
+                            cl = machine_l.compute_completion_time(solution.instance)
                             
                             cnd1 = ( ci < old_ci and cl < old_cl )
                             cnd2 = ( ci < old_ci and cl > old_cl and old_ci - ci >= cl - old_cl and cl != solution.objective_value and cl <= solution.objective_value)
@@ -352,7 +361,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                     job_schedule_copy = list(cmax_machine_schedule)
                     new_schedule = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,job_schedule_copy)
                     new_schedule.job_schedule[i],new_schedule.job_schedule[j] = new_schedule.job_schedule[j],new_schedule.job_schedule[i]
-                    new_ci = new_schedule.compute_completion_time(solution.instance,new_schedule.job_schedule)
+                    new_ci = new_schedule.compute_completion_time(solution.instance)
                     if new_ci < cmax_machine.completion_time:
                         if not move:
                             move = (i,j,new_ci)
@@ -408,8 +417,8 @@ class PM_LocalSearch(Problem.LocalSearch):
                         new_machine_cmax.job_schedule.insert(j,job_other_machine)
                         new_other_machine.job_schedule.insert(k,job_cmax)
                         
-                        ci = new_machine_cmax.compute_completion_time(solution.instance,new_machine_cmax.job_schedule)
-                        cl = new_other_machine.compute_completion_time(solution.instance,new_other_machine.job_schedule)
+                        ci = new_machine_cmax.compute_completion_time(solution.instance)
+                        cl = new_other_machine.compute_completion_time(solution.instance)
                         new_machine_cmax.completion_time = ci
                         new_other_machine.completion_time = cl
 
@@ -480,8 +489,8 @@ class PM_LocalSearch(Problem.LocalSearch):
                             new_other_machine = Machine(other_machine_index,other_machine.completion_time,other_machine.last_job,list(other_machine_schedule))
                             new_other_machine.job_schedule.insert(k,job_cmax)
                             
-                            ci = new_machine_cmax.compute_completion_time(solution.instance,new_machine_cmax.job_schedule)
-                            cl = new_other_machine.compute_completion_time(solution.instance,new_other_machine.job_schedule)
+                            ci = new_machine_cmax.compute_completion_time(solution.instance)
+                            cl = new_other_machine.compute_completion_time(solution.instance)
                             new_machine_cmax.completion_time = ci
                             new_other_machine.completion_time = cl
 
@@ -560,8 +569,8 @@ class PM_LocalSearch(Problem.LocalSearch):
                             new_other_machine = Machine(other_machine_index,other_machine.completion_time,other_machine.last_job,list(other_machine_schedule))
                             new_other_machine.job_schedule.insert(k,job_cmax)
                             
-                            ci = new_machine_cmax.compute_completion_time(solution.instance,new_machine_cmax.job_schedule)
-                            cl = new_other_machine.compute_completion_time(solution.instance,new_other_machine.job_schedule)
+                            ci = new_machine_cmax.compute_completion_time(solution.instance)
+                            cl = new_other_machine.compute_completion_time(solution.instance)
                             new_machine_cmax.completion_time = ci
                             new_other_machine.completion_time = cl
 
