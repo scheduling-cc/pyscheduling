@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
@@ -18,7 +18,7 @@ class GenerationLaw(Enum):
     NORMAL = 2
 
 @dataclass
-class ParallelInstance(Problem.Instance,ABC):
+class ParallelInstance(Problem.Instance):
     
     n : int # n : Number of jobs 
     m : int # m : Number of machines
@@ -223,7 +223,7 @@ class Machine:
         return(ci)
 
 @dataclass
-class ParallelSolution(Problem.Solution,ABC):
+class ParallelSolution(Problem.Solution):
 
     machines_number : int
     configuration : list[Machine]
@@ -287,7 +287,7 @@ class ParallelSolution(Problem.Solution,ABC):
 
 class PM_LocalSearch(Problem.LocalSearch):
     @staticmethod
-    def inter_machine_insertion(solution : ParallelSolution):
+    def _inter_machine_insertion(solution : ParallelSolution):
         for i in range(solution.instance.m): # For every machine in the system
             for l in range(solution.instance.m): # For all the other machines
                 move = None
@@ -337,7 +337,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def internal_swap(solution : ParallelSolution):
+    def _internal_swap(solution : ParallelSolution):
         cmax_machines_list = []
         for m,machine in enumerate(solution.configuration):
             #if machine.completion_time == solution.cmax:
@@ -368,7 +368,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def external_swap(solution : ParallelSolution):
+    def _external_swap(solution : ParallelSolution):
         cmax_machines_list = []
         other_machines = []
         for m,machine in enumerate(solution.configuration):
@@ -443,7 +443,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def external_insertion(solution : ParallelSolution):
+    def _external_insertion(solution : ParallelSolution):
         cmax_machines_list = []
         other_machines = []
         for m,machine in enumerate(solution.configuration):
@@ -520,7 +520,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def balance(solution : ParallelSolution):
+    def _balance(solution : ParallelSolution):
         change = True
         while change:
             change = False
@@ -601,14 +601,8 @@ class PM_LocalSearch(Problem.LocalSearch):
             solution.Cmax()
         return solution
 
-    @staticmethod
-    def local_search(solution : ParallelSolution):
-        for method in PM_LocalSearch.all_methods():
-            solution = method(solution)
-        return solution
-
 @dataclass
-class PaarallelGA(Problem.Solver,ABC):
+class PaarallelGA(Problem.Solver):
 
     @abstractmethod
     def solve(self, instance: Problem.Instance) -> Problem.SolveResult:
@@ -624,7 +618,7 @@ class PaarallelGA(Problem.Solver,ABC):
         pass
 
 @dataclass
-class PaarallelSA(Problem.Solver,ABC):
+class PaarallelSA(Problem.Solver):
 
     @abstractmethod
     def solve(self, instance: Problem.Instance) -> Problem.SolveResult:

@@ -198,9 +198,11 @@ class Heuristics():
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] 
             else:
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
+            
+            solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,solution.configuration[taken_machine].completion_time,ci))
             solution.configuration[taken_machine].completion_time = ci
             solution.configuration[taken_machine].last_job = taken_job
-            solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,ci-instance.P[taken_job][taken_machine],ci))
+            
             remaining_jobs_list.remove(taken_job)
             if (ci > solution.objective_value):
                 solution.objective_value = ci
@@ -208,7 +210,7 @@ class Heuristics():
         return Problem.SolveResult(best_solution=solution,runtime=time()-start_time,solutions=[solution])
 
     @staticmethod
-    def list_heuristic(instance,rule=1,decreasing = False):
+    def list_heuristic(instance : RmSijkCmax_Instance,rule=1,decreasing = False):
         """list_heuristic
 
         Args:
@@ -326,9 +328,9 @@ class Heuristics():
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] 
             else:
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
+            solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,solution.configuration[taken_machine].completion_time,ci))
             solution.configuration[taken_machine].completion_time = ci
             solution.configuration[taken_machine].last_job = taken_job
-            solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(taken_job,ci-instance.P[taken_job][taken_machine],ci))
             if (ci > solution.objective_value):
                 solution.objective_value = ci
         return Problem.SolveResult(best_solution=solution,runtime=time()-start_time,solutions=[solution])
