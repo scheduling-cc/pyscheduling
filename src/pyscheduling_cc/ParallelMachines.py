@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
-from platform import machine
 import random
 import numpy as np
 from enum import Enum
@@ -207,6 +206,20 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"],machine_dict["completion_time"],machine_dict["last_job"],machine_dict["job_schedule"])
 
+    def compute_completion_time(self,instance):
+        ci = 0
+        if len(self.job_schedule) >0:
+            first_job = self.job_schedule[0].id
+            ci = instance.P[first_job][self.machine_num] + instance.S[self.machine_num][first_job][first_job]
+            job_prev_i = self.job_schedule[0].id
+            for i in range(1,len(self.job_schedule)):
+                job_i = self.job_schedule[i].id
+                setup_time = instance.S[self.machine_num][job_prev_i][job_i]
+                proc_time = instance.P[job_i][self.machine_num]
+                ci +=  proc_time + setup_time
+                job_prev_i = job_i
+        return(ci)
+
 @dataclass
 class ParallelSolution(Problem.Solution,ABC):
 
@@ -235,6 +248,12 @@ class ParallelSolution(Problem.Solution,ABC):
             copy_solution.configuration[i] = copy_machines[i]
         copy_solution.objective_value = self.objective_value
         return copy_solution
+
+    def Cmax(self):
+        if self.instance != None:
+            for k in range(self.instance.m):
+                self.configuration[k].compute_completion_time(self.instance) 
+        self.objective_value = max([machine.completion_time for machine in self.configuration])
 
     @classmethod
     @abstractmethod
