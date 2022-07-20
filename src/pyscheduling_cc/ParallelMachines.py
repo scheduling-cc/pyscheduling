@@ -601,24 +601,7 @@ class PM_LocalSearch(Problem.LocalSearch):
             solution.Cmax()
         return solution
 
-@dataclass
-class PaarallelGA(Problem.Solver):
 
-    @abstractmethod
-    def solve(self, instance: Problem.Instance) -> Problem.SolveResult:
-        """Solves the instance and returns the corresponding solve result
-
-        Args:
-            instance (Instance): instance to be solved
-
-        Returns:
-            SolveResult: object containing information about the solving process
-                        and result
-        """
-        pass
-
-@dataclass
-class PaarallelSA(Problem.Solver):
 
     @abstractmethod
     def solve(self, instance: Problem.Instance) -> Problem.SolveResult:
