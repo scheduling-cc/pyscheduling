@@ -145,24 +145,23 @@ class SolveResult:
                 f'Runtime is : {self.runtime}s \n'+ \
                 f'time to best is : {self.time_to_best}s \n'
 
-class LocalSearch():
-    @classmethod
-    def all_methods(cls):
-        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-
 @dataclass
-class LSProcedure:
+class LocalSearch():
 
-    functions : list[object] = field(default_factory=list)
+    methods : list[object] = field(default_factory=list)
     copy_solution: bool = False  # by default for performance reasons
 
-    def __init__(self ,functions : list[object] = LocalSearch.all_methods(),copy_solution : bool = False):
-        for function in functions:
-            if not callable(function):
+    def __init__(self,methods : list[object] = None,copy_solution : bool = False):
+        if methods is None: methods = self.all_methods()
+        for method in methods:
+            if not callable(method):
                 raise ValueError("Is not a function")
-        self.functions = functions
+        self.methods = methods
         self.copy_solution = copy_solution
+
+    @classmethod
+    def all_methods(cls):
+        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and func.startswith("_")]
     
     def improve(self, solution: Solution) -> Solution:
         """Improves a solution by iteratively calling local search operators
@@ -174,10 +173,11 @@ class LSProcedure:
             Solution: improved solution
         """
         curr_sol = solution.copy() if self.copy_solution else solution
-        for operator in self.operators:
-            curr_sol = operator.search(curr_sol)
+        for method in self.methods:
+            curr_sol = method(curr_sol)
 
         return curr_sol
+    
 
 
 @dataclass
