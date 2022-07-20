@@ -148,7 +148,7 @@ class SolveResult:
 class LocalSearch():
     @classmethod
     def all_methods(cls):
-        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods" and not func == "local_search"]
 
 
 @dataclass
