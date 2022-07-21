@@ -10,8 +10,20 @@ $ pip install pyscheduling_cc
 
 ## Usage
 
+```python
+import pyscheduling_cc as pyscheduling
+import pyscheduling_cc.ParallelMachines as pmsp
+import pyscheduling_cc.RmSijkCmax as pmsp_sijk
+
+instance = pmsp_sijk.RmSijkCmax_Instance.generate_random(150,10)
+solver = pyscheduling.Problem.Solver(pmsp_sijk.Heuristics.constructive)
+solve_result = solver.solve(instance)
+LSOperator = pmsp.PM_LocalSearch()
+LSOperator.improve(solve_result.best_solution)
+```
+
 - import pyscheduling_cc as sp
-- instance = sp.pmsp.generate_instance()
+- instance = sp.Rm.generate_instance()
 - GA_solver = sp.pmsp.ga()
 - solution = GA_solver.solve(instance)
 
@@ -21,8 +33,4 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`pyscheduling_cc` was created by Amine ATHMANI. It is licensed under the terms of the MIT license.
-
-## Credits
-
-`pyscheduling_cc` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
+`pyscheduling_cc` was created by the scheduling-cc organization. It is licensed under the terms of the MIT license.

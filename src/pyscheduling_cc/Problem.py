@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass,field
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
@@ -11,7 +11,7 @@ class Instance(ABC):
 
     @classmethod
     @abstractmethod
-    def read_txt(cls,path: Path):
+    def read_txt(cls, path: Path):
         """Read an instance from a txt file according to the problem's format
 
         Args:
@@ -28,7 +28,7 @@ class Instance(ABC):
 
     @classmethod
     @abstractmethod
-    def generate_random(cls,protocol: str = None):
+    def generate_random(cls, protocol: str = None):
         """Generate a random instance according to a predefined protocol
 
         Args:
@@ -53,11 +53,11 @@ class Instance(ABC):
 class Solution(ABC):
 
     instance: Instance
-    objective_value : int
+    objective_value: int
 
     @classmethod
     @abstractmethod
-    def read_txt(cls,path: Path):
+    def read_txt(cls, path: Path):
         """Read a solution from a txt file
 
         Args:
@@ -116,9 +116,9 @@ class SolveResult:
     runtime: float
     kpis: dict[str, object]  # Other metrics that are problem / solver specific
 
-    def __init__(self,best_solution : Solution = None, runtime : float = -1,
-                time_to_best : float = -1, status : SolveStatus = SolveStatus.FEASIBLE,
-                solutions : list[Solution] = None,other_metrics : list[str,object] = None):
+    def __init__(self, best_solution: Solution = None, runtime: float = -1,
+                 time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE,
+                 solutions: list[Solution] = None, other_metrics: list[str, object] = None):
         """constructor of SolveResult
 
         Args:
@@ -150,17 +150,18 @@ class SolveResult:
 
     def __str__(self):
         return f'Search stopped with status : {self.solve_status.name}\n ' + \
-                f'Solution is : \n {self.best_solution} \n' + \
-                f'Runtime is : {self.runtime}s \n'+ \
-                f'time to best is : {self.time_to_best}s \n'
+            f'Solution is : \n {self.best_solution} \n' + \
+            f'Runtime is : {self.runtime}s \n' + \
+            f'time to best is : {self.time_to_best}s \n'
+
 
 @dataclass
 class LocalSearch():
 
-    methods : list[object] = field(default_factory=list)
+    methods: list[object] = field(default_factory=list)
     copy_solution: bool = False  # by default for performance reasons
 
-    def __init__(self,methods : list[object] = None,copy_solution : bool = False):
+    def __init__(self, methods: list[object] = None, copy_solution: bool = False):
         """Constructor of LocalSearch
 
         Args:
@@ -170,7 +171,8 @@ class LocalSearch():
         Raises:
             ValueError: if an element of methods is not a function
         """
-        if methods is None: methods = self.all_methods()
+        if methods is None:
+            methods = self.all_methods()
         for method in methods:
             if not callable(method):
                 raise ValueError("Is not a function")
@@ -184,8 +186,8 @@ class LocalSearch():
         Returns:
             list[object]: list of functions
         """
-        return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and func.startswith("_")]
-    
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and func.startswith("_")]
+
     def improve(self, solution: Solution) -> Solution:
         """Improves a solution by iteratively calling local search operators
 
@@ -200,7 +202,6 @@ class LocalSearch():
             curr_sol = method(curr_sol)
 
         return curr_sol
-    
 
 
 @dataclass
@@ -208,7 +209,7 @@ class Solver(ABC):
 
     method: object
 
-    def __init__(self,method : object) -> None:
+    def __init__(self, method: object) -> None:
         """_summary_
 
         Args:
@@ -219,7 +220,8 @@ class Solver(ABC):
         """
         if not callable(method):
             raise ValueError("Is not a function")
-        else: self.method=method
+        else:
+            self.method = method
 
     def solve(self, instance: Instance, **data) -> SolveResult:
         """Solves the instance and returns the corresponding solve result
@@ -232,7 +234,8 @@ class Solver(ABC):
                         and result
         """
         try:
-           return self.method(instance,**data)
+            return self.method(instance, **data)
         except:
-            print("Do correctly use the method as explain below :\n"+self.method.__doc__)
+            print("Do correctly use the method as explain below :\n" +
+                  self.method.__doc__)
         pass
