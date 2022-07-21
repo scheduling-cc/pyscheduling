@@ -1,12 +1,14 @@
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint, uniform
-import sys
-from time import perf_counter
-import matplotlib.pyplot as plt
 from statistics import mean
-import pyscheduling_cc.Problem as Problem
+from time import perf_counter
+
+import matplotlib.pyplot as plt
+
 import pyscheduling_cc.ParallelMachines as ParallelMachines
+import pyscheduling_cc.Problem as Problem
 
 
 @dataclass

@@ -1,11 +1,13 @@
-from abc import abstractmethod
-from dataclasses import dataclass, field
 import json
-from pathlib import Path
 import random
-import numpy as np
-from enum import Enum
+from abc import abstractmethod
 from collections import namedtuple
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+
+import numpy as np
+
 import pyscheduling_cc.Problem as Problem
 
 Job = namedtuple('Job', ['id', 'start_time', 'completion_time'])
