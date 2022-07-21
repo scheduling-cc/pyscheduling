@@ -8,24 +8,27 @@ from enum import Enum
 from collections import namedtuple
 import pyscheduling_cc.Problem as Problem
 
-Job = namedtuple('Job',['id','start_time','completion_time'])
+Job = namedtuple('Job', ['id', 'start_time', 'completion_time'])
+
 
 class GenerationProtocol(Enum):
     VALLADA = 1
+
 
 class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
+
 @dataclass
 class ParallelInstance(Problem.Instance):
-    
-    n : int # n : Number of jobs 
-    m : int # m : Number of machines
+
+    n: int  # n : Number of jobs
+    m: int  # m : Number of machines
 
     @classmethod
     @abstractmethod
-    def read_txt(cls,path: Path):
+    def read_txt(cls, path: Path):
         """Read an instance from a txt file according to the problem's format
 
         Args:
@@ -42,7 +45,7 @@ class ParallelInstance(Problem.Instance):
 
     @classmethod
     @abstractmethod
-    def generate_random(cls,protocol: str = None):
+    def generate_random(cls, protocol: str = None):
         """Generate a random instance according to a predefined protocol
 
         Args:
@@ -62,7 +65,7 @@ class ParallelInstance(Problem.Instance):
         """
         pass
 
-    def read_P(self,content : list[str],startIndex : int):
+    def read_P(self, content: list[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
 
         Args:
@@ -74,14 +77,14 @@ class ParallelInstance(Problem.Instance):
         """
         P = []  # Matrix P_jk : Execution time of job j on machine k
         i = startIndex
-        for _ in range(self.n): 
+        for _ in range(self.n):
             ligne = content[i].strip().split('\t')
-            P_k = [int(ligne[j]) for j in range(1,2*self.m,2) ]
+            P_k = [int(ligne[j]) for j in range(1, 2*self.m, 2)]
             P.append(P_k)
             i += 1
-        return (P,i)
+        return (P, i)
 
-    def read_R(self,content : list[str],startIndex : int):
+    def read_R(self, content: list[str], startIndex: int):
         """Read the release time table from a list of lines extracted from the file of the instance
 
         Args:
@@ -93,12 +96,12 @@ class ParallelInstance(Problem.Instance):
         """
         i = startIndex + 1
         ligne = content[i].split('\t')
-        ri = [] # Table : Release time of job i
+        ri = []  # Table : Release time of job i
         for j in range(2, len(ligne), 2):
             ri.append(int(ligne[j]))
-        return (ri,i+1)
-    
-    def read_S(self,content : list[str],startIndex : int):
+        return (ri, i+1)
+
+    def read_S(self, content: list[str], startIndex: int):
         """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
 
         Args:
@@ -109,10 +112,10 @@ class ParallelInstance(Problem.Instance):
            (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
         """
         i = startIndex
-        S = [] # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1 # Skip SSD
+        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        i += 1  # Skip SSD
         while i != len(content):
-            i = i+1 # Skip Mk
+            i = i+1  # Skip Mk
             Si = []
             for k in range(self.n):
                 ligne = content[i].strip().split('\t')
@@ -120,9 +123,9 @@ class ParallelInstance(Problem.Instance):
                 Si.append(Sij)
                 i += 1
             S.append(Si)
-        return (S,i)
-    
-    def read_D(self,content : list[str],startIndex : int):
+        return (S, i)
+
+    def read_D(self, content: list[str], startIndex: int):
         """Read the due time table from a list of lines extracted from the file of the instance
 
         Args:
@@ -134,12 +137,12 @@ class ParallelInstance(Problem.Instance):
         """
         i = startIndex + 1
         ligne = content[i].split('\t')
-        di = [] # Table : Due time of job i
+        di = []  # Table : Due time of job i
         for j in range(2, len(ligne), 2):
             di.append(int(ligne[j]))
-        return (di,i+1)
+        return (di, i+1)
 
-    def generate_P(self,protocol: GenerationProtocol,law: GenerationLaw,Pmin : int ,Pmax : int):
+    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
 
         Args:
@@ -151,7 +154,7 @@ class ParallelInstance(Problem.Instance):
         Returns:
            list[list[int]]: Matrix of processing time
         """
-        P = [] 
+        P = []
         for j in range(self.n):
             Pj = []
             for i in range(self.m):
@@ -168,7 +171,7 @@ class ParallelInstance(Problem.Instance):
 
         return P
 
-    def generate_R(self,protocol: GenerationProtocol,law: GenerationLaw,PJobs : list[list[float]],Pmin : int ,Pmax : int ,alpha : float):
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -196,10 +199,10 @@ class ParallelInstance(Problem.Instance):
                     n = int(abs(Pmin+Pmax*value))
 
             ri.append(n)
-        
+
         return ri
 
-    def generate_S(self,protocol: GenerationProtocol,law: GenerationLaw,PJobs : list[list[float]],gamma : float, Smin : int = 0, Smax : int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -223,8 +226,8 @@ class ParallelInstance(Problem.Instance):
                         Sij.append(0)  # check space values
                     else:
                         if law.name == "UNIFORM":  # Use uniform law
-                            min_p = min(PJobs[k][i],PJobs[j][i])
-                            max_p = max(PJobs[k][i],PJobs[j][i])
+                            min_p = min(PJobs[k][i], PJobs[j][i])
+                            max_p = max(PJobs[k][i], PJobs[j][i])
                             Smin = int(gamma * min_p)
                             Smax = int(gamma * max_p)
                             Sij.append(int(random.uniform(Smin, Smax)))
@@ -240,8 +243,8 @@ class ParallelInstance(Problem.Instance):
             S.append(Si)
 
         return S
-        
-    def generate_D(self,protocol: GenerationProtocol,law: GenerationLaw,Pmin,Pmax):
+
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
         """Random generation of due time table
 
         Args:
@@ -255,15 +258,16 @@ class ParallelInstance(Problem.Instance):
         """
         pass
 
+
 @dataclass
 class Machine:
 
-    machine_num : int
-    completion_time : int = 0
-    last_job : int = -1
-    job_schedule : list[Job] = field(default_factory=list)
-    
-    def __init__(self,machine_num : int,completion_time : int =0,last_job : int = -1, job_schedule : list[Job] = None) -> None:
+    machine_num: int
+    completion_time: int = 0
+    last_job: int = -1
+    job_schedule: list[Job] = field(default_factory=list)
+
+    def __init__(self, machine_num: int, completion_time: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -275,32 +279,34 @@ class Machine:
         self.machine_num = machine_num
         self.completion_time = completion_time
         self.last_job = last_job
-        if job_schedule is None :
+        if job_schedule is None:
             self.job_schedule = []
-        else: self.job_schedule = job_schedule
+        else:
+            self.job_schedule = job_schedule
 
     def __str__(self):
-        return str(self.machine_num + 1) + " | " + " : ".join(map(str,[(job.id,job.start_time,job.completion_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
+        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.completion_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         same_machine = other.machine_num == self.machine_num
         same_schedule = other.job_schedule == self.job_schedule
         return (same_machine and same_schedule)
 
     def copy(self):
-        return Machine(self.machine_num,self.completion_time,self.last_job,list(self.job_schedule))
-    
+        return Machine(self.machine_num, self.completion_time, self.last_job, list(self.job_schedule))
+
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, 
-            sort_keys=True, indent=4)
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
     @staticmethod
     def fromDict(machine_dict):
-        return Machine(machine_dict["machine_num"],machine_dict["completion_time"],machine_dict["last_job"],machine_dict["job_schedule"])
+        return Machine(machine_dict["machine_num"], machine_dict["completion_time"], machine_dict["last_job"], machine_dict["job_schedule"])
 
     @abstractmethod
-    def compute_completion_time(self,instance : ParallelInstance):
-        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time, works with both RmSijkCmax and RmriSijkCmax problems
+    def compute_completion_time(self, instance: ParallelInstance):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
+        works with both RmSijkCmax and RmriSijkCmax problems
 
         Args:
             instance (ParallelInstance): The instance associated to the machine
@@ -309,35 +315,40 @@ class Machine:
             int: completion_time of the machine
         """
         ci = 0
-        if len(self.job_schedule) >0:
+        if len(self.job_schedule) > 0:
             first_job = self.job_schedule[0][0]
-            if hasattr(instance,'R'): startTime = max(0,instance.R[first_job])
-            else: startTime = 0 
+            if hasattr(instance, 'R'):
+                startTime = max(0, instance.R[first_job])
+            else:
+                startTime = 0
             ci = startTime + instance.P[first_job][self.machine_num] + \
-                + instance.S[self.machine_num][first_job][first_job] # Added Sk_ii for rabadi benchmark
-            self.job_schedule[0] = Job(first_job,startTime,ci)
+                + instance.S[self.machine_num][first_job][first_job]  # Added Sk_ii for rabadi benchmark
+            self.job_schedule[0] = Job(first_job, startTime, ci)
             job_prev_i = first_job
-            for i in range(1,len(self.job_schedule)):
+            for i in range(1, len(self.job_schedule)):
                 job_i = self.job_schedule[i][0]
 
-                if hasattr(instance,'R'): startTime = max(ci,instance.R[job_i])
-                else: startTime = ci
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
                 setup_time = instance.S[self.machine_num][job_prev_i][job_i]
                 proc_time = instance.P[job_i][self.machine_num]
                 ci = startTime + proc_time + setup_time
 
-                self.job_schedule[i] = Job(job_i,startTime,ci)
+                self.job_schedule[i] = Job(job_i, startTime, ci)
                 job_prev_i = job_i
         self.completion_time = ci
         return ci
 
+
 @dataclass
 class ParallelSolution(Problem.Solution):
 
-    machines_number : int
-    configuration : list[Machine]
+    machines_number: int
+    configuration: list[Machine]
 
-    def __init__(self,m : int,instance : ParallelInstance = None):
+    def __init__(self, m: int, instance: ParallelInstance = None):
         """Constructor of ParallelSolution
 
         Args:
@@ -347,18 +358,18 @@ class ParallelSolution(Problem.Solution):
         self.machines_number = m
         self.configuration = []
         for i in range(m):
-            machine = Machine(i,0,-1,[])
+            machine = Machine(i, 0, -1, [])
             self.configuration.append(machine)
         self.objective_value = 0
 
     def __str__(self):
-        return "Objective : " + str(self.objective_value) + "\n" +"Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" +  "\n".join(map(str,self.configuration))
+        return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.configuration))
 
     def copy(self):
         copy_machines = []
         for m in self.configuration:
             copy_machines.append(m.copy())
-        
+
         copy_solution = ParallelSolution(self.m)
         for i in range(self.m):
             copy_solution.configuration[i] = copy_machines[i]
@@ -366,16 +377,18 @@ class ParallelSolution(Problem.Solution):
         return copy_solution
 
     def cmax(self):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax which equals to the maximal completion time of every machine
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
         """
         if self.instance != None:
             for k in range(self.instance.m):
-                self.configuration[k].compute_completion_time(self.instance) 
-        self.objective_value = max([machine.completion_time for machine in self.configuration])
+                self.configuration[k].compute_completion_time(self.instance)
+        self.objective_value = max(
+            [machine.completion_time for machine in self.configuration])
 
     @classmethod
     @abstractmethod
-    def read_txt(cls,path: Path):
+    def read_txt(cls, path: Path):
         """Read a solution from a txt file
 
         Args:
@@ -401,9 +414,10 @@ class ParallelSolution(Problem.Solution):
         """Plot the solution in an appropriate diagram"""
         pass
 
+
 class PM_LocalSearch(Problem.LocalSearch):
     @staticmethod
-    def _inter_machine_insertion(solution : ParallelSolution):
+    def _inter_machine_insertion(solution: ParallelSolution):
         """For every job, verify if rescheduling it on the same machine at a different position or on a whole different machines gives a better solution
 
         Args:
@@ -412,10 +426,10 @@ class PM_LocalSearch(Problem.LocalSearch):
         Returns:
             ParallelSolution: Improved solution
         """
-        for i in range(solution.instance.m): # For every machine in the system
-            for l in range(solution.instance.m): # For all the other machines
+        for i in range(solution.instance.m):  # For every machine in the system
+            for l in range(solution.instance.m):  # For all the other machines
                 move = None
-                if (l!=i) and len(solution.configuration[i].job_schedule) > 1:
+                if (l != i) and len(solution.configuration[i].job_schedule) > 1:
                     # Machine i
                     machine_i = solution.configuration[i]
                     machine_i_schedule = machine_i.job_schedule
@@ -424,44 +438,54 @@ class PM_LocalSearch(Problem.LocalSearch):
                     machine_l = solution.configuration[l]
                     machine_l_schedule = machine_l.job_schedule
                     old_cl = machine_l.completion_time
-                    for k in range(len(machine_i_schedule)): # for every job in the machine
+                    # for every job in the machine
+                    for k in range(len(machine_i_schedule)):
                         job_schedule_copy = list(machine_i_schedule)
-                        new_schedule = Machine(i,machine_i.completion_time,machine_i.last_job,job_schedule_copy)
+                        new_schedule = Machine(
+                            i, machine_i.completion_time, machine_i.last_job, job_schedule_copy)
                         job_k = new_schedule.job_schedule.pop(k)
-                        ci = machine_i.compute_completion_time(solution.instance)
+                        ci = machine_i.compute_completion_time(
+                            solution.instance)
                         for j in range(len(machine_l_schedule)):
                             job_schedule_copy_l = list(machine_l_schedule)
-                            new_schedule_l = Machine(l,machine_l.completion_time,machine_l.last_job,job_schedule_copy_l)
-                            new_schedule_l.job_schedule.insert(j,job_k)
-                            cl = machine_l.compute_completion_time(solution.instance)
-                            
-                            cnd1 = ( ci < old_ci and cl < old_cl )
-                            cnd2 = ( ci < old_ci and cl > old_cl and old_ci - ci >= cl - old_cl and cl != solution.objective_value and cl <= solution.objective_value)
+                            new_schedule_l = Machine(
+                                l, machine_l.completion_time, machine_l.last_job, job_schedule_copy_l)
+                            new_schedule_l.job_schedule.insert(j, job_k)
+                            cl = machine_l.compute_completion_time(
+                                solution.instance)
+
+                            cnd1 = (ci < old_ci and cl < old_cl)
+                            cnd2 = (ci < old_ci and cl > old_cl and old_ci - ci >= cl - old_cl and cl !=
+                                    solution.objective_value and cl <= solution.objective_value)
                             if cnd1:
                                 if not move:
-                                    move = (l,k,j,ci,cl)
-                                elif ci-old_ci+cl-old_cl>=ci-move[3]+cl-move[4]:
-                                    move = (l,k,j,ci,cl)
+                                    move = (l, k, j, ci, cl)
+                                elif ci-old_ci+cl-old_cl >= ci-move[3]+cl-move[4]:
+                                    move = (l, k, j, ci, cl)
                             elif cnd2:
                                 if not move:
-                                    move = (l,k,j,ci,cl)
-                                elif ci-old_ci+cl-old_cl>=ci-move[3]+cl-move[4]:
-                                    move = (l,k,j,ci,cl)
+                                    move = (l, k, j, ci, cl)
+                                elif ci-old_ci+cl-old_cl >= ci-move[3]+cl-move[4]:
+                                    move = (l, k, j, ci, cl)
                 if move:
-                    job_k = machine_i_schedule.pop(move[1]) # Remove job k from machine i
-                    machine_l_schedule.insert(move[2],job_k) # Insert job k in machine l in pos j
+                    # Remove job k from machine i
+                    job_k = machine_i_schedule.pop(move[1])
+                    # Insert job k in machine l in pos j
+                    machine_l_schedule.insert(move[2], job_k)
                     if machine_i.completion_time == solution.objective_value:
                         solution.objective_value = move[3]
-                    machine_i.completion_time = move[3] # New completion time for machine i
-                    machine_l.completion_time = move[4] # New completion time for machine j
-                    
-                    #print(solution.cmax)
+                    # New completion time for machine i
+                    machine_i.completion_time = move[3]
+                    # New completion time for machine j
+                    machine_l.completion_time = move[4]
+
+                    # print(solution.cmax)
                     solution.cmax()
         solution.cmax()
         return solution
 
     @staticmethod
-    def _internal_swap(solution : ParallelSolution):
+    def _internal_swap(solution: ParallelSolution):
         """Swap between 2 jobs on the same machine whose completion_time is maximal if it gives a better solution
 
         Args:
@@ -471,36 +495,40 @@ class PM_LocalSearch(Problem.LocalSearch):
             ParallelSolution: Improved solution
         """
         cmax_machines_list = []
-        for m,machine in enumerate(solution.configuration):
-            #if machine.completion_time == solution.cmax:
+        for m, machine in enumerate(solution.configuration):
+            # if machine.completion_time == solution.cmax:
             cmax_machines_list.append(m)
         #print("Machines Cmax : " + str(len(cmax_machines_list)))
         for nb_machine in cmax_machines_list:
             cmax_machine = solution.configuration[nb_machine]
             cmax_machine_schedule = cmax_machine.job_schedule
             move = None
-            for i in range(0,len(cmax_machine_schedule)):
-                for j in range(i+1,len(cmax_machine_schedule)):
+            for i in range(0, len(cmax_machine_schedule)):
+                for j in range(i+1, len(cmax_machine_schedule)):
                     job_schedule_copy = list(cmax_machine_schedule)
-                    new_schedule = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,job_schedule_copy)
-                    new_schedule.job_schedule[i],new_schedule.job_schedule[j] = new_schedule.job_schedule[j],new_schedule.job_schedule[i]
-                    new_ci = new_schedule.compute_completion_time(solution.instance)
+                    new_schedule = Machine(
+                        nb_machine, cmax_machine.completion_time, cmax_machine.last_job, job_schedule_copy)
+                    new_schedule.job_schedule[i], new_schedule.job_schedule[
+                        j] = new_schedule.job_schedule[j], new_schedule.job_schedule[i]
+                    new_ci = new_schedule.compute_completion_time(
+                        solution.instance)
                     if new_ci < cmax_machine.completion_time:
                         if not move:
-                            move = (i,j,new_ci)
+                            move = (i, j, new_ci)
                         elif new_ci < move[2]:
-                            move = (i,j,new_ci)
-            
+                            move = (i, j, new_ci)
+
             if move:
-                #print(nb_machine,move)
-                cmax_machine_schedule[move[0]],cmax_machine_schedule[move[1]] = cmax_machine_schedule[move[1]],cmax_machine_schedule[move[0]]
+                # print(nb_machine,move)
+                cmax_machine_schedule[move[0]], cmax_machine_schedule[move[1]
+                                                                      ] = cmax_machine_schedule[move[1]], cmax_machine_schedule[move[0]]
                 cmax_machine.completion_time = move[2]
                 solution.cmax()
         solution.cmax()
         return solution
 
     @staticmethod
-    def _external_swap(solution : ParallelSolution):
+    def _external_swap(solution: ParallelSolution):
         """Swap between 2 jobs on different machines, where one of the machines has the maximal completion_time among all
 
         Args:
@@ -511,7 +539,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         """
         cmax_machines_list = []
         other_machines = []
-        for m,machine in enumerate(solution.configuration):
+        for m, machine in enumerate(solution.configuration):
             if machine.completion_time == solution.objective_value:
                 cmax_machines_list.append(m)
             else:
@@ -520,18 +548,17 @@ class PM_LocalSearch(Problem.LocalSearch):
             cmax_machine = solution.configuration[nb_machine]
             cmax_machine_schedule = cmax_machine.job_schedule
             old_ci = cmax_machine.completion_time
-            
+
             move = None
             other_machines_copy = list(other_machines)
-            
-            
-            while not move and len(other_machines_copy)!=0:
-                
+
+            while not move and len(other_machines_copy) != 0:
+
                 random_index = random.randrange(len(other_machines_copy))
                 other_machine_index = other_machines_copy.pop(random_index)
                 other_machine = solution.configuration[other_machine_index]
                 other_machine_schedule = other_machine.job_schedule
-                
+
                 old_cl = other_machine.completion_time
                 old_cmax = solution.objective_value
                 best_cmax = old_cmax
@@ -539,17 +566,23 @@ class PM_LocalSearch(Problem.LocalSearch):
 
                 for j in range(len(cmax_machine_schedule)):
                     for k in range(len(other_machine_schedule)):
-                        new_machine_cmax = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,list(cmax_machine_schedule))
+                        new_machine_cmax = Machine(
+                            nb_machine, cmax_machine.completion_time, cmax_machine.last_job, list(cmax_machine_schedule))
                         job_cmax = new_machine_cmax.job_schedule.pop(j)
-                    
-                        new_other_machine = Machine(other_machine_index,other_machine.completion_time,other_machine.last_job,list(other_machine_schedule))
-                        job_other_machine = new_other_machine.job_schedule.pop(k)
 
-                        new_machine_cmax.job_schedule.insert(j,job_other_machine)
-                        new_other_machine.job_schedule.insert(k,job_cmax)
-                        
-                        ci = new_machine_cmax.compute_completion_time(solution.instance)
-                        cl = new_other_machine.compute_completion_time(solution.instance)
+                        new_other_machine = Machine(
+                            other_machine_index, other_machine.completion_time, other_machine.last_job, list(other_machine_schedule))
+                        job_other_machine = new_other_machine.job_schedule.pop(
+                            k)
+
+                        new_machine_cmax.job_schedule.insert(
+                            j, job_other_machine)
+                        new_other_machine.job_schedule.insert(k, job_cmax)
+
+                        ci = new_machine_cmax.compute_completion_time(
+                            solution.instance)
+                        cl = new_other_machine.compute_completion_time(
+                            solution.instance)
                         new_machine_cmax.completion_time = ci
                         new_other_machine.completion_time = cl
 
@@ -559,23 +592,24 @@ class PM_LocalSearch(Problem.LocalSearch):
                         solution.cmax()
                         if solution.objective_value < old_cmax:
                             if not move:
-                                move = (other_machine_index,j,k,ci,cl)
+                                move = (other_machine_index, j, k, ci, cl)
                                 best_cmax = solution.objective_value
                             elif solution.objective_value < best_cmax:
-                                move = (other_machine_index,j,k,ci,cl)
+                                move = (other_machine_index, j, k, ci, cl)
                                 best_cmax = solution.objective_value
                         elif solution.objective_value == best_cmax and (ci < old_ci or cl < old_cl):
                             if not move:
-                                move = (other_machine_index,j,k,ci,cl)
+                                move = (other_machine_index, j, k, ci, cl)
                                 best_diff = old_ci - ci + old_cl - cl
                             elif (not best_diff or old_ci - ci + old_cl - cl < best_diff) and best_cmax == old_cmax:
-                                move = (other_machine_index,j,k,ci,cl)
+                                move = (other_machine_index, j, k, ci, cl)
                                 best_diff = old_ci - ci + old_cl - cl
                         solution.configuration[nb_machine] = cmax_machine
                         solution.configuration[other_machine_index] = other_machine
                         solution.cmax()
-            if move: # Apply the best move
-                cmax_machine_schedule[move[1]],other_machine_schedule[move[2]] = other_machine_schedule[move[2]],cmax_machine_schedule[move[1]]
+            if move:  # Apply the best move
+                cmax_machine_schedule[move[1]], other_machine_schedule[move[2]
+                                                                       ] = other_machine_schedule[move[2]], cmax_machine_schedule[move[1]]
                 cmax_machine.completion_time = move[3]
                 other_machine.completion_time = move[4]
                 solution.cmax()
@@ -583,7 +617,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def _external_insertion(solution : ParallelSolution):
+    def _external_insertion(solution: ParallelSolution):
         """Delete a job from the machine whose completion_time is maximal and insert it on another one
 
         Args:
@@ -594,7 +628,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         """
         cmax_machines_list = []
         other_machines = []
-        for m,machine in enumerate(solution.configuration):
+        for m, machine in enumerate(solution.configuration):
             if machine.completion_time == solution.objective_value:
                 cmax_machines_list.append(m)
             else:
@@ -606,15 +640,14 @@ class PM_LocalSearch(Problem.LocalSearch):
             if len(cmax_machine_schedule) > 1:
                 move = None
                 other_machines_copy = list(other_machines)
-                
-                
-                while not move and len(other_machines_copy)!=0:
-                    
+
+                while not move and len(other_machines_copy) != 0:
+
                     random_index = random.randrange(len(other_machines_copy))
                     other_machine_index = other_machines_copy.pop(random_index)
                     other_machine = solution.configuration[other_machine_index]
                     other_machine_schedule = other_machine.job_schedule
-                    
+
                     old_cl = other_machine.completion_time
                     old_cmax = solution.objective_value
                     best_cmax = old_cmax
@@ -622,14 +655,18 @@ class PM_LocalSearch(Problem.LocalSearch):
 
                     for j in range(len(cmax_machine_schedule)):
                         for k in range(len(other_machine_schedule)):
-                            new_machine_cmax = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,list(cmax_machine_schedule))
+                            new_machine_cmax = Machine(
+                                nb_machine, cmax_machine.completion_time, cmax_machine.last_job, list(cmax_machine_schedule))
                             job_cmax = new_machine_cmax.job_schedule.pop(j)
-                        
-                            new_other_machine = Machine(other_machine_index,other_machine.completion_time,other_machine.last_job,list(other_machine_schedule))
-                            new_other_machine.job_schedule.insert(k,job_cmax)
-                            
-                            ci = new_machine_cmax.compute_completion_time(solution.instance)
-                            cl = new_other_machine.compute_completion_time(solution.instance)
+
+                            new_other_machine = Machine(
+                                other_machine_index, other_machine.completion_time, other_machine.last_job, list(other_machine_schedule))
+                            new_other_machine.job_schedule.insert(k, job_cmax)
+
+                            ci = new_machine_cmax.compute_completion_time(
+                                solution.instance)
+                            cl = new_other_machine.compute_completion_time(
+                                solution.instance)
                             new_machine_cmax.completion_time = ci
                             new_other_machine.completion_time = cl
 
@@ -639,28 +676,28 @@ class PM_LocalSearch(Problem.LocalSearch):
                             solution.cmax()
                             if solution.objective_value < old_cmax:
                                 if not move:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_cmax = solution.objective_value
-                                    #print(1,old_cmax,old_ci,old_cl,move)
+                                    # print(1,old_cmax,old_ci,old_cl,move)
                                 elif solution.objective_value < best_cmax:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_cmax = solution.objective_value
-                                    #print(2,old_cmax,old_ci,old_cl,move)
+                                    # print(2,old_cmax,old_ci,old_cl,move)
                             elif solution.objective_value == best_cmax and (ci < old_ci or cl < old_cl):
                                 if not move:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    #print(3,old_cmax,old_ci,old_cl,move)
+                                    # print(3,old_cmax,old_ci,old_cl,move)
                                 elif (not best_diff or old_ci - ci + old_cl - cl < best_diff) and best_cmax == old_cmax:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    #print(4,old_cmax,old_ci,old_cl,move)
+                                    # print(4,old_cmax,old_ci,old_cl,move)
                             solution.configuration[nb_machine] = cmax_machine
                             solution.configuration[other_machine_index] = other_machine
                             solution.cmax()
-                if move: # Apply the best move
-                    cmax_job = cmax_machine_schedule.pop(move[1]) 
-                    other_machine_schedule.insert(move[2],cmax_job)
+                if move:  # Apply the best move
+                    cmax_job = cmax_machine_schedule.pop(move[1])
+                    other_machine_schedule.insert(move[2], cmax_job)
                     cmax_machine.completion_time = move[3]
                     other_machine.completion_time = move[4]
                     solution.cmax()
@@ -668,7 +705,7 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def _balance(solution : ParallelSolution):
+    def _balance(solution: ParallelSolution):
         """Reschedule jobs between machines in order to balance their completion_time thus giving a better solution
 
         Args:
@@ -682,19 +719,19 @@ class PM_LocalSearch(Problem.LocalSearch):
             change = False
             cmax_machines_list = []
             other_machines = []
-            for m,machine in enumerate(solution.configuration):
+            for m, machine in enumerate(solution.configuration):
                 if machine.completion_time == solution.objective_value:
                     cmax_machines_list.append(machine)
                 else:
                     other_machines.append(machine)
-            
 
             for cmax_machine in cmax_machines_list:
                 nb_machine = cmax_machine.machine_num
                 cmax_machine_schedule = cmax_machine.job_schedule
                 old_ci = cmax_machine.completion_time
                 if len(cmax_machine_schedule) > 1:
-                    other_machines = sorted(other_machines,key= lambda machine: machine.completion_time)
+                    other_machines = sorted(
+                        other_machines, key=lambda machine: machine.completion_time)
 
                     move = None
                     l = 0
@@ -702,7 +739,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                         other_machine_index = other_machines[l].machine_num
                         other_machine = solution.configuration[other_machine_index]
                         other_machine_schedule = other_machine.job_schedule
-                        
+
                         old_cl = other_machine.completion_time
                         old_cmax = solution.objective_value
                         best_cmax = old_cmax
@@ -710,14 +747,18 @@ class PM_LocalSearch(Problem.LocalSearch):
 
                         j = len(cmax_machine_schedule)-1
                         for k in range(len(other_machine_schedule)):
-                            new_machine_cmax = Machine(nb_machine,cmax_machine.completion_time,cmax_machine.last_job,list(cmax_machine_schedule))
+                            new_machine_cmax = Machine(
+                                nb_machine, cmax_machine.completion_time, cmax_machine.last_job, list(cmax_machine_schedule))
                             job_cmax = new_machine_cmax.job_schedule.pop(j)
-                        
-                            new_other_machine = Machine(other_machine_index,other_machine.completion_time,other_machine.last_job,list(other_machine_schedule))
-                            new_other_machine.job_schedule.insert(k,job_cmax)
-                            
-                            ci = new_machine_cmax.compute_completion_time(solution.instance)
-                            cl = new_other_machine.compute_completion_time(solution.instance)
+
+                            new_other_machine = Machine(
+                                other_machine_index, other_machine.completion_time, other_machine.last_job, list(other_machine_schedule))
+                            new_other_machine.job_schedule.insert(k, job_cmax)
+
+                            ci = new_machine_cmax.compute_completion_time(
+                                solution.instance)
+                            cl = new_other_machine.compute_completion_time(
+                                solution.instance)
                             new_machine_cmax.completion_time = ci
                             new_other_machine.completion_time = cl
 
@@ -727,30 +768,30 @@ class PM_LocalSearch(Problem.LocalSearch):
                             solution.cmax()
                             if solution.objective_value < old_cmax:
                                 if not move:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_cmax = solution.objective_value
-                                    #print(1,old_cmax,old_ci,old_cl,move)
+                                    # print(1,old_cmax,old_ci,old_cl,move)
                                 elif solution.objective_value < best_cmax:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_cmax = solution.objective_value
-                                    #print(2,old_cmax,old_ci,old_cl,move)
+                                    # print(2,old_cmax,old_ci,old_cl,move)
                             elif solution.objective_value == best_cmax and (ci < old_ci or cl < old_cl):
                                 if not move:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    #print(3,old_cmax,old_ci,old_cl,move)
+                                    # print(3,old_cmax,old_ci,old_cl,move)
                                 elif (not best_diff or old_ci - ci + old_cl - cl < best_diff) and best_cmax == old_cmax:
-                                    move = (other_machine_index,j,k,ci,cl)
+                                    move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    #print(4,old_cmax,old_ci,old_cl,move)
+                                    # print(4,old_cmax,old_ci,old_cl,move)
                             solution.configuration[nb_machine] = cmax_machine
                             solution.configuration[other_machine_index] = other_machine
                             solution.cmax()
-                        l+=1
-                    if move: # Apply the best move
+                        l += 1
+                    if move:  # Apply the best move
                         change = True
-                        cmax_job = cmax_machine_schedule.pop(move[1]) 
-                        other_machine_schedule.insert(move[2],cmax_job)
+                        cmax_job = cmax_machine_schedule.pop(move[1])
+                        other_machine_schedule.insert(move[2], cmax_job)
                         cmax_machine.completion_time = move[3]
                         other_machine.completion_time = move[4]
                         solution.cmax()
