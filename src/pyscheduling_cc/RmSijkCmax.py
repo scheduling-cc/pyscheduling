@@ -5,8 +5,8 @@ import sys
 from time import perf_counter
 import matplotlib.pyplot as plt
 from statistics import mean 
-import Problem
-import ParallelMachines
+import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.ParallelMachines as ParallelMachines
 
 
 @dataclass

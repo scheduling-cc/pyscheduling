@@ -6,7 +6,7 @@ import random
 import numpy as np
 from enum import Enum
 from collections import namedtuple
-import Problem
+import pyscheduling_cc.Problem as Problem
 
 Job = namedtuple('Job',['id','start_time','completion_time'])
 
