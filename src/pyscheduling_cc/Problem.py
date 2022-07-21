@@ -119,7 +119,16 @@ class SolveResult:
     def __init__(self,best_solution : Solution = None, runtime : float = -1,
                 time_to_best : float = -1, status : SolveStatus = SolveStatus.FEASIBLE,
                 solutions : list[Solution] = None,other_metrics : list[str,object] = None):
-        
+        """constructor of SolveResult
+
+        Args:
+            best_solution (Solution, optional): Best solution among solutions. Defaults to None.
+            runtime (float, optional): Execution time. Defaults to -1.
+            time_to_best (float, optional): Estimated time left to find the best solution. Defaults to -1.
+            status (SolveStatus, optional): Status of the solution. Defaults to SolveStatus.FEASIBLE.
+            solutions (list[Solution], optional): All feasible solution of the problem. Defaults to None.
+            other_metrics (list[str,object], optional): Supplementary information. Defaults to None.
+        """
         self.best_solution = best_solution
         self.runtime = runtime
         if best_solution:
@@ -141,7 +150,7 @@ class SolveResult:
 
     def __str__(self):
         return f'Search stopped with status : {self.solve_status.name}\n ' + \
-                f'Solution is : \n {self.best_solution}s \n' + \
+                f'Solution is : \n {self.best_solution} \n' + \
                 f'Runtime is : {self.runtime}s \n'+ \
                 f'time to best is : {self.time_to_best}s \n'
 
@@ -152,6 +161,15 @@ class LocalSearch():
     copy_solution: bool = False  # by default for performance reasons
 
     def __init__(self,methods : list[object] = None,copy_solution : bool = False):
+        """Constructor of LocalSearch
+
+        Args:
+            methods (list[object], optional): List of methods or operators to be used in a given order. Defaults to None.
+            copy_solution (bool, optional): if True, the original solution will not be altered but a new one will be created. Defaults to False.
+
+        Raises:
+            ValueError: if an element of methods is not a function
+        """
         if methods is None: methods = self.all_methods()
         for method in methods:
             if not callable(method):
@@ -161,6 +179,11 @@ class LocalSearch():
 
     @classmethod
     def all_methods(cls):
+        """returns all the methods of a given LocalSearch class
+
+        Returns:
+            list[object]: list of functions
+        """
         return [getattr(cls,func) for func in dir(cls) if not func.startswith("__") and func.startswith("_")]
     
     def improve(self, solution: Solution) -> Solution:
@@ -186,6 +209,14 @@ class Solver(ABC):
     method: object
 
     def __init__(self,method : object) -> None:
+        """_summary_
+
+        Args:
+            method (object): the function (heuristic/metaheuristic) that will be used to solve the problem
+
+        Raises:
+            ValueError: if an element of methods is not a function
+        """
         if not callable(method):
             raise ValueError("Is not a function")
         else: self.method=method
