@@ -177,7 +177,7 @@ class ParallelInstance(Problem.Instance):
             PJobs (list[list[float]]): Matrix of processing time
             Pmin (int): Minimal processing time
             Pmax (int): Maximal processing time
-            alpha (float): _description_
+            alpha (float): release time factor
 
         Returns:
             list[int]: release time table
@@ -206,7 +206,7 @@ class ParallelInstance(Problem.Instance):
             protocol (GenerationProtocol): given protocol of generation of random instances
             law (GenerationLaw): probablistic law of generation
             PJobs (list[list[float]]): Matrix of processing time
-            gamma (float): _description_
+            gamma (float): Setup time factor
             Smin (int, optional): Minimal setup time . Defaults to 0.
             Smax (int, optional): Maximal setup time. Defaults to 0.
 

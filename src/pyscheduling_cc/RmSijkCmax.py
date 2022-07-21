@@ -50,7 +50,7 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
             law (ParallelMachines.GenerationLaw, optional): probablistic law of generation. Defaults to ParallelMachines.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
-            Gamma (float, optional): _description_. Defaults to 0.0.
+            Gamma (float, optional): Setup time factor. Defaults to 0.0.
             Smin (int, optional): Minimal setup time. Defaults to -1.
             Smax (int, optional): Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
