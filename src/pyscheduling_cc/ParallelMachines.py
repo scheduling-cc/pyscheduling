@@ -5,6 +5,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from tracemalloc import start
 
 import numpy as np
 
@@ -374,6 +375,78 @@ class Machine:
             ci = startTime + proc_time + setup_time
 
             job_prev_i = job_i
+
+        return ci
+
+    def completion_time_remove(self, pos : int, instance : ParallelInstance):
+        """
+        Computes the machine's completion time if we remove the job at "pos" in the machine's job_schedule
+        Args:
+            pos (int): position of the job to be removed
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        job_prev_i, ci = -1, 0
+        if pos > 0:  # There's at least one job in the schedule
+            job_prev_i, startTime, ci = self.job_schedule[pos - 1]
+            
+        for i in range(pos+1, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+            else: startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
+                    else instance.S[self.machine_num][job_i][job_i] # Added Sk_ii for rabadi
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_remove_insert(self, pos_remove : int, job : int, pos_insert : int, instance :  ParallelInstance):
+        """
+        Computes the machine's completion time if we remove job at position "pos_remove" 
+        and insert "job" at "pos" in the machine's job_schedule
+        Args:
+            pos_remove (int): position of the job to be removed
+            job (int): id of the inserted job
+            pos_insert (int): position where the job is inserted in the machine
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        first_pos = min(pos_remove, pos_insert)
+
+        job_prev_i, ci = -1, 0
+        if first_pos > 0:  # There's at least one job in the schedule
+            job_prev_i, startTime, ci = self.job_schedule[first_pos - 1]
+
+        for i in range(first_pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            # If job needs to be inserted to position i
+            if i == pos_insert:
+                if hasattr(instance, 'R'): startTime = max(ci, instance.R[job])
+                else: startTime = ci
+                setup_time = instance.S[self.machine_num][job_prev_i][job] if job_prev_i != -1 \
+                        else instance.S[self.machine_num][job][job]
+                proc_time = instance.P[job][self.machine_num]
+                ci = startTime + proc_time + setup_time
+
+                job_prev_i = job
+
+            # If the job_i is not the one to be removed
+            if i != pos_remove:
+                if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+                else: startTime = ci
+                setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
+                        else instance.S[self.machine_num][job_i][job_i]
+                proc_time = instance.P[job_i][self.machine_num]
+                ci = startTime + proc_time + setup_time
+
+                job_prev_i = job_i
 
         return ci
 
