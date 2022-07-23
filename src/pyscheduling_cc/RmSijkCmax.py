@@ -1,7 +1,8 @@
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint, uniform,random
+from random import randint, uniform
+import random
 from statistics import mean
 from time import perf_counter
 
@@ -541,6 +542,7 @@ class Metaheuristics():
         """
         startTime = perf_counter()
         solveResult = Problem.SolveResult()
+        solveResult.all_solutions = []
         best_solution = None
         random.seed(42)
         for _ in range(nb_exec):
@@ -574,12 +576,14 @@ class Metaheuristics():
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
                 solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
                 solution.configuration[taken_machine].completion_time = ci
-                solution.configuration[taken_machine].last_job = taken_job
+                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
+                    solution.configuration[taken_machine].last_job = taken_job
                 solution.configuration[taken_machine].compute_completion_time(instance)
                 if ci > solution.objective_value:
                     solution.objective_value = ci
                 remaining_jobs_list.remove(taken_job)
 
+            solution.fix_cmax()
             solveResult.all_solutions.append(solution)
             if not best_solution or best_solution.objective_value > solution.objective_value:
                 best_solution = solution
@@ -602,10 +606,11 @@ class Metaheuristics():
         """
         startTime = perf_counter()
         solveResult = Problem.SolveResult()
+        solveResult.all_solutions = []
         best_solution = None
         random.seed(42)
         for _ in range(nb_exec):
-            solution = RmSijkCmax_Solution(instance.m)
+            solution = RmSijkCmax_Solution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
@@ -629,14 +634,16 @@ class Metaheuristics():
                 insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
                 rand_insertion = random.choice(insertions_list[0:int(instance.n * x)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.confiuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
-                solution.confiuration[taken_machine].completion_time = ci
-                solution.confiuration[taken_machine].last_job = taken_job
+                solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
+                solution.configuration[taken_machine].completion_time = ci
+                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
+                    solution.configuration[taken_machine].last_job = taken_job
                 solution.configuration[taken_machine].compute_completion_time(instance)
                 if ci > solution.objective_value:
                     solution.objective_value = ci
                 remaining_jobs_list.remove(taken_job)
 
+            solution.fix_cmax()
             solveResult.all_solutions.append(solution)
             if not best_solution or best_solution.objective_value > solution.objective_value:
                 best_solution = solution
@@ -644,4 +651,3 @@ class Metaheuristics():
         solveResult.best_solution = best_solution
         solveResult.runtime = startTime - perf_counter()
         return solveResult
-
