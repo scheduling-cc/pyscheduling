@@ -10,7 +10,7 @@ import numpy as np
 
 import pyscheduling_cc.Problem as Problem
 
-Job = namedtuple('Job', ['id', 'start_time', 'completion_time'])
+Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 
 class GenerationProtocol(Enum):
@@ -388,6 +388,13 @@ class ParallelSolution(Problem.Solution):
         self.objective_value = max(
             [machine.completion_time for machine in self.configuration])
 
+    def fix_cmax(self):
+        """Sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        self.objective_value = max(
+            [machine.completion_time for machine in self.configuration])
+    
     @classmethod
     @abstractmethod
     def read_txt(cls, path: Path):
