@@ -305,7 +305,6 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"], machine_dict["completion_time"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    @abstractmethod
     def compute_completion_time(self, instance: ParallelInstance):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
         works with both RmSijkCmax and RmriSijkCmax problems
@@ -341,6 +340,41 @@ class Machine:
                 self.job_schedule[i] = Job(job_i, startTime, ci)
                 job_prev_i = job_i
         self.completion_time = ci
+        return ci
+
+    def completion_time_insert(self, job : int, pos : int , instance : ParallelInstance):
+        """
+        Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+        Args:
+            job (int): id of the inserted job
+            pos (int): position where the job is inserted in the machine
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        if pos > 0:  # There's at least one job in the schedule
+            prev_job, startTime, c_prev = self.job_schedule[pos - 1]
+            if hasattr(instance, 'R'): release_time = max(instance.R[job] - c_prev, 0)
+            else: release_time = 0
+            ci = c_prev + release_time + instance.S[self.machine_num][prev_job][job] + instance.P[job][self.machine_num]
+        else:
+            if hasattr(instance, 'R'): release_time = max(instance.R[job], 0)
+            else: release_time = 0
+            # First job to be inserted
+            ci = release_time + instance.P[job][self.machine_num] + instance.S[self.machine_num][job][job] # Added Sk_ii for rabadi benchmark 
+
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+            else: startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i]
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+
         return ci
 
 
