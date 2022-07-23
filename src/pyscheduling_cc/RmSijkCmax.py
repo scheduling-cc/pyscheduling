@@ -249,15 +249,15 @@ class Heuristics():
                         taken_job = i
                         taken_machine = j
             if (current_machine_schedule.last_job == -1):
-                ci = solution.configuration[taken_machine].completion_time + \
+                ci = solution.configuration[taken_machine].end_time + \
                     instance.P[taken_job][taken_machine]
             else:
-                ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
+                ci = solution.configuration[taken_machine].end_time + instance.P[taken_job][taken_machine] + \
                     instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
 
             solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(
-                taken_job, solution.configuration[taken_machine].completion_time, ci))
-            solution.configuration[taken_machine].completion_time = ci
+                taken_job, solution.configuration[taken_machine].end_time, ci))
+            solution.configuration[taken_machine].end_time = ci
             solution.configuration[taken_machine].last_job = taken_job
 
             remaining_jobs_list.remove(taken_job)
@@ -441,14 +441,14 @@ class Heuristics():
                     taken_machine = j
 
             if (current_machine_schedule.last_job == -1):
-                ci = solution.configuration[taken_machine].completion_time + \
+                ci = solution.configuration[taken_machine].end_time + \
                     instance.P[taken_job][taken_machine]
             else:
-                ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
+                ci = solution.configuration[taken_machine].end_time + instance.P[taken_job][taken_machine] + \
                     instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
             solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(
-                taken_job, solution.configuration[taken_machine].completion_time, ci))
-            solution.configuration[taken_machine].completion_time = ci
+                taken_job, solution.configuration[taken_machine].end_time, ci))
+            solution.configuration[taken_machine].end_time = ci
             solution.configuration[taken_machine].last_job = taken_job
             if (ci > solution.objective_value):
                 solution.objective_value = ci
