@@ -7,8 +7,8 @@ from time import perf_counter
 
 import matplotlib.pyplot as plt
 
-import pyscheduling_cc.ParallelMachines as ParallelMachines
-import pyscheduling_cc.Problem as Problem
+import ParallelMachines as ParallelMachines
+import Problem as Problem
 
 
 @dataclass
@@ -127,7 +127,6 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         LB = max(lb1,all_max_r_j)
 
         return LB
-
 
 @dataclass
 class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
@@ -277,7 +276,6 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid 
 
-
 class Heuristics():
 
     @staticmethod
@@ -288,7 +286,7 @@ class Heuristics():
             instance (RmSijkCmax_Instance): Instance to be solved by the heuristic
 
         Returns:
-            Problem.SolverResult: the solver result of the execution of the heuristic
+            Problem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
         solution = RmSijkCmax_Solution(instance=instance)
@@ -310,16 +308,17 @@ class Heuristics():
                         min_factor = factor
                         taken_job = i
                         taken_machine = j
-            if (current_machine_schedule.last_job == -1):
-                ci = solution.configuration[taken_machine].end_time + \
+            if (solution.configuration[taken_machine].last_job == -1):
+                ci = solution.configuration[taken_machine].completion_time + \
                     instance.P[taken_job][taken_machine]
             else:
-                ci = solution.configuration[taken_machine].end_time + instance.P[taken_job][taken_machine] + \
+                ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
                     instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
 
+            
             solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(
-                taken_job, solution.configuration[taken_machine].end_time, ci))
-            solution.configuration[taken_machine].end_time = ci
+                taken_job, solution.configuration[taken_machine].completion_time, ci))
+            solution.configuration[taken_machine].completion_time = ci
             solution.configuration[taken_machine].last_job = taken_job
 
             remaining_jobs_list.remove(taken_job)
@@ -338,7 +337,7 @@ class Heuristics():
             decreasing (bool, optional): _description_. Defaults to False.
 
         Returns:
-            Problem.SolverResult: the solver result of the execution of the heuristic
+            Problem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
         solution = RmSijkCmax_Solution(instance=instance)
@@ -502,15 +501,15 @@ class Heuristics():
                     taken_job = i
                     taken_machine = j
 
-            if (current_machine_schedule.last_job == -1):
-                ci = solution.configuration[taken_machine].end_time + \
+            if (solution.configuration[taken_machine].last_job == -1):
+                ci = solution.configuration[taken_machine].completion_time + \
                     instance.P[taken_job][taken_machine]
             else:
-                ci = solution.configuration[taken_machine].end_time + instance.P[taken_job][taken_machine] + \
+                ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
                     instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
             solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(
-                taken_job, solution.configuration[taken_machine].end_time, ci))
-            solution.configuration[taken_machine].end_time = ci
+                taken_job, solution.configuration[taken_machine].completion_time, ci))
+            solution.configuration[taken_machine].completion_time = ci
             solution.configuration[taken_machine].last_job = taken_job
             if (ci > solution.objective_value):
                 solution.objective_value = ci
@@ -538,7 +537,7 @@ class Metaheuristics():
             nb_exec (int): Number of execution of the metaheuristic
 
         Returns:
-            _type_: _description_
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
         solveResult = Problem.SolveResult()
@@ -599,7 +598,7 @@ class Metaheuristics():
             nb_exec (int): Number of execution of the metaheuristic
 
         Returns:
-            _type_: _description_
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
         solveResult = Problem.SolveResult()
@@ -645,3 +644,4 @@ class Metaheuristics():
         solveResult.best_solution = best_solution
         solveResult.runtime = startTime - perf_counter()
         return solveResult
+

@@ -9,7 +9,7 @@ from tracemalloc import start
 
 import numpy as np
 
-import pyscheduling_cc.Problem as Problem
+import Problem as Problem
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -288,7 +288,7 @@ class Machine:
             self.job_schedule = job_schedule
 
     def __str__(self):
-        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.completion_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
+        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
 
     def __eq__(self, other):
         same_machine = other.machine_num == self.machine_num
@@ -318,7 +318,7 @@ class Machine:
         """
         ci = 0
         if len(self.job_schedule) > 0:
-            first_job = self.job_schedule[0][0]
+            first_job = self.job_schedule[0].id
             if hasattr(instance, 'R'):
                 startTime = max(0, instance.R[first_job])
             else:
@@ -328,7 +328,7 @@ class Machine:
             self.job_schedule[0] = Job(first_job, startTime, ci)
             job_prev_i = first_job
             for i in range(1, len(self.job_schedule)):
-                job_i = self.job_schedule[i][0]
+                job_i = self.job_schedule[i].id
 
                 if hasattr(instance, 'R'):
                     startTime = max(ci, instance.R[job_i])
