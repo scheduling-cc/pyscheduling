@@ -450,6 +450,43 @@ class Machine:
 
         return ci
 
+    def completion_time_swap(self, pos_i : int, pos_j : int, instance : ParallelInstance):
+        """
+        Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
+        in the machine's job_schedule
+        Args:
+            pos_i (int): position of the first job to be swapped
+            pos_j (int): position of the second job to be swapped
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        first_pos = min(pos_i, pos_j)
+
+        job_prev_i, ci = -1, 0
+        if first_pos > 0:  # There's at least one job in the schedule
+            job_prev_i, startTime, ci = self.job_schedule[first_pos - 1]
+
+        for i in range(first_pos, len(self.job_schedule)):
+            
+            if i == pos_i: # We take pos_j
+                job_i = self.job_schedule[pos_j][0] # (Id, startTime, endTime)
+            elif i == pos_j: # We take pos_i
+                job_i = self.job_schedule[pos_i][0]
+            else:
+                job_i = self.job_schedule[i][0] # Id of job in position i
+                
+            if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+            else: startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
+                    else instance.S[self.machine_num][job_i][job_i]
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+
+        return ci
+
 
 @dataclass
 class ParallelSolution(Problem.Solution):
