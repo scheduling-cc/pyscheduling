@@ -532,6 +532,18 @@ class ParallelSolution(Problem.Solution):
         self.objective_value = max(
             [machine.completion_time for machine in self.configuration])
 
+    def tmp_cmax(self, temp_ci = {}):
+        """
+        returns the cmax of a solution according to the the ci in the dict temp_ci if present, 
+        if not it takes the ci of the machine, this doesn't modify the "cmax" of the machine.
+        """
+        this_cmax = 0
+        for i in range(self.instance.m):
+            ci = temp_ci.get(i, self.configuration[i].completion_time)
+            if ci > this_cmax:
+                this_cmax = ci
+        return this_cmax
+    
     def fix_cmax(self):
         """Sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine

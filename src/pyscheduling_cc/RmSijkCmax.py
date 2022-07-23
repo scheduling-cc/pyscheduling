@@ -1,7 +1,7 @@
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint, uniform
+from random import randint, uniform,random
 from statistics import mean
 from time import perf_counter
 
@@ -97,6 +97,36 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
                     f.write(str(self.S[i][j][k])+"\t")
                 f.write("\n")
         f.close()
+
+    def lower_bound(self):
+        """Computes the lower bound of maximal completion time of the instance 
+        by dividing the sum of minimal completion time between job pairs on the number of machines
+
+        Returns:
+            int: Lower Bound of maximal completion time
+        """
+        # Preparing ranges
+        M = range(self.m)
+        E = range(self.n)
+        # Compute lower bound
+        sum_j = 0
+        all_max_r_j = 0
+        for j in E:
+            min_j = None
+            min_r_j = None
+            for k in M:
+                for i in E: #(t for t in E if t != j ):
+                    if min_j is None or self.P[j][k] + self.S[k][i][j] < min_j:
+                        min_j = self.P[j][k] + self.S[k][i][j]
+                    if min_r_j is None or self.P[j][k] + self.S[k][i][j] < min_r_j:
+                        min_r_j = self.P[j][k] + self.S[k][i][j]
+            sum_j += min_j
+            all_max_r_j = max(all_max_r_j, min_r_j)
+            
+        lb1 = sum_j / self.m
+        LB = max(lb1,all_max_r_j)
+
+        return LB
 
 
 @dataclass
@@ -214,6 +244,38 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         else:
             print("Matplotlib is not installed, you can't use gant_plot")
             return
+
+    def is_valid(self):
+        """
+        Check if solution respects the constraints
+        """
+        set_jobs = set()
+        is_valid = True
+        for machine in self.configuration:
+            prev_job = None
+            ci, setup_time, expected_start_time = 0, 0, 0
+            for i,element in enumerate(machine.job_schedule):
+                job, startTime, endTime = element
+                # Test End Time + start Time
+                if prev_job is None:
+                    setup_time = self.instance.S[machine.machine_num][job][job]
+                    expected_start_time = 0
+                else:
+                    setup_time = self.instance.S[machine.machine_num][prev_job][job]
+                    expected_start_time = ci
+
+                proc_time = self.instance.P[job][machine.machine_num]
+                ci = expected_start_time + proc_time + setup_time
+
+                if startTime != expected_start_time or endTime != ci:
+                    print(f'## Error: in machine {machine.machine_num}'+\
+                        f' found {element} expected {job,expected_start_time, ci}')
+                    is_valid = False
+                set_jobs.add(job)
+                prev_job = job
+        
+        is_valid &= len(set_jobs) == self.instance.n
+        return is_valid 
 
 
 class Heuristics():
@@ -462,3 +524,124 @@ class Heuristics():
             list[object]: list of functions
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
+class Metaheuristics():
+
+    @staticmethod
+    def meta_raps(instance : RmSijkCmax_Instance, p : float, r : int, nb_exec : int):
+        """_summary_
+
+        Args:
+            instance (RmSijkCmax_Instance): The instance to be solved by the metaheuristic
+            p (float): _description_
+            r (int): _description_
+            nb_exec (int): Number of execution of the metaheuristic
+
+        Returns:
+            _type_: _description_
+        """
+        startTime = perf_counter()
+        solveResult = Problem.SolveResult()
+        best_solution = None
+        random.seed(42)
+        for _ in range(nb_exec):
+            solution = RmSijkCmax_Solution(instance)
+            remaining_jobs_list = [i for i in range(instance.n)]
+            while len(remaining_jobs_list) != 0:
+                insertions_list = []
+                for i in remaining_jobs_list:
+                    for j in range(instance.m):
+                        current_machine_schedule = solution.configuration[j]
+                        job_schedule_copy = list(current_machine_schedule.job_schedule)
+                        new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
+                        new_schedule.job_schedule.insert(0,ParallelMachines.Job(i,0,0))
+                        #ci = new_schedule.compute_completion_time(instance)
+                        ci = new_schedule.completion_time_insert(i,0,instance)
+                        insertions_list.append((i,j,0,ci))
+                        for k in range(1,len(current_machine_schedule.job_schedule)):
+                            job_schedule_copy = list(current_machine_schedule.job_schedule)
+                            new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
+                            new_schedule.job_schedule.insert(k,ParallelMachines.Job(i,0,0))
+                            #ci = new_schedule.compute_completion_time(instance)
+                            ci = new_schedule.completion_time_insert(i,k,instance)
+                            insertions_list.append((i,j,k,ci))
+
+                insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
+                proba = random.random()
+                if proba < p:
+                    rand_insertion = insertions_list[0]
+                else:
+                    rand_insertion = random.choice(insertions_list[0:int(instance.n * r)])
+                taken_job, taken_machine, taken_pos, ci = rand_insertion
+                solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
+                solution.configuration[taken_machine].completion_time = ci
+                solution.configuration[taken_machine].last_job = taken_job
+                solution.configuration[taken_machine].compute_completion_time(instance)
+                if ci > solution.objective_value:
+                    solution.objective_value = ci
+                remaining_jobs_list.remove(taken_job)
+
+            solveResult.all_solutions.append(solution)
+            if not best_solution or best_solution.objective_value > solution.objective_value:
+                best_solution = solution
+        
+        solveResult.best_solution = best_solution
+        solveResult.runtime = startTime - perf_counter()
+        return solveResult
+
+    @staticmethod
+    def grasp(instance : RmSijkCmax_Instance,x,nb_exec : int):
+        """_summary_
+
+        Args:
+            instance (RmSijkCmax_Instance): Instance to be solved by the metaheuristic
+            x (_type_): _description_
+            nb_exec (int): Number of execution of the metaheuristic
+
+        Returns:
+            _type_: _description_
+        """
+        startTime = perf_counter()
+        solveResult = Problem.SolveResult()
+        best_solution = None
+        random.seed(42)
+        for _ in range(nb_exec):
+            solution = RmSijkCmax_Solution(instance.m)
+            remaining_jobs_list = [i for i in range(instance.n)]
+            while len(remaining_jobs_list) != 0:
+                insertions_list = []
+                for i in remaining_jobs_list:
+                    for j in range(instance.m):
+                        current_machine_schedule = solution.configuration[j]
+                        job_schedule_copy = list(current_machine_schedule.job_schedule)
+                        new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
+                        new_schedule.job_schedule.insert(0,ParallelMachines.Job(i,0,0))
+                        #ci = new_schedule.compute_completion_time(instance)
+                        ci = new_schedule.completion_time_insert(i,0,instance)
+                        insertions_list.append((i,j,0,ci))
+                        for k in range(1,len(current_machine_schedule.job_schedule)):
+                            job_schedule_copy = list(current_machine_schedule.job_schedule)
+                            new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
+                            new_schedule.job_schedule.insert(k,ParallelMachines.Job(i,0,0))
+                            #ci = new_schedule.compute_completion_time(instance)
+                            ci = new_schedule.completion_time_insert(i,k,instance)
+                            insertions_list.append((i,j,k,ci))
+
+                insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
+                rand_insertion = random.choice(insertions_list[0:int(instance.n * x)])
+                taken_job, taken_machine, taken_pos, ci = rand_insertion
+                solution.confiuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
+                solution.confiuration[taken_machine].completion_time = ci
+                solution.confiuration[taken_machine].last_job = taken_job
+                solution.configuration[taken_machine].compute_completion_time(instance)
+                if ci > solution.objective_value:
+                    solution.objective_value = ci
+                remaining_jobs_list.remove(taken_job)
+
+            solveResult.all_solutions.append(solution)
+            if not best_solution or best_solution.objective_value > solution.objective_value:
+                best_solution = solution
+        
+        solveResult.best_solution = best_solution
+        solveResult.runtime = startTime - perf_counter()
+        return solveResult
