@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-import Problem as Problem
+import pyscheduling_cc.Problem as Problem
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -497,19 +497,17 @@ class Machine:
 @dataclass
 class ParallelSolution(Problem.Solution):
 
-    machines_number: int
     configuration: list[Machine]
 
-    def __init__(self, m: int, instance: ParallelInstance = None):
+    def __init__(self, instance: ParallelInstance):
         """Constructor of ParallelSolution
 
         Args:
             m (int): number of machines
             instance (ParallelInstance, optional): Instance to be solved by the solution. Defaults to None.
         """
-        self.machines_number = m
         self.configuration = []
-        for i in range(m):
+        for i in range(instance.m):
             machine = Machine(i, 0, -1, [])
             self.configuration.append(machine)
         self.objective_value = 0
@@ -522,8 +520,8 @@ class ParallelSolution(Problem.Solution):
         for m in self.configuration:
             copy_machines.append(m.copy())
 
-        copy_solution = ParallelSolution(self.m)
-        for i in range(self.m):
+        copy_solution = ParallelSolution(self.instance)
+        for i in range(self.instance.m):
             copy_solution.configuration[i] = copy_machines[i]
         copy_solution.objective_value = self.objective_value
         return copy_solution
