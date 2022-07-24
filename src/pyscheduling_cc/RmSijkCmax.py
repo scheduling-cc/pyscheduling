@@ -548,24 +548,16 @@ class Metaheuristics():
         for _ in range(nb_exec):
             solution = RmSijkCmax_Solution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
+            toDelete = 0
             while len(remaining_jobs_list) != 0:
+                toDelete += 1
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
                         current_machine_schedule = solution.configuration[j]
-                        job_schedule_copy = list(current_machine_schedule.job_schedule)
-                        new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
-                        new_schedule.job_schedule.insert(0,ParallelMachines.Job(i,0,0))
-                        #ci = new_schedule.compute_completion_time(instance)
-                        ci = new_schedule.completion_time_insert(i,0,instance)
-                        insertions_list.append((i,j,0,ci))
+                        insertions_list.append((i,j,0,current_machine_schedule.completion_time_insert(i,0,instance)))
                         for k in range(1,len(current_machine_schedule.job_schedule)):
-                            job_schedule_copy = list(current_machine_schedule.job_schedule)
-                            new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
-                            new_schedule.job_schedule.insert(k,ParallelMachines.Job(i,0,0))
-                            #ci = new_schedule.compute_completion_time(instance)
-                            ci = new_schedule.completion_time_insert(i,k,instance)
-                            insertions_list.append((i,j,k,ci))
+                            insertions_list.append((i,j,k,current_machine_schedule.completion_time_insert(i,k,instance)))
 
                 insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
                 proba = random.random()
@@ -575,10 +567,9 @@ class Metaheuristics():
                     rand_insertion = random.choice(insertions_list[0:int(instance.n * r)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
                 solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
-                solution.configuration[taken_machine].completion_time = ci
+                solution.configuration[taken_machine].compute_completion_time(instance,taken_pos)
                 if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
                     solution.configuration[taken_machine].last_job = taken_job
-                solution.configuration[taken_machine].compute_completion_time(instance)
                 if ci > solution.objective_value:
                     solution.objective_value = ci
                 remaining_jobs_list.remove(taken_job)
@@ -589,7 +580,8 @@ class Metaheuristics():
                 best_solution = solution
         
         solveResult.best_solution = best_solution
-        solveResult.runtime = startTime - perf_counter()
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
     @staticmethod
@@ -617,30 +609,17 @@ class Metaheuristics():
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
                         current_machine_schedule = solution.configuration[j]
-                        job_schedule_copy = list(current_machine_schedule.job_schedule)
-                        new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
-                        new_schedule.job_schedule.insert(0,ParallelMachines.Job(i,0,0))
-                        #ci = new_schedule.compute_completion_time(instance)
-                        ci = new_schedule.completion_time_insert(i,0,instance)
-                        insertions_list.append((i,j,0,ci))
+                        insertions_list.append((i,j,0,current_machine_schedule.completion_time_insert(i,0,instance)))
                         for k in range(1,len(current_machine_schedule.job_schedule)):
-                            job_schedule_copy = list(current_machine_schedule.job_schedule)
-                            new_schedule = ParallelMachines.Machine(j,current_machine_schedule.completion_time,current_machine_schedule.last_job,job_schedule_copy)
-                            new_schedule.job_schedule.insert(k,ParallelMachines.Job(i,0,0))
-                            #ci = new_schedule.compute_completion_time(instance)
-                            ci = new_schedule.completion_time_insert(i,k,instance)
-                            insertions_list.append((i,j,k,ci))
+                            insertions_list.append((i,j,k,current_machine_schedule.completion_time_insert(i,k,instance)))
 
                 insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
                 rand_insertion = random.choice(insertions_list[0:int(instance.n * x)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
                 solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
-                solution.configuration[taken_machine].completion_time = ci
+                solution.configuration[taken_machine].compute_completion_time(instance,taken_pos)
                 if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
                     solution.configuration[taken_machine].last_job = taken_job
-                solution.configuration[taken_machine].compute_completion_time(instance)
-                if ci > solution.objective_value:
-                    solution.objective_value = ci
                 remaining_jobs_list.remove(taken_job)
 
             solution.fix_cmax()
@@ -649,5 +628,6 @@ class Metaheuristics():
                 best_solution = solution
         
         solveResult.best_solution = best_solution
-        solveResult.runtime = startTime - perf_counter()
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult

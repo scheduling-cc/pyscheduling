@@ -134,7 +134,7 @@ class SolveResult:
         if best_solution:
             self.solve_status = status
         else:
-            self.status = "Infeasible"
+            self.solve_status = SolveStatus.INFEASIBLE
         self.time_to_best = time_to_best
         self.other_metrics = other_metrics
         self.all_solutions = solutions
