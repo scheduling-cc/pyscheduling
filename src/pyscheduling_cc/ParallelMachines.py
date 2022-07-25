@@ -1032,3 +1032,14 @@ class PM_LocalSearch(Problem.LocalSearch):
                 solution.fix_cmax()
 
         return solution
+
+    @staticmethod
+    def generate_neighbour(solution_i):
+        solution = solution_i.copy()
+
+        r = random.random()
+        if r < 0.5:
+            solution = PM_LocalSearch.random_swap(solution, force_improve=False, internal=False)
+        else:
+            solution = PM_LocalSearch.random_swap(solution, force_improve=False, internal=True)
+        return solution
