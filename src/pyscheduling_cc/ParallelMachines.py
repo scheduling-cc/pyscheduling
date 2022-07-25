@@ -636,19 +636,10 @@ class PM_LocalSearch(Problem.LocalSearch):
                     old_cl = machine_l.completion_time
                     # for every job in the machine
                     for k in range(len(machine_i_schedule)):
-                        job_schedule_copy = list(machine_i_schedule)
-                        new_schedule = Machine(
-                            i, machine_i.completion_time, machine_i.last_job, job_schedule_copy)
-                        job_k = new_schedule.job_schedule.pop(k)
-                        ci = machine_i.compute_completion_time(
-                            solution.instance)
+                        job_k = machine_i_schedule[k]
+                        ci = machine_i.completion_time_remove(k,solution.instance)
                         for j in range(len(machine_l_schedule)):
-                            job_schedule_copy_l = list(machine_l_schedule)
-                            new_schedule_l = Machine(
-                                l, machine_l.completion_time, machine_l.last_job, job_schedule_copy_l)
-                            new_schedule_l.job_schedule.insert(j, job_k)
-                            cl = machine_l.compute_completion_time(
-                                solution.instance)
+                            cl = machine_l.completion_time_insert(job_k.id,j,solution.instance)
 
                             cnd1 = (ci < old_ci and cl < old_cl)
                             cnd2 = (ci < old_ci and cl > old_cl and old_ci - ci >= cl - old_cl and cl !=
@@ -701,13 +692,7 @@ class PM_LocalSearch(Problem.LocalSearch):
             move = None
             for i in range(0, len(cmax_machine_schedule)):
                 for j in range(i+1, len(cmax_machine_schedule)):
-                    job_schedule_copy = list(cmax_machine_schedule)
-                    new_schedule = Machine(
-                        nb_machine, cmax_machine.completion_time, cmax_machine.last_job, job_schedule_copy)
-                    new_schedule.job_schedule[i], new_schedule.job_schedule[
-                        j] = new_schedule.job_schedule[j], new_schedule.job_schedule[i]
-                    new_ci = new_schedule.compute_completion_time(
-                        solution.instance)
+                    new_ci = cmax_machine.completion_time_swap(i,j,solution.instance)
                     if new_ci < cmax_machine.completion_time:
                         if not move:
                             move = (i, j, new_ci)
