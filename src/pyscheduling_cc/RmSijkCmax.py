@@ -1,15 +1,15 @@
+import random
 import sys
 from dataclasses import dataclass, field
+from math import exp
 from pathlib import Path
 from random import randint, uniform
-import random
 from statistics import mean
 from time import perf_counter
-import numpy as np
-from numpy.random import choice as np_choice
-from math import exp
 
 import matplotlib.pyplot as plt
+import numpy as np
+from numpy.random import choice as np_choice
 
 import pyscheduling_cc.ParallelMachines as ParallelMachines
 import pyscheduling_cc.Problem as Problem
@@ -120,18 +120,19 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
             min_j = None
             min_r_j = None
             for k in M:
-                for i in E: #(t for t in E if t != j ):
+                for i in E:  # (t for t in E if t != j ):
                     if min_j is None or self.P[j][k] + self.S[k][i][j] < min_j:
                         min_j = self.P[j][k] + self.S[k][i][j]
                     if min_r_j is None or self.P[j][k] + self.S[k][i][j] < min_r_j:
                         min_r_j = self.P[j][k] + self.S[k][i][j]
             sum_j += min_j
             all_max_r_j = max(all_max_r_j, min_r_j)
-            
+
         lb1 = sum_j / self.m
-        LB = max(lb1,all_max_r_j)
+        LB = max(lb1, all_max_r_j)
 
         return LB
+
 
 @dataclass
 class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
@@ -258,7 +259,7 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         for machine in self.configuration:
             prev_job = None
             ci, setup_time, expected_start_time = 0, 0, 0
-            for i,element in enumerate(machine.job_schedule):
+            for i, element in enumerate(machine.job_schedule):
                 job, startTime, endTime = element
                 # Test End Time + start Time
                 if prev_job is None:
@@ -272,14 +273,15 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
                 ci = expected_start_time + proc_time + setup_time
 
                 if startTime != expected_start_time or endTime != ci:
-                    print(f'## Error: in machine {machine.machine_num}'+\
-                        f' found {element} expected {job,expected_start_time, ci}')
+                    print(f'## Error: in machine {machine.machine_num}' +
+                          f' found {element} expected {job,expected_start_time, ci}')
                     is_valid = False
                 set_jobs.add(job)
                 prev_job = job
-        
+
         is_valid &= len(set_jobs) == self.instance.n
-        return is_valid 
+        return is_valid
+
 
 class Heuristics():
 
@@ -320,7 +322,6 @@ class Heuristics():
                 ci = solution.configuration[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
                     instance.S[taken_machine][solution.configuration[taken_machine].last_job][taken_job]
 
-            
             solution.configuration[taken_machine].job_schedule.append(ParallelMachines.Job(
                 taken_job, solution.configuration[taken_machine].completion_time, ci))
             solution.configuration[taken_machine].completion_time = ci
@@ -529,16 +530,17 @@ class Heuristics():
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
+
 class Metaheuristics():
 
     @staticmethod
-    def meta_raps(instance : RmSijkCmax_Instance, p : float, r : int, nb_exec : int):
+    def meta_raps(instance: RmSijkCmax_Instance, p: float, r: int, nb_exec: int):
         """Returns the solution using the meta-raps algorithm
 
         Args:
             instance (RmSijkCmax_Instance): The instance to be solved by the metaheuristic
-            p (float): _description_
-            r (int): _description_
+            p (float): probability of taking the greedy best solution
+            r (int): percentage of moves to consider to select the best move
             nb_exec (int): Number of execution of the metaheuristic
 
         Returns:
@@ -558,19 +560,25 @@ class Metaheuristics():
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
                         current_machine_schedule = solution.configuration[j]
-                        insertions_list.append((i,j,0,current_machine_schedule.completion_time_insert(i,0,instance)))
-                        for k in range(1,len(current_machine_schedule.job_schedule)):
-                            insertions_list.append((i,j,k,current_machine_schedule.completion_time_insert(i,k,instance)))
+                        insertions_list.append(
+                            (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
+                        for k in range(1, len(current_machine_schedule.job_schedule)):
+                            insertions_list.append(
+                                (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
 
-                insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
+                insertions_list = sorted(
+                    insertions_list, key=lambda insertion: insertion[3])
                 proba = random.random()
                 if proba < p:
                     rand_insertion = insertions_list[0]
                 else:
-                    rand_insertion = random.choice(insertions_list[0:int(instance.n * r)])
+                    rand_insertion = random.choice(
+                        insertions_list[0:int(instance.n * r)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
-                solution.configuration[taken_machine].compute_completion_time(instance,taken_pos)
+                solution.configuration[taken_machine].job_schedule.insert(
+                    taken_pos, ParallelMachines.Job(taken_job, 0, 0))
+                solution.configuration[taken_machine].compute_completion_time(
+                    instance, taken_pos)
                 if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
                     solution.configuration[taken_machine].last_job = taken_job
                 if ci > solution.objective_value:
@@ -581,19 +589,19 @@ class Metaheuristics():
             solveResult.all_solutions.append(solution)
             if not best_solution or best_solution.objective_value > solution.objective_value:
                 best_solution = solution
-        
+
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
         solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
     @staticmethod
-    def grasp(instance : RmSijkCmax_Instance,x,nb_exec : int):
+    def grasp(instance: RmSijkCmax_Instance, x, nb_exec: int):
         """Returns the solution using the grasp algorithm
 
         Args:
             instance (RmSijkCmax_Instance): Instance to be solved by the metaheuristic
-            x (_type_): _description_
+            x (_type_): percentage of moves to consider to select the best move
             nb_exec (int): Number of execution of the metaheuristic
 
         Returns:
@@ -611,15 +619,21 @@ class Metaheuristics():
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
                         current_machine_schedule = solution.configuration[j]
-                        insertions_list.append((i,j,0,current_machine_schedule.completion_time_insert(i,0,instance)))
-                        for k in range(1,len(current_machine_schedule.job_schedule)):
-                            insertions_list.append((i,j,k,current_machine_schedule.completion_time_insert(i,k,instance)))
+                        insertions_list.append(
+                            (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
+                        for k in range(1, len(current_machine_schedule.job_schedule)):
+                            insertions_list.append(
+                                (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
 
-                insertions_list = sorted(insertions_list,key=lambda insertion: insertion[3])
-                rand_insertion = random.choice(insertions_list[0:int(instance.n * x)])
+                insertions_list = sorted(
+                    insertions_list, key=lambda insertion: insertion[3])
+                rand_insertion = random.choice(
+                    insertions_list[0:int(instance.n * x)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.configuration[taken_machine].job_schedule.insert(taken_pos,ParallelMachines.Job(taken_job,0,0))
-                solution.configuration[taken_machine].compute_completion_time(instance,taken_pos)
+                solution.configuration[taken_machine].job_schedule.insert(
+                    taken_pos, ParallelMachines.Job(taken_job, 0, 0))
+                solution.configuration[taken_machine].compute_completion_time(
+                    instance, taken_pos)
                 if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
                     solution.configuration[taken_machine].last_job = taken_job
                 remaining_jobs_list.remove(taken_job)
@@ -628,14 +642,14 @@ class Metaheuristics():
             solveResult.all_solutions.append(solution)
             if not best_solution or best_solution.objective_value > solution.objective_value:
                 best_solution = solution
-        
+
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
         solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
     @staticmethod
-    def antColony(instance : RmSijkCmax_Instance,**data):
+    def antColony(instance: RmSijkCmax_Instance, **data):
         """Returns the solution using the ant colony algorithm
 
         Args:
@@ -646,14 +660,14 @@ class Metaheuristics():
         """
         startTime = perf_counter()
         solveResult = Problem.SolveResult()
-        AC = AntColony(instance=instance,**data)
-        solveResult.best_solution,solveResult.all_solutions = AC.solve()
+        AC = AntColony(instance=instance, **data)
+        solveResult.best_solution, solveResult.all_solutions = AC.solve()
         solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         solveResult.runtime = perf_counter() - startTime
         return solveResult
 
     @staticmethod
-    def lahc(instance : RmSijkCmax_Instance, **kwargs):
+    def lahc(instance: RmSijkCmax_Instance, **kwargs):
         """ Returns the solution using the LAHC algorithm
         Args:
             instance (RmSijkCmax_Instance): Instance object to solve
@@ -674,12 +688,13 @@ class Metaheuristics():
 
         # Extracting parameters
         time_limit_factor = kwargs.get("time_limit_factor", None)
-        init_sol_method = kwargs.get("init_sol_method", Heuristics.constructive)
+        init_sol_method = kwargs.get(
+            "init_sol_method", Heuristics.constructive)
         Lfa = kwargs.get("Lfa", 30)
         Nb_iter = kwargs.get("Nb_iter", 500000)
         Non_improv = kwargs.get("Non_improv", 50000)
         LS = kwargs.get("LS", True)
-        seed = kwargs.get("seed",None)
+        seed = kwargs.get("seed", None)
 
         if seed:
             random.seed(seed)
@@ -688,20 +703,23 @@ class Metaheuristics():
         if time_limit_factor:
             time_limit = instance.m * instance.n * time_limit_factor
 
-        solution_init = init_sol_method(instance).best_solution  # Generate init solutoin using the initial solution method
+        # Generate init solutoin using the initial solution method
+        solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
             return Problem.SolveResult()
-        
+
         local_search = ParallelMachines.PM_LocalSearch()
 
-        if LS: solution_init = local_search.improve(solution_init)  # Improve it with LS
-        
+        if LS:
+            solution_init = local_search.improve(
+                solution_init)  # Improve it with LS
+
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
         all_solutions.append(solution_best)
         lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
-        
+
         N = 0
         i = 0
         time_to_best = perf_counter() - first_time
@@ -710,12 +728,14 @@ class Metaheuristics():
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
-            
-            solution_i = ParallelMachines.NeighbourhoodGeneration.lahc_neighbour(current_solution)
-            
-            if LS: solution_i = local_search.improve(solution_i)
+
+            solution_i = ParallelMachines.NeighbourhoodGeneration.lahc_neighbour(
+                current_solution)
+
+            if LS:
+                solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
-                
+
                 current_solution = solution_i
                 if solution_i.objective_value < solution_best.objective_value:
                     all_solutions.append(solution_i)
@@ -730,14 +750,14 @@ class Metaheuristics():
         solve_result = Problem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
-            runtime = (perf_counter() - first_time),
-            time_to_best= time_to_best,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
         )
 
         return solve_result
 
     @staticmethod
-    def SA(instance : RmSijkCmax_Instance, **kwargs):
+    def SA(instance: RmSijkCmax_Instance, **kwargs):
         """ Returns the solution using the simulated annealing algorithm or the restricted simulated annealing
         algorithm
         Args:
@@ -759,15 +779,16 @@ class Metaheuristics():
                 Defaults to "constructive"
             seed (int, optional): Seed for the random operators to make the 
                 algo deterministic if fixed. Defaults to None.
-            
+
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
 
         # Extracting the parameters
-        restriced = kwargs.get("restricted",False)
+        restriced = kwargs.get("restricted", False)
         time_limit_factor = kwargs.get("time_limit_factor", None)
-        init_sol_method = kwargs.get("init_sol_method", Heuristics.constructive)
+        init_sol_method = kwargs.get(
+            "init_sol_method", Heuristics.constructive)
         T0 = kwargs.get("T0", 1.4)
         Tf = kwargs.get("Tf", 0.01)
         k = kwargs.get("k", 0.1)
@@ -780,7 +801,7 @@ class Metaheuristics():
 
         if restriced:
             generationMethod = ParallelMachines.NeighbourhoodGeneration.RSA_neighbour
-            data = {'q0' : q0}
+            data = {'q0': q0}
         else:
             generationMethod = ParallelMachines.NeighbourhoodGeneration.SA_neighbour
             data = {}
@@ -798,9 +819,10 @@ class Metaheuristics():
 
         local_search = ParallelMachines.PM_LocalSearch()
 
-        if LS: solution_init = local_search.improve(solution_init)
+        if LS:
+            solution_init = local_search.improve(solution_init)
 
-        all_solutions = []    
+        all_solutions = []
         # Initialisation
         T = T0
         N = 0
@@ -817,10 +839,12 @@ class Metaheuristics():
                 if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                     break
 
-                #solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
-                solution_i = generationMethod(solution_best,**data)
-                if LS: solution_i = local_search.improve(solution_i)  # Improve generated solution using LS
-                    
+                # solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
+                solution_i = generationMethod(solution_best, **data)
+                if LS:
+                    # Improve generated solution using LS
+                    solution_i = local_search.improve(solution_i)
+
                 delta_cmax = solution_init.objective_value - solution_i.objective_value
                 if delta_cmax >= 0:
                     solution_init = solution_i
@@ -843,18 +867,19 @@ class Metaheuristics():
         # Construct the solve result
         solve_result = Problem.SolveResult(
             best_solution=solution_best,
-            runtime = (perf_counter() - first_time),
-            time_to_best= time_to_best,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
             solutions=all_solutions
         )
 
         return solve_result
-        
+
+
 class AntColony(object):
 
-    def __init__(self, instance : RmSijkCmax_Instance, n_ants : int = 60, n_best : int = 1,
-        n_iterations : int = 100, alpha=1, beta=1, phi : float = 0.081,evaporation : float = 0.01,
-        q0 : float = 0.5, best_ants : int = 10, pheromone_init = 10):
+    def __init__(self, instance: RmSijkCmax_Instance, n_ants: int = 60, n_best: int = 1,
+                 n_iterations: int = 100, alpha=1, beta=1, phi: float = 0.081, evaporation: float = 0.01,
+                 q0: float = 0.5, best_ants: int = 10, pheromone_init=10):
         """
         Args:
             distances (2D numpy.array): Square matrix of distances. Diagonal is assumed to be np.inf.
@@ -882,90 +907,132 @@ class AntColony(object):
         self.aco_graph = self.init_graph()
 
     def solve(self):
+        """Main method used to solve the problem and call the different steps
+
+        Returns:
+            SolveResult: Object containing the solution and useful metrics
+        """
         shortest_path = None
         all_time_shortest_cmax = ("placeholder", np.inf)
         for i in range(self.n_iterations):
             all_solutions = self.gen_all_paths()
             all_solutions = self.improve_best_ants(all_solutions)
-            
+
             shortest_path = min(all_solutions, key=lambda x: x[1])
             longest_path = max(all_solutions, key=lambda x: x[1])
 
             if shortest_path[1] == longest_path[1]:
                 self.reinit_graph()
 
-            if shortest_path[1] < all_time_shortest_cmax[1]: 
+            if shortest_path[1] < all_time_shortest_cmax[1]:
                 all_time_shortest_cmax = shortest_path
             self.spread_pheronome_global(all_solutions)
-            
-        return all_time_shortest_cmax[0],[solution[0] for solution in all_solutions]
-        
+
+        return all_time_shortest_cmax[0], [solution[0] for solution in all_solutions]
+
     def init_graph(self):
+        """ Initialize the two stage graph with initial values of pheromone
+
+        Returns:
+            list[np.array]: list of the two stage graph consisting of np.array elements
+        """
         aco_graph = []
-        """ Initializing pheromone """
-        pheromone_stage_1 = np.full((self.instance.n,self.instance.m),self.pheromone_init,dtype=float)
-        pheromone_stage_2 = np.full((self.instance.m,self.instance.n,self.instance.n),self.pheromone_init,dtype=float)
+        # Initializing pheromone
+        pheromone_stage_1 = np.full(
+            (self.instance.n, self.instance.m), self.pheromone_init, dtype=float)
+        pheromone_stage_2 = np.full(
+            (self.instance.m, self.instance.n, self.instance.n), self.pheromone_init, dtype=float)
         aco_graph.append(pheromone_stage_1)
         aco_graph.append(pheromone_stage_2)
 
-        """ Compute LB """
+        # Compute LB
         self.LB = self.instance.lower_bound()
 
         return aco_graph
 
-    def spread_pheronome_global(self, all_solutions : list[RmSijkCmax_Solution]):
+    def spread_pheronome_global(self, all_solutions: list[RmSijkCmax_Solution]):
+        """Update pheromone levels globally after finding new solutions
+
+        Args:
+            all_solutions (list[RmSijkCmax_Solution]): list of generated solutions
+        """
         sorted_solutions = sorted(all_solutions, key=lambda x: x[1])
 
         for solution, cmax_i in sorted_solutions[:self.n_best]:
             for k in range(solution.instance.m):
                 machine_k = solution.configuration[k]
                 for i, task_i in enumerate(machine_k.job_schedule):
-                    self.aco_graph[0][task_i.id,k] += self.phi * self.LB / cmax_i
+                    self.aco_graph[0][task_i.id,
+                                      k] += self.phi * self.LB / cmax_i
                     if i > 0:
                         prev_task = machine_k.job_schedule[i-1]
-                        self.aco_graph[1][k,prev_task.id,task_i.id] += self.phi * self.LB / cmax_i
-                    
-    def improve_best_ants(self,all_solutions):
+                        self.aco_graph[1][k, prev_task.id,
+                                          task_i.id] += self.phi * self.LB / cmax_i
+
+    def improve_best_ants(self, all_solutions):
+        """Apply local search to the best solution
+
+        Args:
+            all_solutions (_type_): list of all generated solutions
+
+        Returns:
+            list[RmSijkCmax_Solution]: list of updated solutions
+        """
         sorted_solutions = sorted(all_solutions, key=lambda x: x[1])
         local_search = ParallelMachines.PM_LocalSearch()
         for solution, cmax_i in sorted_solutions[:self.best_ants]:
             solution = local_search.improve(solution)
         return sorted_solutions
-        
+
     def gen_all_paths(self):
+        """Calls the gen_path function to generate all solutions from ants paths
+
+        Returns:
+            list[RmSijkCmax_Solution]: list of new solutions  
+        """
         all_solutions = []
         for i in range(self.n_ants):
             solution_i = self.gen_path()
             if solution_i:
                 all_solutions.append((solution_i, solution_i.objective_value))
-            
+
         return all_solutions
 
     def gen_path(self):
-        
+        """Generate one new solution from one ant's path, it calls the two stages: affect_tasks and sequence_tasks
+
+        Returns:
+            RmSijkCmax_Solution: new solution from ant's path
+        """
         # Stage 1 : Task Affectation
         affectation = self.affect_tasks()
         for m in affectation:
-            if len(m)==0:
+            if len(m) == 0:
                 return None
         # Stage 2 : Task Sequencing
         solution_path = self.sequence_tasks(affectation)
-        
+
         return solution_path
 
     def affect_tasks(self):
+        """Generates an affectation from the first stage graph and the path the ant went through
+
+        Returns:
+            list[list[int]]: List of tasks inside each machine 
+        """
         pheromone = self.aco_graph[0]
         affectation = [[] for _ in range(self.instance.m)]
         for i in range(self.instance.n):
             q = random.random()
-            row = (pheromone[i] ** self.alpha) * ( (1 / np.array(self.instance.P[i])) ** self.beta)
+            row = (pheromone[i] ** self.alpha) * \
+                ((1 / np.array(self.instance.P[i])) ** self.beta)
             row = np.nan_to_num(row)
-            if row.sum() ==0:
+            if row.sum() == 0:
                 for j in range(self.instance.m):
                     row[j] = len(affectation[j])
-                
-                if row.sum()==0:
-                    machine = random.randrange(0,self.instance.m)
+
+                if row.sum() == 0:
+                    machine = random.randrange(0, self.instance.m)
                 else:
                     norm_row = row / row.sum()
                     all_inds = range(len(pheromone[i]))
@@ -979,40 +1046,65 @@ class AntColony(object):
                 machine = np_choice(all_inds, 1, p=norm_row)[0]
 
             # Spread Pheromone Locally
-            pheromone[i,machine] = (1-self.evaporation) * pheromone[i,machine]
+            pheromone[i, machine] = (
+                1-self.evaporation) * pheromone[i, machine]
 
             affectation[machine].append(i)
         return affectation
-        
-    def sequence_tasks(self,affectation):
+
+    def sequence_tasks(self, affectation):
+        """Uses the affectation from stage 1 to sequence tasks inside machines using stage 2 of the graph
+
+        Args:
+            affectation (list[list[int]]): affectation to machines
+
+        Returns:
+            RmSijkCmax_Solution: complete solution of one ant
+        """
         pheromone = self.aco_graph[1]
         solution_path = RmSijkCmax_Solution(self.instance)
-        
+
         for m in range(len(affectation)):
             machine_schedule = []
-            if len(affectation[m])>0:
-                first_task = affectation[m][random.randrange(0,len(affectation[m]))]
-                machine_schedule.append(ParallelMachines.Job(first_task,0,0))
+            if len(affectation[m]) > 0:
+                first_task = affectation[m][random.randrange(
+                    0, len(affectation[m]))]
+                machine_schedule.append(ParallelMachines.Job(first_task, 0, 0))
                 prev = first_task
-                
+
                 for i in range(len(affectation[m]) - 1):
-                    pheromone_i = pheromone[m,prev]
-                    next_task = self.pick_task(prev,m,pheromone_i, affectation[m], [job.id for job in machine_schedule])
-                    
+                    pheromone_i = pheromone[m, prev]
+                    next_task = self.pick_task(prev, m, pheromone_i, affectation[m], [
+                                               job.id for job in machine_schedule])
+
                     # Spread Pheromone Locally
-                    pheromone_i[next_task] = (1 - self.evaporation) * pheromone_i[next_task]
-                    
-                    machine_schedule.append(ParallelMachines.Job(next_task,0,0))
-                
+                    pheromone_i[next_task] = (
+                        1 - self.evaporation) * pheromone_i[next_task]
+
+                    machine_schedule.append(
+                        ParallelMachines.Job(next_task, 0, 0))
+
             current_machine = solution_path.configuration[m]
             current_machine.job_schedule = machine_schedule
             current_machine.compute_completion_time(self.instance)
-            
+
         solution_path.cmax()
 
         return solution_path
-        
+
     def pick_task(self, prev, m, pheromone, affected_tasks, visited):
+        """Select a task to affect according to pheromone levels and the graph's state
+
+        Args:
+            prev (int): previous segment in the graph
+            m (int): number of machines
+            pheromone (np.array): pheromone levels
+            affected_tasks (list): list of affected tasks
+            visited (list): list of visited segments
+
+        Returns:
+            int: next task to affect
+        """
         pheromone_cp = np.copy(pheromone)
 
         pheromone_cp[:] = 0
@@ -1020,36 +1112,38 @@ class AntColony(object):
         pheromone_cp[visited] = 0
         pheromone_cp[prev] = 0
 
-        setups = np.array( self.instance.S[m][prev])
+        setups = np.array(self.instance.S[m][prev])
         setups[prev] = 1
         setups[visited] = 1
-        
+
         q = random.random()
         if q < self.q0:
-            next_task = np.argmax(pheromone_cp ** self.alpha * (( 1.0 / setups) ** self.beta))
-        else:  
-            row = pheromone_cp ** self.alpha * (( 1.0 / setups) ** self.beta)
+            next_task = np.argmax(
+                pheromone_cp ** self.alpha * ((1.0 / setups) ** self.beta))
+        else:
+            row = pheromone_cp ** self.alpha * ((1.0 / setups) ** self.beta)
             row = np.nan_to_num(row)
-            
+
             norm_row = row / row.sum()
             all_inds = range(self.instance.n)
             next_task = np_choice(all_inds, 1, p=norm_row)[0]
-        
+
         return next_task
 
     def reinit_graph(self):
-        print("Reinit Pheromone")
+        """Reinitialize the graph's pheromone levels when the premature convergence is detected
+        """
         r1 = random.random()
         for i in range(self.instance.n):
             for k in range(self.instance.m):
                 r2 = random.random()
                 if r2 < r1:
-                    self.aco_graph[0][i,k] = self.pheromone_init
-        
+                    self.aco_graph[0][i, k] = self.pheromone_init
+
         r3 = random.random()
         for k in range(self.instance.m):
             for i in range(self.instance.n):
                 for j in range(self.instance.n):
                     r4 = random.random()
                     if r4 < r3:
-                        self.aco_graph[1][k,i,j] = self.pheromone_init
+                        self.aco_graph[1][k, i, j] = self.pheromone_init
