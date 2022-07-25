@@ -10,7 +10,7 @@ import numpy as np
 
 import pyscheduling_cc.Problem as Problem
 
-Job = namedtuple('Job', ['id', 'start_time', 'completion_time'])
+Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 
 class GenerationProtocol(Enum):
@@ -287,7 +287,7 @@ class Machine:
             self.job_schedule = job_schedule
 
     def __str__(self):
-        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.completion_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
+        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
 
     def __eq__(self, other):
         same_machine = other.machine_num == self.machine_num
@@ -305,35 +305,41 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"], machine_dict["completion_time"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    @abstractmethod
-    def compute_completion_time(self, instance: ParallelInstance):
+    def compute_completion_time(self, instance: ParallelInstance,startIndex : int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
         works with both RmSijkCmax and RmriSijkCmax problems
 
         Args:
             instance (ParallelInstance): The instance associated to the machine
+            startIndex (int) : The job index the function starts operating from
 
         Returns:
             int: completion_time of the machine
         """
         ci = 0
         if len(self.job_schedule) > 0:
-            first_job = self.job_schedule[0][0]
-            if hasattr(instance, 'R'):
-                startTime = max(0, instance.R[first_job])
+            if startIndex>0:
+                prev_job, startTime, c_prev = self.job_schedule[startIndex - 1]
+                job = self.job_schedule[startIndex].id
+                if hasattr(instance, 'R'): release_time = max(instance.R[job] - c_prev, 0)
+                else: release_time = 0
+                ci = c_prev + release_time + instance.S[self.machine_num][prev_job][job] + instance.P[job][self.machine_num]
             else:
-                startTime = 0
-            ci = startTime + instance.P[first_job][self.machine_num] + \
-                + instance.S[self.machine_num][first_job][first_job]  # Added Sk_ii for rabadi benchmark
-            self.job_schedule[0] = Job(first_job, startTime, ci)
-            job_prev_i = first_job
-            for i in range(1, len(self.job_schedule)):
-                job_i = self.job_schedule[i][0]
+                job = self.job_schedule[0].id
+                
+                if hasattr(instance, 'R'): startTime = max(0, instance.R[job])  
+                else: startTime = 0
+                    
+                ci = startTime + instance.P[job][self.machine_num] + \
+                    + instance.S[self.machine_num][job][job]  # Added Sk_ii for rabadi benchmark
+            self.job_schedule[startIndex] = Job(job, startTime, ci)
+            job_prev_i = job
+            for i in range(startIndex+1, len(self.job_schedule)):
+                job_i = self.job_schedule[i].id
 
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
+                if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+                else: startTime = ci
+
                 setup_time = instance.S[self.machine_num][job_prev_i][job_i]
                 proc_time = instance.P[job_i][self.machine_num]
                 ci = startTime + proc_time + setup_time
@@ -343,23 +349,165 @@ class Machine:
         self.completion_time = ci
         return ci
 
+    def completion_time_insert(self, job : int, pos : int , instance : ParallelInstance):
+        """
+        Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+        Args:
+            job (int): id of the inserted job
+            pos (int): position where the job is inserted in the machine
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        if pos > 0:  # There's at least one job in the schedule
+            prev_job, startTime, c_prev = self.job_schedule[pos - 1]
+            if hasattr(instance, 'R'): release_time = max(instance.R[job] - c_prev, 0)
+            else: release_time = 0
+            ci = c_prev + release_time + instance.S[self.machine_num][prev_job][job] + instance.P[job][self.machine_num]
+        else:
+            if hasattr(instance, 'R'): release_time = max(instance.R[job], 0)
+            else: release_time = 0
+            # First job to be inserted
+            ci = release_time + instance.P[job][self.machine_num] + instance.S[self.machine_num][job][job] # Added Sk_ii for rabadi benchmark 
+
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+            else: startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i]
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_remove(self, pos : int, instance : ParallelInstance):
+        """
+        Computes the machine's completion time if we remove the job at "pos" in the machine's job_schedule
+        Args:
+            pos (int): position of the job to be removed
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        job_prev_i, ci = -1, 0
+        if pos > 0:  # There's at least one job in the schedule
+            job_prev_i, startTime, ci = self.job_schedule[pos - 1]
+            
+        for i in range(pos+1, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+            else: startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
+                    else instance.S[self.machine_num][job_i][job_i] # Added Sk_ii for rabadi
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_remove_insert(self, pos_remove : int, job : int, pos_insert : int, instance :  ParallelInstance):
+        """
+        Computes the machine's completion time if we remove job at position "pos_remove" 
+        and insert "job" at "pos" in the machine's job_schedule
+        Args:
+            pos_remove (int): position of the job to be removed
+            job (int): id of the inserted job
+            pos_insert (int): position where the job is inserted in the machine
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        first_pos = min(pos_remove, pos_insert)
+
+        job_prev_i, ci = -1, 0
+        if first_pos > 0:  # There's at least one job in the schedule
+            job_prev_i, startTime, ci = self.job_schedule[first_pos - 1]
+
+        for i in range(first_pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            # If job needs to be inserted to position i
+            if i == pos_insert:
+                if hasattr(instance, 'R'): startTime = max(ci, instance.R[job])
+                else: startTime = ci
+                setup_time = instance.S[self.machine_num][job_prev_i][job] if job_prev_i != -1 \
+                        else instance.S[self.machine_num][job][job]
+                proc_time = instance.P[job][self.machine_num]
+                ci = startTime + proc_time + setup_time
+
+                job_prev_i = job
+
+            # If the job_i is not the one to be removed
+            if i != pos_remove:
+                if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+                else: startTime = ci
+                setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
+                        else instance.S[self.machine_num][job_i][job_i]
+                proc_time = instance.P[job_i][self.machine_num]
+                ci = startTime + proc_time + setup_time
+
+                job_prev_i = job_i
+
+        return ci
+
+    def completion_time_swap(self, pos_i : int, pos_j : int, instance : ParallelInstance):
+        """
+        Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
+        in the machine's job_schedule
+        Args:
+            pos_i (int): position of the first job to be swapped
+            pos_j (int): position of the second job to be swapped
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        first_pos = min(pos_i, pos_j)
+
+        job_prev_i, ci = -1, 0
+        if first_pos > 0:  # There's at least one job in the schedule
+            job_prev_i, startTime, ci = self.job_schedule[first_pos - 1]
+
+        for i in range(first_pos, len(self.job_schedule)):
+            
+            if i == pos_i: # We take pos_j
+                job_i = self.job_schedule[pos_j][0] # (Id, startTime, endTime)
+            elif i == pos_j: # We take pos_i
+                job_i = self.job_schedule[pos_i][0]
+            else:
+                job_i = self.job_schedule[i][0] # Id of job in position i
+                
+            if hasattr(instance, 'R'): startTime = max(ci, instance.R[job_i])
+            else: startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
+                    else instance.S[self.machine_num][job_i][job_i]
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+
+        return ci
+
 
 @dataclass
 class ParallelSolution(Problem.Solution):
 
-    machines_number: int
     configuration: list[Machine]
 
-    def __init__(self, m: int, instance: ParallelInstance = None):
+    def __init__(self, instance: ParallelInstance):
         """Constructor of ParallelSolution
 
         Args:
             m (int): number of machines
             instance (ParallelInstance, optional): Instance to be solved by the solution. Defaults to None.
         """
-        self.machines_number = m
         self.configuration = []
-        for i in range(m):
+        for i in range(instance.m):
             machine = Machine(i, 0, -1, [])
             self.configuration.append(machine)
         self.objective_value = 0
@@ -372,8 +520,8 @@ class ParallelSolution(Problem.Solution):
         for m in self.configuration:
             copy_machines.append(m.copy())
 
-        copy_solution = ParallelSolution(self.m)
-        for i in range(self.m):
+        copy_solution = ParallelSolution(self.instance)
+        for i in range(self.instance.m):
             copy_solution.configuration[i] = copy_machines[i]
         copy_solution.objective_value = self.objective_value
         return copy_solution
@@ -388,6 +536,25 @@ class ParallelSolution(Problem.Solution):
         self.objective_value = max(
             [machine.completion_time for machine in self.configuration])
 
+    def tmp_cmax(self, temp_ci = {}):
+        """
+        returns the cmax of a solution according to the the ci in the dict temp_ci if present, 
+        if not it takes the ci of the machine, this doesn't modify the "cmax" of the machine.
+        """
+        this_cmax = 0
+        for i in range(self.instance.m):
+            ci = temp_ci.get(i, self.configuration[i].completion_time)
+            if ci > this_cmax:
+                this_cmax = ci
+        return this_cmax
+    
+    def fix_cmax(self):
+        """Sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        self.objective_value = max(
+            [machine.completion_time for machine in self.configuration])
+    
     @classmethod
     @abstractmethod
     def read_txt(cls, path: Path):
@@ -799,3 +966,230 @@ class PM_LocalSearch(Problem.LocalSearch):
                         solution.cmax()
             solution.cmax()
         return solution
+
+   
+class NeighbourhoodGeneration():
+    
+    @staticmethod
+    def random_swap(solution : ParallelSolution, force_improve : bool =True, internal : bool =False):
+        """_summary_
+
+        Args:
+            solution (_type_): Solution to be improved
+            force_improve (bool, optional): _description_. Defaults to True.
+            internal (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
+        # Get compatible machines (len(job_schedule) >= 1)
+        compatible_machines = []
+        for m in range(solution.instance.m):
+            if (len(solution.configuration[m].job_schedule) >= 1 and not internal) or \
+                (len(solution.configuration[m].job_schedule) >= 2 and internal):
+                compatible_machines.append(m)
+
+        if len(compatible_machines) >= 2:
+
+            random_machine_index = random.choice(compatible_machines)
+            if internal:
+                other_machine_index = random_machine_index
+            else:
+                other_machine_index = random.choice(compatible_machines)
+                while other_machine_index == random_machine_index:
+                    other_machine_index = random.choice(compatible_machines)
+
+            random_machine = solution.configuration[random_machine_index]
+            other_machine = solution.configuration[other_machine_index]
+
+            random_machine_schedule = random_machine.job_schedule
+            other_machine_schedule = other_machine.job_schedule
+            
+            old_ci, old_cl = random_machine.completion_time, other_machine.completion_time
+
+            random_job_index = random.randrange(len(random_machine_schedule))
+            other_job_index = random.randrange(len(other_machine_schedule))
+            
+            if internal: # Internal swap
+                while other_job_index == random_job_index:
+                    other_job_index = random.randrange(len(other_machine_schedule))
+
+                new_ci = random_machine.completion_time_swap(random_job_index,other_job_index,solution.instance)
+                new_cl = new_ci
+            else: # External swap
+                
+                job_random, _, _ = random_machine_schedule[random_job_index]
+                other_job, _, _ = other_machine_schedule[other_job_index]
+
+                
+                new_ci = random_machine.completion_time_swap(random_job_index,other_job_index,solution.instance)
+                new_cl = other_machine.completion_time_remove_insert(other_job_index, job_random, other_job_index, solution.instance)
+            
+            if not force_improve or (new_ci + new_cl <= old_ci + old_cl): # Apply the move
+                random_machine_schedule[random_job_index], other_machine_schedule[
+                    other_job_index] = other_machine_schedule[
+                        other_job_index], random_machine_schedule[random_job_index]
+                random_machine.completion_time = random_machine.compute_completion_time(solution.instance)
+                other_machine.completion_time = other_machine.compute_completion_time(solution.instance)
+                solution.fix_cmax()
+
+        return solution
+
+    @staticmethod
+    def random_inter_machine_insertion(solution : ParallelSolution, force_improve : bool =True):
+        """_summary_
+
+        Args:
+            solution (ParallelSolution): Solution to be improved
+            force_improve (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
+        # Get compatible machines (len(job_schedule) >= 2)
+        compatible_machines = []
+        for m in range(solution.instance.m):
+            if (len(solution.configuration[m].job_schedule) >= 2):
+                compatible_machines.append(m)
+
+        if len(compatible_machines) >= 1:
+
+            random_machine_index = random.choice(compatible_machines)
+            other_mahcine_index = random.randrange(solution.instance.m)
+            while other_mahcine_index == random_machine_index:
+                other_mahcine_index = random.randrange(solution.instance.m)
+
+            random_machine = solution.configuration[random_machine_index]
+            other_machine = solution.configuration[other_mahcine_index]
+
+            random_machine_schedule = random_machine.job_schedule
+            other_machine_schedule = other_machine.job_schedule
+
+            random_job_index = random.randrange(len(random_machine_schedule))
+            other_job_index = random.randrange(len(other_machine_schedule)) if len(other_machine_schedule) > 0 else 0
+
+            old_ci, old_cl = random_machine.completion_time, other_machine.completion_time
+            job_i, _, _ = random_machine_schedule[random_job_index]
+            
+            new_ci = random_machine.completion_time_remove(random_job_index, solution.instance)
+            new_cl = other_machine.completion_time_insert(job_i,other_job_index,solution.instance)    
+
+            if not force_improve or (new_ci + new_cl <= old_ci + old_cl): # Apply the move
+                job_i = random_machine_schedule.pop(random_job_index)
+                other_machine_schedule.insert(other_job_index, job_i)
+
+                random_machine.completion_time = random_machine.compute_completion_time(solution.instance)
+                other_machine.completion_time = other_machine.compute_completion_time(solution.instance)
+
+                solution.fix_cmax()
+
+        return solution
+
+    @staticmethod
+    def restricted_swap(solution : ParallelSolution):
+        cmax_machines_list = []
+        other_machines = []
+        for m, machine in enumerate(solution.configuration):
+            if machine.completion_time == solution.objective_value:
+                cmax_machines_list.append(m)
+            elif len(machine.job_schedule
+                    ) >= 1:  # Compatible machines have len > 1:
+                other_machines.append(m)
+
+        if len(cmax_machines_list) > 2:
+            choices = random.sample(cmax_machines_list, 2)
+            m1, m2 = choices[0], choices[1]
+        elif len(cmax_machines_list) == 2:
+            m1, m2 = cmax_machines_list[0], cmax_machines_list[1]
+        else:
+            m1 = cmax_machines_list[0]
+            if len(other_machines) > 0:
+                m2 = random.choice(other_machines)
+            else:
+                return solution
+
+        t1 = random.randrange(len(solution.configuration[m1].job_schedule))
+        t2 = random.randrange(len(solution.configuration[m2].job_schedule))
+
+        machine_1_schedule = solution.configuration[m1].job_schedule
+        machine_2_schedule = solution.configuration[m2].job_schedule
+
+        machine_1_schedule[t1], machine_2_schedule[t2] = machine_2_schedule[
+            t2], machine_1_schedule[t1]
+
+        solution.configuration[m1].completion_time = solution.configuration[m1].compute_completion_time(solution.instance)
+        solution.configuration[m2].completion_time = solution.configuration[m2].compute_completion_time(solution.instance)
+
+        solution.fix_cmax()
+        return solution
+
+    @staticmethod
+    def restricted_insert(solution : ParallelSolution):
+        cmax_machines_list = []
+        other_machines = []
+        for m, machine in enumerate(solution.configuration):
+            if machine.completion_time == solution.objective_value:
+                cmax_machines_list.append(m)
+            else:
+                other_machines.append(m)
+
+        if len(cmax_machines_list) > 2:
+            choices = random.sample(cmax_machines_list, 2)
+            m1, m2 = choices[0], choices[1]
+        elif len(cmax_machines_list) == 2:
+            m1, m2 = cmax_machines_list[0], cmax_machines_list[1]
+        else:
+            m1 = cmax_machines_list[0]
+            m2 = random.choice(other_machines)
+
+        t1 = random.randrange(len(solution.configuration[m1].job_schedule))
+        t2 = random.randrange(len(solution.configuration[m2].job_schedule)) if len(
+            solution.configuration[m2].job_schedule) > 0 else 0
+
+        machine_1_schedule = solution.configuration[m1].job_schedule
+        machine_2_schedule = solution.configuration[m2].job_schedule
+
+        job_i = machine_1_schedule.pop(t1)
+        machine_2_schedule.insert(t2, job_i)
+
+        solution.configuration[m1].completion_time = solution.configuration[m1].compute_completion_time(solution.instance)
+        solution.configuration[m2].completion_time = solution.configuration[m2].compute_completion_time(solution.instance)
+
+        solution.fix_cmax()
+        return solution
+
+    @staticmethod
+    def generate_neighbour(solution_i):
+        solution = solution_i.copy()
+
+        r = random.random()
+        if r < 0.5:
+            solution = NeighbourhoodGeneration.random_swap(solution, force_improve=False, internal=False)
+        else:
+            solution = NeighbourhoodGeneration.random_swap(solution, force_improve=False, internal=True)
+        return solution
+
+    @staticmethod
+    def generate_NX(solution : ParallelSolution):
+        solution_copy = solution.copy()
+        r = random.random()
+        if r < 0.33:
+            solution_copy = NeighbourhoodGeneration.random_swap(solution_copy,force_improve=False,internal=False)  # External Swap
+        elif r < 0.67:
+            solution_copy = NeighbourhoodGeneration.random_swap(solution_copy, force_improve=False,
+                            internal=True)  # Internal Swap
+        else:
+            solution_copy = NeighbourhoodGeneration.random_inter_machine_insertion(
+                solution_copy, force_improve=False)  # Inter Machine Insertion
+        return solution_copy
+
+    @staticmethod
+    def generate_NX_restricted(solution : ParallelInstance,q0 : float):
+        solution_copy = solution.copy()
+        r = random.random()
+        if r < q0:
+            solution_copy = NeighbourhoodGeneration.restricted_swap(solution_copy)
+        r = random.random()
+        if r < q0:
+            solution_copy = NeighbourhoodGeneration.restricted_insert(solution_copy)
+        return solution_copy
