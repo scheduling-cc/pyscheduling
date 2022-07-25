@@ -9,7 +9,7 @@ from xmlrpc.client import Boolean
 
 import numpy as np
 
-import Problem as Problem
+import pyscheduling_cc.Problem as Problem
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 

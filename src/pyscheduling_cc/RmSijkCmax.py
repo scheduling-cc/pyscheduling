@@ -10,8 +10,8 @@ from numpy.random import choice as np_choice
 
 import matplotlib.pyplot as plt
 
-import ParallelMachines as ParallelMachines
-import Problem as Problem
+import pyscheduling_cc.ParallelMachines as ParallelMachines
+import pyscheduling_cc.Problem as Problem
 
 
 @dataclass
@@ -931,9 +931,3 @@ class AntColony(object):
                     r4 = random.random()
                     if r4 < r3:
                         self.aco_graph[1][k,i,j] = self.pheromone_init
-
-instance = RmSijkCmax_Instance.generate_random(20,4)
-
-solver = Problem.Solver(Metaheuristics.lahc)
-result = solver.solve(instance,Nb_iter=1000)
-print(result)
