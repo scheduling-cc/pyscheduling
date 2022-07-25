@@ -5,10 +5,11 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from xmlrpc.client import Boolean
 
 import numpy as np
 
-import pyscheduling_cc.Problem as Problem
+import Problem as Problem
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -965,4 +966,69 @@ class PM_LocalSearch(Problem.LocalSearch):
                         other_machine.completion_time = move[4]
                         solution.cmax()
             solution.cmax()
+        return solution
+
+    @staticmethod
+    def random_swap(solution : ParallelSolution, force_improve : bool =True, internal : bool =False):
+        """_summary_
+
+        Args:
+            solution (_type_): Solution to be improved
+            force_improve (bool, optional): _description_. Defaults to True.
+            internal (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
+        # Get compatible machines (len(job_schedule) >= 1)
+        compatible_machines = []
+        for m in range(solution.instance.m):
+            if (len(solution.configuration[m].job_schedule) >= 1 and not internal) or \
+                (len(solution.configuration[m].job_schedule) >= 2 and internal):
+                compatible_machines.append(m)
+
+        if len(compatible_machines) >= 2:
+
+            random_machine_index = random.choice(compatible_machines)
+            if internal:
+                other_machine_index = random_machine_index
+            else:
+                other_machine_index = random.choice(compatible_machines)
+                while other_machine_index == random_machine_index:
+                    other_machine_index = random.choice(compatible_machines)
+
+            random_machine = solution.configuration[random_machine_index]
+            other_machine = solution.configuration[other_machine_index]
+
+            random_machine_schedule = random_machine.job_schedule
+            other_machine_schedule = other_machine.job_schedule
+            
+            old_ci, old_cl = random_machine.completion_time, other_machine.completion_time
+
+            random_job_index = random.randrange(len(random_machine_schedule))
+            other_job_index = random.randrange(len(other_machine_schedule))
+            
+            if internal: # Internal swap
+                while other_job_index == random_job_index:
+                    other_job_index = random.randrange(len(other_machine_schedule))
+
+                new_ci = random_machine.completion_time_swap(random_job_index,other_job_index,solution.instance)
+                new_cl = new_ci
+            else: # External swap
+                
+                job_random, _, _ = random_machine_schedule[random_job_index]
+                other_job, _, _ = other_machine_schedule[other_job_index]
+
+                
+                new_ci = random_machine.completion_time_swap(random_job_index,other_job_index,solution.instance)
+                new_cl = other_machine.completion_time_remove_insert(other_job_index, job_random, other_job_index, solution.instance)
+            
+            if not force_improve or (new_ci + new_cl <= old_ci + old_cl): # Apply the move
+                random_machine_schedule[random_job_index], other_machine_schedule[
+                    other_job_index] = other_machine_schedule[
+                        other_job_index], random_machine_schedule[random_job_index]
+                random_machine.completion_time = random_machine.compute_completion_time(solution.instance)
+                other_machine.completion_time = other_machine.compute_completion_time(solution.instance)
+                solution.fix_cmax()
+
         return solution
