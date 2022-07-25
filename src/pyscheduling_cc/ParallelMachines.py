@@ -972,15 +972,15 @@ class NeighbourhoodGeneration():
     
     @staticmethod
     def random_swap(solution : ParallelSolution, force_improve : bool =True, internal : bool =False):
-        """_summary_
+        """Performs a random swap between 2 jobs on the same machine or on different machines
 
         Args:
-            solution (_type_): Solution to be improved
-            force_improve (bool, optional): _description_. Defaults to True.
-            internal (bool, optional): _description_. Defaults to False.
+            solution (ParallelSolution): Solution to be improved
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+            internal (bool, optional): If true, applies the swap between jobs on the same machine only. Defaults to False.
 
         Returns:
-            ParallelSolution: Improved solution
+            ParallelSolution: New solution
         """
         # Get compatible machines (len(job_schedule) >= 1)
         compatible_machines = []
@@ -1037,14 +1037,14 @@ class NeighbourhoodGeneration():
 
     @staticmethod
     def random_inter_machine_insertion(solution : ParallelSolution, force_improve : bool =True):
-        """_summary_
+        """Removes randomly a job from a machine and insert it on the same machine in different possition or another machine
 
         Args:
             solution (ParallelSolution): Solution to be improved
-            force_improve (bool, optional): _description_. Defaults to True.
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
 
         Returns:
-            ParallelSolution: Improved solution
+            ParallelSolution: New solution
         """
         # Get compatible machines (len(job_schedule) >= 2)
         compatible_machines = []
@@ -1087,6 +1087,17 @@ class NeighbourhoodGeneration():
 
     @staticmethod
     def restricted_swap(solution : ParallelSolution):
+        """Performs a random swap between 2 jobs of 2 different machines whose completion time is equal
+        to the maximal completion time. If it's not possible, performs the move between a job on
+        the machine whose completion time is equel to the maximal completion time and another
+        one
+
+        Args:
+            solution (ParallelSolution): Solution to be improved
+
+        Returns:
+            ParallelSolution: New solution
+        """
         cmax_machines_list = []
         other_machines = []
         for m, machine in enumerate(solution.configuration):
@@ -1125,6 +1136,17 @@ class NeighbourhoodGeneration():
 
     @staticmethod
     def restricted_insert(solution : ParallelSolution):
+        """Performs a random inter_machine_insertion between 2 different machines whose
+        completion time is equal to the maximal completion time. If it's not possible, performs the
+        move between a job on the machine whose completion time is equel to the 
+        maximal completion time and another one
+
+        Args:
+            solution (ParallelSolution): Solution to be improved
+
+        Returns:
+            ParallelSolution: New solution
+        """
         cmax_machines_list = []
         other_machines = []
         for m, machine in enumerate(solution.configuration):
@@ -1152,6 +1174,7 @@ class NeighbourhoodGeneration():
         job_i = machine_1_schedule.pop(t1)
         machine_2_schedule.insert(t2, job_i)
 
+
         solution.configuration[m1].completion_time = solution.configuration[m1].compute_completion_time(solution.instance)
         solution.configuration[m2].completion_time = solution.configuration[m2].compute_completion_time(solution.instance)
 
@@ -1159,7 +1182,15 @@ class NeighbourhoodGeneration():
         return solution
 
     @staticmethod
-    def generate_neighbour(solution_i):
+    def lahc_neighbour(solution_i):
+        """Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+        Args:
+            solution_i (ParallelSolution): Solution to be improved
+
+        Returns:
+            ParallelSolution: New solution
+        """
         solution = solution_i.copy()
 
         r = random.random()
@@ -1170,7 +1201,15 @@ class NeighbourhoodGeneration():
         return solution
 
     @staticmethod
-    def generate_NX(solution : ParallelSolution):
+    def SA_neighbour(solution : ParallelSolution):
+        """Generates a neighbour solution of the given solution for the SA metaheuristic
+
+        Args:
+            solution_i (ParallelSolution): Solution to be improved
+
+        Returns:
+            ParallelSolution: New solution
+        """
         solution_copy = solution.copy()
         r = random.random()
         if r < 0.33:
@@ -1184,7 +1223,17 @@ class NeighbourhoodGeneration():
         return solution_copy
 
     @staticmethod
-    def generate_NX_restricted(solution : ParallelInstance,q0 : float):
+    def RSA_neighbour(solution : ParallelInstance,q0 : float):
+        """Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+        Args:
+            solution_i (ParallelSolution): Solution to be improved
+            q0 (float): Probability to apply restricted swap compared to
+            restricted insertion.
+
+        Returns:
+            ParallelSolution: New solution
+        """
         solution_copy = solution.copy()
         r = random.random()
         if r < q0:

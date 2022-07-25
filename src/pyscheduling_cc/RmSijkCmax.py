@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 import pyscheduling_cc.ParallelMachines as ParallelMachines
 import pyscheduling_cc.Problem as Problem
+from pyscheduling_cc.Problem import Solver
 
 
 @dataclass
@@ -532,7 +533,7 @@ class Metaheuristics():
 
     @staticmethod
     def meta_raps(instance : RmSijkCmax_Instance, p : float, r : int, nb_exec : int):
-        """_summary_
+        """Returns the solution using the meta-raps algorithm
 
         Args:
             instance (RmSijkCmax_Instance): The instance to be solved by the metaheuristic
@@ -547,7 +548,6 @@ class Metaheuristics():
         solveResult = Problem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
-        random.seed(42)
         for _ in range(nb_exec):
             solution = RmSijkCmax_Solution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
@@ -589,7 +589,7 @@ class Metaheuristics():
 
     @staticmethod
     def grasp(instance : RmSijkCmax_Instance,x,nb_exec : int):
-        """_summary_
+        """Returns the solution using the grasp algorithm
 
         Args:
             instance (RmSijkCmax_Instance): Instance to be solved by the metaheuristic
@@ -603,7 +603,6 @@ class Metaheuristics():
         solveResult = Problem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
-        random.seed(42)
         for _ in range(nb_exec):
             solution = RmSijkCmax_Solution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
@@ -637,6 +636,14 @@ class Metaheuristics():
 
     @staticmethod
     def antColony(instance : RmSijkCmax_Instance,**data):
+        """Returns the solution using the ant colony algorithm
+
+        Args:
+            instance (RmSijkCmax_Instance): Instance to be solved
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
         startTime = perf_counter()
         solveResult = Problem.SolveResult()
         AC = AntColony(instance=instance,**data)
@@ -662,7 +669,7 @@ class Metaheuristics():
                 Defaults to "constructive"
             seed (int, optional): Seed for the random operators to make the algo deterministic
         Returns:
-            SolveResult: The object represeting the solving process result
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
 
         # Extracting parameters
@@ -704,7 +711,7 @@ class Metaheuristics():
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
             
-            solution_i = ParallelMachines.NeighbourhoodGeneration.generate_neighbour(current_solution)
+            solution_i = ParallelMachines.NeighbourhoodGeneration.lahc_neighbour(current_solution)
             
             if LS: solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
@@ -731,13 +738,16 @@ class Metaheuristics():
 
     @staticmethod
     def SA(instance : RmSijkCmax_Instance, **kwargs):
-        """ Returns the solution using the simulated annealing algorithm
+        """ Returns the solution using the simulated annealing algorithm or the restricted simulated annealing
+        algorithm
         Args:
             instance (RmSijkCmax_Instance): Instance object to solve
             T0 (float, optional): Initial temperature. Defaults to 1.1.
             Tf (float, optional): Final temperature. Defaults to 0.01.
             k (float, optional): Acceptance facture. Defaults to 0.1.
             b (float, optional): Cooling factor. Defaults to 0.97.
+            q0 (int, optional): Probability to apply restricted swap compared to
+            restricted insertion. Defaults to 0.5.
             n_iter (int, optional): Number of iterations for each temperature. Defaults to 10.
             Non_improv (int, optional): SA stops when the number of iterations without
                 improvement is achieved. Defaults to 500.
@@ -751,7 +761,7 @@ class Metaheuristics():
                 algo deterministic if fixed. Defaults to None.
             
         Returns:
-            SolveResult: The object represeting the solving process result
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
 
         # Extracting the parameters
@@ -769,10 +779,10 @@ class Metaheuristics():
         seed = kwargs.get("seed", None)
 
         if restriced:
-            generationMethod = ParallelMachines.NeighbourhoodGeneration.generate_NX_restricted
+            generationMethod = ParallelMachines.NeighbourhoodGeneration.RSA_neighbour
             data = {'q0' : q0}
         else:
-            generationMethod = ParallelMachines.NeighbourhoodGeneration.generate_NX
+            generationMethod = ParallelMachines.NeighbourhoodGeneration.SA_neighbour
             data = {}
         if seed:
             random.seed(seed)
