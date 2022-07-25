@@ -5,7 +5,6 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from xmlrpc.client import Boolean
 
 import numpy as np
 
@@ -1087,6 +1086,79 @@ class NeighbourhoodGeneration():
         return solution
 
     @staticmethod
+    def restricted_swap(solution : ParallelSolution):
+        cmax_machines_list = []
+        other_machines = []
+        for m, machine in enumerate(solution.configuration):
+            if machine.completion_time == solution.objective_value:
+                cmax_machines_list.append(m)
+            elif len(machine.job_schedule
+                    ) >= 1:  # Compatible machines have len > 1:
+                other_machines.append(m)
+
+        if len(cmax_machines_list) > 2:
+            choices = random.sample(cmax_machines_list, 2)
+            m1, m2 = choices[0], choices[1]
+        elif len(cmax_machines_list) == 2:
+            m1, m2 = cmax_machines_list[0], cmax_machines_list[1]
+        else:
+            m1 = cmax_machines_list[0]
+            if len(other_machines) > 0:
+                m2 = random.choice(other_machines)
+            else:
+                return solution
+
+        t1 = random.randrange(len(solution.configuration[m1].job_schedule))
+        t2 = random.randrange(len(solution.configuration[m2].job_schedule))
+
+        machine_1_schedule = solution.configuration[m1].job_schedule
+        machine_2_schedule = solution.configuration[m2].job_schedule
+
+        machine_1_schedule[t1], machine_2_schedule[t2] = machine_2_schedule[
+            t2], machine_1_schedule[t1]
+
+        solution.configuration[m1].completion_time = solution.configuration[m1].compute_completion_time(solution.instance)
+        solution.configuration[m2].completion_time = solution.configuration[m2].compute_completion_time(solution.instance)
+
+        solution.fix_cmax()
+        return solution
+
+    @staticmethod
+    def restricted_insert(solution : ParallelSolution):
+        cmax_machines_list = []
+        other_machines = []
+        for m, machine in enumerate(solution.configuration):
+            if machine.completion_time == solution.objective_value:
+                cmax_machines_list.append(m)
+            else:
+                other_machines.append(m)
+
+        if len(cmax_machines_list) > 2:
+            choices = random.sample(cmax_machines_list, 2)
+            m1, m2 = choices[0], choices[1]
+        elif len(cmax_machines_list) == 2:
+            m1, m2 = cmax_machines_list[0], cmax_machines_list[1]
+        else:
+            m1 = cmax_machines_list[0]
+            m2 = random.choice(other_machines)
+
+        t1 = random.randrange(len(solution.configuration[m1].job_schedule))
+        t2 = random.randrange(len(solution.configuration[m2].job_schedule)) if len(
+            solution.configuration[m2].job_schedule) > 0 else 0
+
+        machine_1_schedule = solution.configuration[m1].job_schedule
+        machine_2_schedule = solution.configuration[m2].job_schedule
+
+        job_i = machine_1_schedule.pop(t1)
+        machine_2_schedule.insert(t2, job_i)
+
+        solution.configuration[m1].completion_time = solution.configuration[m1].compute_completion_time(solution.instance)
+        solution.configuration[m2].completion_time = solution.configuration[m2].compute_completion_time(solution.instance)
+
+        solution.fix_cmax()
+        return solution
+
+    @staticmethod
     def generate_neighbour(solution_i):
         solution = solution_i.copy()
 
@@ -1109,4 +1181,15 @@ class NeighbourhoodGeneration():
         else:
             solution_copy = NeighbourhoodGeneration.random_inter_machine_insertion(
                 solution_copy, force_improve=False)  # Inter Machine Insertion
+        return solution_copy
+
+    @staticmethod
+    def generate_NX_restricted(solution : ParallelInstance,q0 : float):
+        solution_copy = solution.copy()
+        r = random.random()
+        if r < q0:
+            solution_copy = NeighbourhoodGeneration.restricted_swap(solution_copy)
+        r = random.random()
+        if r < q0:
+            solution_copy = NeighbourhoodGeneration.restricted_insert(solution_copy)
         return solution_copy

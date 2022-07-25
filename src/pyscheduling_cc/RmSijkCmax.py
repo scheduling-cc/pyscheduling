@@ -755,17 +755,25 @@ class Metaheuristics():
         """
 
         # Extracting the parameters
+        restriced = kwargs.get("restricted",False)
         time_limit_factor = kwargs.get("time_limit_factor", None)
         init_sol_method = kwargs.get("init_sol_method", Heuristics.constructive)
         T0 = kwargs.get("T0", 1.4)
         Tf = kwargs.get("Tf", 0.01)
         k = kwargs.get("k", 0.1)
         b = kwargs.get("b", 0.99)
+        q0 = kwargs.get("q0", 0.5)
         n_iter = kwargs.get("n_iter", 20)
         Non_improv = kwargs.get("Non_improv", 5000)
         LS = kwargs.get("LS", True)
         seed = kwargs.get("seed", None)
 
+        if restriced:
+            generationMethod = ParallelMachines.NeighbourhoodGeneration.generate_NX_restricted
+            data = {'q0' : q0}
+        else:
+            generationMethod = ParallelMachines.NeighbourhoodGeneration.generate_NX
+            data = {}
         if seed:
             random.seed(seed)
 
@@ -799,7 +807,8 @@ class Metaheuristics():
                 if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                     break
 
-                solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
+                #solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
+                solution_i = generationMethod(solution_best,**data)
                 if LS: solution_i = local_search.improve(solution_i)  # Improve generated solution using LS
                     
                 delta_cmax = solution_init.objective_value - solution_i.objective_value
