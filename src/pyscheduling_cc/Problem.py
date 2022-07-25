@@ -112,6 +112,7 @@ class SolveResult:
 
     all_solutions: list[Solution]
     best_solution: Solution  # Needs to be consistent with "all_solutions" list
+    time_to_best : float
     solve_status: SolveStatus
     runtime: float
     kpis: dict[str, object]  # Other metrics that are problem / solver specific
