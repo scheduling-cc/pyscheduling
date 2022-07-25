@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyscheduling_cc"
-version = "0.1.0"
+version = "0.1.1"
 description = "THE python package to solve scheduling problems"
 authors = ["Amine ATHMANI", "Taha ARBAOUI", "Akram LAISSAOUI"]
 license = "MIT"
