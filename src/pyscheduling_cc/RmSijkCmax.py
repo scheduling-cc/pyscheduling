@@ -7,6 +7,7 @@ from statistics import mean
 from time import perf_counter
 import numpy as np
 from numpy.random import choice as np_choice
+from math import exp
 
 import matplotlib.pyplot as plt
 
@@ -703,7 +704,7 @@ class Metaheuristics():
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
             
-            solution_i = ParallelMachines.PM_LocalSearch.generate_neighbour(current_solution)
+            solution_i = ParallelMachines.NeighbourhoodGeneration.generate_neighbour(current_solution)
             
             if LS: solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
@@ -724,6 +725,108 @@ class Metaheuristics():
             solutions=all_solutions,
             runtime = (perf_counter() - first_time),
             time_to_best= time_to_best,
+        )
+
+        return solve_result
+
+    @staticmethod
+    def SA(instance : RmSijkCmax_Instance, **kwargs):
+        """ Returns the solution using the simulated annealing algorithm
+        Args:
+            instance (RmSijkCmax_Instance): Instance object to solve
+            T0 (float, optional): Initial temperature. Defaults to 1.1.
+            Tf (float, optional): Final temperature. Defaults to 0.01.
+            k (float, optional): Acceptance facture. Defaults to 0.1.
+            b (float, optional): Cooling factor. Defaults to 0.97.
+            n_iter (int, optional): Number of iterations for each temperature. Defaults to 10.
+            Non_improv (int, optional): SA stops when the number of iterations without
+                improvement is achieved. Defaults to 500.
+            LS (bool, optional): Flag to apply local search at each iteration or not. 
+                Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
+                else Nb_iter is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. 
+                Defaults to "constructive"
+            seed (int, optional): Seed for the random operators to make the 
+                algo deterministic if fixed. Defaults to None.
+            
+        Returns:
+            SolveResult: The object represeting the solving process result
+        """
+
+        # Extracting the parameters
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get("init_sol_method", Heuristics.constructive)
+        T0 = kwargs.get("T0", 1.4)
+        Tf = kwargs.get("Tf", 0.01)
+        k = kwargs.get("k", 0.1)
+        b = kwargs.get("b", 0.99)
+        n_iter = kwargs.get("n_iter", 20)
+        Non_improv = kwargs.get("Non_improv", 5000)
+        LS = kwargs.get("LS", True)
+        seed = kwargs.get("seed", None)
+
+        if seed:
+            random.seed(seed)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.m * instance.n * time_limit_factor
+
+        solution_init = init_sol_method(instance).best_solution
+
+        if not solution_init:
+            return Problem.SolveResult()
+
+        local_search = ParallelMachines.PM_LocalSearch()
+
+        if LS: solution_init = local_search.improve(solution_init)
+
+        all_solutions = []    
+        # Initialisation
+        T = T0
+        N = 0
+        time_to_best = 0
+        solution_i = None
+        all_solutions.append(solution_init)
+        solution_best = solution_init
+        while T > Tf and (N != Non_improv):
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+            for i in range(0, n_iter):
+                # check time limit if exists
+                if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                    break
+
+                solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
+                if LS: solution_i = local_search.improve(solution_i)  # Improve generated solution using LS
+                    
+                delta_cmax = solution_init.objective_value - solution_i.objective_value
+                if delta_cmax >= 0:
+                    solution_init = solution_i
+                else:
+                    r = random.random()
+                    factor = delta_cmax / (k * T)
+                    exponent = exp(factor)
+                    if (r < exponent):
+                        solution_init = solution_i
+
+                if solution_best.objective_value > solution_init.objective_value:
+                    all_solutions.append(solution_init)
+                    solution_best = solution_init
+                    time_to_best = (perf_counter() - first_time)
+                    N = 0
+
+            T = T * b
+            N += 1
+
+        # Construct the solve result
+        solve_result = Problem.SolveResult(
+            best_solution=solution_best,
+            runtime = (perf_counter() - first_time),
+            time_to_best= time_to_best,
+            solutions=all_solutions
         )
 
         return solve_result

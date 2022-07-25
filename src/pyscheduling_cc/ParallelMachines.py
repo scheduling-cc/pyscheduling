@@ -968,6 +968,9 @@ class PM_LocalSearch(Problem.LocalSearch):
             solution.cmax()
         return solution
 
+   
+class NeighbourhoodGeneration():
+    
     @staticmethod
     def random_swap(solution : ParallelSolution, force_improve : bool =True, internal : bool =False):
         """_summary_
@@ -1034,12 +1037,76 @@ class PM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
+    def random_inter_machine_insertion(solution : ParallelSolution, force_improve : bool =True):
+        """_summary_
+
+        Args:
+            solution (ParallelSolution): Solution to be improved
+            force_improve (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            ParallelSolution: Improved solution
+        """
+        # Get compatible machines (len(job_schedule) >= 2)
+        compatible_machines = []
+        for m in range(solution.instance.m):
+            if (len(solution.configuration[m].job_schedule) >= 2):
+                compatible_machines.append(m)
+
+        if len(compatible_machines) >= 1:
+
+            random_machine_index = random.choice(compatible_machines)
+            other_mahcine_index = random.randrange(solution.instance.m)
+            while other_mahcine_index == random_machine_index:
+                other_mahcine_index = random.randrange(solution.instance.m)
+
+            random_machine = solution.configuration[random_machine_index]
+            other_machine = solution.configuration[other_mahcine_index]
+
+            random_machine_schedule = random_machine.job_schedule
+            other_machine_schedule = other_machine.job_schedule
+
+            random_job_index = random.randrange(len(random_machine_schedule))
+            other_job_index = random.randrange(len(other_machine_schedule)) if len(other_machine_schedule) > 0 else 0
+
+            old_ci, old_cl = random_machine.completion_time, other_machine.completion_time
+            job_i, _, _ = random_machine_schedule[random_job_index]
+            
+            new_ci = random_machine.completion_time_remove(random_job_index, solution.instance)
+            new_cl = other_machine.completion_time_insert(job_i,other_job_index,solution.instance)    
+
+            if not force_improve or (new_ci + new_cl <= old_ci + old_cl): # Apply the move
+                job_i = random_machine_schedule.pop(random_job_index)
+                other_machine_schedule.insert(other_job_index, job_i)
+
+                random_machine.completion_time = random_machine.compute_completion_time(solution.instance)
+                other_machine.completion_time = other_machine.compute_completion_time(solution.instance)
+
+                solution.fix_cmax()
+
+        return solution
+
+    @staticmethod
     def generate_neighbour(solution_i):
         solution = solution_i.copy()
 
         r = random.random()
         if r < 0.5:
-            solution = PM_LocalSearch.random_swap(solution, force_improve=False, internal=False)
+            solution = NeighbourhoodGeneration.random_swap(solution, force_improve=False, internal=False)
         else:
-            solution = PM_LocalSearch.random_swap(solution, force_improve=False, internal=True)
+            solution = NeighbourhoodGeneration.random_swap(solution, force_improve=False, internal=True)
         return solution
+
+    @staticmethod
+    def generate_NX(solution : ParallelSolution):
+        solution_copy = solution.copy()
+        r = random.random()
+        if r < 0.33:
+            solution_copy = NeighbourhoodGeneration.random_swap(solution_copy,force_improve=False,internal=False)  # External Swap
+        elif r < 0.67:
+            solution_copy = NeighbourhoodGeneration.random_swap(solution_copy, force_improve=False,
+                            internal=True)  # Internal Swap
+        else:
+            solution_copy = NeighbourhoodGeneration.random_inter_machine_insertion(
+                solution_copy, force_improve=False)  # Inter Machine Insertion
+        return solution_copy
