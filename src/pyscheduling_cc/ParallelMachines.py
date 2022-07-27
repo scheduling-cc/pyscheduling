@@ -1036,8 +1036,8 @@ class NeighbourhoodGeneration():
                 job_random, _, _ = random_machine_schedule[random_job_index]
                 other_job, _, _ = other_machine_schedule[other_job_index]
 
-                new_ci = random_machine.completion_time_swap(
-                    random_job_index, other_job_index, solution.instance)
+                new_ci = random_machine.completion_time_remove_insert(
+                    random_job_index, other_job, random_job_index, solution.instance)
                 new_cl = other_machine.completion_time_remove_insert(
                     other_job_index, job_random, other_job_index, solution.instance)
 
