@@ -1,6 +1,7 @@
 import sys
 import random
 from dataclasses import dataclass, field
+from math import exp
 from pathlib import Path
 from random import randint, uniform
 from statistics import mean
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 
 import pyscheduling_cc.ParallelMachines as ParallelMachines
 import pyscheduling_cc.Problem as Problem
+from pyscheduling_cc.Problem import Solver
 
 @dataclass
 class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
@@ -778,3 +780,220 @@ class Heuristics():
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
+class Metaheuristics():
+    @staticmethod
+    def lahc(instance: RmriSijkCmax_Instance, **kwargs):
+        """ Returns the solution using the LAHC algorithm
+        Args:
+            instance (RmSijkCmax_Instance): Instance object to solve
+            Lfa (int, optional): Size of the candidates list. Defaults to 25.
+            Nb_iter (int, optional): Number of iterations of LAHC. Defaults to 300.
+            Non_improv (int, optional): LAHC stops when the number of iterations without
+                improvement is achieved. Defaults to 50.
+            LS (bool, optional): Flag to apply local search at each iteration or not.
+                Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
+                else Nb_iter is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. 
+                Defaults to "constructive"
+            seed (int, optional): Seed for the random operators to make the algo deterministic
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+
+        # Extracting parameters
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get(
+            "init_sol_method", Heuristics.constructive)
+        Lfa = kwargs.get("Lfa", 30)
+        Nb_iter = kwargs.get("Nb_iter", 500000)
+        Non_improv = kwargs.get("Non_improv", 50000)
+        LS = kwargs.get("LS", True)
+        seed = kwargs.get("seed", None)
+
+        if seed:
+            random.seed(seed)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.m * instance.n * time_limit_factor
+
+        # Generate init solutoin using the initial solution method
+        solution_init = init_sol_method(instance).best_solution
+
+        if not solution_init:
+            return Problem.SolveResult()
+
+        local_search = ParallelMachines.PM_LocalSearch()
+
+        if LS:
+            solution_init = local_search.improve(
+                solution_init)  # Improve it with LS
+
+        all_solutions = []
+        solution_best = solution_init.copy()  # Save the current best solution
+        all_solutions.append(solution_best)
+        lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
+
+        N = 0
+        i = 0
+        time_to_best = perf_counter() - first_time
+        current_solution = solution_init
+        while i < Nb_iter and N < Non_improv:
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+
+            solution_i = ParallelMachines.NeighbourhoodGeneration.lahc_neighbour(
+                current_solution)
+
+            if LS:
+                solution_i = local_search.improve(solution_i)
+            if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
+
+                current_solution = solution_i
+                if solution_i.objective_value < solution_best.objective_value:
+                    all_solutions.append(solution_i)
+                    solution_best = solution_i
+                    time_to_best = (perf_counter() - first_time)
+                    N = 0
+            lahc_list[i % Lfa] = solution_i.objective_value
+            i += 1
+            N += 1
+
+        # Construct the solve result
+        solve_result = Problem.SolveResult(
+            best_solution=solution_best,
+            solutions=all_solutions,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
+        )
+
+        return solve_result
+
+    @staticmethod
+    def SA(instance: RmriSijkCmax_Instance, **kwargs):
+        """ Returns the solution using the simulated annealing algorithm or the restricted simulated annealing
+        algorithm
+        Args:
+            instance (RmSijkCmax_Instance): Instance object to solve
+            T0 (float, optional): Initial temperature. Defaults to 1.1.
+            Tf (float, optional): Final temperature. Defaults to 0.01.
+            k (float, optional): Acceptance facture. Defaults to 0.1.
+            b (float, optional): Cooling factor. Defaults to 0.97.
+            q0 (int, optional): Probability to apply restricted swap compared to
+            restricted insertion. Defaults to 0.5.
+            n_iter (int, optional): Number of iterations for each temperature. Defaults to 10.
+            Non_improv (int, optional): SA stops when the number of iterations without
+                improvement is achieved. Defaults to 500.
+            LS (bool, optional): Flag to apply local search at each iteration or not. 
+                Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
+                else Nb_iter is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. 
+                Defaults to "constructive"
+            seed (int, optional): Seed for the random operators to make the 
+                algo deterministic if fixed. Defaults to None.
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+
+        # Extracting the parameters
+        restriced = kwargs.get("restricted", False)
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get(
+            "init_sol_method", Heuristics.constructive)
+        T0 = kwargs.get("T0", 1.4)
+        Tf = kwargs.get("Tf", 0.01)
+        k = kwargs.get("k", 0.1)
+        b = kwargs.get("b", 0.99)
+        q0 = kwargs.get("q0", 0.5)
+        n_iter = kwargs.get("n_iter", 20)
+        Non_improv = kwargs.get("Non_improv", 5000)
+        LS = kwargs.get("LS", True)
+        seed = kwargs.get("seed", None)
+
+        if restriced:
+            generationMethod = ParallelMachines.NeighbourhoodGeneration.RSA_neighbour
+            data = {'q0': q0}
+        else:
+            generationMethod = ParallelMachines.NeighbourhoodGeneration.SA_neighbour
+            data = {}
+        if seed:
+            random.seed(seed)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.m * instance.n * time_limit_factor
+
+        solution_init = init_sol_method(instance).best_solution
+
+        if not solution_init:
+            return Problem.SolveResult()
+
+        local_search = ParallelMachines.PM_LocalSearch()
+
+        if LS:
+            solution_init = local_search.improve(solution_init)
+
+        all_solutions = []
+        # Initialisation
+        T = T0
+        N = 0
+        time_to_best = 0
+        solution_i = None
+        all_solutions.append(solution_init)
+        solution_best = solution_init
+        while T > Tf and (N != Non_improv):
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+            for i in range(0, n_iter):
+                # check time limit if exists
+                if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                    break
+
+                # solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
+                solution_i = generationMethod(solution_best, **data)
+                if LS:
+                    # Improve generated solution using LS
+                    solution_i = local_search.improve(solution_i)
+
+                delta_cmax = solution_init.objective_value - solution_i.objective_value
+                if delta_cmax >= 0:
+                    solution_init = solution_i
+                else:
+                    r = random.random()
+                    factor = delta_cmax / (k * T)
+                    exponent = exp(factor)
+                    if (r < exponent):
+                        solution_init = solution_i
+
+                if solution_best.objective_value > solution_init.objective_value:
+                    all_solutions.append(solution_init)
+                    solution_best = solution_init
+                    time_to_best = (perf_counter() - first_time)
+                    N = 0
+
+            T = T * b
+            N += 1
+
+        # Construct the solve result
+        solve_result = Problem.SolveResult(
+            best_solution=solution_best,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
+            solutions=all_solutions
+        )
+
+        return solve_result
+
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
