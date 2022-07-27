@@ -81,7 +81,7 @@ class ParallelInstance(Problem.Instance):
         i = startIndex
         for _ in range(self.n):
             ligne = content[i].strip().split('\t')
-            P_k = [int(ligne[j]) for j in range(self.m)]
+            P_k = [int(ligne[j]) for j in range(1, self.m*2, 2)]
             P.append(P_k)
             i += 1
         return (P, i)
@@ -99,7 +99,7 @@ class ParallelInstance(Problem.Instance):
         i = startIndex + 1
         ligne = content[i].strip().split('\t')
         ri = []  # Table : Release time of job i
-        for j in range(len(ligne)):
+        for j in range(1, len(ligne), 2):
             ri.append(int(ligne[j]))
         return (ri, i+1)
 
@@ -141,7 +141,7 @@ class ParallelInstance(Problem.Instance):
         i = startIndex + 1
         ligne = content[i].strip().split('\t')
         di = []  # Table : Due time of job i
-        for j in range(len(ligne)):
+        for j in range(1, len(ligne), 2):
             di.append(int(ligne[j]))
         return (di, i+1)
 

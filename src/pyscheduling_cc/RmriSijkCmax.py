@@ -1,6 +1,12 @@
+import sys
+import random
 from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint, uniform
+from statistics import mean
+from time import perf_counter
+
+import matplotlib.pyplot as plt
 
 import pyscheduling_cc.ParallelMachines as ParallelMachines
 import pyscheduling_cc.Problem as Problem
@@ -29,7 +35,7 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         content = f.read().split('\n')
         ligne0 = content[0].split(' ')
         n = int(ligne0[0])  # number of configuration
-        m = int(ligne0[1])  # number of jobs
+        m = int(ligne0[2])  # number of jobs
         i = 2
         instance = cls("test", n, m)
         instance.P, i = instance.read_P(content, i)
@@ -132,4 +138,643 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         LB = max(lb1, all_max_r_j)
 
         return LB
+
+@dataclass
+class RmriSijkCmax_Solution(ParallelMachines.ParallelSolution):
+
+    def __init__(self, instance: RmriSijkCmax_Instance = None, configuration: list[ParallelMachines.Machine] = None, objective_value: int = 0):
+        """Constructor of RmSijkCmax_Solution
+
+        Args:
+            instance (RmriSijkCmax_Instance, optional): Instance to be solved by the solution. Defaults to None.
+            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
+            objective_value (int, optional): initial objective value of the solution. Defaults to 0.
+        """
+        self.instance = instance
+        if configuration is None:
+            self.configuration = []
+            for i in range(instance.m):
+                machine = ParallelMachines.Machine(i, 0, -1, [])
+                self.configuration.append(machine)
+        else:
+            self.configuration = configuration
+        self.objective_value = 0
+
+    def __str__(self):
+        return "Cmax : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.configuration))
+
+    def copy(self):
+        copy_machines = []
+        for m in self.configuration:
+            copy_machines.append(m.copy())
+
+        copy_solution = RmriSijkCmax_Solution(self.instance)
+        for i in range(self.instance.m):
+            copy_solution.configuration[i] = copy_machines[i]
+        copy_solution.objective_value = self.objective_value
+        return copy_solution
+
+    @classmethod
+    def read_txt(cls, path: Path):
+        """Read a solution from a txt file
+
+        Args:
+            path (Path): path to the solution's txt file of type Path from pathlib
+
+        Returns:
+            RmSijkCmax_Solution:
+        """
+        f = open(path, "r")
+        content = f.read().split('\n')
+        objective_value_ = int(content[0].split(':')[1])
+        configuration_ = []
+        for i in range(2, len(content)):
+            line_content = content[i].split('|')
+            configuration_.append(ParallelMachines.Machine(int(line_content[0]), int(line_content[2]), job_schedule=[ParallelMachines.Job(
+                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[1].split(':')]]))
+        solution = cls(objective_value=objective_value_,
+                       configuration=configuration_)
+        return solution
+
+    def plot(self, path: Path = None) -> None:
+        """Plot the solution in an appropriate diagram"""
+        if "matplotlib" in sys.modules:
+            if self.instance is not None:
+                # Add Tasks ID
+                fig, gnt = plt.subplots()
+
+                # Setting labels for x-axis and y-axis
+                gnt.set_xlabel('seconds')
+                gnt.set_ylabel('Machines')
+
+                # Setting ticks on y-axis
+
+                ticks = []
+                ticks_labels = []
+                for i in range(len(self.configuration)):
+                    ticks.append(10*(i+1) + 5)
+                    ticks_labels.append(str(i+1))
+
+                gnt.set_yticks(ticks)
+                # Labelling tickes of y-axis
+                gnt.set_yticklabels(ticks_labels)
+
+                # Setting graph attribute
+                gnt.grid(True)
+
+                for j in range(len(self.configuration)):
+                    schedule = self.configuration[j].job_schedule
+                    prev = -1
+                    prevEndTime = 0
+                    for element in schedule:
+                        job_index, startTime, endTime = element
+                        if prevEndTime < startTime:
+                            # Idle Time
+                            gnt.broken_barh(
+                                [(prevEndTime, startTime - prevEndTime)], ((j+1) * 10, 9), facecolors=('tab:gray'))
+                        if prev != -1:
+                            # Setup Time
+                            gnt.broken_barh([(startTime, self.instance.S[j][prev][job_index])], ((
+                                j+1) * 10, 9), facecolors=('tab:orange'))
+                            # Processing Time
+                            gnt.broken_barh([(startTime + self.instance.S[j][prev][job_index],
+                                            self.instance.P[job_index][j])], ((j+1) * 10, 9), facecolors=('tab:blue'))
+                        else:
+                            gnt.broken_barh([(startTime, self.instance.P[job_index][j])], ((
+                                j+1) * 10, 9), facecolors=('tab:blue'))
+                        prev = job_index
+                        prevEndTime = endTime
+                if path:
+                    plt.savefig(path)
+                else:
+                    plt.show()
+                return
+            else:
+                print("Please assign the solved instance to the solution object")
+        else:
+            print("Matplotlib is not installed, you can't use gant_plot")
+            return
+
+    def is_valid(self):
+        """
+        Check if solution respects the constraints
+        """
+        set_jobs = set()
+        is_valid = True
+        for machine in self.configuration:
+            prev_job = None
+            ci, setup_time, expected_start_time = 0, 0, 0
+            for i, element in enumerate(machine.job_schedule):
+                job, startTime, endTime = element
+                # Test End Time + start Time
+                if prev_job is None:
+                    setup_time = self.instance.S[machine.machine_num][job][job]
+                    expected_start_time = self.instance.R[job]
+                else:
+                    setup_time = self.instance.S[machine.machine_num][prev_job][job]
+                    expected_start_time = max(ci,self.instance.R[job])
+
+                proc_time = self.instance.P[job][machine.machine_num]
+                ci = expected_start_time + proc_time + setup_time
+
+                if startTime != expected_start_time or endTime != ci:
+                    print(f'## Error: in machine {machine.machine_num}' +
+                          f' found {element} expected {job,expected_start_time, ci}')
+                    is_valid = False
+                set_jobs.add(job)
+                prev_job = job
+
+        is_valid &= len(set_jobs) == self.instance.n
+        return is_valid
+
+class Heuristics():
+
+    @staticmethod
+    def constructive(instance: RmriSijkCmax_Instance):
+        """the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
+
+        Args:
+            instance (RmriSijkCmax_Instance): Instance to be solved by the heuristic
+            
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        start_time = perf_counter()
+        solution = RmriSijkCmax_Solution(instance=instance)
+
+        remaining_jobs_list = [j for j in range(instance.n)]
+
+        while len(remaining_jobs_list) != 0:
+            min_factor = None
+            for i in remaining_jobs_list:
+                for j in range(instance.m):
+                    current_machine_schedule = solution.configuration[j]
+                    if (current_machine_schedule.last_job == -1):
+                        startTime = max(current_machine_schedule.completion_time,
+                                        instance.R[i]) 
+                        factor = startTime + instance.P[i][j] + \
+                            instance.S[j][i][i] # Added Sj_ii for rabadi
+                    else:
+                        startTime = max(current_machine_schedule.completion_time,
+                                        instance.R[i])
+                        factor = startTime + instance.P[i][j] + instance.S[j][
+                            current_machine_schedule.last_job][i]
+
+                    if not min_factor or (min_factor > factor):
+                        min_factor = factor
+                        taken_job = i
+                        taken_machine = j
+                        taken_startTime = startTime
+            if (solution.configuration[taken_machine].last_job == -1):
+                ci = taken_startTime + instance.P[taken_job][taken_machine] + instance.S[taken_machine][taken_job][taken_job] # Added Sj_ii for rabadi
+            else:
+                ci = taken_startTime + instance.P[taken_job][
+                    taken_machine] + instance.S[taken_machine][
+                        solution.configuration[taken_machine].last_job][taken_job]
+            solution.configuration[taken_machine].completion_time = ci
+            solution.configuration[taken_machine].last_job = taken_job
+            solution.configuration[taken_machine].job_schedule.append(
+                ParallelMachines.Job(taken_job, taken_startTime, min_factor))
+            remaining_jobs_list.remove(taken_job)
+            if (ci > solution.objective_value):
+                solution.objective_value = ci
+
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+
+    @staticmethod
+    def ordered_constructive(instance : RmriSijkCmax_Instance, remaining_jobs_list=None, is_random : bool = False):
+        start_time = perf_counter()
+        solution = RmriSijkCmax_Solution(instance)
+        if remaining_jobs_list is None:
+            remaining_jobs_list = [i for i in range(instance.n)]
+            if is_random:
+                random.shuffle(remaining_jobs_list)
+
+        for i in remaining_jobs_list:
+            min_factor = None
+            for j in range(instance.m):
+                current_machine_schedule = solution.configuration[j]
+                if (current_machine_schedule.last_job == -1):
+                    startTime = max(current_machine_schedule.completion_time,
+                                    instance.R[i]) 
+                    factor = startTime + instance.P[i][j] + \
+                        instance.S[j][i][i] # Added Sj_ii for rabadi
+                else:
+                    startTime = max(current_machine_schedule.completion_time,
+                                    instance.R[i])
+                    factor = startTime + instance.P[i][j] + instance.S[j][
+                        current_machine_schedule.last_job][i]
+
+                if not min_factor or (min_factor > factor):
+                    min_factor = factor
+                    taken_job = i
+                    taken_machine = j
+                    taken_startTime = startTime
+            
+            # Apply the move
+            if (current_machine_schedule.last_job == -1):
+                ci = taken_startTime + instance.P[taken_job][taken_machine] +\
+                    instance.S[taken_machine][taken_job][taken_job] # Added Sj_ii for rabadi
+            else:
+                ci = taken_startTime + instance.P[taken_job][
+                    taken_machine] + instance.S[taken_machine][
+                        solution.configuration[taken_machine].last_job][taken_job]
+            solution.configuration[taken_machine].completion_time = ci
+            solution.configuration[taken_machine].last_job = taken_job
+            solution.configuration[taken_machine].job_schedule.append(
+                ParallelMachines.Job(taken_job, taken_startTime, min_factor))
+            if (ci > solution.objective_value):
+                solution.objective_value = ci
+
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+
+    @staticmethod
+    def list_heuristic(instance : RmriSijkCmax_Instance, rule : int = 1, decreasing : bool = False):
+        """list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution
+
+        Args:
+            instance (RmriSijkCmax_Instance): Instance to be solved by the heuristic
+            rule (int, optional): ID of the rule to follow by the heuristic. Defaults to 1.
+            decreasing (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        if rule == 1:  # Mean Processings
+            remaining_jobs_list = [(i, mean(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 2:  # Min Processings
+            remaining_jobs_list = [(i, min(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 3:  # Mean Processings + Mean Setups
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[i]) for s in instance.S]
+                                for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, mean(instance.P[i]) + setup_means[i])
+                                for i in range(instance.n)]
+        elif rule == 4:  # Max Processings
+            remaining_jobs_list = [(i, max(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 5:  # IS1
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, max(max(instance.P[i]), max_setup[i][0]))
+                                for i in range(instance.n)]
+        elif rule == 6:  # IS2
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, max(min(instance.P[i]), min_setup[i][0]))
+                                for i in range(instance.n)]
+        elif rule == 7:  # IS3
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, min(min(instance.P[i]), min_setup[i][0]))
+                                for i in range(instance.n)]
+        elif rule == 8:  # IS4
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, min(max(instance.P[i]), max_setup[i][0]))
+                                for i in range(instance.n)]
+        elif rule == 9:  # IS5
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, max(instance.P[i]) / max_setup[i][0])
+                                for i in range(instance.n)]
+        elif rule == 10:  # IS6
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, min(instance.P[i]) / (min_setup[i][0] + 1))
+                                for i in range(instance.n)]
+        elif rule == 11:  # IS7
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, max_setup[i][0] / max(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 12:  # IS8
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, min_setup[i][0] / (min(instance.P[i]) + 1))
+                                for i in range(instance.n)]
+        elif rule == 13:  # IS9
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, min_setup[i][0] / max(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 14:  # IS10
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, max_setup[i][0] / (min(instance.P[i]) + 1))
+                                for i in range(instance.n)]
+        elif rule == 15:  # IS11
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, max_setup[i][0] + max(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 16:  # IS12
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, min_setup[i][0] + min(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 17:  # IS13
+            proc_div_setup = [
+                min([instance.P[i][k] / max(instance.S[k][i])]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 18:  # IS14
+            proc_div_setup = [
+                min(instance.P[i][k] / (min(instance.S[k][i]) + 1)
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 19:  # IS15
+            proc_div_setup = [
+                max(max(instance.S[k][i]) / instance.P[i][k]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 20:  # IS16
+            proc_div_setup = [
+                max([min(instance.S[k][i]) / instance.P[i][k]]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 21:  # IS17
+            proc_div_setup = [
+                min([min(instance.S[k][i]) / instance.P[i][k]]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 22:  # IS18
+            proc_div_setup = [
+                min([max(instance.S[k][i]) / instance.P[i][k]]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 23:  # IS19
+            proc_div_setup = [
+                min([max(instance.S[k][i]) + instance.P[i][k]]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 24:  # IS20
+            proc_div_setup = [
+                max([max(instance.S[k][i]) + instance.P[i][k]]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 25:  # IS21
+            proc_div_setup = [
+                min(min(instance.S[k][i]) + instance.P[i][k]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 26:  # IS22
+            proc_div_setup = [
+                max([min(instance.S[k][i]) + instance.P[i][k]]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 27:  # Mean Setup
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[i]) for s in instance.S]
+                                for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_means[i]) for i in range(instance.n)]
+        elif rule == 28:  # Min Setup
+            setup_mins = [
+                min(min_list) for min_list in [[min(s[i]) for s in instance.S]
+                                            for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_mins[i]) for i in range(instance.n)]
+        elif rule == 29:  # Max Setup
+            setup_max = [
+                max(max_list) for max_list in [[max(s[i]) for s in instance.S]
+                                            for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_max[i]) for i in range(instance.n)]
+        elif rule == 30:
+            remaining_jobs_list = [(i, instance.R[i]) for i in range(instance.n)]
+        elif rule == 31:  # Mean Processings + Mean Setups
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[i]) for s in instance.S]
+                                for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, mean(instance.P[i]) + setup_means[i] + instance.R[i])
+                                for i in range(instance.n)]
+        elif rule == 32:  # IS10
+            max_setup = [
+                max([max(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + max_setup[i][0] / (min(instance.P[i]) + 1))
+                                for i in range(instance.n)]
+        elif rule == 33:  # IS21
+            proc_div_setup = [
+                min(min(instance.S[k][i]) + instance.P[i][k]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 34:  # IS2
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + max(min(instance.P[i]), min_setup[i][0]))
+                                for i in range(instance.n)]                
+        elif rule == 35:  # Min Processings
+            remaining_jobs_list = [(i, instance.R[i] + min(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 36:  # IS14
+            proc_div_setup = [
+                min(instance.P[i][k] / (min(instance.S[k][i]) + 1)
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + proc_div_setup[i])
+                                for i in range(instance.n)]
+        elif rule == 37:  # IS12
+            min_setup = [
+                min([min(instance.S[k][i])] for k in range(instance.m))
+                for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + min_setup[i][0] + min(instance.P[i]))
+                                for i in range(instance.n)]
+        elif rule == 38:  # IS15
+            proc_div_setup = [
+                max(max(instance.S[k][i]) / instance.P[i][k]
+                    for k in range(instance.m)) for i in range(instance.n)
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + proc_div_setup[i])
+                                for i in range(instance.n)]
+
+        remaining_jobs_list = sorted(remaining_jobs_list,
+                                    key=lambda job: job[1],
+                                    reverse=decreasing)
+        jobs_list = [element[0] for element in remaining_jobs_list]
+
+        return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)
+    
+    @staticmethod
+    def meta_raps(instance: RmriSijkCmax_Instance, p: float, r: int, nb_exec: int):
+        """Returns the solution using the meta-raps algorithm
+
+        Args:
+            instance (RmriSijkCmax_Instance): The instance to be solved by the metaheuristic
+            p (float): probability of taking the greedy best solution
+            r (int): percentage of moves to consider to select the best move
+            nb_exec (int): Number of execution of the metaheuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+        startTime = perf_counter()
+        solveResult = Problem.SolveResult()
+        solveResult.all_solutions = []
+        best_solution = None
+        for _ in range(nb_exec):
+            solution = RmriSijkCmax_Solution(instance)
+            remaining_jobs_list = [i for i in range(instance.n)]
+            toDelete = 0
+            while len(remaining_jobs_list) != 0:
+                toDelete += 1
+                insertions_list = []
+                for i in remaining_jobs_list:
+                    for j in range(instance.m):
+                        current_machine_schedule = solution.configuration[j]
+                        insertions_list.append(
+                            (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
+                        for k in range(1, len(current_machine_schedule.job_schedule)):
+                            insertions_list.append(
+                                (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
+
+                insertions_list = sorted(
+                    insertions_list, key=lambda insertion: insertion[3])
+                proba = random.random()
+                if proba < p:
+                    rand_insertion = insertions_list[0]
+                else:
+                    rand_insertion = random.choice(
+                        insertions_list[0:int(instance.n * r)])
+                taken_job, taken_machine, taken_pos, ci = rand_insertion
+                solution.configuration[taken_machine].job_schedule.insert(
+                    taken_pos, ParallelMachines.Job(taken_job, 0, 0))
+                solution.configuration[taken_machine].compute_completion_time(
+                    instance, taken_pos)
+                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
+                    solution.configuration[taken_machine].last_job = taken_job
+                if ci > solution.objective_value:
+                    solution.objective_value = ci
+                remaining_jobs_list.remove(taken_job)
+
+            solution.fix_cmax()
+            solveResult.all_solutions.append(solution)
+            if not best_solution or best_solution.objective_value > solution.objective_value:
+                best_solution = solution
+
+        solveResult.best_solution = best_solution
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
+        return solveResult
+
+    @staticmethod
+    def grasp(instance: RmriSijkCmax_Instance, x : float, nb_exec: int):
+        """Returns the solution using the grasp algorithm
+
+        Args:
+            instance (RmSijkCmax_Instance): Instance to be solved by the metaheuristic
+            x (float): percentage of moves to consider to select the best move
+            nb_exec (int): Number of execution of the metaheuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+        startTime = perf_counter()
+        solveResult = Problem.SolveResult()
+        solveResult.all_solutions = []
+        best_solution = None
+        for _ in range(nb_exec):
+            solution = RmriSijkCmax_Solution(instance)
+            remaining_jobs_list = [i for i in range(instance.n)]
+            while len(remaining_jobs_list) != 0:
+                insertions_list = []
+                for i in remaining_jobs_list:
+                    for j in range(instance.m):
+                        current_machine_schedule = solution.configuration[j]
+                        insertions_list.append(
+                            (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
+                        for k in range(1, len(current_machine_schedule.job_schedule)):
+                            insertions_list.append(
+                                (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
+
+                insertions_list = sorted(
+                    insertions_list, key=lambda insertion: insertion[3])
+                rand_insertion = random.choice(
+                    insertions_list[0:int(instance.n * x)])
+                taken_job, taken_machine, taken_pos, ci = rand_insertion
+                solution.configuration[taken_machine].job_schedule.insert(
+                    taken_pos, ParallelMachines.Job(taken_job, 0, 0))
+                solution.configuration[taken_machine].compute_completion_time(
+                    instance, taken_pos)
+                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
+                    solution.configuration[taken_machine].last_job = taken_job
+                remaining_jobs_list.remove(taken_job)
+
+            solution.fix_cmax()
+            solveResult.all_solutions.append(solution)
+            if not best_solution or best_solution.objective_value > solution.objective_value:
+                best_solution = solution
+
+        solveResult.best_solution = best_solution
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
+        return solveResult
+
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
