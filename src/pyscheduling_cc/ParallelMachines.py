@@ -81,7 +81,7 @@ class ParallelInstance(Problem.Instance):
         i = startIndex
         for _ in range(self.n):
             ligne = content[i].strip().split('\t')
-            P_k = [int(ligne[j]) for j in range(1, 2*self.m, 2)]
+            P_k = [int(ligne[j]) for j in range(self.m)]
             P.append(P_k)
             i += 1
         return (P, i)
@@ -97,9 +97,9 @@ class ParallelInstance(Problem.Instance):
            (list[int],int): (Table of release time, index of the next section of the instance)
         """
         i = startIndex + 1
-        ligne = content[i].split('\t')
+        ligne = content[i].strip().split('\t')
         ri = []  # Table : Release time of job i
-        for j in range(2, len(ligne), 2):
+        for j in range(len(ligne)):
             ri.append(int(ligne[j]))
         return (ri, i+1)
 
@@ -116,7 +116,8 @@ class ParallelInstance(Problem.Instance):
         i = startIndex
         S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
         i += 1  # Skip SSD
-        while i != len(content):
+        endIndex = startIndex+1+self.n*self.m+self.m
+        while i != endIndex:
             i = i+1  # Skip Mk
             Si = []
             for k in range(self.n):
@@ -138,9 +139,9 @@ class ParallelInstance(Problem.Instance):
            (list[int],int): (Table of due time, index of the next section of the instance)
         """
         i = startIndex + 1
-        ligne = content[i].split('\t')
+        ligne = content[i].strip().split('\t')
         di = []  # Table : Due time of job i
-        for j in range(2, len(ligne), 2):
+        for j in range(len(ligne)):
             di.append(int(ligne[j]))
         return (di, i+1)
 

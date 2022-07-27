@@ -39,11 +39,12 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         content = f.read().split('\n')
         ligne0 = content[0].split(' ')
         n = int(ligne0[0])  # number of configuration
-        m = int(ligne0[2])  # number of jobs
+        m = int(ligne0[1])  # number of jobs
         i = 2
         instance = cls("test", n, m)
         instance.P, i = instance.read_P(content, i)
         instance.S, i = instance.read_S(content, i)
+        f.close()
         return instance
 
     @classmethod
@@ -873,6 +874,15 @@ class Metaheuristics():
         )
 
         return solve_result
+
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 
 class AntColony(object):
