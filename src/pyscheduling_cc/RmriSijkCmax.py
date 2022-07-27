@@ -35,7 +35,7 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         content = f.read().split('\n')
         ligne0 = content[0].split(' ')
         n = int(ligne0[0])  # number of configuration
-        m = int(ligne0[1])  # number of jobs
+        m = int(ligne0[2])  # number of jobs
         i = 2
         instance = cls("test", n, m)
         instance.P, i = instance.read_P(content, i)
