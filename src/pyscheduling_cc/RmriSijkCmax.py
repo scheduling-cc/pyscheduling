@@ -1,6 +1,9 @@
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint, uniform
+
+import matplotlib.pyplot as plt
 
 import pyscheduling_cc.ParallelMachines as ParallelMachines
 import pyscheduling_cc.Problem as Problem
@@ -132,4 +135,152 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         LB = max(lb1, all_max_r_j)
 
         return LB
+
+@dataclass
+class RmriSijkCmax_Solution(ParallelMachines.ParallelSolution):
+
+    def __init__(self, instance: RmriSijkCmax_Instance = None, configuration: list[ParallelMachines.Machine] = None, objective_value: int = 0):
+        """Constructor of RmSijkCmax_Solution
+
+        Args:
+            instance (RmriSijkCmax_Instance, optional): Instance to be solved by the solution. Defaults to None.
+            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
+            objective_value (int, optional): initial objective value of the solution. Defaults to 0.
+        """
+        self.instance = instance
+        if configuration is None:
+            self.configuration = []
+            for i in range(instance.m):
+                machine = ParallelMachines.Machine(i, 0, -1, [])
+                self.configuration.append(machine)
+        else:
+            self.configuration = configuration
+        self.objective_value = 0
+
+    def __str__(self):
+        return "Cmax : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.configuration))
+
+    def copy(self):
+        copy_machines = []
+        for m in self.configuration:
+            copy_machines.append(m.copy())
+
+        copy_solution = RmriSijkCmax_Solution(self.instance)
+        for i in range(self.instance.m):
+            copy_solution.configuration[i] = copy_machines[i]
+        copy_solution.objective_value = self.objective_value
+        return copy_solution
+
+    @classmethod
+    def read_txt(cls, path: Path):
+        """Read a solution from a txt file
+
+        Args:
+            path (Path): path to the solution's txt file of type Path from pathlib
+
+        Returns:
+            RmSijkCmax_Solution:
+        """
+        f = open(path, "r")
+        content = f.read().split('\n')
+        objective_value_ = int(content[0].split(':')[1])
+        configuration_ = []
+        for i in range(2, len(content)):
+            line_content = content[i].split('|')
+            configuration_.append(ParallelMachines.Machine(int(line_content[0]), int(line_content[2]), job_schedule=[ParallelMachines.Job(
+                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[1].split(':')]]))
+        solution = cls(objective_value=objective_value_,
+                       configuration=configuration_)
+        return solution
+
+    def plot(self, path: Path = None) -> None:
+        """Plot the solution in an appropriate diagram"""
+        if "matplotlib" in sys.modules:
+            if self.instance is not None:
+                # Add Tasks ID
+                fig, gnt = plt.subplots()
+
+                # Setting labels for x-axis and y-axis
+                gnt.set_xlabel('seconds')
+                gnt.set_ylabel('Machines')
+
+                # Setting ticks on y-axis
+
+                ticks = []
+                ticks_labels = []
+                for i in range(len(self.configuration)):
+                    ticks.append(10*(i+1) + 5)
+                    ticks_labels.append(str(i+1))
+
+                gnt.set_yticks(ticks)
+                # Labelling tickes of y-axis
+                gnt.set_yticklabels(ticks_labels)
+
+                # Setting graph attribute
+                gnt.grid(True)
+
+                for j in range(len(self.configuration)):
+                    schedule = self.configuration[j].job_schedule
+                    prev = -1
+                    prevEndTime = 0
+                    for element in schedule:
+                        job_index, startTime, endTime = element
+                        if prevEndTime < startTime:
+                            # Idle Time
+                            gnt.broken_barh(
+                                [(prevEndTime, startTime - prevEndTime)], ((j+1) * 10, 9), facecolors=('tab:gray'))
+                        if prev != -1:
+                            # Setup Time
+                            gnt.broken_barh([(startTime, self.instance.S[j][prev][job_index])], ((
+                                j+1) * 10, 9), facecolors=('tab:orange'))
+                            # Processing Time
+                            gnt.broken_barh([(startTime + self.instance.S[j][prev][job_index],
+                                            self.instance.P[job_index][j])], ((j+1) * 10, 9), facecolors=('tab:blue'))
+                        else:
+                            gnt.broken_barh([(startTime, self.instance.P[job_index][j])], ((
+                                j+1) * 10, 9), facecolors=('tab:blue'))
+                        prev = job_index
+                        prevEndTime = endTime
+                if path:
+                    plt.savefig(path)
+                else:
+                    plt.show()
+                return
+            else:
+                print("Please assign the solved instance to the solution object")
+        else:
+            print("Matplotlib is not installed, you can't use gant_plot")
+            return
+
+    def is_valid(self):
+        """
+        Check if solution respects the constraints
+        """
+        set_jobs = set()
+        is_valid = True
+        for machine in self.configuration:
+            prev_job = None
+            ci, setup_time, expected_start_time = 0, 0, 0
+            for i, element in enumerate(machine.job_schedule):
+                job, startTime, endTime = element
+                # Test End Time + start Time
+                if prev_job is None:
+                    setup_time = self.instance.S[machine.machine_num][job][job]
+                    expected_start_time = self.instance.R[job]
+                else:
+                    setup_time = self.instance.S[machine.machine_num][prev_job][job]
+                    expected_start_time = max(ci,self.instance.R[job])
+
+                proc_time = self.instance.P[job][machine.machine_num]
+                ci = expected_start_time + proc_time + setup_time
+
+                if startTime != expected_start_time or endTime != ci:
+                    print(f'## Error: in machine {machine.machine_num}' +
+                          f' found {element} expected {job,expected_start_time, ci}')
+                    is_valid = False
+                set_jobs.add(job)
+                prev_job = job
+
+        is_valid &= len(set_jobs) == self.instance.n
+        return is_valid
 
