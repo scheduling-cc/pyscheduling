@@ -980,6 +980,34 @@ class PM_LocalSearch(Problem.LocalSearch):
             solution.cmax()
         return solution
 
+    @staticmethod
+    def best_insertion_machine(solution : ParallelSolution,machine_id : int, job_id : int):
+        """Find the best position to insert a job job_id in the machine machine_id
+
+        Args:
+            solution (ParallelSolution): Solution to be improved
+            machine_id (int): ID of the machine 
+            job_id (int): ID of the job
+
+        Returns:
+            ParallelSolution: New solution
+        """
+        machine = solution.configuration[machine_id]
+        machine_schedule = machine.job_schedule
+        best_cl = None
+        taken_move = 0
+        for j in range(len(machine_schedule)):  # for every position in other machine
+            cl = machine.completion_time_insert(job_id, j, solution.instance)
+
+            if not best_cl or cl < best_cl:
+                best_cl = cl
+                taken_move = j
+
+        machine_schedule.insert(taken_move, Job(job_id, 0, 0))
+        machine.completion_time = machine.compute_completion_time(solution.instance)
+
+        return solution
+
 
 class NeighbourhoodGeneration():
 
@@ -1036,8 +1064,8 @@ class NeighbourhoodGeneration():
                 job_random, _, _ = random_machine_schedule[random_job_index]
                 other_job, _, _ = other_machine_schedule[other_job_index]
 
-                new_ci = random_machine.completion_time_swap(
-                    random_job_index, other_job_index, solution.instance)
+                new_ci = random_machine.completion_time_remove_insert(
+                    random_job_index, other_job, random_job_index, solution.instance)
                 new_cl = other_machine.completion_time_remove_insert(
                     other_job_index, job_random, other_job_index, solution.instance)
 
