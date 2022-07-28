@@ -119,7 +119,7 @@ class SolveResult:
 
     def __init__(self, best_solution: Solution = None, runtime: float = -1,
                  time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE,
-                 solutions: list[Solution] = None, other_metrics: list[str, object] = None):
+                 solutions: list[Solution] = None, kpis: list[str, object] = None):
         """constructor of SolveResult
 
         Args:
@@ -137,7 +137,7 @@ class SolveResult:
         else:
             self.solve_status = SolveStatus.INFEASIBLE
         self.time_to_best = time_to_best
-        self.other_metrics = other_metrics
+        self.kpis = kpis
         self.all_solutions = solutions
 
     @property
