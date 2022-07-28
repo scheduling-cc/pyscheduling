@@ -636,102 +636,104 @@ class MILP():
         Returns:
             SolveResult: The object represeting the solving process result
         """
+        if "gurobipy" in sys.modules:
+            # Extracting parameters
+            log_path = kwargs.get("log_path", None)
+            time_limit = kwargs.get("time_limit", 300)
+            nb_threads = kwargs.get("threads", 1)
+            stop_times = kwargs.get("stop_times", [
+                                    time_limit // 4, time_limit // 2, (3*time_limit) // 4, time_limit])
 
-        # Extracting parameters
-        log_path = kwargs.get("log_path", None)
-        time_limit = kwargs.get("time_limit", 300)
-        nb_threads = kwargs.get("threads", 1)
-        stop_times = kwargs.get("stop_times", [
-                                time_limit // 4, time_limit // 2, (3*time_limit) // 4, time_limit])
+            # Preparing ranges
+            M = range(instance.m)
+            E = range(instance.n)
 
-        # Preparing ranges
-        M = range(instance.m)
-        E = range(instance.n)
+            # Compute lower bound
+            LB = instance.lower_bound
 
-        # Compute lower bound
-        LB = instance.lower_bound
+            # Computing upper bound
+            # init_sol = Heuristics.constructive(instance).best_solution
+            # UB = init_sol.cmax
 
-        # Computing upper bound
-        # init_sol = Heuristics.constructive(instance).best_solution
-        # UB = init_sol.cmax
+            # Min Ri
+            min_ri = min(instance.R)
 
-        # Min Ri
-        min_ri = min(instance.R)
+            model = gp.Model("sched")
 
-        model = gp.Model("sched")
+            s_ijk, p_ij = MILP.format_matrices(instance)
 
-        s_ijk, p_ij = MILP.format_matrices(instance)
+            N0 = range(0, instance.n+1)
+            N = range(1, instance.n+1)
+            V = 100000
 
-        N0 = range(0, instance.n+1)
-        N = range(1, instance.n+1)
-        V = 100000
+            X_ijk = model.addVars(instance.m, instance.n+1,
+                                instance.n+1, vtype=gp.GRB.BINARY, name="X")
+            Y_ij = model.addVars(instance.m, instance.n+1,
+                                vtype=gp.GRB.BINARY, name="Y")
 
-        X_ijk = model.addVars(instance.m, instance.n+1,
-                              instance.n+1, vtype=gp.GRB.BINARY, name="X")
-        Y_ij = model.addVars(instance.m, instance.n+1,
-                             vtype=gp.GRB.BINARY, name="Y")
+            C_j = model.addVars(instance.n + 1, lb=0,
+                                vtype=gp.GRB.INTEGER, name="C")
+            C_max = model.addVar(lb=0, vtype=gp.GRB.INTEGER, name="C_max")
 
-        C_j = model.addVars(instance.n + 1, lb=0,
-                            vtype=gp.GRB.INTEGER, name="C")
-        C_max = model.addVar(lb=0, vtype=gp.GRB.INTEGER, name="C_max")
+            # Assignment
+            model.addConstrs((sum(Y_ij[i, j]
+                            for i in M) == 1 for j in N), name="C2")
+            model.addConstrs((Y_ij[i, k] == sum(X_ijk[i, j, k]
+                            for j in N0 if j != k) for i in M for k in N), name="C3")
+            model.addConstrs((Y_ij[i, j] == sum(X_ijk[i, j, k]
+                            for k in N0 if k != j) for i in M for j in N), name="C4")
+            model.addConstrs((sum(X_ijk[i, 0, k]
+                            for k in N) <= 1 for i in M), name="C5")
 
-        # Assignment
-        model.addConstrs((sum(Y_ij[i, j]
-                         for i in M) == 1 for j in N), name="C2")
-        model.addConstrs((Y_ij[i, k] == sum(X_ijk[i, j, k]
-                         for j in N0 if j != k) for i in M for k in N), name="C3")
-        model.addConstrs((Y_ij[i, j] == sum(X_ijk[i, j, k]
-                         for k in N0 if k != j) for i in M for j in N), name="C4")
-        model.addConstrs((sum(X_ijk[i, 0, k]
-                         for k in N) <= 1 for i in M), name="C5")
+            # Scheduling
+            model.addConstrs((C_j[k] >= C_j[j] + V * (X_ijk[i, j, k] - 1) + s_ijk[i][j][k] + p_ij[i][k]
+                            for j in N0 for k in N for i in M if j != k), name="C6")
+            model.addConstrs((C_j[k] >= instance.R[k-1] + V * (X_ijk[i, j, k] - 1) + s_ijk[i][j][k] + p_ij[i][k]
+                            for j in N0 for k in N for i in M if j != k), name="C7")
+            model.addConstr(C_j[0] == 0, name="C8")
+            model.addConstrs((C_j[j] <= C_max for j in N), name="C9")
 
-        # Scheduling
-        model.addConstrs((C_j[k] >= C_j[j] + V * (X_ijk[i, j, k] - 1) + s_ijk[i][j][k] + p_ij[i][k]
-                          for j in N0 for k in N for i in M if j != k), name="C6")
-        model.addConstrs((C_j[k] >= instance.R[k-1] + V * (X_ijk[i, j, k] - 1) + s_ijk[i][j][k] + p_ij[i][k]
-                          for j in N0 for k in N for i in M if j != k), name="C7")
-        model.addConstr(C_j[0] == 0, name="C8")
-        model.addConstrs((C_j[j] <= C_max for j in N), name="C9")
+            # Valid inequalities
+            model.addConstrs((sum(s_ijk[i][j][k] * X_ijk[i, j, k] for j in N0 for k in N if j != k) +
+                            sum(p_ij[i][j] * Y_ij[i, j] for j in N) + min_ri <= C_max for i in M), name="C10")
 
-        # Valid inequalities
-        model.addConstrs((sum(s_ijk[i][j][k] * X_ijk[i, j, k] for j in N0 for k in N if j != k) +
-                          sum(p_ij[i][j] * Y_ij[i, j] for j in N) + min_ri <= C_max for i in M), name="C10")
+            model.setObjective(C_max)
 
-        model.setObjective(C_max)
+            if time_limit:
+                model.setParam("TimeLimit", time_limit)
+            if log_path:
+                model.setParam("LogFile", log_path)
 
-        if time_limit:
-            model.setParam("TimeLimit", time_limit)
-        if log_path:
-            model.setParam("LogFile", log_path)
+            model.setParam("Threads", nb_threads)
+            model.setParam("LogToConsole", 0)
+            model.update()
+            model.optimize(MILP.build_callback(
+                MILP.mycallback, stop_times=stop_times))
 
-        model.setParam("Threads", nb_threads)
-        model.setParam("LogToConsole", 0)
-        model.update()
-        model.optimize(MILP.build_callback(
-            MILP.mycallback, stop_times=stop_times))
+            sol = MILP.transform_solution(Y_ij, C_j, instance)
 
-        sol = MILP.transform_solution(Y_ij, C_j, instance)
+            # Construct the solve result
+            execTimes = {"ObjBound": model.ObjBound}
+            prev = -1
+            for stop_t in MILP.mycallback.stop_times:
+                if stop_t in MILP.mycallback.best_values:
+                    execTimes[f'Obj-{stop_t}'] = MILP.mycallback.best_values[stop_t]
+                    prev = MILP.mycallback.best_values[stop_t]
+                else:
+                    execTimes[f'Obj-{stop_t}'] = prev
 
-        # Construct the solve result
-        execTimes = {"ObjBound": model.ObjBound}
-        prev = -1
-        for stop_t in MILP.mycallback.stop_times:
-            if stop_t in MILP.mycallback.best_values:
-                execTimes[f'Obj-{stop_t}'] = MILP.mycallback.best_values[stop_t]
-                prev = MILP.mycallback.best_values[stop_t]
-            else:
-                execTimes[f'Obj-{stop_t}'] = prev
+            solve_result = Problem.SolveResult(
+                best_solution=sol,
+                runtime=model.Runtime,
+                time_to_best=MILP.mycallback.SOLVE_RESULT.time_to_best,
+                status=MILP.GUROBI_STATUS.get(
+                    model.status, Problem.SolveStatus.FEASIBLE),
+                kpis=execTimes
+            )
 
-        solve_result = Problem.SolveResult(
-            best_solution=sol,
-            runtime=model.Runtime,
-            time_to_best=MILP.mycallback.SOLVE_RESULT.time_to_best,
-            status=MILP.GUROBI_STATUS.get(
-                model.status, Problem.SolveStatus.FEASIBLE),
-            kpis=execTimes
-        )
-
-        return solve_result
+            return solve_result
+        else:
+            print("gurobipy import error: you can not use this solver")
 
 
 class Heuristics():
