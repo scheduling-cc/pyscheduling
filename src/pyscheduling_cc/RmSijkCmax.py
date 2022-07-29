@@ -104,6 +104,12 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
                 f.write("\n")
         f.close()
 
+    def create_solution(self):
+        return RmSijkCmax_Solution(self)
+
+    def init_sol_method(self):
+        return Heuristics.constructive
+
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
         by dividing the sum of minimal completion time between job pairs on the number of machines

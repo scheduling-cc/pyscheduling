@@ -11,8 +11,6 @@ from time import perf_counter
 import numpy as np
 
 import pyscheduling_cc.Problem as Problem
-import pyscheduling_cc.RmSijkCmax as RmSijkCmax
-import pyscheduling_cc.RmriSijkCmax as RmriSijkCmax
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -1328,8 +1326,7 @@ class Metaheuristics_Cmax():
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(nb_exec):
-            if(type(instance).__name__.split('_')[0] == "RmSijkCmax") : solution = RmSijkCmax.RmSijkCmax_Solution(instance)
-            elif(type(instance).__name__.split('_')[0] == "RmriSijkCmax") : solution = RmriSijkCmax.RmriSijkCmax_Solution(instance)
+            solution = instance.create_solution()
             remaining_jobs_list = [i for i in range(instance.n)]
             toDelete = 0
             while len(remaining_jobs_list) != 0:
@@ -1390,8 +1387,7 @@ class Metaheuristics_Cmax():
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(nb_exec):
-            if(type(instance).__name__.split('_')[0] == "RmSijkCmax") : solution = RmSijkCmax.RmSijkCmax_Solution(instance)
-            elif(type(instance).__name__.split('_')[0] == "RmriSijkCmax") : solution = RmriSijkCmax.RmriSijkCmax_Solution(instance)
+            solution = instance.create_solution()
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
@@ -1449,8 +1445,7 @@ class Metaheuristics_Cmax():
 
         # Extracting parameters
         time_limit_factor = kwargs.get("time_limit_factor", None)
-        if(type(instance).__name__.split('_')[0] == "RmSijkCmax") : init_sol_method = kwargs.get("init_sol_method", RmSijkCmax.Heuristics.constructive)
-        elif(type(instance).__name__.split('_')[0] == "RmriSijkCmax") : init_sol_method = kwargs.get("init_sol_method", RmriSijkCmax.Heuristics.constructive)
+        init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
         Lfa = kwargs.get("Lfa", 30)
         Nb_iter = kwargs.get("Nb_iter", 500000)
         Non_improv = kwargs.get("Non_improv", 50000)
@@ -1548,8 +1543,7 @@ class Metaheuristics_Cmax():
         # Extracting the parameters
         restriced = kwargs.get("restricted", False)
         time_limit_factor = kwargs.get("time_limit_factor", None)
-        if(type(instance).__name__.split('_')[0] == "RmSijkCmax") : init_sol_method = kwargs.get("init_sol_method", RmSijkCmax.Heuristics.constructive)
-        elif(type(instance).__name__.split('_')[0] == "RmriSijkCmax") : init_sol_method = kwargs.get("init_sol_method", RmriSijkCmax.Heuristics.constructive)
+        init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
         T0 = kwargs.get("T0", 1.4)
         Tf = kwargs.get("Tf", 0.01)
         k = kwargs.get("k", 0.1)
