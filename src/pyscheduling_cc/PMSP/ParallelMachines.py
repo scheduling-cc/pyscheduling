@@ -1,12 +1,10 @@
 import json
-from math import exp
 import random
 from abc import abstractmethod
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from time import perf_counter
 
 import numpy as np
 
