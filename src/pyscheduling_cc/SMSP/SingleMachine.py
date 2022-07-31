@@ -299,31 +299,10 @@ class Machine:
         Returns:
             int: completion_time of the machine
         """
-        ci = 0
         if len(self.job_schedule) > 0:
-            if startIndex > 0:
-                prev_job, startTime, c_prev = self.job_schedule[startIndex - 1]
-                job = self.job_schedule[startIndex].id
-                if hasattr(instance, 'R'):
-                    release_time = max(instance.R[job] - c_prev, 0)
-                else:
-                    release_time = 0
-                ci = c_prev + release_time + \
-                    instance.S[self.machine_num][prev_job][job] + \
-                    instance.P[job][self.machine_num]
-            else:
-                job = self.job_schedule[0].id
-
-                if hasattr(instance, 'R'):
-                    startTime = max(0, instance.R[job])
-                else:
-                    startTime = 0
-
-                ci = startTime + instance.P[job][self.machine_num] + \
-                    + instance.S[self.machine_num][job][job]  # Added Sk_ii for rabadi benchmark
-            self.job_schedule[startIndex] = Job(job, startTime, ci)
-            job_prev_i = job
-            for i in range(startIndex+1, len(self.job_schedule)):
+            if startIndex > 0: ci = self.job_schedule[startIndex - 1].end_time
+            else: ci = 0
+            for i in range(startIndex, len(self.job_schedule)):
                 job_i = self.job_schedule[i].id
 
                 if hasattr(instance, 'R'):
@@ -331,12 +310,10 @@ class Machine:
                 else:
                     startTime = ci
 
-                setup_time = instance.S[self.machine_num][job_prev_i][job_i]
-                proc_time = instance.P[job_i][self.machine_num]
-                ci = startTime + proc_time + setup_time
+                proc_time = instance.P[job_i]
+                ci = startTime + proc_time
 
                 self.job_schedule[i] = Job(job_i, startTime, ci)
-                job_prev_i = job_i
         self.completion_time = ci
         return ci
 
@@ -350,27 +327,8 @@ class Machine:
         Returns:
             ci (int) : completion time
         """
-        if pos > 0:  # There's at least one job in the schedule
-            prev_job, startTime, c_prev = self.job_schedule[pos - 1]
-            if hasattr(instance, 'R'):
-                release_time = max(instance.R[job] - c_prev, 0)
-            else:
-                release_time = 0
-            ci = c_prev + release_time + \
-                instance.S[self.machine_num][prev_job][job] + \
-                instance.P[job][self.machine_num]
-        else:
-            if hasattr(instance, 'R'):
-                release_time = max(instance.R[job], 0)
-            else:
-                release_time = 0
-            # First job to be inserted
-            # Added Sk_ii for rabadi benchmark
-            ci = release_time + \
-                instance.P[job][self.machine_num] + \
-                instance.S[self.machine_num][job][job]
-
-        job_prev_i = job
+        if pos > 0: ci = instance.P[job]+self.job_schedule[pos - 1].end_time
+        else: ci = instance.P[job]
         for i in range(pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
 
@@ -378,11 +336,8 @@ class Machine:
                 startTime = max(ci, instance.R[job_i])
             else:
                 startTime = ci
-            setup_time = instance.S[self.machine_num][job_prev_i][job_i]
-            proc_time = instance.P[job_i][self.machine_num]
-            ci = startTime + proc_time + setup_time
-
-            job_prev_i = job_i
+            proc_time = instance.P[job_i][
+            ci = startTime + proc_time
 
         return ci
 
@@ -400,9 +355,9 @@ class Machine:
         """
         first_pos = min(pos_remove, pos_insert)
 
-        job_prev_i, ci = -1, 0
+        ci = 0
         if first_pos > 0:  # There's at least one job in the schedule
-            job_prev_i, startTime, ci = self.job_schedule[first_pos - 1]
+            ci = self.job_schedule[first_pos - 1].end_time
 
         for i in range(first_pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
@@ -413,12 +368,8 @@ class Machine:
                     startTime = max(ci, instance.R[job])
                 else:
                     startTime = ci
-                setup_time = instance.S[self.machine_num][job_prev_i][job] if job_prev_i != -1 \
-                    else instance.S[self.machine_num][job][job]
-                proc_time = instance.P[job][self.machine_num]
-                ci = startTime + proc_time + setup_time
-
-                job_prev_i = job
+                proc_time = instance.P[job]
+                ci = startTime + proc_time
 
             # If the job_i is not the one to be removed
             if i != pos_remove:
@@ -426,12 +377,8 @@ class Machine:
                     startTime = max(ci, instance.R[job_i])
                 else:
                     startTime = ci
-                setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
-                    else instance.S[self.machine_num][job_i][job_i]
-                proc_time = instance.P[job_i][self.machine_num]
-                ci = startTime + proc_time + setup_time
-
-                job_prev_i = job_i
+                proc_time = instance.P[job_i]
+                ci = startTime + proc_time
 
         return ci
 
@@ -448,9 +395,9 @@ class Machine:
         """
         first_pos = min(pos_i, pos_j)
 
-        job_prev_i, ci = -1, 0
+        ci = 0
         if first_pos > 0:  # There's at least one job in the schedule
-            job_prev_i, startTime, ci = self.job_schedule[first_pos - 1]
+            ci = self.job_schedule[first_pos - 1].end_time
 
         for i in range(first_pos, len(self.job_schedule)):
 
@@ -465,12 +412,8 @@ class Machine:
                 startTime = max(ci, instance.R[job_i])
             else:
                 startTime = ci
-            setup_time = instance.S[self.machine_num][job_prev_i][job_i] if job_prev_i != -1 \
-                else instance.S[self.machine_num][job_i][job_i]
-            proc_time = instance.P[job_i][self.machine_num]
-            ci = startTime + proc_time + setup_time
-
-            job_prev_i = job_i
+            proc_time = instance.P[job_i]
+            ci = startTime + proc_time
 
         return ci
 
