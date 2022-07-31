@@ -207,7 +207,7 @@ class Heuristics():
     def WSPT(instance : wiCi_Instance):
         startTime = perf_counter()
         jobs = list(range(instance.n))
-        jobs.sort(key=lambda job_id : float(instance.W[job_id])/float(instance.P[job_id]))
+        jobs.sort(reverse=True,key=lambda job_id : float(instance.W[job_id])/float(instance.P[job_id]))
         solution = wiCi_Solution(instance)
         for job in jobs:
             solution.machine.job_schedule.append(SingleMachine.Job(job,0,0)) 

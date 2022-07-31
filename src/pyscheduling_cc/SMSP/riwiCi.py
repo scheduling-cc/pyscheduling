@@ -3,6 +3,8 @@ import sys
 from dataclasses import dataclass, field
 from random import randint, uniform
 from pathlib import Path
+from time import perf_counter
+
 from matplotlib import pyplot as plt
 
 import pyscheduling_cc.Problem as Problem
@@ -210,3 +212,77 @@ class wiCi_Solution(SingleMachine.SingleSolution):
 
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
+
+class Heuristics():
+    @staticmethod
+    def heuristic_1(instance : riwiCi_Instance):
+        startTime = perf_counter()
+        solution = wiCi_Solution(instance)
+        solution.machine.wiCi_index = []
+        ci = 0
+        wiCi = 0
+        remaining_jobs_list = list(range(instance.n))
+        rule = lambda job_id : float(instance.W[job_id])/float(max(instance.R[job_id] - ci,0) + instance.P[job_id])
+        while(len(remaining_jobs_list)>0):
+            remaining_jobs_list.sort(reverse=True,key=rule)
+            taken_job = remaining_jobs_list[0]
+            start_time = max(instance.R[taken_job],ci)
+            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,start_time+instance.P[taken_job]))
+            ci = start_time+instance.P[taken_job]
+            wiCi += instance.W[taken_job]*ci
+            solution.machine.wiCi_index.append(wiCi)
+            remaining_jobs_list.pop(0)
+        solution.machine.objective=solution.machine.wiCi_index[instance.n-1]
+        solution.fix_objective()
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+    @staticmethod
+    def heuristic_2(instance : riwiCi_Instance):
+        startTime = perf_counter()
+        solution = wiCi_Solution(instance)
+        solution.machine.wiCi_index = []
+        ci = min(instance.R)
+        wiCi = 0
+        remaining_jobs_list = list(range(instance.n))
+        
+        rule = lambda job_id : float(instance.W[job_id])/float(instance.P[job_id])
+        while(len(remaining_jobs_list)>0):
+            filtered_remaining_jobs_list = list(filter(lambda job_id : instance.R[job_id]<=ci,remaining_jobs_list))
+            filtered_remaining_jobs_list.sort(reverse=True,key=rule)
+            if(len(filtered_remaining_jobs_list)==0):
+                ci = min([instance.R[job_id] for job_id in remaining_jobs_list])
+                filtered_remaining_jobs_list = list(filter(lambda job_id : instance.R[job_id]<=ci,remaining_jobs_list))
+                filtered_remaining_jobs_list.sort(reverse=True,key=rule)
+
+            taken_job = filtered_remaining_jobs_list[0]
+            start_time = max(instance.R[taken_job],ci)
+            ci = start_time+instance.P[taken_job]
+            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,ci))
+            wiCi += instance.W[taken_job]*ci
+            solution.machine.wiCi_index.append(wiCi)
+            remaining_jobs_list.remove(taken_job)
+
+        solution.machine.objective=solution.machine.wiCi_index[instance.n-1]
+        solution.fix_objective()
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
+
+class Metaheuristics():
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
