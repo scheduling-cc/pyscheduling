@@ -294,34 +294,39 @@ class SingleInstance(Problem.Instance):
 @dataclass
 class Machine:
 
-    completion_time: int = 0
+    objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
+    wiCi_index: list[job] = field(default_factory=list)
 
-    def __init__(self, completion_time: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index : list[int] = None) -> None:
         """Constructor of Machine
 
         Args:
-            completion_time (int, optional): completion time of the last job of the machine. Defaults to 0.
+            objective (int, optional): completion time of the last job of the machine. Defaults to 0.
             last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
             job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
+            wiCi_index (list[int], optional): list of indexes of the total completion time after every job. Defaults to None.
         """
-        self.completion_time = completion_time
+        self.objective = objective
         self.last_job = last_job
         if job_schedule is None:
             self.job_schedule = []
         else:
             self.job_schedule = job_schedule
+        
+        if wiCi_index is None: self.wiCi_index = []
+        else: self.wiCi_index = wiCi_index
 
     def __str__(self):
-        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
+        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
 
     def __eq__(self, other):
         same_schedule = other.job_schedule == self.job_schedule
         return (same_machine and same_schedule)
 
     def copy(self):
-        return Machine(self.completion_time, self.last_job, list(self.job_schedule))
+        return Machine(self.objective, self.last_job, list(self.job_schedule))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -329,9 +334,9 @@ class Machine:
 
     @staticmethod
     def fromDict(machine_dict):
-        return Machine(machine_dict["completion_time"], machine_dict["last_job"], machine_dict["job_schedule"])
+        return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def compute_completion_time(self, instance: SingleInstance, startIndex: int = 0):
+    def total_weighted_completion_time(self, instance: SingleInstance, startIndex: int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
         works with both RmSijkCmax and RmriSijkCmax problems
 
@@ -340,11 +345,18 @@ class Machine:
             startIndex (int) : The job index the function starts operating from
 
         Returns:
-            int: completion_time of the machine
+            int: objective of the machine
         """
+        if self.wiCi_index == [] :
+            self.wiCi_index = [-1] * len(self.job_schedule)
+            startIndex = 0
         if len(self.job_schedule) > 0:
-            if startIndex > 0: ci = self.job_schedule[startIndex - 1].end_time
-            else: ci = 0
+            if startIndex > 0: 
+                ci = self.job_schedule[startIndex - 1].end_time
+                wiCi = self.wiCi_index[startIndex - 1]
+            else: 
+                ci = 0
+                wiCi = 0
             for i in range(startIndex, len(self.job_schedule)):
                 job_i = self.job_schedule[i].id
 
@@ -352,13 +364,15 @@ class Machine:
                     startTime = max(ci, instance.R[job_i])
                 else:
                     startTime = ci
-
+                old_ci = ci
                 proc_time = instance.P[job_i]
                 ci = startTime + proc_time
 
                 self.job_schedule[i] = Job(job_i, startTime, ci)
-        self.completion_time = ci
-        return ci
+                wiCi += instance.W[job_i]*(ci - old_ci)
+                self.wiCi_index[i] = wiCi
+        self.objective = wiCi
+        return wiCi
 
     def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
         """
@@ -477,7 +491,7 @@ class SingleSolution(Problem.Solution):
         self.objective_value = 0
 
     def __str__(self):
-        return "Objective : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + self.machine.__str__()
+        return "Objective : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | objective\n" + self.machine.__str__()
 
     def copy(self):
         copy_solution = ParallelSolution(self.instance)
@@ -486,19 +500,19 @@ class SingleSolution(Problem.Solution):
         copy_solution.objective_value = self.objective_value
         return copy_solution
 
-    def cmax(self):
+    def wiCi(self):
         """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
         """
         if self.instance != None:
-                self.machine.compute_completion_time(self.instance)
-        self.objective_value = self.machine.completion_time
+                self.machine.total_weighted_completion_time(self.instance)
+        self.objective_value = self.machine.objective
 
-    def fix_cmax(self):
+    def fix_objective(self):
         """Sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
         """
-        self.objective_value = self.machine.completion_time
+        self.objective_value = self.machine.objective
 
     @classmethod
     @abstractmethod
