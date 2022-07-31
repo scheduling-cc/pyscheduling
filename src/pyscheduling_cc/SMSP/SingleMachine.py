@@ -83,6 +83,23 @@ class SingleInstance(Problem.Instance):
             P.append(int(j))
         return (P, i+1)
 
+    def read_W(self, content: list[str], startIndex: int):
+        """Read the Processing time matrix from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the jobs weights table
+
+        Returns:
+           (list[int],int): (Table of jobs weights, index of the next section of the instance)
+        """
+        i = startIndex + 1
+        line = content[i].strip().split('\t')
+        W = []  # Table : Processing time of job i
+        for j in line:
+            W.append(int(j))
+        return (W, i+1)
+
     def read_R(self, content: list[str], startIndex: int):
         """Read the release time table from a list of lines extracted from the file of the instance
 
@@ -163,6 +180,32 @@ class SingleInstance(Problem.Instance):
 
         return P
 
+    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+        """Random generation of jobs weights table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Wmin (int): Minimal weight
+            Wmax (int): Maximal weight
+
+        Returns:
+           list[int]: Table of jobs weights
+        """
+        W = []
+        for j in range(self.n):
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(Wmin, Wmax))
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Wmin+Wmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Wmin+Wmax*value))
+            W.append(n)
+
+        return W
+    
     def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
