@@ -649,7 +649,7 @@ class MILP():
             E = range(instance.n)
 
             # Compute lower bound
-            LB = instance.lower_bound
+            LB = instance.lower_bound()
 
             # Computing upper bound
             # init_sol = Heuristics.constructive(instance).best_solution

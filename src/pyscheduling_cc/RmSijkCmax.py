@@ -15,6 +15,12 @@ import pyscheduling_cc.ParallelMachines as ParallelMachines
 import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
 
+try:
+    import docplex
+    from docplex.cp.model import CpoModel
+    from docplex.cp.solver.cpo_callback import CpoCallback
+except ImportError:
+    pass
 
 @dataclass
 class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
@@ -283,6 +289,191 @@ class RmSijkCmax_Solution(ParallelMachines.ParallelSolution):
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
 
+class ExactSolvers():
+
+    @staticmethod
+    def csp(instance, **kwargs):
+        return CSP.solve(instance, **kwargs)
+
+class CSP():
+
+    CPO_STATUS = {
+        "Feasible": Problem.SolveStatus.FEASIBLE,
+        "Optimal": Problem.SolveStatus.OPTIMAL
+    }
+
+    class MyCallback(CpoCallback):
+        """A callback used to log the value of cmax at different timestamps
+
+        Args:
+            CpoCallback (_type_): Inherits from CpoCallback
+        """
+
+        def __init__(self, stop_times=[300, 600, 3600, 7200]):
+            self.stop_times = stop_times
+            self.best_values = dict()
+            self.stop_idx = 0
+            self.best_sol_time = 0
+            self.nb_sol = 0
+
+        def invoke(self, solver, event, jsol):
+
+            if event == "Solution":
+                self.nb_sol += 1
+                solve_time = jsol.get_info('SolveTime')
+                self.best_sol_time = solve_time
+
+                # Go to the next stop time
+                while self.stop_idx < len(self.stop_times) and solve_time > self.stop_times[self.stop_idx]:
+                    self.stop_idx += 1
+
+                if self.stop_idx < len(self.stop_times):
+                    # Get important elements
+                    obj_val = jsol.get_objective_values()[0]
+                    self.best_values[self.stop_times[self.stop_idx]] = obj_val
+
+    @staticmethod
+    def _transform_csp_solution(msol, T_ki, instance):
+        """Transforms cp optimizer interval variable into a solution 
+
+        Args:
+            msol (): CPO solution
+            T_ki (list[list[interval_var]]): Interval variables represening jobs
+            instance (RmSijkCmax_Instance): instance corresponding to the solution
+
+        Returns:
+            RmSijkCmax_Solution: cpoptimizer's solution
+        """
+        sol = RmSijkCmax_Solution(instance)
+        for k in range(instance.m):
+            k_tasks = []
+            for i in range(instance.n):
+                if len(msol[T_ki[k][i]]) > 0:
+                    start = msol[T_ki[k][i]][0]
+                    end = msol[T_ki[k][i]][1]
+                    k_tasks.append(ParallelMachines.Job(i, start, end))
+            
+            k_tasks = sorted(k_tasks, key= lambda x: x[1])
+            sol.configuration[k].job_schedule = k_tasks
+        
+        sol.cmax()
+        return sol
+
+    @staticmethod
+    def solve(instance, **kwargs):
+        """ Returns the solution using the Cplex - CP optimizer solver
+
+        Args:
+            instance (Instance): Instance object to solve
+            log_path (str, optional): Path to the log file to output cp optimizer log. Defaults to None to disable logging.
+            time_limit (int, optional): Time limit for executing the solver. Defaults to 300s.
+            threads (int, optional): Number of threads to set for cp optimizer solver. Defaults to 1.
+
+        Returns:
+            SolveResult: The object represeting the solving process result
+        """
+        if "docplex" in sys.modules:
+            
+            # Extracting parameters
+            log_path = kwargs.get("log_path", None)
+            time_limit = kwargs.get("time_limit", 300)
+            nb_threads = kwargs.get("threads", 1)
+            stop_times = kwargs.get(
+                "stop_times", [time_limit // 4, time_limit // 2, (time_limit * 3) // 4, time_limit])
+
+            # Preparing ranges
+            M = range(instance.m)
+            E = range(instance.n)
+
+            LB = instance.lower_bound()
+            model = CpoModel("pmspModel")
+
+            # Preparing transition matrices
+            trans_matrix = {}
+            for k in range(instance.m):
+                k_matrix = [ [0 for _ in range(instance.n + 1)] for _ in range(instance.n + 1) ]
+                for i in range(instance.n):
+                    ele = instance.S[k][i][i]
+                    k_matrix[i+1][0] = ele
+                    k_matrix[0][i+1] = ele
+                    
+                    for j in range(instance.n):
+                        k_matrix[i+1][j+1] = instance.S[k][i][j]
+                
+                trans_matrix[k] = model.transition_matrix(k_matrix)
+
+            # Cumul function
+            usage = model.step_at(0,0)
+
+            # Mother tasks
+            E_j = []
+            for i in E:
+                task = model.interval_var( optional= False, name=f'E[{i}]')
+                E_j.append(task)
+                usage += model.pulse(task,1)
+
+            T_ki = {}
+            M_ik = {}
+            for k in M:
+                for i in E:
+                    task = model.interval_var( size=instance.P[i][k], optional= True, name=f'T[{k},{i}]')
+                    T_ki.setdefault(k,[]).append(task)
+                    M_ik.setdefault(i,[]).append(task)
+
+            # A task is executed in one machine only
+            for i in E:
+                model.add( model.alternative(E_j[i], M_ik[i], 1) )
+
+            # A task can only process one task at a time and includes a setup time between consecutive tasks
+            first_task = model.interval_var(size=0, optional= False, name=f'first_task')
+            model.add( model.start_of(first_task) == 0 )
+            Seq_k = {}
+            for k in M:
+                types = list(range(instance.n + 1))
+                seq_list = [first_task]
+                seq_list.extend(T_ki[k])
+                Seq_k[k] = model.sequence_var( seq_list, types )
+                model.add( model.no_overlap(Seq_k[k], trans_matrix[k]) ) 
+            
+            # Cumulative function usage limit
+            model.add(usage <= instance.m)
+
+            # Lower bound and objective
+            model.add( model.max( model.end_of(E_j[i]) for i in E ) >= LB ) 
+            model.add(model.minimize( model.max( model.end_of(E_j[i]) for i in E ))) # Cmax
+
+            # Adding callback to log stats
+            mycallback = CSP.MyCallback(stop_times=stop_times)
+            model.add_solver_callback(mycallback)
+
+            msol = model.solve(LogVerbosity="Normal", Workers=nb_threads, TimeLimit=time_limit, LogPeriod=1000000,
+                               trace_log=False,  add_log_to_solution=True, RelativeOptimalityTolerance=0)
+
+            if log_path:
+                logFile = open(log_path, "w")
+                logFile.write('\n\t'.join(msol.get_solver_log().split("!")))
+
+            sol = CSP._transform_csp_solution(msol, T_ki, instance)
+
+            # Construct the solve result
+            kpis = {
+                "ObjBound": msol.get_objective_bounds()[0],
+                "MemUsage": msol.get_infos()["MemoryUsage"]
+            }
+            
+            solve_result = Problem.SolveResult(
+                best_solution=sol,
+                runtime=msol.get_infos()["TotalTime"],
+                time_to_best= mycallback.best_sol_time,
+                status=CSP.CPO_STATUS.get(
+                    msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
+                kpis=kpis
+            )
+
+            return solve_result
+
+        else:
+            print("Docplex import error: you can not use this solver")
 
 class Heuristics():
 
