@@ -3,6 +3,7 @@ import sys
 from dataclasses import dataclass, field
 from random import randint, uniform
 from pathlib import Path
+from matplotlib import pyplot as plt
 
 import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
@@ -164,10 +165,10 @@ class wiCi_Solution(SingleMachine.SingleSolution):
                     if prevEndTime < startTime:
                         # Idle Time
                         gnt.broken_barh(
-                            [(prevEndTime, startTime - prevEndTime)], ((j+1) * 10, 9), facecolors=('tab:gray'))
+                            [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
                     
-                    gnt.broken_barh([(startTime, self.instance.P[job_index][j])], ((
-                        j+1) * 10, 9), facecolors=('tab:blue'))
+                    gnt.broken_barh([(startTime, self.instance.P[job_index])], (
+                        10, 9), facecolors=('tab:blue'))
                     prev = job_index
                     prevEndTime = endTime
                 if path:
@@ -195,8 +196,7 @@ class wiCi_Solution(SingleMachine.SingleSolution):
             ci +=  self.instance.P[job]
 
             if startTime != expected_start_time or endTime != ci:
-                print(f'## Error: in machine {machine.machine_num}' +
-                        f' found {element} expected {job,expected_start_time, ci}')
+                print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
                 is_valid = False
             set_jobs.add(job)
             prev_job = job

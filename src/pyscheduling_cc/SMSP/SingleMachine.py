@@ -114,7 +114,7 @@ class SingleInstance(Problem.Instance):
         line = content[i].strip().split('\t')
         ri = []  # Table : Release time of job i
         for j in line:
-            ri.append(int(ligne[j]))
+            ri.append(int(line[j]))
         return (ri, i+1)
 
     def read_S(self, content: list[str], startIndex: int):
@@ -148,7 +148,7 @@ class SingleInstance(Problem.Instance):
            (list[int],int): (Table of due time, index of the next section of the instance)
         """
         i = startIndex + 1
-        ligne = content[i].strip().split('\t')
+        line = content[i].strip().split('\t')
         di = []  # Table : Due time of job i
         for j in line:
             di.append(int(j))
@@ -199,7 +199,7 @@ class SingleInstance(Problem.Instance):
             elif law.name == "NORMAL":  # Use normal law
                 value = np.random.normal(0, 1)
                 n = int(abs(Wmin+Wmax*value))
-                while n < Pmin or n > Pmax:
+                while n < Wmin or n > Wmax:
                     value = np.random.normal(0, 1)
                     n = int(abs(Wmin+Wmax*value))
             W.append(n)
@@ -259,8 +259,8 @@ class SingleInstance(Problem.Instance):
                     Sij.append(0)  # check space values
                 else:
                     if law.name == "UNIFORM":  # Use uniform law
-                        min_p = min(PJobs[k][i], PJobs[j][i])
-                        max_p = max(PJobs[k][i], PJobs[j][i])
+                        min_p = min(PJobs[k], PJobs[j])
+                        max_p = max(PJobs[k], PJobs[j])
                         Smin = int(gamma * min_p)
                         Smax = int(gamma * max_p)
                         Sij.append(int(random.uniform(Smin, Smax)))
@@ -297,16 +297,15 @@ class Machine:
     objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-    wiCi_index: list[job] = field(default_factory=list)
+    wiCi_index: list[int] = field(default_factory=list)
 
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index : list[int] = None) -> None:
+    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
         """Constructor of Machine
 
         Args:
             objective (int, optional): completion time of the last job of the machine. Defaults to 0.
             last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
             job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
-            wiCi_index (list[int], optional): list of indexes of the total completion time after every job. Defaults to None.
         """
         self.objective = objective
         self.last_job = last_job
@@ -314,16 +313,14 @@ class Machine:
             self.job_schedule = []
         else:
             self.job_schedule = job_schedule
-        
-        if wiCi_index is None: self.wiCi_index = []
-        else: self.wiCi_index = wiCi_index
+        self.wiCi_index = None
 
     def __str__(self):
         return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
 
     def __eq__(self, other):
         same_schedule = other.job_schedule == self.job_schedule
-        return (same_machine and same_schedule)
+        return (same_schedule)
 
     def copy(self):
         return Machine(self.objective, self.last_job, list(self.job_schedule))
@@ -347,29 +344,34 @@ class Machine:
         Returns:
             int: objective of the machine
         """
-        if self.wiCi_index == [] :
-            self.wiCi_index = [-1] * len(self.job_schedule)
-            startIndex = 0
         if len(self.job_schedule) > 0:
+            job_schedule_len = len(self.job_schedule)
+            if self.wiCi_index is None :
+                self.wiCi_index = [-1] * job_schedule_len
+                startIndex = 0
+            if len(self.wiCi_index) != job_schedule_len:
+                if startIndex == 0:
+                    self.wiCi_index = [-1] * job_schedule_len
+                else:
+                    self.wiCi_index.insert(startIndex,-1) 
             if startIndex > 0: 
                 ci = self.job_schedule[startIndex - 1].end_time
                 wiCi = self.wiCi_index[startIndex - 1]
             else: 
                 ci = 0
                 wiCi = 0
-            for i in range(startIndex, len(self.job_schedule)):
+            for i in range(startIndex,job_schedule_len):
                 job_i = self.job_schedule[i].id
 
                 if hasattr(instance, 'R'):
                     startTime = max(ci, instance.R[job_i])
                 else:
                     startTime = ci
-                old_ci = ci
                 proc_time = instance.P[job_i]
                 ci = startTime + proc_time
 
                 self.job_schedule[i] = Job(job_i, startTime, ci)
-                wiCi += instance.W[job_i]*(ci - old_ci)
+                wiCi += instance.W[job_i]*ci
                 self.wiCi_index[i] = wiCi
         self.objective = wiCi
         return wiCi
@@ -384,8 +386,17 @@ class Machine:
         Returns:
             ci (int) : completion time
         """
-        if pos > 0: ci = instance.P[job]+self.job_schedule[pos - 1].end_time
-        else: ci = instance.P[job]
+        if pos > 0:
+            c_prev = self.job_schedule[pos - 1].end_time
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job] - c_prev, 0)
+            else:
+                release_time = 0 
+            ci = c_prev + release_time + instance.P[job]
+            wiCi = self.wiCi_index[pos -1]+instance.W[job]*ci
+        else: 
+            ci = instance.P[job]
+            wiCi = instance.W[job]*instance.P[job]
         for i in range(pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
 
@@ -395,8 +406,9 @@ class Machine:
                 startTime = ci
             proc_time = instance.P[job_i]
             ci = startTime + proc_time
+            wiCi += instance.W[job_i]*ci
 
-        return ci
+        return wiCi
 
     def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """
@@ -413,9 +425,10 @@ class Machine:
         first_pos = min(pos_remove, pos_insert)
 
         ci = 0
+        wiCi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
-
+            wiCi = self.wiCi_index[first_pos - 1]
         for i in range(first_pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
 
@@ -427,6 +440,7 @@ class Machine:
                     startTime = ci
                 proc_time = instance.P[job]
                 ci = startTime + proc_time
+                wiCi += instance.W[job]*ci
 
             # If the job_i is not the one to be removed
             if i != pos_remove:
@@ -436,8 +450,9 @@ class Machine:
                     startTime = ci
                 proc_time = instance.P[job_i]
                 ci = startTime + proc_time
+                wiCi += instance.W[job_i]*ci
 
-        return ci
+        return wiCi
 
     def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
         """
@@ -453,8 +468,10 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
+        wiCi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
+            wiCi = self.wiCi_index[first_pos - 1]
 
         for i in range(first_pos, len(self.job_schedule)):
 
@@ -471,8 +488,9 @@ class Machine:
                 startTime = ci
             proc_time = instance.P[job_i]
             ci = startTime + proc_time
+            wiCi += instance.W[job_i]*ci
 
-        return ci
+        return wiCi
 
 
 @dataclass
@@ -494,7 +512,7 @@ class SingleSolution(Problem.Solution):
         return "Objective : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | objective\n" + self.machine.__str__()
 
     def copy(self):
-        copy_solution = ParallelSolution(self.instance)
+        copy_solution = SingleSolution(self.instance)
         for i in range(self.instance.m):
             copy_solution.machine = self.machine.copy()
         copy_solution.objective_value = self.objective_value
