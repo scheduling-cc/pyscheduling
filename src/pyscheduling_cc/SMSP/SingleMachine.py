@@ -222,9 +222,8 @@ class SingleInstance(Problem.Instance):
         """
         ri = []
         for j in range(self.n):
-            sum_p = sum(PJobs[j])
             if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(0, alpha * (sum_p / self.m)))
+                n = int(random.uniform(0, alpha * PJobs[j]))
 
             elif law.name == "NORMAL":  # Use normal law
                 value = np.random.normal(0, 1)

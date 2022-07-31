@@ -12,9 +12,10 @@ import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 
 
 @dataclass
-class wiCi_Instance(SingleMachine.SingleInstance):
+class riwiCi_Instance(SingleMachine.SingleInstance):
     W : list[int] = field(default_factory=list) # Jobs weights
     P: list[int] = field(default_factory=list)  # Processing time
+    R: list[int] = field(default_factory=list)
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -38,11 +39,12 @@ class wiCi_Instance(SingleMachine.SingleInstance):
         instance = cls("test", n)
         instance.W, i = instance.read_W(content, i)
         instance.P, i = instance.read_P(content, i)
+        instance.R, i = instance.read_R(content, i)
         f.close()
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.VALLADA, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.VALLADA, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = -1, Pmax: int = -1, Alpha: float = 0.0, InstanceName: str = ""):
         """Random generation of RmSijkCmax problem instance
 
         Args:
@@ -51,6 +53,7 @@ class wiCi_Instance(SingleMachine.SingleInstance):
             law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
+            Alpha (float,optional): Release time factor. Defaults to 0.0.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
@@ -60,9 +63,13 @@ class wiCi_Instance(SingleMachine.SingleInstance):
             Pmin = randint(1, 100)
         if(Pmax == -1):
             Pmax = randint(Pmin, 100)
+        if(Alpha == 0.0):
+            Alpha = round(uniform(1.0, 3.0), 1)
         instance = cls(InstanceName, jobs_number)
         instance.W = instance.generate_W(protocol,law, Wmin, Wmax)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.R = instance.generate_R(
+            protocol, law, instance.P, Pmin, Pmax, Alpha)
         return instance
 
     def to_txt(self, path: Path) -> None:
@@ -79,6 +86,9 @@ class wiCi_Instance(SingleMachine.SingleInstance):
         f.write("\nProcessing time\n")
         for i in range(self.n):
             f.write(str(self.P[i])+"\t")
+        f.write("\nRelease time\n")
+        for i in range(self.n):
+            f.write(str(self.R[i])+"\t")
         f.close()
 
     def create_solution(self):
@@ -88,7 +98,7 @@ class wiCi_Instance(SingleMachine.SingleInstance):
 @dataclass
 class wiCi_Solution(SingleMachine.SingleSolution):
 
-    def __init__(self, instance: wiCi_Instance = None, machine : SingleMachine.Machine = None, objective_value: int = 0):
+    def __init__(self, instance: riwiCi_Instance = None, machine : SingleMachine.Machine = None, objective_value: int = 0):
         """Constructor of wiCi_Solution
 
         Args:
@@ -167,7 +177,7 @@ class wiCi_Solution(SingleMachine.SingleSolution):
                     
                     gnt.broken_barh([(startTime, self.instance.P[job_index])], (
                         10, 9), facecolors=('tab:blue'))
-                    prev = job_index
+                    
                     prevEndTime = endTime
                 if path:
                     plt.savefig(path)
