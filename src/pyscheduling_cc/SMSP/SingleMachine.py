@@ -77,7 +77,7 @@ class SingleInstance(Problem.Instance):
            (list[int],int): (Table of processing time, index of the next section of the instance)
         """
         i = startIndex + 1
-        line = content[i].strip().split(' ')
+        line = content[i].strip().split('\t')
         P = []  # Table : Processing time of job i
         for j in line:
             P.append(int(j))
@@ -94,7 +94,7 @@ class SingleInstance(Problem.Instance):
            (list[int],int): (Table of release time, index of the next section of the instance)
         """
         i = startIndex + 1
-        line = content[i].strip().split(' ')
+        line = content[i].strip().split('\t')
         ri = []  # Table : Release time of job i
         for j in line:
             ri.append(int(ligne[j]))
@@ -131,7 +131,7 @@ class SingleInstance(Problem.Instance):
            (list[int],int): (Table of due time, index of the next section of the instance)
         """
         i = startIndex + 1
-        ligne = content[i].strip().split(' ')
+        ligne = content[i].strip().split('\t')
         di = []  # Table : Due time of job i
         for j in line:
             di.append(int(j))
@@ -336,7 +336,7 @@ class Machine:
                 startTime = max(ci, instance.R[job_i])
             else:
                 startTime = ci
-            proc_time = instance.P[job_i][
+            proc_time = instance.P[job_i]
             ci = startTime + proc_time
 
         return ci
