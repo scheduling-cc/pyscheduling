@@ -1,8 +1,9 @@
-import random
 import sys
 from dataclasses import dataclass, field
-from random import randint, uniform
+from random import randint
 from pathlib import Path
+from time import perf_counter
+
 from matplotlib import pyplot as plt
 
 import pyscheduling_cc.Problem as Problem
@@ -200,3 +201,37 @@ class wiCi_Solution(SingleMachine.SingleSolution):
 
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
+
+class Heuristics():
+    @staticmethod
+    def WSPT(instance : wiCi_Instance):
+        startTime = perf_counter()
+        jobs = list(range(instance.n))
+        jobs.sort(key=lambda job_id : float(instance.W[job_id])/float(instance.P[job_id]))
+        solution = wiCi_Solution(instance)
+        for job in jobs:
+            solution.machine.job_schedule.append(SingleMachine.Job(job,0,0)) 
+        solution.machine.total_weighted_completion_time(instance)
+        solution.fix_objective()
+        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
+
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
+
+class Metaheuristics():
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
