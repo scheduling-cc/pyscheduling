@@ -5,6 +5,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from re import M
 
 import numpy as np
 
@@ -599,3 +600,61 @@ class SM_LocalSearch(Problem.LocalSearch):
             solution.machine.objective = move[2]
             solution.wiCi()
         return solution
+
+class NeighbourhoodGeneration():
+    @staticmethod
+    def random_swap(solution: SingleSolution, force_improve: bool = True):
+        """Performs a random swap between 2 jobs on the same machine
+
+        Args:
+            solution (SingleSolution): Solution to be improved
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+
+        Returns:
+            SingleSolution: New solution
+        """
+
+        machine_schedule = solution.machine.job_schedule
+        machine_schedule_len = len(machine_schedule)
+
+        old_ci = solution.machine.completion_time
+
+        random_job_index = random.randrange(machine_schedule_len)
+        other_job_index = random.randrange(machine_schedule_len)
+
+        while other_job_index == random_job_index:
+            other_job_index = random.randrange(machine_schedule_len)
+
+        new_ci = solution.machine.completion_time_swap(
+            random_job_index, other_job_index, solution.instance)
+
+        # Apply the move
+        if not force_improve or (new_ci <= old_ci):
+            machine_schedule[random_job_index], machine_schedule[
+                other_job_index] = machine_schedule[
+                    other_job_index], machine_schedule[random_job_index]
+            solution.machine.total_weighted_completion_time(solution.instance,min(random_job_index,other_job_index))
+            solution.fix_objective()
+
+        return solution
+
+    @staticmethod
+    def generate_neighbour(solution : SingleSolution):
+        """Generates a neighbour solution of the given solution for the metaheuristic
+
+        Args:
+            solution_i (SingleSolution): Solution to be improved
+
+        Returns:
+            SingleSolution: New solution
+        """
+        solution_copy = solution.copy()
+
+        r = random.random()
+        if r < 0.5:
+            solution_copy = NeighbourhoodGeneration.random_swap(
+                solution_copy, force_improve=False)
+        else:
+            solution_copy = NeighbourhoodGeneration.random_swap(
+                solution_copy, force_improve=False)
+        return solution_copy
