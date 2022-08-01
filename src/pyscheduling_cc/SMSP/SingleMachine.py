@@ -579,3 +579,23 @@ class SM_LocalSearch(Problem.LocalSearch):
                 solution.machine.total_weighted_completion_time(solution.instance,min(taken_pos,pos))
         solution.fix_objective()
         return solution
+
+    @staticmethod
+    def _swap(solution : SingleSolution):
+        job_schedule_len = len(solution.machine.job_schedule)
+        move = None
+        for i in range(0, job_schedule_len):
+            for j in range(i+1, job_schedule_len):
+                new_ci = solution.machine.completion_time_swap(i,j,solution.instance)
+                if new_ci < solution.machine.objective:
+                    if not move:
+                        move = (i, j, new_ci)
+                    elif new_ci < move[2]:
+                        move = (i, j, new_ci)
+
+        if move:
+            solution.machine.job_schedule[move[0]], solution.machine.job_schedule[move[1]
+            ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
+            solution.machine.objective = move[2]
+            solution.wiCi()
+        return solution
