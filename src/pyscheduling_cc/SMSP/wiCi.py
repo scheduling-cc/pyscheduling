@@ -37,13 +37,13 @@ class wiCi_Instance(SingleMachine.SingleInstance):
         n = int(ligne0[0])  # number of jobs
         i = 1
         instance = cls("test", n)
-        instance.W, i = instance.read_W(content, i)
         instance.P, i = instance.read_P(content, i)
+        instance.W, i = instance.read_W(content, i)
         f.close()
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.VALLADA, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = 1, Pmax: int = -1, InstanceName: str = ""):
         """Random generation of RmSijkCmax problem instance
 
         Args:
@@ -57,13 +57,11 @@ class wiCi_Instance(SingleMachine.SingleInstance):
         Returns:
             wiCi_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
         if(Pmax == -1):
             Pmax = randint(Pmin, 100)
         instance = cls(InstanceName, jobs_number)
-        instance.W = instance.generate_W(protocol,law, Wmin, Wmax)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.W = instance.generate_W(protocol,law, Wmin, Wmax)
         return instance
 
     def to_txt(self, path: Path) -> None:
@@ -73,13 +71,14 @@ class wiCi_Instance(SingleMachine.SingleInstance):
             path (Path): path to the resulting txt file
         """
         f = open(path, "w")
-        f.write(str(self.n)+"\n")
-        f.write("Weights\n")
-        for i in range(self.n):
-            f.write(str(self.W[i])+"\t")
+        f.write(str(self.n))
         f.write("\nProcessing time\n")
         for i in range(self.n):
             f.write(str(self.P[i])+"\t")
+        f.write("\nWeights\n")
+        for i in range(self.n):
+            f.write(str(self.W[i])+"\t")
+        
         f.close()
 
     def create_solution(self):

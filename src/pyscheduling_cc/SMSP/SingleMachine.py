@@ -14,7 +14,7 @@ Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 
 class GenerationProtocol(Enum):
-    VALLADA = 1
+    BASE = 1
 
 
 class GenerationLaw(Enum):
@@ -296,7 +296,7 @@ class Machine:
     objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-    wiCi_index: list[int] = field(default_factory=list)
+    wiCi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total cweighted completion time reached after each job in job_schedule
 
     def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
         """Constructor of Machine
@@ -345,13 +345,13 @@ class Machine:
         """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
-            if self.wiCi_index is None :
+            if self.wiCi_index is None : # Iniates wiCi_index to the size of job_schedule
                 self.wiCi_index = [-1] * job_schedule_len
                 startIndex = 0
             if len(self.wiCi_index) != job_schedule_len:
-                if startIndex == 0:
+                if startIndex == 0: # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiCi_index needs to be reinitialized
                     self.wiCi_index = [-1] * job_schedule_len
-                else:
+                else: # Insert an element in wiCi_index corresponding to the position where a new job has been inserted
                     self.wiCi_index.insert(startIndex,-1) 
             if startIndex > 0: 
                 ci = self.job_schedule[startIndex - 1].end_time
