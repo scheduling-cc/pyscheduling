@@ -299,7 +299,7 @@ class Machine:
     job_schedule: list[Job] = field(default_factory=list)
     wiCi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total cweighted completion time reached after each job in job_schedule
 
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index : list[int] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -313,7 +313,7 @@ class Machine:
             self.job_schedule = []
         else:
             self.job_schedule = job_schedule
-        self.wiCi_index = None
+        self.wiCi_index = wiCi_index
 
     def __str__(self):
         return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
@@ -323,7 +323,7 @@ class Machine:
         return (same_schedule)
 
     def copy(self):
-        return Machine(self.objective, self.last_job, list(self.job_schedule))
+        return Machine(self.objective, self.last_job, list(self.job_schedule),list(self.wiCi_index))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -560,6 +560,7 @@ class SingleSolution(Problem.Solution):
         """Plot the solution in an appropriate diagram"""
         pass
 
+
 class SM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
@@ -601,6 +602,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             solution.wiCi()
         return solution
 
+
 class NeighbourhoodGeneration():
     @staticmethod
     def random_swap(solution: SingleSolution, force_improve: bool = True):
@@ -617,7 +619,7 @@ class NeighbourhoodGeneration():
         machine_schedule = solution.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
 
-        old_ci = solution.machine.completion_time
+        old_ci = solution.machine.objective
 
         random_job_index = random.randrange(machine_schedule_len)
         other_job_index = random.randrange(machine_schedule_len)
@@ -639,8 +641,43 @@ class NeighbourhoodGeneration():
         return solution
 
     @staticmethod
-    def generate_neighbour(solution : SingleSolution):
-        """Generates a neighbour solution of the given solution for the metaheuristic
+    def passive_swap(solution : SingleSolution, force_improve: bool = True):
+        """Performs a swap between the 2 less effective jobs in terms of WSPT rule
+
+        Args:
+            solution (SingleSolution): Solution to be improved
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+
+        Returns:
+            SingleSolution: New solution
+        """
+        if(len(solution.machine.job_schedule)>1):
+
+            jobs_list = list(range(solution.instance.n))
+            jobs_list.sort(key = lambda job_id : float(solution.instance.W[job_id])/float(solution.instance.P[job_id]))
+            job_i_id, job_j_id = jobs_list[0], jobs_list[1]
+            machine_schedule = solution.machine.job_schedule
+            machine_schedule_jobs_id = [job.id for job in machine_schedule]
+            job_i_pos, job_j_pos = machine_schedule_jobs_id.index(job_i_id), machine_schedule_jobs_id.index(job_j_id)
+
+            old_ci = solution.machine.objective
+
+            new_ci = solution.machine.completion_time_swap(
+                job_i_pos, job_j_pos, solution.instance)
+
+            # Apply the move
+            if not force_improve or (new_ci <= old_ci):
+                machine_schedule[job_i_pos], machine_schedule[
+                    job_j_pos] = machine_schedule[
+                        job_j_pos], machine_schedule[job_i_pos]
+                solution.machine.total_weighted_completion_time(solution.instance,min(job_i_pos,job_j_pos))
+                solution.fix_objective()
+
+        return solution
+    
+    @staticmethod
+    def lahc_neighbour(solution : SingleSolution):
+        """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:
             solution_i (SingleSolution): Solution to be improved
@@ -649,12 +686,8 @@ class NeighbourhoodGeneration():
             SingleSolution: New solution
         """
         solution_copy = solution.copy()
+        #for _ in range(1,random.randint(1, 2)):
+        solution_copy = NeighbourhoodGeneration.random_swap(
+            solution_copy, force_improve=False)
 
-        r = random.random()
-        if r < 0.5:
-            solution_copy = NeighbourhoodGeneration.random_swap(
-                solution_copy, force_improve=False)
-        else:
-            solution_copy = NeighbourhoodGeneration.random_swap(
-                solution_copy, force_improve=False)
         return solution_copy
