@@ -559,3 +559,23 @@ class SingleSolution(Problem.Solution):
         """Plot the solution in an appropriate diagram"""
         pass
 
+class SM_LocalSearch(Problem.LocalSearch):
+
+    @staticmethod
+    def _intra_insertion(solution : SingleSolution):
+        for pos in range(len(solution.machine.job_schedule)):
+            job = solution.machine.job_schedule[pos]
+            wiCi = solution.machine.objective
+            taken_pos = pos
+            for new_pos in range(len(solution.machine.job_schedule)):
+                if(pos != new_pos):
+                    new_wiCi = solution.machine.completion_time_remove_insert(pos,job.id,new_pos,solution.instance)
+                    if new_wiCi < wiCi: 
+                        taken_pos = new_pos
+                        wiCi = new_wiCi
+            if taken_pos != pos:
+                solution.machine.job_schedule.pop(pos)
+                solution.machine.job_schedule.insert(taken_pos,job)
+                solution.machine.total_weighted_completion_time(solution.instance,min(taken_pos,pos))
+        solution.fix_objective()
+        return solution

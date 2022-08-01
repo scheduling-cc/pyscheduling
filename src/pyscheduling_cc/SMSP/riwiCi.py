@@ -279,7 +279,7 @@ class Heuristics():
         elif rule ==3: #WSPT including release time in the processing time
             sorting_func = lambda job_id : float(instance.W[job_id])/float(instance.R[job_id]+instance.P[job_id])
             reverse = True
-            
+
         remaining_jobs_list = list(range(instance.n))
         remaining_jobs_list.sort(reverse=reverse,key=sorting_func)
         
