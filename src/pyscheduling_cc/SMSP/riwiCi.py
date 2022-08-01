@@ -264,6 +264,37 @@ class Heuristics():
         solution.fix_objective()
         return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
+    @staticmethod
+    def list_heuristic(instance : riwiCi_Instance, rule : int = 1):
+
+        startTime = perf_counter()
+        solution = wiCi_Solution(instance)
+        solution.machine.wiCi_index = []
+        if rule==1: # Increasing order of the release time
+            sorting_func = lambda job_id : instance.R[job_id]
+            reverse = False
+        elif rule==2: # WSPT
+            sorting_func = lambda job_id : float(instance.W[job_id])/float(instance.P[job_id])
+            reverse = True
+        elif rule ==3: #WSPT including release time in the processing time
+            sorting_func = lambda job_id : float(instance.W[job_id])/float(instance.R[job_id]+instance.P[job_id])
+            reverse = True
+            
+        remaining_jobs_list = list(range(instance.n))
+        remaining_jobs_list.sort(reverse=reverse,key=sorting_func)
+        
+        ci = 0
+        wiCi = 0
+        for job in remaining_jobs_list:
+            start_time = max(instance.R[job],ci)
+            ci = start_time + instance.P[job]
+            wiCi += instance.W[job]*ci
+            solution.machine.job_schedule.append(SingleMachine.Job(job,start_time,ci))
+            solution.machine.wiCi_index.append(wiCi)
+        solution.machine.objective = solution.machine.wiCi_index[instance.n - 1]
+        solution.fix_objective()
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
     @classmethod
     def all_methods(cls):
         """returns all the methods of the given Heuristics class
