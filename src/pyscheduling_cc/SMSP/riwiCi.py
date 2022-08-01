@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
-
+from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
 
 
 @dataclass

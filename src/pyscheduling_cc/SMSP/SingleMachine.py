@@ -5,10 +5,18 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+import sys
 
 import numpy as np
 
 import pyscheduling_cc.Problem as Problem
+
+try:
+    from docplex.cp.model import CpoModel
+    from docplex.cp.solver.cpo_callback import CpoCallback
+    from docplex.cp.expression import INTERVAL_MAX
+except ImportError:
+    pass
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -559,3 +567,148 @@ class SingleSolution(Problem.Solution):
         """Plot the solution in an appropriate diagram"""
         pass
 
+class ExactSolvers():
+
+    @staticmethod
+    def csp(instance, **kwargs):
+        return CSP.solve(instance, **kwargs)
+
+class CSP():
+
+    CPO_STATUS = {
+        "Feasible": Problem.SolveStatus.FEASIBLE,
+        "Optimal": Problem.SolveStatus.OPTIMAL
+    }
+
+    class MyCallback(CpoCallback):
+
+        def __init__(self, stop_times=[300, 600, 3600, 7200]):
+            self.stop_times = stop_times
+            self.best_values = dict()
+            self.stop_idx = 0
+            self.best_sol_time = 0
+            self.nb_sol = 0
+
+        def invoke(self, solver, event, jsol):
+
+            if event == "Solution":
+                self.nb_sol += 1
+                solve_time = jsol.get_info('SolveTime')
+                self.best_sol_time = solve_time
+
+                # Go to the next stop time
+                while self.stop_idx < len(self.stop_times) and solve_time > self.stop_times[self.stop_idx]:
+                    self.stop_idx += 1
+
+                if self.stop_idx < len(self.stop_times):
+                    # Get important elements
+                    obj_val = jsol.get_objective_values()[0]
+                    self.best_values[self.stop_times[self.stop_idx]] = obj_val
+
+    @staticmethod
+    def _csp_transform_solution(msol, E_i, instance, objective):
+
+        sol = instance.create_solution()
+        k_tasks = []
+        for i in range(instance.n):
+            start = msol[E_i[i]][0]
+            end = msol[E_i[i]][1]
+            k_tasks.append(Job(i,start,end))
+            
+            k_tasks = sorted(k_tasks, key= lambda x: x[1])
+            sol.machine.job_schedule = k_tasks
+        
+        if objective == "wiCi":
+            sol.wiCi()
+
+        return sol
+    
+    @staticmethod
+    def solve(instance, **kwargs):
+        """ Returns the solution using the Cplex - CP optimizer solver
+
+        Args:
+            instance (Instance): Instance object to solve
+            objective (str): The objective to optimize. Defaults to wiCi
+            log_path (str, optional): Path to the log file to output cp optimizer log. Defaults to None to disable logging.
+            time_limit (int, optional): Time limit for executing the solver. Defaults to 300s.
+            threads (int, optional): Number of threads to set for cp optimizer solver. Defaults to 1.
+
+        Returns:
+            SolveResult: The object represeting the solving process result
+        """
+        if "docplex" in sys.modules:
+            # Extracting parameters
+            objective = kwargs.get("objective", "wiCi")
+            log_path = kwargs.get("log_path", None)
+            time_limit = kwargs.get("time_limit", 300)
+            nb_threads = kwargs.get("threads", 1)
+            stop_times = kwargs.get(
+                "stop_times", [time_limit // 4, time_limit // 2, (time_limit * 3) // 4, time_limit])
+
+            E = range(instance.n)
+
+            # Construct the model
+            model = CpoModel("smspModel")
+
+            # Jobs interval_vars including the release date and processing times constraints
+            E_i = []
+            for i in E:
+                start_period = (instance.R[i], INTERVAL_MAX) if hasattr(instance, 'R') else (0, INTERVAL_MAX)
+                job_i = model.interval_var( start = start_period,
+                                            size = instance.P[i], optional= False, name=f'E[{i}]')
+                E_i.append(job_i)
+
+            # Sequential execution on the machine
+            machine_sequence = model.sequence_var( E_i, list(E) )
+            model.add( model.no_overlap(machine_sequence) )
+            
+            # Define the objective 
+            if objective == "wiCi":
+                model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i]) for i in E ) )) # sum_{i in E} wi * ci
+            elif objective == "cmax":
+                model.add(model.minimize( max( model.end_of(E_i[i]) for i in E ) )) # max_{i in E} ci 
+
+            # Link the callback to save stats of the solve process
+            mycallback = CSP.MyCallback(stop_times=stop_times)
+            model.add_solver_callback(mycallback)
+
+            # Run the model
+            msol = model.solve(LogVerbosity="Normal", Workers=nb_threads, TimeLimit=time_limit, LogPeriod=1000000,
+                               log_output=True, trace_log=False, add_log_to_solution=True, RelativeOptimalityTolerance=0)
+
+            # Logging solver's infos if log_path is specified
+            if log_path:
+                with open(log_path, "a") as logFile:
+                    logFile.write('\n\t'.join(msol.get_solver_log().split("!")))
+                    logFile.flush()
+
+            sol = CSP._csp_transform_solution(msol, E_i, instance, objective)
+
+            # Construct the solve result
+            kpis = {
+                "ObjValue": msol.get_objective_value(),
+                "ObjBound": msol.get_objective_bounds()[0],
+                "MemUsage": msol.get_infos()["MemoryUsage"]
+            }
+            prev = -1
+            for stop_t in mycallback.stop_times:
+                if stop_t in mycallback.best_values:
+                    kpis[f'Obj-{stop_t}'] = mycallback.best_values[stop_t]
+                    prev = mycallback.best_values[stop_t]
+                else:
+                    kpis[f'Obj-{stop_t}'] = prev
+
+            solve_result = Problem.SolveResult(
+                best_solution=sol,
+                runtime=msol.get_infos()["TotalTime"],
+                time_to_best=mycallback.best_sol_time,
+                status=CSP.CPO_STATUS.get(
+                    msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
+                kpis=kpis
+            )
+
+            return solve_result
+
+        else:
+            print("Docplex import error: you can not use this solver")
