@@ -5,7 +5,6 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from re import M
 
 import numpy as np
 
