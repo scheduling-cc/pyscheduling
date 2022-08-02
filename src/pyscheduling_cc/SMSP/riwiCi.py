@@ -1,3 +1,4 @@
+import random
 import sys
 from dataclasses import dataclass, field
 from random import randint, uniform
@@ -91,14 +92,14 @@ class riwiCi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def create_solution(self):
-        return wiCi_Solution(self)
+        return riwiCi_Solution(self)
 
 
 @dataclass
-class wiCi_Solution(SingleMachine.SingleSolution):
+class riwiCi_Solution(SingleMachine.SingleSolution):
 
     def __init__(self, instance: riwiCi_Instance = None, machine : SingleMachine.Machine = None, objective_value: int = 0):
-        """Constructor of wiCi_Solution
+        """Constructor of riwiCi_Solution
 
         Args:
             instance (wiCi_Instance, optional): Instance to be solved by the solution. Defaults to None.
@@ -116,7 +117,7 @@ class wiCi_Solution(SingleMachine.SingleSolution):
         return "Cmax : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + self.machine.__str__()
 
     def copy(self):
-        copy_solution = wiCi_Solution(self.instance)
+        copy_solution = riwiCi_Solution(self.instance)
         copy_solution.machine = self.machine.copy()
         copy_solution.objective_value = self.objective_value
         return copy_solution
@@ -215,7 +216,7 @@ class Heuristics():
     @staticmethod
     def WSECi(instance : riwiCi_Instance):
         startTime = perf_counter()
-        solution = wiCi_Solution(instance)
+        solution = riwiCi_Solution(instance)
         solution.machine.wiCi_index = []
         ci = 0
         wiCi = 0
@@ -237,7 +238,7 @@ class Heuristics():
     @staticmethod
     def WSAPT(instance : riwiCi_Instance):
         startTime = perf_counter()
-        solution = wiCi_Solution(instance)
+        solution = riwiCi_Solution(instance)
         solution.machine.wiCi_index = []
         ci = min(instance.R)
         wiCi = 0
@@ -268,7 +269,7 @@ class Heuristics():
     def list_heuristic(instance : riwiCi_Instance, rule : int = 1):
 
         startTime = perf_counter()
-        solution = wiCi_Solution(instance)
+        solution = riwiCi_Solution(instance)
         solution.machine.wiCi_index = []
         if rule==1: # Increasing order of the release time
             sorting_func = lambda job_id : instance.R[job_id]
@@ -279,7 +280,7 @@ class Heuristics():
         elif rule ==3: #WSPT including release time in the processing time
             sorting_func = lambda job_id : float(instance.W[job_id])/float(instance.R[job_id]+instance.P[job_id])
             reverse = True
-            
+
         remaining_jobs_list = list(range(instance.n))
         remaining_jobs_list.sort(reverse=reverse,key=sorting_func)
         
@@ -306,6 +307,148 @@ class Heuristics():
 
 
 class Metaheuristics():
+
+    @staticmethod
+    def lahc(instance : riwiCi_Instance, **kwargs):
+        """ Returns the solution using the LAHC algorithm
+        Args:
+            instance (riwiCi_Instance): Instance object to solve
+            Lfa (int, optional): Size of the candidates list. Defaults to 25.
+            Nb_iter (int, optional): Number of iterations of LAHC. Defaults to 300.
+            Non_improv (int, optional): LAHC stops when the number of iterations without
+                improvement is achieved. Defaults to 50.
+            LS (bool, optional): Flag to apply local search at each iteration or not.
+                Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
+                else Nb_iter is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. 
+                Defaults to "WSECi"
+            seed (int, optional): Seed for the random operators to make the algo deterministic
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+
+        # Extracting parameters
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get("init_sol_method", Heuristics.WSECi)
+        Lfa = kwargs.get("Lfa", 30)
+        Nb_iter = kwargs.get("Nb_iter", 500000)
+        Non_improv = kwargs.get("Non_improv", 50000)
+        LS = kwargs.get("LS", True)
+        seed = kwargs.get("seed", None)
+
+        if seed:
+            random.seed(seed)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.m * instance.n * time_limit_factor
+
+        # Generate init solutoin using the initial solution method
+        solution_init = init_sol_method(instance).best_solution
+
+        if not solution_init:
+            return Problem.SolveResult()
+
+        local_search = SingleMachine.SM_LocalSearch()
+
+        if LS:
+            solution_init = local_search.improve(
+                solution_init)  # Improve it with LS
+
+        all_solutions = []
+        solution_best = solution_init.copy()  # Save the current best solution
+        all_solutions.append(solution_best)
+        lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
+
+        N = 0
+        i = 0
+        time_to_best = perf_counter() - first_time
+        current_solution = solution_init
+        while i < Nb_iter and N < Non_improv:
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+
+            solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(
+                current_solution)
+
+            if LS:
+                solution_i = local_search.improve(solution_i)
+            if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
+                current_solution = solution_i
+                if solution_i.objective_value < solution_best.objective_value:
+                    all_solutions.append(solution_i)
+                    solution_best = solution_i
+                    time_to_best = (perf_counter() - first_time)
+                    N = 0
+            lahc_list[i % Lfa] = solution_i.objective_value
+            i += 1
+            N += 1
+
+        # Construct the solve result
+        solve_result = Problem.SolveResult(
+            best_solution=solution_best,
+            solutions=all_solutions,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
+        )
+
+        return solve_result
+
+    @staticmethod
+    def iterative_LS(instance : riwiCi_Instance, ** kwargs):
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get("init_sol_method", Heuristics.WSECi)
+        Nb_iter = kwargs.get("Nb_iter", 500000)
+        Non_improv = kwargs.get("Non_improv", 50000)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.m * instance.n * time_limit_factor
+
+        # Generate init solutoin using the initial solution method
+        solution_init = init_sol_method(instance).best_solution
+
+        if not solution_init:
+            return Problem.SolveResult()
+
+        local_search = SingleMachine.SM_LocalSearch()
+
+        all_solutions = []
+        solution_best = solution_init.copy()  # Save the current best solution
+        solution_i = solution_init.copy()
+        all_solutions.append(solution_best)
+
+        N = 0
+        i = 0
+        time_to_best = perf_counter() - first_time
+        while i < Nb_iter and N < Non_improv:
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+
+            solution_i = local_search.improve(solution_i)
+
+            if solution_i.objective_value < solution_best.objective_value:
+                all_solutions.append(solution_i)
+                solution_best = solution_i.copy()
+                time_to_best = (perf_counter() - first_time)
+                N = 0
+            i += 1
+            N += 1
+
+        # Construct the solve result
+        solve_result = Problem.SolveResult(
+            best_solution=solution_best,
+            solutions=all_solutions,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
+        )
+
+        return solve_result
+
+    
     @classmethod
     def all_methods(cls):
         """returns all the methods of the given Heuristics class
@@ -314,4 +457,3 @@ class Metaheuristics():
             list[object]: list of functions
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
