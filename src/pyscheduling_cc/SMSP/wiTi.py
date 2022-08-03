@@ -291,6 +291,6 @@ class Heuristics_Tuning():
 
     @staticmethod
     def ACT(instance : wiTi_Instance):
-        rho = 1 - sum(instance.D)/(instance.n*sum(instance.P))
-        R = (max(instance.D)-min(instance.D))/sum(instance.P)
+        Tightness = 1 - sum(instance.D)/(instance.n*sum(instance.P))
+        Range = (max(instance.D)-min(instance.D))/sum(instance.P)
         return 0.2
