@@ -253,7 +253,7 @@ class Heuristics():
         wiTi = 0
         remaining_jobs_list = list(range(instance.n))
         sumP = sum(instance.P)
-        K = Heuristics_Tuning.define_ACT_K(instance)
+        K = Heuristics_Tuning.ACT(instance)
         rule = lambda job_id : (float(instance.W[job_id])/float(instance.P[job_id]))*exp(-max(instance.D[job_id]-instance.P[job_id]-ci,0)/(K*sumP))
         while(len(remaining_jobs_list)>0):
             remaining_jobs_list.sort(reverse=True,key=rule)
@@ -290,7 +290,7 @@ class Metaheuristics():
 class Heuristics_Tuning():
 
     @staticmethod
-    def define_ACT_K(instance : wiTi_Instance):
+    def ACT(instance : wiTi_Instance):
         rho = 1 - sum(instance.D)/(instance.n*sum(instance.P))
         R = (max(instance.D)-min(instance.D))/sum(instance.P)
         return 0.2
