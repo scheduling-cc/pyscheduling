@@ -283,19 +283,37 @@ class SingleInstance(Problem.Instance):
 
         return Si
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin : int, Pmax : int, due_time_factor : float, RJobs : list[float] = None):
         """Random generation of due time table
 
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
             law (GenerationLaw): probablistic law of generation
+            PJobs (list[float]): Table of processing time
             Pmin (int): Minimal processing time
             Pmax (int): Maximal processing time
+            fraction (float): due time factor
 
         Returns:
             list[int]: due time table
         """
-        pass
+        di = []
+        for j in range(self.n):
+            if hasattr(self,'R'): startTime = RJobs[j] + PJobs[j]
+            else: startTime = PJobs[j]
+            if law.name == "UNIFORM":  # Generate uniformly    
+                n = int(random.uniform(startTime, startTime + due_time_factor * PJobs[j]))
+
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            di.append(n)
+
+        return di
 
 
 @dataclass
