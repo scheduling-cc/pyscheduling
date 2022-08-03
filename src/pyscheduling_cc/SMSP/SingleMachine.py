@@ -298,11 +298,12 @@ class SingleInstance(Problem.Instance):
             list[int]: due time table
         """
         di = []
+        sumP = sum(PJobs)
         for j in range(self.n):
             if hasattr(self,'R'): startTime = RJobs[j] + PJobs[j]
             else: startTime = PJobs[j]
             if law.name == "UNIFORM":  # Generate uniformly    
-                n = int(random.uniform(startTime, startTime + due_time_factor * PJobs[j]))
+                n = int(random.uniform(startTime, startTime + due_time_factor * sumP))
 
             elif law.name == "NORMAL":  # Use normal law
                 value = np.random.normal(0, 1)
@@ -322,9 +323,10 @@ class Machine:
     objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-    wiCi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total cweighted completion time reached after each job in job_schedule
-
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index : list[int] = None) -> None:
+    wiCi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total weighted completion time reached after each job in job_schedule
+    wiTi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
+    
+    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index : list[int] = None, wiTi_index : list[int] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -339,6 +341,7 @@ class Machine:
         else:
             self.job_schedule = job_schedule
         self.wiCi_index = wiCi_index
+        self.wiTi_index = wiTi_index
 
     def __str__(self):
         return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
@@ -516,6 +519,48 @@ class Machine:
             wiCi += instance.W[job_i]*ci
 
         return wiCi
+
+    def total_weighted_lateness(self, instance: SingleInstance, startIndex: int = 0):
+        """_summary_
+
+        Args:
+            instance (SingleInstance): _description_
+            startIndex (int, optional): _description_. Defaults to 0.
+
+        Returns:
+            _type_: _description_
+        """
+        if len(self.job_schedule) > 0:
+            job_schedule_len = len(self.job_schedule)
+            if self.wiTi_index is None : # Iniates wiTi_index to the size of job_schedule
+                self.wiTi_index = [-1] * job_schedule_len
+                startIndex = 0
+            if len(self.wiTi_index) != job_schedule_len:
+                if startIndex == 0: # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiTi_index needs to be reinitialized
+                    self.wiTi_index = [-1] * job_schedule_len
+                else: # Insert an element in wiTi_index corresponding to the position where a new job has been inserted
+                    self.wiTi_index.insert(startIndex,-1) 
+            if startIndex > 0: 
+                ci = self.job_schedule[startIndex - 1].end_time
+                wiTi = self.wiTi_index[startIndex - 1]
+            else: 
+                ci = 0
+                wiTi = 0
+            for i in range(startIndex,job_schedule_len):
+                job_i = self.job_schedule[i].id
+
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                proc_time = instance.P[job_i]
+                ci = startTime + proc_time
+
+                self.job_schedule[i] = Job(job_i, startTime, ci)
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+                self.wiTi_index[i] = wiTi
+        self.objective = wiTi
+        return wiTi
 
 
 @dataclass
