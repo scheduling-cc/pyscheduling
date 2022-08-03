@@ -16,7 +16,8 @@ from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
 class riwiTi_Instance(SingleMachine.SingleInstance):
     W : list[int] = field(default_factory=list) # Jobs weights
     P: list[int] = field(default_factory=list)  # Processing time
-    W: list[int] = field(default_factory=list) # Due time
+    R: list[int] = field(default_factory=list) # release time
+    D: list[int] = field(default_factory=list) # due time
 
     @classmethod
     def read_txt(cls, path: Path):
