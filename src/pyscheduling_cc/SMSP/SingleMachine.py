@@ -683,6 +683,8 @@ class CSP():
         
         if objective == "wiCi":
             sol.wiCi()
+        elif objective == "wiTi":
+            sol.objective_value = sol.machine.total_weighted_lateness(instance)
 
         return sol
     
@@ -731,7 +733,10 @@ class CSP():
                 model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i]) for i in E ) )) # sum_{i in E} wi * ci
             elif objective == "cmax":
                 model.add(model.minimize( max( model.end_of(E_i[i]) for i in E ) )) # max_{i in E} ci 
-
+            elif objective == "wiTi":
+                model.add( model.minimize( 
+                    sum( instance.W[i] * model.max(model.end_of(E_i[i]) - instance.D[i], 0) for i in E ) # sum_{i in E} wi * Ti
+                ))
             # Link the callback to save stats of the solve process
             mycallback = CSP.MyCallback(stop_times=stop_times)
             model.add_solver_callback(mycallback)
