@@ -194,7 +194,7 @@ class sijwiTi_Solution(SingleMachine.SingleSolution):
                     if prevEndTime < startTime:
                         # Idle Time
                         gnt.broken_barh(
-                            [(prevEndTime, startTime - prevEndTime)], (0, 9), facecolors=('tab:gray'))
+                            [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
                     if prev != -1:
                             # Setup Time
                         gnt.broken_barh([(startTime, self.instance.S[prev][job_index])], (
@@ -252,9 +252,8 @@ class Heuristics():
         remaining_jobs_list = list(range(instance.n))
         while(len(remaining_jobs_list)>0):
             prev_job, taken_job = Heuristics_HelperFunctions.ACTS_Sorting(instance,remaining_jobs_list,ci,prev_job)
-            start_time_i = ci+instance.S[prev_job][taken_job]
-            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time_i,start_time_i+instance.P[taken_job]))
-            ci = start_time_i + instance.P[taken_job]
+            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,ci,ci+instance.S[prev_job][taken_job]+instance.P[taken_job]))
+            ci += instance.S[prev_job][taken_job] + instance.P[taken_job]
             wiTi += instance.W[taken_job]*max(ci-instance.D[taken_job],0)
             solution.machine.wiTi_index.append(wiTi)
             remaining_jobs_list.remove(taken_job)
