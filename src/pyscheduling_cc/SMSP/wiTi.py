@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
+import pyscheduling_cc.SMSP.SM_Methods as Methods
 from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
 
 
@@ -283,7 +284,7 @@ class Heuristics():
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 
-class Metaheuristics():
+class Metaheuristics(Methods.Metaheuristics):
     @classmethod
     def all_methods(cls):
         """returns all the methods of the given Heuristics class
