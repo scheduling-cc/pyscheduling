@@ -758,6 +758,14 @@ class SingleSolution(Problem.Solution):
                 self.machine.total_weighted_completion_time(self.instance)
         self.objective_value = self.machine.objective
 
+    def wiTi(self):
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        if self.instance != None:
+                self.machine.total_weighted_lateness(self.instance)
+        self.objective_value = self.machine.objective
+
     def fix_objective(self):
         """Sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
@@ -941,31 +949,44 @@ class CSP():
 class SM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution : SingleSolution):
+    def _intra_insertion(solution : SingleSolution, objective : str):
+        if objective == "wiCi":
+            fix_machine = solution.machine.total_weighted_completion_time
+            remove_insert = solution.machine.total_weighted_completion_time_remove_insert
+        elif objective == "wiTi":
+            fix_machine = solution.machine.total_weighted_lateness
+            remove_insert = solution.machine.total_weighted_lateness_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
             job = solution.machine.job_schedule[pos]
-            wiCi = solution.machine.objective
+            objective = solution.machine.objective
             taken_pos = pos
             for new_pos in range(len(solution.machine.job_schedule)):
                 if(pos != new_pos):
-                    new_wiCi = solution.machine.total_weighted_completion_time_remove_insert(pos,job.id,new_pos,solution.instance)
-                    if new_wiCi < wiCi: 
+                    new_objective = remove_insert(pos,job.id,new_pos,solution.instance)
+                    if new_objective < objective: 
                         taken_pos = new_pos
-                        wiCi = new_wiCi
+                        objective = new_objective
             if taken_pos != pos:
                 solution.machine.job_schedule.pop(pos)
                 solution.machine.job_schedule.insert(taken_pos,job)
-                solution.machine.total_weighted_completion_time(solution.instance,min(taken_pos,pos))
+                fix_machine(solution.instance,min(taken_pos,pos))
         solution.fix_objective()
         return solution
 
     @staticmethod
-    def _swap(solution : SingleSolution):
+    def _swap(solution : SingleSolution, objective : str):
+        if objective == "wiCi":
+            set_solution = solution.wiCi
+            swap = solution.machine.total_weighted_completion_time_swap
+        elif objective == "wiTi":
+            set_solution = solution.wiTi
+            swap = solution.machine.total_weighted_lateness_swap
+
         job_schedule_len = len(solution.machine.job_schedule)
         move = None
         for i in range(0, job_schedule_len):
             for j in range(i+1, job_schedule_len):
-                new_ci = solution.machine.total_weighted_completion_time_swap(i,j,solution.instance)
+                new_ci = swap(i,j,solution.instance)
                 if new_ci < solution.machine.objective:
                     if not move:
                         move = (i, j, new_ci)
@@ -976,7 +997,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             solution.machine.job_schedule[move[0]], solution.machine.job_schedule[move[1]
             ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
             solution.machine.objective = move[2]
-            solution.wiCi()
+            set_solution()
         return solution
 
 
