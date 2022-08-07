@@ -103,3 +103,20 @@ class Metaheuristics():
             list[object]: list of functions
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
+class Heuristics_HelperFunctions():
+    
+    @staticmethod
+    def rule_sorting(remaining_jobs : list[SingleMachine.Job], rule : object, reverse : bool = True):
+        max_rule_value = -1
+        min_rule_value = None
+        for job in remaining_jobs:
+            rule_value = rule(job)
+            if max_rule_value<rule_value: 
+                max_rule_value = rule_value
+                taken_job_max = job
+            if min_rule_value is None or min_rule_value>rule_value:
+                min_rule_value = rule_value
+                taken_job_min = job
+        if reverse: return taken_job_max
+        else: return taken_job_min
