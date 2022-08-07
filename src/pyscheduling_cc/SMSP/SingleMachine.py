@@ -351,7 +351,11 @@ class Machine:
         return (same_schedule)
 
     def copy(self):
-        return Machine(self.objective, self.last_job, list(self.job_schedule),list(self.wiCi_index))
+        if self.wiCi_index is None and self.wiTi_index is None:
+            return Machine(self.objective, self.last_job, list(self.job_schedule))
+        elif self.wiCi_index is None:
+            return Machine(self.objective, self.last_job, list(self.job_schedule),wiTi_index=list(self.wiTi_index))
+        else: return Machine(self.objective, self.last_job, list(self.job_schedule),wiCi_index=list(self.wiCi_index))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -1000,10 +1004,25 @@ class SM_LocalSearch(Problem.LocalSearch):
             set_solution()
         return solution
 
+    def improve(self, solution: SingleSolution, objective : str) -> SingleSolution:
+        """Improves a solution by iteratively calling local search operators
+
+        Args:
+            solution (Solution): current solution
+
+        Returns:
+            Solution: improved solution
+        """
+        curr_sol = solution.copy() if self.copy_solution else solution
+        for method in self.methods:
+            curr_sol = method(curr_sol,objective)
+
+        return curr_sol
+
 
 class NeighbourhoodGeneration():
     @staticmethod
-    def random_swap(solution: SingleSolution, force_improve: bool = True):
+    def random_swap(solution: SingleSolution, objective : str, force_improve: bool = True):
         """Performs a random swap between 2 jobs on the same machine
 
         Args:
@@ -1013,6 +1032,13 @@ class NeighbourhoodGeneration():
         Returns:
             SingleSolution: New solution
         """
+
+        if objective == "wiCi":
+            fix_machine = solution.machine.total_weighted_completion_time
+            swap = solution.machine.total_weighted_completion_time_swap
+        elif objective == "wiTi":
+            fix_machine = solution.machine.total_weighted_lateness
+            swap = solution.machine.total_weighted_lateness_swap
 
         machine_schedule = solution.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
@@ -1025,7 +1051,7 @@ class NeighbourhoodGeneration():
         while other_job_index == random_job_index:
             other_job_index = random.randrange(machine_schedule_len)
 
-        new_ci = solution.machine.completion_time_swap(
+        new_ci = swap(
             random_job_index, other_job_index, solution.instance)
 
         # Apply the move
@@ -1033,7 +1059,8 @@ class NeighbourhoodGeneration():
             machine_schedule[random_job_index], machine_schedule[
                 other_job_index] = machine_schedule[
                     other_job_index], machine_schedule[random_job_index]
-            solution.machine.total_weighted_completion_time(solution.instance,min(random_job_index,other_job_index))
+
+            fix_machine(solution.instance,min(random_job_index,other_job_index))
             solution.fix_objective()
 
         return solution
@@ -1074,7 +1101,7 @@ class NeighbourhoodGeneration():
         return solution
     
     @staticmethod
-    def lahc_neighbour(solution : SingleSolution):
+    def lahc_neighbour(solution : SingleSolution, objective : str):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:
@@ -1086,6 +1113,6 @@ class NeighbourhoodGeneration():
         solution_copy = solution.copy()
         #for _ in range(1,random.randint(1, 2)):
         solution_copy = NeighbourhoodGeneration.random_swap(
-            solution_copy, force_improve=False)
+            solution_copy, objective, force_improve=False)
 
         return solution_copy

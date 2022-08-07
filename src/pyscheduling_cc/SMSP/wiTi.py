@@ -89,8 +89,14 @@ class wiTi_Instance(SingleMachine.SingleInstance):
             f.write(str(self.D[i])+"\t")
         f.close()
 
+    def get_objective(self):
+        return "wiTi"
+    
     def create_solution(self):
         return wiTi_Solution(self)
+
+    def init_sol_method(self):
+        return Heuristics.ACT
 
 
 @dataclass

@@ -91,8 +91,14 @@ class riwiCi_Instance(SingleMachine.SingleInstance):
             f.write(str(self.R[i])+"\t")
         f.close()
 
+    def get_objective(self):
+        return "wiCi"
+
     def create_solution(self):
         return riwiCi_Solution(self)
+
+    def init_sol_method(self):
+        return Heuristics.WSECi
 
 
 @dataclass
