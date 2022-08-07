@@ -120,3 +120,35 @@ class Heuristics_HelperFunctions():
                 taken_job_min = job
         if reverse: return taken_job_max
         else: return taken_job_min
+
+class Heuristics_Cmax():
+    @staticmethod
+    def meta_raps(instance: SingleMachine.SingleInstance, p: float, r: int, nb_exec: int):
+        """Returns the solution using the meta-raps algorithm
+
+        Args:
+            instance (SingleInstance): The instance to be solved by the heuristic
+            p (float): probability of taking the greedy best solution
+            r (int): percentage of moves to consider to select the best move
+            nb_exec (int): Number of execution of the heuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        pass
+
+    @staticmethod
+    def grasp(instance: SingleMachine.SingleInstance, x, nb_exec: int):
+        """Returns the solution using the grasp algorithm
+
+        Args:
+            instance (SingleInstance): Instance to be solved by the heuristic
+            x (_type_): percentage of moves to consider to select the best move
+            nb_exec (int): Number of execution of the heuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        pass
+
+ 
