@@ -384,9 +384,11 @@ class Machine:
                     self.wiCi_index.insert(startIndex,-1) 
             if startIndex > 0: 
                 ci = self.job_schedule[startIndex - 1].end_time
+                job_prev_i = self.job_schedule[startIndex - 1].id
                 wiCi = self.wiCi_index[startIndex - 1]
             else: 
                 ci = 0
+                job_prev_i = self.job_schedule[startIndex].id
                 wiCi = 0
             for i in range(startIndex,job_schedule_len):
                 job_i = self.job_schedule[i].id
@@ -395,16 +397,22 @@ class Machine:
                     startTime = max(ci, instance.R[job_i])
                 else:
                     startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
                 proc_time = instance.P[job_i]
-                ci = startTime + proc_time
+                ci = startTime + setupTime + proc_time
 
-                self.job_schedule[i] = Job(job_i, startTime, ci)
+                self.job_schedule[i] = Job(job_i, startTime + setupTime, ci)
                 wiCi += instance.W[job_i]*ci
                 self.wiCi_index[i] = wiCi
+
+                job_prev_i = job_i
         self.objective = wiCi
         return wiCi
 
-    def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
+    def total_weighted_completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
         """
         Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
         Args:
@@ -416,15 +424,21 @@ class Machine:
         """
         if pos > 0:
             c_prev = self.job_schedule[pos - 1].end_time
+            job_prev_i = self.job_schedule[pos - 1].id
             if hasattr(instance, 'R'):
                 release_time = max(instance.R[job] - c_prev, 0)
             else:
                 release_time = 0 
-            ci = c_prev + release_time + instance.P[job]
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job]
+            else:
+                setupTime = 0
+            ci = c_prev + release_time + setupTime +instance.P[job]
             wiCi = self.wiCi_index[pos -1]+instance.W[job]*ci
         else: 
-            ci = instance.P[job]
-            wiCi = instance.W[job]*instance.P[job]
+            ci = instance.S[job][job] + instance.P[job]
+            wiCi = instance.W[job]*ci
+        job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
 
@@ -432,13 +446,19 @@ class Machine:
                 startTime = max(ci, instance.R[job_i])
             else:
                 startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
             proc_time = instance.P[job_i]
-            ci = startTime + proc_time
+            ci = startTime + setupTime +proc_time
             wiCi += instance.W[job_i]*ci
+
+            job_prev_i = job_i
 
         return wiCi
 
-    def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+    def total_weighted_completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """
         Computes the machine's completion time if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
@@ -454,8 +474,10 @@ class Machine:
 
         ci = 0
         wiCi = 0
+        job_prev_i=job
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
             wiCi = self.wiCi_index[first_pos - 1]
         for i in range(first_pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
@@ -466,8 +488,12 @@ class Machine:
                     startTime = max(ci, instance.R[job])
                 else:
                     startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job]
+                else:
+                    setupTime = 0
                 proc_time = instance.P[job]
-                ci = startTime + proc_time
+                ci = startTime + setupTime + proc_time
                 wiCi += instance.W[job]*ci
 
             # If the job_i is not the one to be removed
@@ -476,13 +502,19 @@ class Machine:
                     startTime = max(ci, instance.R[job_i])
                 else:
                     startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
                 proc_time = instance.P[job_i]
-                ci = startTime + proc_time
+                ci = startTime + setupTime + proc_time
                 wiCi += instance.W[job_i]*ci
+
+            job_prev_i = job_i
 
         return wiCi
 
-    def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+    def total_weighted_completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
         """
         Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
         in the machine's job_schedule
@@ -496,9 +528,12 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
+        if pos_i == 0: job_prev_i = self.job_schedule[pos_j]
+        else: job_prev_i = self.job_schedule[pos_i]
         wiCi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
             wiCi = self.wiCi_index[first_pos - 1]
 
         for i in range(first_pos, len(self.job_schedule)):
@@ -514,8 +549,12 @@ class Machine:
                 startTime = max(ci, instance.R[job_i])
             else:
                 startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
             proc_time = instance.P[job_i]
-            ci = startTime + proc_time
+            ci = startTime + setupTime + proc_time
             wiCi += instance.W[job_i]*ci
 
         return wiCi
@@ -786,7 +825,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             taken_pos = pos
             for new_pos in range(len(solution.machine.job_schedule)):
                 if(pos != new_pos):
-                    new_wiCi = solution.machine.completion_time_remove_insert(pos,job.id,new_pos,solution.instance)
+                    new_wiCi = solution.machine.total_weighted_completion_time_remove_insert(pos,job.id,new_pos,solution.instance)
                     if new_wiCi < wiCi: 
                         taken_pos = new_pos
                         wiCi = new_wiCi
@@ -803,7 +842,7 @@ class SM_LocalSearch(Problem.LocalSearch):
         move = None
         for i in range(0, job_schedule_len):
             for j in range(i+1, job_schedule_len):
-                new_ci = solution.machine.completion_time_swap(i,j,solution.instance)
+                new_ci = solution.machine.total_weighted_completion_time_swap(i,j,solution.instance)
                 if new_ci < solution.machine.objective:
                     if not move:
                         move = (i, j, new_ci)
