@@ -581,9 +581,11 @@ class Machine:
                     self.wiTi_index.insert(startIndex,-1) 
             if startIndex > 0: 
                 ci = self.job_schedule[startIndex - 1].end_time
+                job_prev_i = self.job_schedule[startIndex - 1].id
                 wiTi = self.wiTi_index[startIndex - 1]
             else: 
                 ci = 0
+                job_prev_i = self.job_schedule[startIndex].id
                 wiTi = 0
             for i in range(startIndex,job_schedule_len):
                 job_i = self.job_schedule[i].id
@@ -592,13 +594,134 @@ class Machine:
                     startTime = max(ci, instance.R[job_i])
                 else:
                     startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
                 proc_time = instance.P[job_i]
-                ci = startTime + proc_time
+                ci = startTime + setupTime + proc_time
 
-                self.job_schedule[i] = Job(job_i, startTime, ci)
+                self.job_schedule[i] = Job(job_i, startTime + setupTime, ci)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
                 self.wiTi_index[i] = wiTi
         self.objective = wiTi
+        return wiTi
+
+    def total_weighted_lateness_insert(self, job: int, pos: int, instance: SingleInstance):
+        if pos > 0:
+            c_prev = self.job_schedule[pos - 1].end_time
+            job_prev_i = self.job_schedule[pos - 1].id
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job] - c_prev, 0)
+            else:
+                release_time = 0 
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job]
+            else:
+                setupTime = 0
+            ci = c_prev + release_time + setupTime +instance.P[job]
+            wiTi = self.wiTi_index[pos -1]+instance.W[job]*ci
+        else: 
+            ci = instance.S[job][job] + instance.P[job]
+            wiTi = instance.W[job]*ci
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i]
+            ci = startTime + setupTime +proc_time
+            wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+
+            job_prev_i = job_i
+
+        return wiTi
+
+    def total_weighted_lateness_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+        first_pos = min(pos_remove, pos_insert)
+
+        ci = 0
+        wiTi = 0
+        job_prev_i=job
+        if first_pos > 0:  # There's at least one job in the schedule
+            ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
+            wiTi = self.wiTi_index[first_pos - 1]
+        for i in range(first_pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            # If job needs to be inserted to position i
+            if i == pos_insert:
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job]
+                ci = startTime + setupTime + proc_time
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+
+            # If the job_i is not the one to be removed
+            if i != pos_remove:
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job_i]
+                ci = startTime + setupTime + proc_time
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+
+            job_prev_i = job_i
+
+        return wiTi
+
+    def total_weighted_lateness_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+        first_pos = min(pos_i, pos_j)
+
+        ci = 0
+        if pos_i == 0: job_prev_i = self.job_schedule[pos_j]
+        else: job_prev_i = self.job_schedule[pos_i]
+        wiTi = 0
+        if first_pos > 0:  # There's at least one job in the schedule
+            ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
+            wiTi = self.wiTi_index[first_pos - 1]
+
+        for i in range(first_pos, len(self.job_schedule)):
+
+            if i == pos_i:  # We take pos_j
+                job_i = self.job_schedule[pos_j][0]  # (Id, startTime, endTime)
+            elif i == pos_j:  # We take pos_i
+                job_i = self.job_schedule[pos_i][0]
+            else:
+                job_i = self.job_schedule[i][0]  # Id of job in position i
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i]
+            ci = startTime + setupTime + proc_time
+            wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+
         return wiTi
 
 
