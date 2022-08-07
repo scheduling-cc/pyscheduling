@@ -105,9 +105,9 @@ class Metaheuristics():
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 class Heuristics_HelperFunctions():
-    
+
     @staticmethod
-    def rule_sorting(remaining_jobs : list[SingleMachine.Job], rule : object, reverse : bool = True):
+    def rule_candidate(remaining_jobs : list[SingleMachine.Job], rule : object, reverse : bool = True):
         max_rule_value = -1
         min_rule_value = None
         for job in remaining_jobs:
