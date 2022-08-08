@@ -107,7 +107,18 @@ class Metaheuristics():
 class Heuristics_HelperFunctions():
 
     @staticmethod
-    def rule_candidate(remaining_jobs : list[SingleMachine.Job], rule : object, reverse : bool = True):
+    def rule_candidate(remaining_jobs : list[int], rule : object, reverse : bool = True):
+        """Extract the highest index job using the specific passed rule.
+
+        Args:
+            remaining_jobs (list[int]): The list of jobs on which we apply the rule
+            rule (object): The rule (function) which is used in the heuristic in order to extract the candidate job
+            reverse (bool, optional): When true, the candidate returned is the job with the highest value returned by the rule.
+            When false, returns the job with the lowest value returned by the rule. Defaults to True.
+
+        Returns:
+            int: returns the job candidate by the given rule from remaining_jobs
+        """
         max_rule_value = -1
         min_rule_value = None
         for job in remaining_jobs:

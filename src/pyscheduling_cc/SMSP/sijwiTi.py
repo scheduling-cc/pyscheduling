@@ -285,7 +285,22 @@ class Metaheuristics(Methods.Metaheuristics):
 class Heuristics_HelperFunctions():
 
     @staticmethod
-    def ACTS_Sorting(instance : sijwiTi_Instance, remaining_jobs : list[SingleMachine.Job], t : int, prev_job : int):
+    def ACTS_Sorting(instance : sijwiTi_Instance, remaining_jobs : list[int], t : int, prev_job : int):
+        """Extracts the prev_job and the job to be scheduled next based on ACTS rule.
+        It returns a couple of previous job scheduled and the new job to be scheduled. The previous job will be the
+        same than the taken job if it's the first time when the rule is applied, is the same prev_job passed as
+        argument to the function otherwise. This is to avoid extra-ifs and thus not slowing the execution of 
+        the heuristic
+
+        Args:
+            instance (sijwiTi_Instance): Instance to be solved
+            remaining_jobs (list[int]): list of remaining jobs id on which the rule will be applied
+            t (int): the current time
+            prev_job (int): last scheduled job id
+
+        Returns:
+            int, int: (previous job scheduled, taken job to be scheduled)
+        """
         sumP = sum(instance.P)
         sumS = 0
         for i in range(instance.n):

@@ -980,10 +980,10 @@ class SM_LocalSearch(Problem.LocalSearch):
     @staticmethod
     def _swap(solution : SingleSolution, objective : str):
         if objective == "wiCi":
-            set_solution = solution.wiCi
+            set_objective = solution.wiCi
             swap = solution.machine.total_weighted_completion_time_swap
         elif objective == "wiTi":
-            set_solution = solution.wiTi
+            set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
 
         job_schedule_len = len(solution.machine.job_schedule)
@@ -1001,7 +1001,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             solution.machine.job_schedule[move[0]], solution.machine.job_schedule[move[1]
             ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
             solution.machine.objective = move[2]
-            set_solution()
+            set_objective()
         return solution
 
     def improve(self, solution: SingleSolution, objective : str) -> SingleSolution:
