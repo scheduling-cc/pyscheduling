@@ -15,11 +15,12 @@ from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
 
 
 @dataclass
-class riwiTi_Instance(SingleMachine.SingleInstance):
+class risijwiTi_Instance(SingleMachine.SingleInstance):
     W : list[int] = field(default_factory=list) # Jobs weights
     P: list[int] = field(default_factory=list)  # Processing time
     R: list[int] = field(default_factory=list) # release time
-    D: list[int] = field(default_factory=list) # due time
+    D: list[int] = field(default_factory=list) # Due time
+    S: list[list[int]] = field(default_factory=list) # Setup time
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -32,7 +33,7 @@ class riwiTi_Instance(SingleMachine.SingleInstance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            riwiTi_Instance:
+            risijwiTi_Instance:
 
         """
         f = open(path, "r")
@@ -45,11 +46,12 @@ class riwiTi_Instance(SingleMachine.SingleInstance):
         instance.W, i = instance.read_W(content, i)
         instance.R, i = instance.read_R(content, i)
         instance.D, i = instance.read_D(content, i)
+        instance.S, i = instance.read_S(content, i)
         f.close()
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = 1, Pmax: int = -1, alpha : float = 0.0, due_time_factor : float = 0.0, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = 1, Pmax: int = -1, alpha : float = 0.0, due_time_factor : float = 0.0, Gamma : float = 0.0, Smin : int = -1, Smax : int = -1, InstanceName: str = ""):
         """Random generation of RmSijkCmax problem instance
 
         Args:
@@ -61,19 +63,26 @@ class riwiTi_Instance(SingleMachine.SingleInstance):
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
-            riwiTi_Instance: the randomly generated instance
+            risijwiTi_Instance: the randomly generated instance
         """
         if(Pmax == -1):
             Pmax = Pmin + randint(1, 100)
         if(alpha == 0.0):
-            alpha = round(uniform(1.0, 3.0), 1)
+            alpha = round(uniform(5.0, 10.0), 1)
         if(due_time_factor == 0.0):
             due_time_factor = round(uniform(0, 1), 1)
+        if(Gamma == 0.0):
+            Gamma = round(uniform(1.0, 3.0), 1)
+        if(Smin == -1):
+            Smin = randint(1, 100)
+        if(Smax == -1):
+            Smax = randint(Smin, 100)
         instance = cls(InstanceName, jobs_number)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
         instance.W = instance.generate_W(protocol,law, Wmin, Wmax)
         instance.R = instance.generate_R(protocol,law,instance.P,Pmin,Pmax,alpha)
         instance.D = instance.generate_D(protocol,law,instance.P,Pmin,Pmax,due_time_factor,RJobs=instance.R)
+        instance.S = instance.generate_S(protocol,law,instance.P,Gamma,Smin,Smax)
         return instance
 
     def to_txt(self, path: Path) -> None:
@@ -96,27 +105,31 @@ class riwiTi_Instance(SingleMachine.SingleInstance):
         f.write("\nDue time\n")
         for i in range(self.n):
             f.write(str(self.D[i])+"\t")
+        f.write("\nSSD\n")
+        for i in range(self.n):
+            for j in range(self.n):
+                f.write(str(self.S[i][j])+"\t")
+            f.write("\n")
         f.close()
-
 
     def get_objective(self):
         return "wiTi"
-
+    
     def create_solution(self):
-        return riwiTi_Solution(self)
+        return risijwiTi_Solution(self)
 
     def init_sol_method(self):
-        return Heuristics.ACT_WSECi
+        return Heuristics.ACTS_WSECi
 
 
 @dataclass
-class riwiTi_Solution(SingleMachine.SingleSolution):
+class risijwiTi_Solution(SingleMachine.SingleSolution):
 
-    def __init__(self, instance: riwiTi_Instance = None, machine : SingleMachine.Machine = None, objective_value: int = 0):
-        """Constructor of riwiTi_Solution
+    def __init__(self, instance: risijwiTi_Instance = None, machine : SingleMachine.Machine = None, objective_value: int = 0):
+        """Constructor of risijwiTi_Solution
 
         Args:
-            instance (riwiTi_Instance, optional): Instance to be solved by the solution. Defaults to None.
+            instance (risijwiTi_Instance, optional): Instance to be solved by the solution. Defaults to None.
             configuration (SingleMachine.Machine, optional): list of machines of the instance. Defaults to None.
             objective_value (int, optional): initial objective value of the solution. Defaults to 0.
         """
@@ -131,7 +144,7 @@ class riwiTi_Solution(SingleMachine.SingleSolution):
         return "Cmax : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + self.machine.__str__()
 
     def copy(self):
-        copy_solution = riwiTi_Solution(self.instance)
+        copy_solution = risijwiTi_Solution(self.instance)
         copy_solution.machine = self.machine.copy()
         copy_solution.objective_value = self.objective_value
         return copy_solution
@@ -181,6 +194,8 @@ class riwiTi_Solution(SingleMachine.SingleSolution):
                 gnt.grid(True)
 
                 schedule = self.machine.job_schedule
+
+                prev = -1
                 prevEndTime = 0
                 for element in schedule:
                     job_index, startTime, endTime = element
@@ -188,9 +203,16 @@ class riwiTi_Solution(SingleMachine.SingleSolution):
                         # Idle Time
                         gnt.broken_barh(
                             [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
-                    
-                    gnt.broken_barh([(startTime, self.instance.P[job_index])], (
-                        10, 9), facecolors=('tab:blue'))
+                    if prev != -1:
+                            # Setup Time
+                        gnt.broken_barh([(startTime, self.instance.S[prev][job_index])], (
+                            10, 9), facecolors=('tab:orange'))
+                        # Processing Time
+                        gnt.broken_barh([(startTime + self.instance.S[prev][job_index],
+                                        self.instance.P[job_index])], (10, 9), facecolors=('tab:blue'))
+                    else:
+                        gnt.broken_barh([(startTime, self.instance.P[job_index])], (
+                            10, 9), facecolors=('tab:blue'))
                     prev = job_index
                     prevEndTime = endTime
                 if path:
@@ -226,60 +248,29 @@ class riwiTi_Solution(SingleMachine.SingleSolution):
         return is_valid
 
 class Heuristics():
-
+    
     @staticmethod
-    def ACT_WSECi(instance : riwiTi_Instance):
+    def ACTS_WSECi(instance : risijwiTi_Instance):
         startTime = perf_counter()
-        solution = riwiTi_Solution(instance)
+        solution = risijwiTi_Solution(instance)
         solution.machine.wiTi_index = []
         ci = 0
         wiTi = 0
+        prev_job = -1
         remaining_jobs_list = list(range(instance.n))
-        sumP = sum(instance.P)
-        K = Heuristics_Tuning.ACT(instance)
-        rule = lambda job_id : (float(instance.W[job_id])/float(max(instance.R[job_id] - ci,0) + instance.P[job_id]))*exp(-max(instance.D[job_id]-instance.P[job_id]-ci,0)/(K*sumP))
         while(len(remaining_jobs_list)>0):
-            remaining_jobs_list.sort(reverse=True,key=rule)
-            taken_job = remaining_jobs_list[0]
+            prev_job, taken_job = Heuristics_HelperFunctions.ACTS_WSECi_Sorting(instance,remaining_jobs_list,ci,prev_job)
             start_time = max(instance.R[taken_job],ci)
-            ci = start_time + instance.P[taken_job]
+            ci = start_time + instance.S[prev_job][taken_job] + instance.P[taken_job]
             solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,ci))
             wiTi += instance.W[taken_job]*max(ci-instance.D[taken_job],0)
             solution.machine.wiTi_index.append(wiTi)
-            remaining_jobs_list.pop(0)
+            remaining_jobs_list.remove(taken_job)
+            prev_job = taken_job
         solution.machine.objective=solution.machine.wiTi_index[instance.n-1]
         solution.fix_objective()
         return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
-    
-    @staticmethod
-    def ACT_WSAPT(instance : riwiTi_Instance):
-        startTime = perf_counter()
-        solution = riwiTi_Solution(instance)
-        solution.machine.wiTi_index = []
-        ci = min(instance.R)
-        wiTi = 0
-        remaining_jobs_list = list(range(instance.n))
-        sumP = sum(instance.P)
-        K = Heuristics_Tuning.ACT(instance)
-        rule = lambda job_id : (float(instance.W[job_id])/float(instance.P[job_id]))*exp(-max(instance.D[job_id]-instance.P[job_id]-ci,0)/(K*sumP))
-        while(len(remaining_jobs_list)>0):
-            filtered_remaining_jobs_list = list(filter(lambda job_id : instance.R[job_id]<=ci,remaining_jobs_list))
-            filtered_remaining_jobs_list.sort(reverse=True,key=rule)
-            if(len(filtered_remaining_jobs_list)==0):
-                ci = min([instance.R[job_id] for job_id in remaining_jobs_list])
-                filtered_remaining_jobs_list = list(filter(lambda job_id : instance.R[job_id]<=ci,remaining_jobs_list))
-                filtered_remaining_jobs_list.sort(reverse=True,key=rule)
-            taken_job = remaining_jobs_list[0]
-            start_time = max(instance.R[taken_job],ci)
-            ci = start_time + instance.P[taken_job]
-            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,ci))
-            wiTi += instance.W[taken_job]*max(ci-instance.D[taken_job],0)
-            solution.machine.wiTi_index.append(wiTi)
-            remaining_jobs_list.pop(0)
-        solution.machine.objective=solution.machine.wiTi_index[instance.n-1]
-        solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
-    
+
     @classmethod
     def all_methods(cls):
         """returns all the methods of the given Heuristics class
@@ -300,10 +291,37 @@ class Metaheuristics(Methods.Metaheuristics):
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-class Heuristics_Tuning():
+class Heuristics_HelperFunctions():
 
     @staticmethod
-    def ACT(instance : riwiTi_Instance):
+    def ACTS_WSECi_Sorting(instance : risijwiTi_Instance, remaining_jobs : list[SingleMachine.Job], t : int, prev_job : int):
+        sumP = sum(instance.P)
+        sumS = 0
+        for i in range(instance.n):
+            sumSi = sum(instance.S[i])
+            sumS += sumSi
+        K1, K2 = Heuristics_HelperFunctions.ACTS_WSECi_Tuning(instance)
+        rule = lambda prev_j,job_id : (float(instance.W[job_id])/float(max(instance.R[job_id] - t,0) + instance.P[job_id]))*exp(
+            -max(instance.D[job_id]-instance.P[job_id]-t,0)/(K1*sumP))*exp(-instance.S[prev_j][job_id]/(K2*sumS))
+        max_rule_value = -1
+        if prev_job == -1:
+            for job in remaining_jobs:
+                rule_value = rule(job,job)
+                if max_rule_value<rule_value: 
+                    max_rule_value = rule_value
+                    taken_job = job
+            return taken_job, taken_job
+        else:
+            for job in remaining_jobs:
+                rule_value = rule(prev_job,job)
+                if max_rule_value<rule_value: 
+                    max_rule_value = rule_value
+                    taken_job = job
+            return prev_job, taken_job
+        
+
+    @staticmethod
+    def ACTS_WSECi_Tuning(instance : risijwiTi_Instance):
         Tightness = 1 - sum(instance.D)/(instance.n*sum(instance.P))
         Range = (max(instance.D)-min(instance.D))/sum(instance.P)
-        return 0.2
+        return 0.2, 1

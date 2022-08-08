@@ -26,9 +26,7 @@ class Metaheuristics_Cmax():
         for _ in range(nb_exec):
             solution = instance.create_solution()
             remaining_jobs_list = [i for i in range(instance.n)]
-            toDelete = 0
             while len(remaining_jobs_list) != 0:
-                toDelete += 1
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
