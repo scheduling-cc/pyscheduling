@@ -30,6 +30,10 @@ class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
+class Objectives(Enum):
+    Cmax = 0
+    wiTi = 0
+    wiCi = 0
 
 @dataclass
 class SingleInstance(Problem.Instance):
@@ -762,6 +766,11 @@ class SingleSolution(Problem.Solution):
         copy_solution.machine = self.machine.copy()
         copy_solution.objective_value = self.objective_value
         return copy_solution
+
+    def __lt__(self, other):
+        if self.instance.get_objective().value == 1 :
+            return self.objective_value < other.objective_value
+        else : return other.objective_value < self.objective_value
 
     def wiCi(self):
         """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
