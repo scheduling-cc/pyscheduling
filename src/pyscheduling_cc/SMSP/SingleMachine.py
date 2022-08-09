@@ -608,6 +608,7 @@ class Machine:
                 self.job_schedule[i] = Job(job_i, startTime + setupTime, ci)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
                 self.wiTi_index[i] = wiTi
+                job_prev_i = job_i
         self.objective = wiTi
         return wiTi
 
@@ -886,31 +887,67 @@ class CSP():
                 "stop_times", [time_limit // 4, time_limit // 2, (time_limit * 3) // 4, time_limit])
 
             E = range(instance.n)
+            # Build transition matrix if setup is included
+            trans_matrix = None
+            if hasattr(instance, 'S'):
+                trans_matrix = [0 for i in range(instance.n + 1)
+                            for j in range(instance.n + 1)]
+                for i in range(instance.n):
+                    # Setup of the first job
+                    trans_matrix[i+1] = instance.S[i][i]
+                    for j in range(instance.n):
+                        if i != j:
+                            # Setup between i and j
+                            trans_matrix[(i+1)*(instance.n+1) + j +
+                                    1] = instance.S[i][j]
 
             # Construct the model
             model = CpoModel("smspModel")
 
             # Jobs interval_vars including the release date and processing times constraints
-            E_i = []
+            E_i, S_i, iv_array, types_array = [], [], [], []
             for i in E:
                 start_period = (instance.R[i], INTERVAL_MAX) if hasattr(instance, 'R') else (0, INTERVAL_MAX)
                 job_i = model.interval_var( start = start_period,
                                             size = instance.P[i], optional= False, name=f'E[{i}]')
                 E_i.append(job_i)
-
+                
+                # Arrays for sequence variable
+                iv_array.append(job_i)
+                types_array.append(i)
+                
+                # Add setup task if setup is included
+                if hasattr(instance, 'S'):
+                    # Setup can only start after the release of job_i
+                    setup_task = model.interval_var(start=start_period,
+                                                    optional=False, name=f'S[{i}]')
+                    S_i.append(setup_task)
+                    
+                    # Arrays for sequence variable
+                    iv_array.append(setup_task)
+                    types_array.append(0)
+                    
+                    # Processing of job i starts right after its setup
+                    model.add((model.end_at_start(setup_task, job_i)
+                                        ).set_name(f'SP[{i}]'))
+                    
             # Sequential execution on the machine
-            machine_sequence = model.sequence_var( E_i, list(E) )
+            machine_sequence = model.sequence_var( iv_array, types_array )
             model.add( model.no_overlap(machine_sequence) )
-            
-            # Define the objective 
-            if objective == "wiCi":
-                model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i]) for i in E ) )) # sum_{i in E} wi * ci
-            elif objective == "cmax":
-                model.add(model.minimize( max( model.end_of(E_i[i]) for i in E ) )) # max_{i in E} ci 
-            elif objective == "wiTi":
-                model.add( model.minimize( 
-                    sum( instance.W[i] * model.max(model.end_of(E_i[i]) - instance.D[i], 0) for i in E ) # sum_{i in E} wi * Ti
-                ))
+
+            # Add the setup constraint
+            if hasattr(instance, 'S'):
+                for i in E:
+                    # Setup time size
+                    dep = S_i[i]
+
+                    model.add((model.size_of(dep) ==
+                            model.element(trans_matrix,
+                                            (model.type_of_prev(
+                                machine_sequence, dep, -1, 0) + 1) * (instance.n+1)
+                        + i + 1)).set_name(f'Dep[{i},{j}]')
+                    )
+
             # Link the callback to save stats of the solve process
             mycallback = CSP.MyCallback(stop_times=stop_times)
             model.add_solver_callback(mycallback)
