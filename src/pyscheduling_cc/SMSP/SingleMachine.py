@@ -122,7 +122,7 @@ class SingleInstance(Problem.Instance):
         line = content[i].strip().split('\t')
         ri = []  # Table : Release time of job i
         for j in line:
-            ri.append(int(line[j]))
+            ri.append(int(j))
         return (ri, i+1)
 
     def read_S(self, content: list[str], startIndex: int):
@@ -561,6 +561,8 @@ class Machine:
             ci = startTime + setupTime + proc_time
             wiCi += instance.W[job_i]*ci
 
+            job_prev_i = job_i
+
         return wiCi
 
     def total_weighted_lateness(self, instance: SingleInstance, startIndex: int = 0):
@@ -726,6 +728,8 @@ class Machine:
             proc_time = instance.P[job_i]
             ci = startTime + setupTime + proc_time
             wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+
+            job_prev_i = job_i
 
         return wiTi
 
