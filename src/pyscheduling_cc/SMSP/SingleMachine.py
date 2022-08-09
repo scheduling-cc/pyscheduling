@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 import pyscheduling_cc.Problem as Problem
 
@@ -740,23 +741,25 @@ class SingleSolution(Problem.Solution):
 
     machine: Machine
 
-    def __init__(self, instance: SingleInstance):
+    def __init__(self, instance: SingleInstance, machine : Machine = None, objective_value: int = 0):
         """Constructor of SingleSolution
 
         Args:
             instance (SingleInstance, optional): Instance to be solved by the solution.
         """
         self.instance = instance
-        self.machine = Machine(0, -1, [])
-        self.objective_value = 0
+        if machine is None:
+            self.machine = Machine(0, -1, [])
+        else:
+            self.machine = machine
+        self.objective_value = objective_value
 
     def __str__(self):
         return "Objective : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | objective\n" + self.machine.__str__()
 
     def copy(self):
         copy_solution = SingleSolution(self.instance)
-        for i in range(self.instance.m):
-            copy_solution.machine = self.machine.copy()
+        copy_solution.machine = self.machine.copy()
         copy_solution.objective_value = self.objective_value
         return copy_solution
 
@@ -783,7 +786,6 @@ class SingleSolution(Problem.Solution):
         self.objective_value = self.machine.objective
 
     @classmethod
-    @abstractmethod
     def read_txt(cls, path: Path):
         """Read a solution from a txt file
 
@@ -791,9 +793,17 @@ class SingleSolution(Problem.Solution):
             path (Path): path to the solution's txt file of type Path from pathlib
 
         Returns:
-            ParallelSolution:
+            SingleSolution:
         """
-        pass
+        f = open(path, "r")
+        content = f.read().split('\n')
+        objective_value_ = int(content[0].split(':')[1])
+        line_content = content[2].split('|')
+        machine = Machine(int(line_content[1]), job_schedule=[Job(
+                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[0].split(':')]])
+        solution = cls(objective_value=objective_value_,
+                       machine=machine)
+        return solution
 
     def to_txt(self, path: Path) -> None:
         """Export the solution to a txt file
@@ -805,10 +815,83 @@ class SingleSolution(Problem.Solution):
         f.write(self.__str__())
         f.close()
 
-    @abstractmethod
-    def plot(self) -> None:
+    def plot(self, path: Path = None) -> None:
         """Plot the solution in an appropriate diagram"""
-        pass
+        if "matplotlib" in sys.modules:
+            if self.instance is not None:
+                # Add Tasks ID
+                fig, gnt = plt.subplots()
+
+                # Setting labels for x-axis and y-axis
+                gnt.set_xlabel('seconds')
+                gnt.set_ylabel('Machines')
+
+                # Setting ticks on y-axis
+
+                ticks = []
+                ticks_labels = []
+                ticks.append(15)
+
+                gnt.set_yticks(ticks)
+                # Labelling tickes of y-axis
+                gnt.set_yticklabels(ticks_labels)
+
+                # Setting graph attribute
+                gnt.grid(True)
+
+                schedule = self.machine.job_schedule
+
+                prev = -1
+                prevEndTime = 0
+                for element in schedule:
+                    job_index, startTime, endTime = element
+                    if prevEndTime < startTime:
+                        # Idle Time
+                        gnt.broken_barh(
+                            [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
+                    if prev != -1:
+                            # Setup Time
+                        gnt.broken_barh([(startTime, self.instance.S[prev][job_index])], (
+                            10, 9), facecolors=('tab:orange'))
+                        # Processing Time
+                        gnt.broken_barh([(startTime + self.instance.S[prev][job_index],
+                                        self.instance.P[job_index])], (10, 9), facecolors=('tab:blue'))
+                    else:
+                        gnt.broken_barh([(startTime, self.instance.P[job_index])], (
+                            10, 9), facecolors=('tab:blue'))
+                    prev = job_index
+                    prevEndTime = endTime
+                if path:
+                    plt.savefig(path)
+                else:
+                    plt.show()
+                return
+            else:
+                print("Please assign the solved instance to the solution object")
+        else:
+            print("Matplotlib is not installed, you can't use gant_plot")
+            return
+
+    def is_valid(self):
+        """
+        Check if solution respects the constraints
+        """
+        set_jobs = set()
+        is_valid = True
+        ci, expected_start_time = 0, 0
+        for i, element in enumerate(self.machine.job_schedule):
+            job, startTime, endTime = element
+            # Test End Time + start Time
+            expected_start_time = ci
+            ci +=  self.instance.P[job]
+
+            if startTime != expected_start_time or endTime != ci:
+                print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                is_valid = False
+            set_jobs.add(job)
+
+        is_valid &= len(set_jobs) == self.instance.n
+        return is_valid
 
 class ExactSolvers():
 
