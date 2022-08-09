@@ -850,11 +850,15 @@ class SingleSolution(Problem.Solution):
                         gnt.broken_barh(
                             [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
                     if prev != -1:
+                        if hasattr(self.instance, 'S'):
+                            setupTime = self.instance.S[prev][job_index]
+                        else:
+                            setupTime = 0
                             # Setup Time
-                        gnt.broken_barh([(startTime, self.instance.S[prev][job_index])], (
+                        gnt.broken_barh([(startTime, setupTime)], (
                             10, 9), facecolors=('tab:orange'))
                         # Processing Time
-                        gnt.broken_barh([(startTime + self.instance.S[prev][job_index],
+                        gnt.broken_barh([(startTime + setupTime,
                                         self.instance.P[job_index])], (10, 9), facecolors=('tab:blue'))
                     else:
                         gnt.broken_barh([(startTime, self.instance.P[job_index])], (
