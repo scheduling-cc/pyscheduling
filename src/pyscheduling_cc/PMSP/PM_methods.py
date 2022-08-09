@@ -30,7 +30,7 @@ class Metaheuristics_Cmax():
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
-                        current_machine_schedule = solution.configuration[j]
+                        current_machine_schedule = solution.machines[j]
                         insertions_list.append(
                             (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
                         for k in range(1, len(current_machine_schedule.job_schedule)):
@@ -46,12 +46,12 @@ class Metaheuristics_Cmax():
                     rand_insertion = random.choice(
                         insertions_list[0:int(instance.n * r)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.configuration[taken_machine].job_schedule.insert(
+                solution.machines[taken_machine].job_schedule.insert(
                     taken_pos, pm.Job(taken_job, 0, 0))
-                solution.configuration[taken_machine].compute_completion_time(
+                solution.machines[taken_machine].compute_completion_time(
                     instance, taken_pos)
-                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
-                    solution.configuration[taken_machine].last_job = taken_job
+                if taken_pos == len(solution.machines[taken_machine].job_schedule)-1:
+                    solution.machines[taken_machine].last_job = taken_job
                 if ci > solution.objective_value:
                     solution.objective_value = ci
                 remaining_jobs_list.remove(taken_job)
@@ -89,7 +89,7 @@ class Metaheuristics_Cmax():
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
-                        current_machine_schedule = solution.configuration[j]
+                        current_machine_schedule = solution.machines[j]
                         insertions_list.append(
                             (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
                         for k in range(1, len(current_machine_schedule.job_schedule)):
@@ -101,12 +101,12 @@ class Metaheuristics_Cmax():
                 rand_insertion = random.choice(
                     insertions_list[0:int(instance.n * x)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.configuration[taken_machine].job_schedule.insert(
+                solution.machines[taken_machine].job_schedule.insert(
                     taken_pos, pm.Job(taken_job, 0, 0))
-                solution.configuration[taken_machine].compute_completion_time(
+                solution.machines[taken_machine].compute_completion_time(
                     instance, taken_pos)
-                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
-                    solution.configuration[taken_machine].last_job = taken_job
+                if taken_pos == len(solution.machines[taken_machine].job_schedule)-1:
+                    solution.machines[taken_machine].last_job = taken_job
                 remaining_jobs_list.remove(taken_job)
 
             solution.fix_cmax()
