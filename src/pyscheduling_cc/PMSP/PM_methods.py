@@ -24,7 +24,8 @@ class Metaheuristics_Cmax():
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(nb_exec):
-            solution = instance.create_solution()
+            #solution = instance.create_solution()
+            solution = pm.ParallelSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
@@ -83,7 +84,8 @@ class Metaheuristics_Cmax():
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(nb_exec):
-            solution = instance.create_solution()
+            #solution = instance.create_solution()
+            solution = pm.ParallelSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
