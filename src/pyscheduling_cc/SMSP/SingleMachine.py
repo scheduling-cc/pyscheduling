@@ -1,22 +1,15 @@
 import json
 import random
+import sys
 from abc import abstractmethod
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-import sys
 
 import numpy as np
-
 import pyscheduling_cc.Problem as Problem
-
-try:
-    from docplex.cp.model import CpoModel
-    from docplex.cp.solver.cpo_callback import CpoCallback
-    from docplex.cp.expression import INTERVAL_MAX
-except ImportError:
-    pass
+from matplotlib import pyplot as plt
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -700,8 +693,8 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
-        if pos_i == 0: job_prev_i = self.job_schedule[pos_j]
-        else: job_prev_i = self.job_schedule[pos_i]
+        if pos_i == 0: job_prev_i = self.job_schedule[pos_j].id
+        else: job_prev_i = self.job_schedule[pos_i].id
         wiTi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
@@ -739,25 +732,32 @@ class SingleSolution(Problem.Solution):
 
     machine: Machine
 
-    def __init__(self, instance: SingleInstance):
+    def __init__(self, instance: SingleInstance, machine : Machine = None, objective_value: int = 0):
         """Constructor of SingleSolution
 
         Args:
             instance (SingleInstance, optional): Instance to be solved by the solution.
         """
         self.instance = instance
-        self.machine = Machine(0, -1, [])
-        self.objective_value = 0
+        if machine is None:
+            self.machine = Machine(0, -1, [])
+        else:
+            self.machine = machine
+        self.objective_value = objective_value
 
     def __str__(self):
         return "Objective : " + str(self.objective_value) + "\n" + "Job_schedule (job_id , start_time , completion_time) | objective\n" + self.machine.__str__()
 
     def copy(self):
         copy_solution = SingleSolution(self.instance)
-        for i in range(self.instance.m):
-            copy_solution.machine = self.machine.copy()
+        copy_solution.machine = self.machine.copy()
         copy_solution.objective_value = self.objective_value
         return copy_solution
+
+    def __lt__(self, other):
+        if self.instance.get_objective().value > 0 :
+            return self.objective_value < other.objective_value
+        else : return other.objective_value < self.objective_value
 
     def wiCi(self):
         """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
@@ -782,7 +782,6 @@ class SingleSolution(Problem.Solution):
         self.objective_value = self.machine.objective
 
     @classmethod
-    @abstractmethod
     def read_txt(cls, path: Path):
         """Read a solution from a txt file
 
@@ -790,9 +789,17 @@ class SingleSolution(Problem.Solution):
             path (Path): path to the solution's txt file of type Path from pathlib
 
         Returns:
-            ParallelSolution:
+            SingleSolution:
         """
-        pass
+        f = open(path, "r")
+        content = f.read().split('\n')
+        objective_value_ = int(content[0].split(':')[1])
+        line_content = content[2].split('|')
+        machine = Machine(int(line_content[1]), job_schedule=[Job(
+                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[0].split(':')]])
+        solution = cls(objective_value=objective_value_,
+                       machine=machine)
+        return solution
 
     def to_txt(self, path: Path) -> None:
         """Export the solution to a txt file
@@ -804,206 +811,96 @@ class SingleSolution(Problem.Solution):
         f.write(self.__str__())
         f.close()
 
-    @abstractmethod
-    def plot(self) -> None:
+    def plot(self, path: Path = None) -> None:
         """Plot the solution in an appropriate diagram"""
-        pass
+        if "matplotlib" in sys.modules:
+            if self.instance is not None:
+                # Add Tasks ID
+                fig, gnt = plt.subplots()
 
-class ExactSolvers():
+                # Setting labels for x-axis and y-axis
+                gnt.set_xlabel('seconds')
+                gnt.set_ylabel('Machines')
 
-    @staticmethod
-    def csp(instance, **kwargs):
-        return CSP.solve(instance, **kwargs)
+                # Setting ticks on y-axis
 
-class CSP():
+                ticks = []
+                ticks_labels = []
+                ticks.append(15)
 
-    CPO_STATUS = {
-        "Feasible": Problem.SolveStatus.FEASIBLE,
-        "Optimal": Problem.SolveStatus.OPTIMAL
-    }
+                gnt.set_yticks(ticks)
+                # Labelling tickes of y-axis
+                gnt.set_yticklabels(ticks_labels)
 
-    class MyCallback(CpoCallback):
+                # Setting graph attribute
+                gnt.grid(True)
 
-        def __init__(self, stop_times=[300, 600, 3600, 7200]):
-            self.stop_times = stop_times
-            self.best_values = dict()
-            self.stop_idx = 0
-            self.best_sol_time = 0
-            self.nb_sol = 0
+                schedule = self.machine.job_schedule
 
-        def invoke(self, solver, event, jsol):
-
-            if event == "Solution":
-                self.nb_sol += 1
-                solve_time = jsol.get_info('SolveTime')
-                self.best_sol_time = solve_time
-
-                # Go to the next stop time
-                while self.stop_idx < len(self.stop_times) and solve_time > self.stop_times[self.stop_idx]:
-                    self.stop_idx += 1
-
-                if self.stop_idx < len(self.stop_times):
-                    # Get important elements
-                    obj_val = jsol.get_objective_values()[0]
-                    self.best_values[self.stop_times[self.stop_idx]] = obj_val
-
-    @staticmethod
-    def _csp_transform_solution(msol, E_i, instance, objective):
-
-        sol = instance.create_solution()
-        k_tasks = []
-        for i in range(instance.n):
-            start = msol[E_i[i]][0]
-            end = msol[E_i[i]][1]
-            k_tasks.append(Job(i,start,end))
-            
-            k_tasks = sorted(k_tasks, key= lambda x: x[1])
-            sol.machine.job_schedule = k_tasks
-        
-        if objective == "wiCi":
-            sol.wiCi()
-        elif objective == "wiTi":
-            sol.objective_value = sol.machine.total_weighted_lateness(instance)
-
-        return sol
-    
-    @staticmethod
-    def solve(instance, **kwargs):
-        """ Returns the solution using the Cplex - CP optimizer solver
-
-        Args:
-            instance (Instance): Instance object to solve
-            objective (str): The objective to optimize. Defaults to wiCi
-            log_path (str, optional): Path to the log file to output cp optimizer log. Defaults to None to disable logging.
-            time_limit (int, optional): Time limit for executing the solver. Defaults to 300s.
-            threads (int, optional): Number of threads to set for cp optimizer solver. Defaults to 1.
-
-        Returns:
-            SolveResult: The object represeting the solving process result
-        """
-        if "docplex" in sys.modules:
-            # Extracting parameters
-            objective = kwargs.get("objective", "wiCi")
-            log_path = kwargs.get("log_path", None)
-            time_limit = kwargs.get("time_limit", 300)
-            nb_threads = kwargs.get("threads", 1)
-            stop_times = kwargs.get(
-                "stop_times", [time_limit // 4, time_limit // 2, (time_limit * 3) // 4, time_limit])
-
-            E = range(instance.n)
-            # Build transition matrix if setup is included
-            trans_matrix = None
-            if hasattr(instance, 'S'):
-                trans_matrix = [0 for i in range(instance.n + 1)
-                            for j in range(instance.n + 1)]
-                for i in range(instance.n):
-                    # Setup of the first job
-                    trans_matrix[i+1] = instance.S[i][i]
-                    for j in range(instance.n):
-                        if i != j:
-                            # Setup between i and j
-                            trans_matrix[(i+1)*(instance.n+1) + j +
-                                    1] = instance.S[i][j]
-
-            # Construct the model
-            model = CpoModel("smspModel")
-
-            # Jobs interval_vars including the release date and processing times constraints
-            E_i, S_i, iv_array, types_array = [], [], [], []
-            for i in E:
-                start_period = (instance.R[i], INTERVAL_MAX) if hasattr(instance, 'R') else (0, INTERVAL_MAX)
-                job_i = model.interval_var( start = start_period,
-                                            size = instance.P[i], optional= False, name=f'E[{i}]')
-                E_i.append(job_i)
-                
-                # Arrays for sequence variable
-                iv_array.append(job_i)
-                types_array.append(i)
-                
-                # Add setup task if setup is included
-                if hasattr(instance, 'S'):
-                    # Setup can only start after the release of job_i
-                    setup_task = model.interval_var(start=start_period,
-                                                    optional=False, name=f'S[{i}]')
-                    S_i.append(setup_task)
-                    
-                    # Arrays for sequence variable
-                    iv_array.append(setup_task)
-                    types_array.append(0)
-                    
-                    # Processing of job i starts right after its setup
-                    model.add((model.end_at_start(setup_task, job_i)
-                                        ).set_name(f'SP[{i}]'))
-                    
-            # Sequential execution on the machine
-            machine_sequence = model.sequence_var( iv_array, types_array )
-            model.add( model.no_overlap(machine_sequence) )
-
-            # Add the setup constraint
-            if hasattr(instance, 'S'):
-                for i in E:
-                    # Setup time size
-                    dep = S_i[i]
-
-                    model.add((model.size_of(dep) ==
-                            model.element(trans_matrix,
-                                            (model.type_of_prev(
-                                machine_sequence, dep, -1, 0) + 1) * (instance.n+1)
-                        + i + 1)).set_name(f'Dep[{i},{j}]')
-                    )
-
-            # Link the callback to save stats of the solve process
-            mycallback = CSP.MyCallback(stop_times=stop_times)
-            model.add_solver_callback(mycallback)
-
-            # Run the model
-            msol = model.solve(LogVerbosity="Normal", Workers=nb_threads, TimeLimit=time_limit, LogPeriod=1000000,
-                               log_output=True, trace_log=False, add_log_to_solution=True, RelativeOptimalityTolerance=0)
-
-            # Logging solver's infos if log_path is specified
-            if log_path:
-                with open(log_path, "a") as logFile:
-                    logFile.write('\n\t'.join(msol.get_solver_log().split("!")))
-                    logFile.flush()
-
-            sol = CSP._csp_transform_solution(msol, E_i, instance, objective)
-
-            # Construct the solve result
-            kpis = {
-                "ObjValue": msol.get_objective_value(),
-                "ObjBound": msol.get_objective_bounds()[0],
-                "MemUsage": msol.get_infos()["MemoryUsage"]
-            }
-            prev = -1
-            for stop_t in mycallback.stop_times:
-                if stop_t in mycallback.best_values:
-                    kpis[f'Obj-{stop_t}'] = mycallback.best_values[stop_t]
-                    prev = mycallback.best_values[stop_t]
+                prev = -1
+                prevEndTime = 0
+                for element in schedule:
+                    job_index, startTime, endTime = element
+                    if prevEndTime < startTime:
+                        # Idle Time
+                        gnt.broken_barh(
+                            [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
+                    if prev != -1:
+                        if hasattr(self.instance, 'S'):
+                            setupTime = self.instance.S[prev][job_index]
+                        else:
+                            setupTime = 0
+                            # Setup Time
+                        gnt.broken_barh([(startTime, setupTime)], (
+                            10, 9), facecolors=('tab:orange'))
+                        # Processing Time
+                        gnt.broken_barh([(startTime + setupTime,
+                                        self.instance.P[job_index])], (10, 9), facecolors=('tab:blue'))
+                    else:
+                        gnt.broken_barh([(startTime, self.instance.P[job_index])], (
+                            10, 9), facecolors=('tab:blue'))
+                    prev = job_index
+                    prevEndTime = endTime
+                if path:
+                    plt.savefig(path)
                 else:
-                    kpis[f'Obj-{stop_t}'] = prev
-
-            solve_result = Problem.SolveResult(
-                best_solution=sol,
-                runtime=msol.get_infos()["TotalTime"],
-                time_to_best=mycallback.best_sol_time,
-                status=CSP.CPO_STATUS.get(
-                    msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
-                kpis=kpis
-            )
-
-            return solve_result
-
+                    plt.show()
+                return
+            else:
+                print("Please assign the solved instance to the solution object")
         else:
-            print("Docplex import error: you can not use this solver")
+            print("Matplotlib is not installed, you can't use gant_plot")
+            return
+
+    def is_valid(self):
+        """
+        Check if solution respects the constraints
+        """
+        set_jobs = set()
+        is_valid = True
+        ci, expected_start_time = 0, 0
+        for i, element in enumerate(self.machine.job_schedule):
+            job, startTime, endTime = element
+            # Test End Time + start Time
+            expected_start_time = ci
+            ci +=  self.instance.P[job]
+
+            if startTime != expected_start_time or endTime != ci:
+                print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                is_valid = False
+            set_jobs.add(job)
+
+        is_valid &= len(set_jobs) == self.instance.n
+        return is_valid
 
 class SM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution : SingleSolution, objective : str):
-        if objective == "wiCi":
+    def _intra_insertion(solution : SingleSolution, objective : Problem.Objective):
+        if objective == Problem.Objective.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             remove_insert = solution.machine.total_weighted_completion_time_remove_insert
-        elif objective == "wiTi":
+        elif objective == Problem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             remove_insert = solution.machine.total_weighted_lateness_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
@@ -1024,11 +921,11 @@ class SM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def _swap(solution : SingleSolution, objective : str):
-        if objective == "wiCi":
+    def _swap(solution : SingleSolution, objective : Problem.Objective):
+        if objective == Problem.Objective.wiCi:
             set_objective = solution.wiCi
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == "wiTi":
+        elif objective == Problem.Objective.wiTi:
             set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1050,7 +947,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             set_objective()
         return solution
 
-    def improve(self, solution: SingleSolution, objective : str) -> SingleSolution:
+    def improve(self, solution: SingleSolution, objective : Problem.Objective) -> SingleSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -1068,7 +965,7 @@ class SM_LocalSearch(Problem.LocalSearch):
 
 class NeighbourhoodGeneration():
     @staticmethod
-    def random_swap(solution: SingleSolution, objective : str, force_improve: bool = True):
+    def random_swap(solution: SingleSolution, objective : Problem.Objective, force_improve: bool = True):
         """Performs a random swap between 2 jobs on the same machine
 
         Args:
@@ -1079,10 +976,10 @@ class NeighbourhoodGeneration():
             SingleSolution: New solution
         """
 
-        if objective == "wiCi":
+        if objective == Problem.Objective.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == "wiTi":
+        elif objective == Problem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1147,7 +1044,7 @@ class NeighbourhoodGeneration():
         return solution
     
     @staticmethod
-    def lahc_neighbour(solution : SingleSolution, objective : str):
+    def lahc_neighbour(solution : SingleSolution, objective : Problem.Objective):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:

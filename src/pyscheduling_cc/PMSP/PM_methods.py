@@ -7,14 +7,14 @@ import pyscheduling_cc.PMSP.ParallelMachines as pm
 
 class Metaheuristics_Cmax():
     @staticmethod
-    def meta_raps(instance: pm.ParallelInstance, p: float, r: int, nb_exec: int):
+    def meta_raps(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 100):
         """Returns the solution using the meta-raps algorithm
 
         Args:
             instance (ParallelInstance): The instance to be solved by the metaheuristic
             p (float): probability of taking the greedy best solution
-            r (int): percentage of moves to consider to select the best move
-            nb_exec (int): Number of execution of the metaheuristic
+            r (float): percentage of moves to consider to select the best move
+            n_iterations (int): Number of execution of the metaheuristic
 
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic
@@ -23,14 +23,15 @@ class Metaheuristics_Cmax():
         solveResult = Problem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
-        for _ in range(nb_exec):
-            solution = instance.create_solution()
+        for _ in range(n_iterations):
+            #solution = instance.create_solution()
+            solution = pm.ParallelSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
-                        current_machine_schedule = solution.configuration[j]
+                        current_machine_schedule = solution.machines[j]
                         insertions_list.append(
                             (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
                         for k in range(1, len(current_machine_schedule.job_schedule)):
@@ -46,12 +47,12 @@ class Metaheuristics_Cmax():
                     rand_insertion = random.choice(
                         insertions_list[0:int(instance.n * r)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.configuration[taken_machine].job_schedule.insert(
+                solution.machines[taken_machine].job_schedule.insert(
                     taken_pos, pm.Job(taken_job, 0, 0))
-                solution.configuration[taken_machine].compute_completion_time(
+                solution.machines[taken_machine].compute_completion_time(
                     instance, taken_pos)
-                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
-                    solution.configuration[taken_machine].last_job = taken_job
+                if taken_pos == len(solution.machines[taken_machine].job_schedule)-1:
+                    solution.machines[taken_machine].last_job = taken_job
                 if ci > solution.objective_value:
                     solution.objective_value = ci
                 remaining_jobs_list.remove(taken_job)
@@ -67,13 +68,13 @@ class Metaheuristics_Cmax():
         return solveResult
 
     @staticmethod
-    def grasp(instance: pm.ParallelInstance, x, nb_exec: int):
+    def grasp(instance: pm.ParallelInstance, x : float = 0.5, n_iterations: int = 100):
         """Returns the solution using the grasp algorithm
 
         Args:
             instance (ParallelInstance): Instance to be solved by the metaheuristic
-            x (_type_): percentage of moves to consider to select the best move
-            nb_exec (int): Number of execution of the metaheuristic
+            x (float): percentage of moves to consider to select the best move
+            n_iterations (int): Number of execution of the metaheuristic
 
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic
@@ -82,14 +83,15 @@ class Metaheuristics_Cmax():
         solveResult = Problem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
-        for _ in range(nb_exec):
-            solution = instance.create_solution()
+        for _ in range(n_iterations):
+            #solution = instance.create_solution()
+            solution = pm.ParallelSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
-                        current_machine_schedule = solution.configuration[j]
+                        current_machine_schedule = solution.machines[j]
                         insertions_list.append(
                             (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
                         for k in range(1, len(current_machine_schedule.job_schedule)):
@@ -101,12 +103,12 @@ class Metaheuristics_Cmax():
                 rand_insertion = random.choice(
                     insertions_list[0:int(instance.n * x)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.configuration[taken_machine].job_schedule.insert(
+                solution.machines[taken_machine].job_schedule.insert(
                     taken_pos, pm.Job(taken_job, 0, 0))
-                solution.configuration[taken_machine].compute_completion_time(
+                solution.machines[taken_machine].compute_completion_time(
                     instance, taken_pos)
-                if taken_pos == len(solution.configuration[taken_machine].job_schedule)-1:
-                    solution.configuration[taken_machine].last_job = taken_job
+                if taken_pos == len(solution.machines[taken_machine].job_schedule)-1:
+                    solution.machines[taken_machine].last_job = taken_job
                 remaining_jobs_list.remove(taken_job)
 
             solution.fix_cmax()
@@ -125,13 +127,13 @@ class Metaheuristics_Cmax():
         Args:
             instance (ParallelInstance): Instance object to solve
             Lfa (int, optional): Size of the candidates list. Defaults to 25.
-            Nb_iter (int, optional): Number of iterations of LAHC. Defaults to 300.
+            n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
             Non_improv (int, optional): LAHC stops when the number of iterations without
                 improvement is achieved. Defaults to 50.
             LS (bool, optional): Flag to apply local search at each iteration or not.
                 Defaults to True.
             time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
-                else Nb_iter is taken Defaults to None
+                else n_iterations is taken Defaults to None
             init_sol_method: The method used to get the initial solution. 
                 Defaults to "constructive"
             seed (int, optional): Seed for the random operators to make the algo deterministic
@@ -143,7 +145,7 @@ class Metaheuristics_Cmax():
         time_limit_factor = kwargs.get("time_limit_factor", None)
         init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
         Lfa = kwargs.get("Lfa", 30)
-        Nb_iter = kwargs.get("Nb_iter", 500000)
+        n_iterations = kwargs.get("n_iterations", 500000)
         Non_improv = kwargs.get("Non_improv", 50000)
         LS = kwargs.get("LS", True)
         seed = kwargs.get("seed", None)
@@ -176,7 +178,7 @@ class Metaheuristics_Cmax():
         i = 0
         time_to_best = perf_counter() - first_time
         current_solution = solution_init
-        while i < Nb_iter and N < Non_improv:
+        while i < n_iterations and N < Non_improv:
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
@@ -220,13 +222,13 @@ class Metaheuristics_Cmax():
             b (float, optional): Cooling factor. Defaults to 0.97.
             q0 (int, optional): Probability to apply restricted swap compared to
             restricted insertion. Defaults to 0.5.
-            n_iter (int, optional): Number of iterations for each temperature. Defaults to 10.
+            n_iterations (int, optional): Number of iterations for each temperature. Defaults to 10.
             Non_improv (int, optional): SA stops when the number of iterations without
                 improvement is achieved. Defaults to 500.
             LS (bool, optional): Flag to apply local search at each iteration or not. 
                 Defaults to True.
             time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
-                else Nb_iter is taken Defaults to None
+                else n_iterations is taken Defaults to None
             init_sol_method: The method used to get the initial solution. 
                 Defaults to "constructive"
             seed (int, optional): Seed for the random operators to make the 
@@ -245,7 +247,7 @@ class Metaheuristics_Cmax():
         k = kwargs.get("k", 0.1)
         b = kwargs.get("b", 0.99)
         q0 = kwargs.get("q0", 0.5)
-        n_iter = kwargs.get("n_iter", 20)
+        n_iterations = kwargs.get("n_iterations", 20)
         Non_improv = kwargs.get("Non_improv", 5000)
         LS = kwargs.get("LS", True)
         seed = kwargs.get("seed", None)
@@ -285,7 +287,7 @@ class Metaheuristics_Cmax():
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
-            for i in range(0, n_iter):
+            for i in range(0, n_iterations):
                 # check time limit if exists
                 if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                     break

@@ -121,12 +121,12 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
                 f.write("\n")
         f.close()
 
-    def create_solution(self):
-        return RmriSijkCmax_Solution(self)
-
     def init_sol_method(self):
         return Heuristics.constructive
 
+    def get_objective(self):
+        return Problem.Objective.Cmax
+    
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
         by dividing the sum of minimal completion time between job pairs on the number of machines
@@ -156,164 +156,6 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         LB = max(lb1, all_max_r_j)
 
         return LB
-
-
-@dataclass
-class RmriSijkCmax_Solution(ParallelMachines.ParallelSolution):
-
-    def __init__(self, instance: RmriSijkCmax_Instance = None, configuration: list[ParallelMachines.Machine] = None, objective_value: int = 0):
-        """Constructor of RmSijkCmax_Solution
-        Args:
-            instance (RmriSijkCmax_Instance, optional): Instance to be solved by the solution. Defaults to None.
-            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
-            objective_value (int, optional): initial objective value of the solution. Defaults to 0.
-        """
-        self.instance = instance
-        if configuration is None:
-            self.configuration = []
-            for i in range(instance.m):
-                machine = ParallelMachines.Machine(i, 0, -1, [])
-                self.configuration.append(machine)
-        else:
-            self.configuration = configuration
-        self.objective_value = 0
-
-    def __str__(self):
-        return "Cmax : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.configuration))
-
-    def __eq__(self, other):
-        for i, machine in enumerate(self.configuration):
-            if (machine != other.configuration[i]):
-                return False
-
-        return True
-
-    def __lt__(self, other):
-        return self.objective_value < other.objective_value
-
-    def copy(self):
-        copy_machines = []
-        for m in self.configuration:
-            copy_machines.append(m.copy())
-
-        copy_solution = RmriSijkCmax_Solution(self.instance)
-        for i in range(self.instance.m):
-            copy_solution.configuration[i] = copy_machines[i]
-        copy_solution.objective_value = self.objective_value
-        return copy_solution
-
-    @classmethod
-    def read_txt(cls, path: Path):
-        """Read a solution from a txt file
-
-        Args:
-            path (Path): path to the solution's txt file of type Path from pathlib
-
-        Returns:
-            RmSijkCmax_Solution:
-        """
-        f = open(path, "r")
-        content = f.read().split('\n')
-        objective_value_ = int(content[0].split(':')[1])
-        configuration_ = []
-        for i in range(2, len(content)):
-            line_content = content[i].split('|')
-            configuration_.append(ParallelMachines.Machine(int(line_content[0]), int(line_content[2]), job_schedule=[ParallelMachines.Job(
-                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[1].split(':')]]))
-        solution = cls(objective_value=objective_value_,
-                       configuration=configuration_)
-        return solution
-
-    def plot(self, path: Path = None) -> None:
-        """Plot the solution in an appropriate diagram"""
-        if "matplotlib" in sys.modules:
-            if self.instance is not None:
-                # Add Tasks ID
-                fig, gnt = plt.subplots()
-
-                # Setting labels for x-axis and y-axis
-                gnt.set_xlabel('seconds')
-                gnt.set_ylabel('Machines')
-
-                # Setting ticks on y-axis
-
-                ticks = []
-                ticks_labels = []
-                for i in range(len(self.configuration)):
-                    ticks.append(10*(i+1) + 5)
-                    ticks_labels.append(str(i+1))
-
-                gnt.set_yticks(ticks)
-                # Labelling tickes of y-axis
-                gnt.set_yticklabels(ticks_labels)
-
-                # Setting graph attribute
-                gnt.grid(True)
-
-                for j in range(len(self.configuration)):
-                    schedule = self.configuration[j].job_schedule
-                    prev = -1
-                    prevEndTime = 0
-                    for element in schedule:
-                        job_index, startTime, endTime = element
-                        if prevEndTime < startTime:
-                            # Idle Time
-                            gnt.broken_barh(
-                                [(prevEndTime, startTime - prevEndTime)], ((j+1) * 10, 9), facecolors=('tab:gray'))
-                        if prev != -1:
-                            # Setup Time
-                            gnt.broken_barh([(startTime, self.instance.S[j][prev][job_index])], ((
-                                j+1) * 10, 9), facecolors=('tab:orange'))
-                            # Processing Time
-                            gnt.broken_barh([(startTime + self.instance.S[j][prev][job_index],
-                                            self.instance.P[job_index][j])], ((j+1) * 10, 9), facecolors=('tab:blue'))
-                        else:
-                            gnt.broken_barh([(startTime, self.instance.P[job_index][j])], ((
-                                j+1) * 10, 9), facecolors=('tab:blue'))
-                        prev = job_index
-                        prevEndTime = endTime
-                if path:
-                    plt.savefig(path)
-                else:
-                    plt.show()
-                return
-            else:
-                print("Please assign the solved instance to the solution object")
-        else:
-            print("Matplotlib is not installed, you can't use gant_plot")
-            return
-
-    def is_valid(self):
-        """
-        Check if solution respects the constraints
-        """
-        set_jobs = set()
-        is_valid = True
-        for machine in self.configuration:
-            prev_job = None
-            ci, setup_time, expected_start_time = 0, 0, 0
-            for i, element in enumerate(machine.job_schedule):
-                job, startTime, endTime = element
-                # Test End Time + start Time
-                if prev_job is None:
-                    setup_time = self.instance.S[machine.machine_num][job][job]
-                    expected_start_time = self.instance.R[job]
-                else:
-                    setup_time = self.instance.S[machine.machine_num][prev_job][job]
-                    expected_start_time = max(ci, self.instance.R[job])
-
-                proc_time = self.instance.P[job][machine.machine_num]
-                ci = expected_start_time + proc_time + setup_time
-
-                if startTime != expected_start_time or endTime != ci:
-                    print(f'## Error: in machine {machine.machine_num}' +
-                          f' found {element} expected {job,expected_start_time, ci}')
-                    is_valid = False
-                set_jobs.add(job)
-                prev_job = job
-
-        is_valid &= len(set_jobs) == self.instance.n
-        return is_valid
 
 
 class ExactSolvers():
@@ -362,7 +204,7 @@ class CSP():
     @staticmethod
     def _csp_transform_solution(msol, X_ij, instance):
 
-        sol = RmriSijkCmax_Solution(instance)
+        sol = ParallelMachines.ParallelSolution(instance)
         for i in range(instance.m):
             k_tasks = []
             for j in range(instance.n):
@@ -372,7 +214,7 @@ class CSP():
                     k_tasks.append(ParallelMachines.Job(j, start, end))
 
             k_tasks = sorted(k_tasks, key=lambda x: x[1])
-            sol.configuration[i].job_schedule = k_tasks
+            sol.machines[i].job_schedule = k_tasks
 
         sol.cmax()
         return sol
@@ -615,15 +457,15 @@ class MILP():
 
     @staticmethod
     def transform_solution(Y_ij, C_j, instance):
-        sol = RmriSijkCmax_Solution(instance)
+        sol = ParallelMachines.ParallelSolution(instance)
         for i in range(instance.m):
             for j in range(1, instance.n+1):
                 if Y_ij[(i, j)].x == 1:  # Job j-1 is scheduled on machine i
-                    sol.configuration[i].job_schedule.append(
+                    sol.machines[i].job_schedule.append(
                         ParallelMachines.Job(j-1, -1, C_j[j].x))
 
         for i in range(instance.m):
-            sol.configuration[i].job_schedule.sort(key=lambda x: x[2])
+            sol.machines[i].job_schedule.sort(key=lambda x: x[2])
 
         sol.cmax()
         return sol
@@ -755,7 +597,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
-        solution = RmriSijkCmax_Solution(instance=instance)
+        solution = ParallelMachines.ParallelSolution(instance=instance)
 
         remaining_jobs_list = [j for j in range(instance.n)]
 
@@ -763,7 +605,7 @@ class Heuristics():
             min_factor = None
             for i in remaining_jobs_list:
                 for j in range(instance.m):
-                    current_machine_schedule = solution.configuration[j]
+                    current_machine_schedule = solution.machines[j]
                     if (current_machine_schedule.last_job == -1):
                         startTime = max(current_machine_schedule.completion_time,
                                         instance.R[i])
@@ -780,16 +622,16 @@ class Heuristics():
                         taken_job = i
                         taken_machine = j
                         taken_startTime = startTime
-            if (solution.configuration[taken_machine].last_job == -1):
+            if (solution.machines[taken_machine].last_job == -1):
                 ci = taken_startTime + instance.P[taken_job][taken_machine] + \
                     instance.S[taken_machine][taken_job][taken_job]  # Added Sj_ii for rabadi
             else:
                 ci = taken_startTime + instance.P[taken_job][
                     taken_machine] + instance.S[taken_machine][
-                        solution.configuration[taken_machine].last_job][taken_job]
-            solution.configuration[taken_machine].completion_time = ci
-            solution.configuration[taken_machine].last_job = taken_job
-            solution.configuration[taken_machine].job_schedule.append(
+                        solution.machines[taken_machine].last_job][taken_job]
+            solution.machines[taken_machine].completion_time = ci
+            solution.machines[taken_machine].last_job = taken_job
+            solution.machines[taken_machine].job_schedule.append(
                 ParallelMachines.Job(taken_job, taken_startTime, min_factor))
             remaining_jobs_list.remove(taken_job)
             if (ci > solution.objective_value):
@@ -811,7 +653,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
-        solution = RmriSijkCmax_Solution(instance)
+        solution = ParallelMachines.ParallelSolution(instance)
         if remaining_jobs_list is None:
             remaining_jobs_list = [i for i in range(instance.n)]
             if is_random:
@@ -820,7 +662,7 @@ class Heuristics():
         for i in remaining_jobs_list:
             min_factor = None
             for j in range(instance.m):
-                current_machine_schedule = solution.configuration[j]
+                current_machine_schedule = solution.machines[j]
                 if (current_machine_schedule.last_job == -1):
                     startTime = max(current_machine_schedule.completion_time,
                                     instance.R[i])
@@ -845,10 +687,10 @@ class Heuristics():
             else:
                 ci = taken_startTime + instance.P[taken_job][
                     taken_machine] + instance.S[taken_machine][
-                        solution.configuration[taken_machine].last_job][taken_job]
-            solution.configuration[taken_machine].completion_time = ci
-            solution.configuration[taken_machine].last_job = taken_job
-            solution.configuration[taken_machine].job_schedule.append(
+                        solution.machines[taken_machine].last_job][taken_job]
+            solution.machines[taken_machine].completion_time = ci
+            solution.machines[taken_machine].last_job = taken_job
+            solution.machines[taken_machine].job_schedule.append(
                 ParallelMachines.Job(taken_job, taken_startTime, min_factor))
             if (ci > solution.objective_value):
                 solution.objective_value = ci
@@ -1158,7 +1000,7 @@ class Metaheuristics(pm_methods.Metaheuristics_Cmax):
 class GeneticAlgorithm():
 
     @staticmethod
-    def solve(instance: RmriSijkCmax_Instance, pop_size=50, p_cross=0.7, p_mut=0.5, p_ls=1, pressure=30, nb_iter=100):
+    def solve(instance: RmriSijkCmax_Instance, pop_size=50, p_cross=0.7, p_mut=0.5, p_ls=1, pressure=30, n_iterations=100):
         population = GeneticAlgorithm.generate_population(
             instance, pop_size, LS=(p_ls != 0))
         delta = 0
@@ -1168,7 +1010,7 @@ class GeneticAlgorithm():
         best_cmax = None
         best_solution = None
         solutions = []
-        while i < nb_iter and N < 20:  # ( instance.n*instance.m*50/2000 ):
+        while i < n_iterations and N < 20:  # ( instance.n*instance.m*50/2000 ):
             # Select the parents
             # print("Selection")
             parent_1, parent_2 = GeneticAlgorithm.selection(
@@ -1270,23 +1112,23 @@ class GeneticAlgorithm():
 
     @staticmethod
     def crossover(instance: RmriSijkCmax_Instance, parent_1, parent_2):
-        child1 = RmriSijkCmax_Solution(instance)
-        child2 = RmriSijkCmax_Solution(instance)
+        child1 = ParallelMachines.ParallelSolution(instance)
+        child2 = ParallelMachines.ParallelSolution(instance)
 
-        for i, machine1 in enumerate(parent_1.configuration):
-            machine2 = parent_2.configuration[i]
+        for i, machine1 in enumerate(parent_1.machines):
+            machine2 = parent_2.machines[i]
             # generate 2 random crossing points
             cross_point_1 = random.randint(0, len(machine1.job_schedule)-1)
             cross_point_2 = random.randint(0, len(machine2.job_schedule)-1)
 
-            child1.configuration[i].job_schedule.extend(
+            child1.machines[i].job_schedule.extend(
                 machine1.job_schedule[0:cross_point_1])
-            child2.configuration[i].job_schedule.extend(
+            child2.machines[i].job_schedule.extend(
                 machine2.job_schedule[0:cross_point_2])
 
-            child1.configuration[i].completion_time = child1.configuration[i].compute_completion_time(
+            child1.machines[i].completion_time = child1.machines[i].compute_completion_time(
                 instance)
-            child2.configuration[i].completion_time = child2.configuration[i].compute_completion_time(
+            child2.machines[i].completion_time = child2.machines[i].compute_completion_time(
                 instance)
 
             GeneticAlgorithm.complete_solution(instance, parent_1, child2)
@@ -1295,18 +1137,18 @@ class GeneticAlgorithm():
         return child1, child2
 
     @staticmethod
-    def mutation(instance: RmriSijkCmax_Instance, child: RmriSijkCmax_Solution):
+    def mutation(instance: RmriSijkCmax_Instance, child: ParallelMachines.ParallelSolution):
         # Random Internal Swap
         child = ParallelMachines.NeighbourhoodGeneration.random_swap(
             child, force_improve=False, internal=True)
         return child
 
     @staticmethod
-    def complete_solution(instance: RmriSijkCmax_Instance, parent, child: RmriSijkCmax_Solution):
+    def complete_solution(instance: RmriSijkCmax_Instance, parent, child: ParallelMachines.ParallelSolution):
         # Cache the jobs affected to both childs
         child_jobs = set(
-            job[0] for machine in child.configuration for job in machine.job_schedule)
-        for i, machine_parent in enumerate(parent.configuration):
+            job[0] for machine in child.machines for job in machine.job_schedule)
+        for i, machine_parent in enumerate(parent.machines):
             for job in machine_parent.job_schedule:
                 if job[0] not in child_jobs:
                     child = ParallelMachines.PM_LocalSearch.best_insertion_machine(

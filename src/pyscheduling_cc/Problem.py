@@ -3,6 +3,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
+class Objective(Enum):# Negative value are for minimization problems, Positive values are for maximization problems
+    Cmax = -1
+    wiTi = -2
+    wiCi = -3
 
 @dataclass
 class Instance(ABC):
