@@ -926,6 +926,7 @@ class PM_LocalSearch(Problem.LocalSearch):
                     random_index = random.randrange(len(other_machines_copy))
                     other_machine_index = other_machines_copy.pop(random_index)
                     other_machine = solution.machines[other_machine_index]
+                    other_nb_machine = other_machine.machine_num
                     other_machine_schedule = other_machine.job_schedule
 
                     old_cl = other_machine.completion_time
@@ -934,54 +935,40 @@ class PM_LocalSearch(Problem.LocalSearch):
                     best_diff = None
 
                     for j in range(len(cmax_machine_schedule)):
+                        job_cmax, _, _ = cmax_machine_schedule[j]
+                        ci = cmax_machine.completion_time_remove(j, solution.instance)
                         for k in range(len(other_machine_schedule)):
-                            new_machine_cmax = Machine(
-                                nb_machine, cmax_machine.completion_time, cmax_machine.last_job, list(cmax_machine_schedule))
-                            job_cmax = new_machine_cmax.job_schedule.pop(j)
+                            
+                            cl = other_machine.completion_time_insert(job_cmax,k,solution.instance)
 
-                            new_other_machine = Machine(
-                                other_machine_index, other_machine.completion_time, other_machine.last_job, list(other_machine_schedule))
-                            new_other_machine.job_schedule.insert(k, job_cmax)
-
-                            ci = new_machine_cmax.compute_completion_time(
-                                solution.instance)
-                            cl = new_other_machine.compute_completion_time(
-                                solution.instance)
-                            new_machine_cmax.completion_time = ci
-                            new_other_machine.completion_time = cl
-
-                            solution.machines[nb_machine] = new_machine_cmax
-                            solution.machines[other_machine_index] = new_other_machine
-
-                            solution.cmax()
-                            if solution.objective_value < old_cmax:
+                            new_cmax = solution.tmp_cmax(temp_ci = {nb_machine: ci, other_nb_machine: cl})
+                            if new_cmax < old_cmax:
                                 if not move:
                                     move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = solution.objective_value
-                                    # print(1,old_cmax,old_ci,old_cl,move)
-                                elif solution.objective_value < best_cmax:
+                                    best_cmax = new_cmax
+                                    #print(1,old_cmax,old_ci,old_cl,move)
+                                elif new_cmax < best_cmax:
                                     move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = solution.objective_value
-                                    # print(2,old_cmax,old_ci,old_cl,move)
-                            elif solution.objective_value == best_cmax and (ci < old_ci or cl < old_cl):
+                                    best_cmax = new_cmax
+                                    #print(2,old_cmax,old_ci,old_cl,move)
+                            elif new_cmax == best_cmax and (ci < old_ci
+                                                                or cl < old_cl):
                                 if not move:
                                     move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    # print(3,old_cmax,old_ci,old_cl,move)
-                                elif (not best_diff or old_ci - ci + old_cl - cl < best_diff) and best_cmax == old_cmax:
+                                    #print(3,old_cmax,old_ci,old_cl,move)
+                                elif (not best_diff or old_ci - ci + old_cl - cl <
+                                    best_diff) and best_cmax == old_cmax:
                                     move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    # print(4,old_cmax,old_ci,old_cl,move)
-                            solution.machines[nb_machine] = cmax_machine
-                            solution.machines[other_machine_index] = other_machine
-                            solution.cmax()
+                                    #print(4,old_cmax,old_ci,old_cl,move)
+
                 if move:  # Apply the best move
                     cmax_job = cmax_machine_schedule.pop(move[1])
                     other_machine_schedule.insert(move[2], cmax_job)
-                    cmax_machine.completion_time = move[3]
-                    other_machine.completion_time = move[4]
-                    solution.cmax()
-        solution.cmax()
+                    cmax_machine.compute_completion_time(solution.instance)
+                    other_machine.compute_completion_time(solution.instance)
+                    solution.fix_cmax()
         return solution
 
     @staticmethod
@@ -1011,71 +998,57 @@ class PM_LocalSearch(Problem.LocalSearch):
                 old_ci = cmax_machine.completion_time
                 if len(cmax_machine_schedule) > 1:
                     other_machines = sorted(
-                        other_machines, key=lambda machine: machine.completion_time)
+                        other_machines,
+                        key=lambda machine: machine.completion_time)
 
                     move = None
                     l = 0
                     while not move and l < len(other_machines):
                         other_machine_index = other_machines[l].machine_num
                         other_machine = solution.machines[other_machine_index]
-                        other_machine_schedule = other_machine.job_schedule
+                        other_nb_machine = other_machine.machine_num
+                        other_mahcine_schedule = other_machine.job_schedule
 
                         old_cl = other_machine.completion_time
                         old_cmax = solution.objective_value
                         best_cmax = old_cmax
                         best_diff = None
 
-                        j = len(cmax_machine_schedule)-1
-                        for k in range(len(other_machine_schedule)):
-                            new_machine_cmax = Machine(
-                                nb_machine, cmax_machine.completion_time, cmax_machine.last_job, list(cmax_machine_schedule))
-                            job_cmax = new_machine_cmax.job_schedule.pop(j)
-
-                            new_other_machine = Machine(
-                                other_machine_index, other_machine.completion_time, other_machine.last_job, list(other_machine_schedule))
-                            new_other_machine.job_schedule.insert(k, job_cmax)
-
-                            ci = new_machine_cmax.compute_completion_time(
-                                solution.instance)
-                            cl = new_other_machine.compute_completion_time(
-                                solution.instance)
-                            new_machine_cmax.completion_time = ci
-                            new_other_machine.completion_time = cl
-
-                            solution.machines[nb_machine] = new_machine_cmax
-                            solution.machines[other_machine_index] = new_other_machine
-
-                            solution.cmax()
-                            if solution.objective_value < old_cmax:
+                        j = len(cmax_machine_schedule) - 1
+                        job_cmax, _, _ = cmax_machine_schedule[j]
+                        ci = cmax_machine.completion_time_remove(j,solution.instance)
+                        for k in range(len(other_mahcine_schedule)):
+                            cl = other_machine.completion_time_insert(job_cmax, k, solution.instance)
+                            
+                            new_cmax = solution.tmp_cmax(temp_ci = {nb_machine: ci, other_nb_machine: cl})
+                            if new_cmax < old_cmax:
                                 if not move:
                                     move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = solution.objective_value
-                                    # print(1,old_cmax,old_ci,old_cl,move)
-                                elif solution.objective_value < best_cmax:
+                                    best_cmax = new_cmax
+                                    #print(1,old_cmax,old_ci,old_cl,move)
+                                elif new_cmax < best_cmax:
                                     move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = solution.objective_value
-                                    # print(2,old_cmax,old_ci,old_cl,move)
-                            elif solution.objective_value == best_cmax and (ci < old_ci or cl < old_cl):
+                                    best_cmax = new_cmax
+                                    #print(2,old_cmax,old_ci,old_cl,move)
+                            elif new_cmax == best_cmax and (ci < old_ci
+                                                                or cl < old_cl):
                                 if not move:
                                     move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    # print(3,old_cmax,old_ci,old_cl,move)
-                                elif (not best_diff or old_ci - ci + old_cl - cl < best_diff) and best_cmax == old_cmax:
+                                    #print(3,old_cmax,old_ci,old_cl,move)
+                                elif (not best_diff or old_ci - ci + old_cl - cl <
+                                    best_diff) and best_cmax == old_cmax:
                                     move = (other_machine_index, j, k, ci, cl)
                                     best_diff = old_ci - ci + old_cl - cl
-                                    # print(4,old_cmax,old_ci,old_cl,move)
-                            solution.machines[nb_machine] = cmax_machine
-                            solution.machines[other_machine_index] = other_machine
-                            solution.cmax()
+                                    #print(4,old_cmax,old_ci,old_cl,move)
                         l += 1
                     if move:  # Apply the best move
                         change = True
                         cmax_job = cmax_machine_schedule.pop(move[1])
-                        other_machine_schedule.insert(move[2], cmax_job)
-                        cmax_machine.completion_time = move[3]
-                        other_machine.completion_time = move[4]
-                        solution.cmax()
-            solution.cmax()
+                        other_mahcine_schedule.insert(move[2], cmax_job)
+                        cmax_machine.compute_completion_time(solution.instance)
+                        other_machine.compute_completion_time(solution.instance)
+                        solution.fix_cmax()
         return solution
 
     @staticmethod
