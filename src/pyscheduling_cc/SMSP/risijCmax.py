@@ -99,11 +99,7 @@ class risijCmax_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-<<<<<<< HEAD
         return Problem.Objective.Cmax
-=======
-        return SingleMachine.Objective.Cmax
->>>>>>> 56337911a2c33ab1ea53b1916fe6b39c94e224ce
 
     def init_sol_method(self):
         return Heuristics.constructive
