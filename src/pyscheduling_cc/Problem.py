@@ -8,6 +8,10 @@ class Objective(Enum):# Negative value are for minimization problems, Positive v
     wiTi = -2
     wiCi = -3
 
+    @classmethod
+    def toString(cls):
+        return cls.Cmax.name + "\n" + cls.wiTi.name + "\n" + cls.wiCi.name
+
 @dataclass
 class Instance(ABC):
 
@@ -241,6 +245,6 @@ class Solver(ABC):
         try:
             return self.method(instance, **data)
         except:
-            print("Do correctly use the method as explain below :\n" +
+            print("Do correctly use the method as explained below :\n" +
                   self.method.__doc__)
         pass

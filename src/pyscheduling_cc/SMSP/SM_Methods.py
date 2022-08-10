@@ -5,7 +5,8 @@ from time import perf_counter
 import pyscheduling_cc.Problem as Problem
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 from pyscheduling_cc.Problem import Solver
-from pyscheduling_cc.SMSP.SingleMachine import Job, Objective
+from pyscheduling_cc.SMSP.SingleMachine import Job
+from pyscheduling_cc.Problem import Objective
 
 try:
     from docplex.cp.expression import INTERVAL_MAX
