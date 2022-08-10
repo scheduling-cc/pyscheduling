@@ -11,7 +11,7 @@ import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
-from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
+from pyscheduling_cc.SMSP.SM_Methods import ExactSolvers
 
 
 @dataclass
@@ -94,7 +94,7 @@ class riwiCi_Instance(SingleMachine.SingleInstance):
 
     def get_objective(self):
         return Problem.Objective.wiCi
-
+        
     def init_sol_method(self):
         return Heuristics.WSECi
 

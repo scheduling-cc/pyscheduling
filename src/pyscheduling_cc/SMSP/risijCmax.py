@@ -11,7 +11,7 @@ import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
-from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
+from pyscheduling_cc.SMSP.SM_Methods import ExactSolvers
 
 
 @dataclass
@@ -99,7 +99,11 @@ class risijCmax_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
+<<<<<<< HEAD
         return Problem.Objective.Cmax
+=======
+        return SingleMachine.Objective.Cmax
+>>>>>>> 56337911a2c33ab1ea53b1916fe6b39c94e224ce
 
     def init_sol_method(self):
         return Heuristics.constructive
