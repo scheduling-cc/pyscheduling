@@ -91,7 +91,7 @@ class sijCmax_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return "Cmax"
+        return SingleMachine.Objectives.Cmax
 
     def init_sol_method(self):
         return Heuristics.constructive

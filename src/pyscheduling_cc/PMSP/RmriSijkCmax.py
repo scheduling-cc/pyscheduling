@@ -125,7 +125,7 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         return Heuristics.constructive
 
     def get_objective(self):
-        return "Cmax"
+        return ParallelMachines.Objectives.Cmax
     
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 

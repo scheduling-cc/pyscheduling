@@ -24,9 +24,9 @@ class GenerationLaw(Enum):
     NORMAL = 2
 
 class Objectives(Enum):
-    Cmax = 0
-    wiTi = 0
-    wiCi = 0
+    Cmax = -1
+    wiTi = -2
+    wiCi = -3
 
 @dataclass
 class ParallelInstance(Problem.Instance):
@@ -567,7 +567,7 @@ class ParallelSolution(Problem.Solution):
         return copy_solution
 
     def __lt__(self, other):
-        if self.instance.get_objective().value == 1 :
+        if self.instance.get_objective().value > 0 :
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
     

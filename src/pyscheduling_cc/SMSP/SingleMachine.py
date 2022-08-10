@@ -31,9 +31,9 @@ class GenerationLaw(Enum):
     NORMAL = 2
 
 class Objectives(Enum):
-    Cmax = 0
-    wiTi = 0
-    wiCi = 0
+    Cmax = -1
+    wiTi = -2
+    wiCi = -3
 
 @dataclass
 class SingleInstance(Problem.Instance):
@@ -706,8 +706,8 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
-        if pos_i == 0: job_prev_i = self.job_schedule[pos_j]
-        else: job_prev_i = self.job_schedule[pos_i]
+        if pos_i == 0: job_prev_i = self.job_schedule[pos_j].id
+        else: job_prev_i = self.job_schedule[pos_i].id
         wiTi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
@@ -768,7 +768,7 @@ class SingleSolution(Problem.Solution):
         return copy_solution
 
     def __lt__(self, other):
-        if self.instance.get_objective().value == 1 :
+        if self.instance.get_objective().value > 0 :
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
 
@@ -1060,11 +1060,11 @@ class CSP():
 class SM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution : SingleSolution, objective : str):
-        if objective == "wiCi":
+    def _intra_insertion(solution : SingleSolution, objective : Objectives):
+        if objective == Objectives.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             remove_insert = solution.machine.total_weighted_completion_time_remove_insert
-        elif objective == "wiTi":
+        elif objective == Objectives.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             remove_insert = solution.machine.total_weighted_lateness_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
@@ -1085,11 +1085,11 @@ class SM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def _swap(solution : SingleSolution, objective : str):
-        if objective == "wiCi":
+    def _swap(solution : SingleSolution, objective : Objectives):
+        if objective == Objectives.wiCi:
             set_objective = solution.wiCi
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == "wiTi":
+        elif objective == Objectives.wiTi:
             set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1111,7 +1111,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             set_objective()
         return solution
 
-    def improve(self, solution: SingleSolution, objective : str) -> SingleSolution:
+    def improve(self, solution: SingleSolution, objective : Objectives) -> SingleSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -1129,7 +1129,7 @@ class SM_LocalSearch(Problem.LocalSearch):
 
 class NeighbourhoodGeneration():
     @staticmethod
-    def random_swap(solution: SingleSolution, objective : str, force_improve: bool = True):
+    def random_swap(solution: SingleSolution, objective : Objectives, force_improve: bool = True):
         """Performs a random swap between 2 jobs on the same machine
 
         Args:
@@ -1140,10 +1140,10 @@ class NeighbourhoodGeneration():
             SingleSolution: New solution
         """
 
-        if objective == "wiCi":
+        if objective == Objectives.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == "wiTi":
+        elif objective == Objectives.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1208,7 +1208,7 @@ class NeighbourhoodGeneration():
         return solution
     
     @staticmethod
-    def lahc_neighbour(solution : SingleSolution, objective : str):
+    def lahc_neighbour(solution : SingleSolution, objective : Objectives):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:

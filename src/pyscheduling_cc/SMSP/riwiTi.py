@@ -100,7 +100,7 @@ class riwiTi_Instance(SingleMachine.SingleInstance):
 
 
     def get_objective(self):
-        return "wiTi"
+        return SingleMachine.Objectives.wiTi
 
     def init_sol_method(self):
         return Heuristics.ACT_WSECi
