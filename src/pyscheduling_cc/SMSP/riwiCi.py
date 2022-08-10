@@ -93,7 +93,7 @@ class riwiCi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return Problem.Objectives.wiCi
+        return Problem.Objective.wiCi
 
     def init_sol_method(self):
         return Heuristics.WSECi

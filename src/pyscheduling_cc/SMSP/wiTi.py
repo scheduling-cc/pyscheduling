@@ -91,7 +91,7 @@ class wiTi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return Problem.Objectives.wiTi
+        return Problem.Objective.wiTi
 
     def init_sol_method(self):
         return Heuristics.ACT
