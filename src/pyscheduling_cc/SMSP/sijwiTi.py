@@ -11,7 +11,7 @@ import pyscheduling_cc.Problem as Problem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
-from pyscheduling_cc.SMSP.SingleMachine import ExactSolvers
+from pyscheduling_cc.SMSP.SM_Methods import ExactSolvers
 
 
 @dataclass
@@ -105,7 +105,7 @@ class sijwiTi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return SingleMachine.Objectives.wiTi
+        return SingleMachine.Objective.wiTi
 
     def init_sol_method(self):
         return Heuristics.ACTS
