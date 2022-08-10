@@ -30,11 +30,6 @@ class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
-class Objectives(Enum):
-    Cmax = -1
-    wiTi = -2
-    wiCi = -3
-
 @dataclass
 class SingleInstance(Problem.Instance):
 
@@ -1060,11 +1055,11 @@ class CSP():
 class SM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution : SingleSolution, objective : Objectives):
-        if objective == Objectives.wiCi:
+    def _intra_insertion(solution : SingleSolution, objective : Problem.Objectives):
+        if objective == Problem.Objectives.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             remove_insert = solution.machine.total_weighted_completion_time_remove_insert
-        elif objective == Objectives.wiTi:
+        elif objective == Problem.Objectives.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             remove_insert = solution.machine.total_weighted_lateness_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
@@ -1085,11 +1080,11 @@ class SM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def _swap(solution : SingleSolution, objective : Objectives):
-        if objective == Objectives.wiCi:
+    def _swap(solution : SingleSolution, objective : Problem.Objectives):
+        if objective == Problem.Objectives.wiCi:
             set_objective = solution.wiCi
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == Objectives.wiTi:
+        elif objective == Problem.Objectives.wiTi:
             set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1111,7 +1106,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             set_objective()
         return solution
 
-    def improve(self, solution: SingleSolution, objective : Objectives) -> SingleSolution:
+    def improve(self, solution: SingleSolution, objective : Problem.Objectives) -> SingleSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -1129,7 +1124,7 @@ class SM_LocalSearch(Problem.LocalSearch):
 
 class NeighbourhoodGeneration():
     @staticmethod
-    def random_swap(solution: SingleSolution, objective : Objectives, force_improve: bool = True):
+    def random_swap(solution: SingleSolution, objective : Problem.Objectives, force_improve: bool = True):
         """Performs a random swap between 2 jobs on the same machine
 
         Args:
@@ -1140,10 +1135,10 @@ class NeighbourhoodGeneration():
             SingleSolution: New solution
         """
 
-        if objective == Objectives.wiCi:
+        if objective == Problem.Objectives.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == Objectives.wiTi:
+        elif objective == Problem.Objectives.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1208,7 +1203,7 @@ class NeighbourhoodGeneration():
         return solution
     
     @staticmethod
-    def lahc_neighbour(solution : SingleSolution, objective : Objectives):
+    def lahc_neighbour(solution : SingleSolution, objective : Problem.Objectives):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:

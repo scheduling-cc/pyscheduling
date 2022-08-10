@@ -113,7 +113,7 @@ class risijwiTi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return SingleMachine.Objectives.wiTi
+        return Problem.Objectives.wiTi
 
     def init_sol_method(self):
         return Heuristics.ACTS_WSECi

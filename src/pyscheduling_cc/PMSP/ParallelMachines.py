@@ -23,11 +23,6 @@ class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
-class Objectives(Enum):
-    Cmax = -1
-    wiTi = -2
-    wiCi = -3
-
 @dataclass
 class ParallelInstance(Problem.Instance):
 
