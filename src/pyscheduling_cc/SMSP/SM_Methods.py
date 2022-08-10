@@ -13,13 +13,13 @@ class Metaheuristics():
         Args:
             instance (SingleMachine.SingleInstance): Instance object to solve
             Lfa (int, optional): Size of the candidates list. Defaults to 25.
-            Nb_iter (int, optional): Number of iterations of LAHC. Defaults to 300.
+            n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
             Non_improv (int, optional): LAHC stops when the number of iterations without
                 improvement is achieved. Defaults to 50.
             LS (bool, optional): Flag to apply local search at each iteration or not.
                 Defaults to True.
             time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
-                else Nb_iter is taken Defaults to None
+                else n_iterations is taken Defaults to None
             init_sol_method: The method used to get the initial solution. 
                 Defaults to "WSECi"
             seed (int, optional): Seed for the random operators to make the algo deterministic
@@ -31,7 +31,7 @@ class Metaheuristics():
         time_limit_factor = kwargs.get("time_limit_factor", None)
         init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
         Lfa = kwargs.get("Lfa", 30)
-        Nb_iter = kwargs.get("Nb_iter", 500000)
+        n_iterations = kwargs.get("n_iterations", 500000)
         Non_improv = kwargs.get("Non_improv", 50000)
         LS = kwargs.get("LS", True)
         seed = kwargs.get("seed", None)
@@ -64,7 +64,7 @@ class Metaheuristics():
         i = 0
         time_to_best = perf_counter() - first_time
         current_solution = solution_init
-        while i < Nb_iter and N < Non_improv:
+        while i < n_iterations and N < Non_improv:
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break

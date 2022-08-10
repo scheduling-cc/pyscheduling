@@ -1000,7 +1000,7 @@ class Metaheuristics(pm_methods.Metaheuristics_Cmax):
 class GeneticAlgorithm():
 
     @staticmethod
-    def solve(instance: RmriSijkCmax_Instance, pop_size=50, p_cross=0.7, p_mut=0.5, p_ls=1, pressure=30, nb_iter=100):
+    def solve(instance: RmriSijkCmax_Instance, pop_size=50, p_cross=0.7, p_mut=0.5, p_ls=1, pressure=30, n_iterations=100):
         population = GeneticAlgorithm.generate_population(
             instance, pop_size, LS=(p_ls != 0))
         delta = 0
@@ -1010,7 +1010,7 @@ class GeneticAlgorithm():
         best_cmax = None
         best_solution = None
         solutions = []
-        while i < nb_iter and N < 20:  # ( instance.n*instance.m*50/2000 ):
+        while i < n_iterations and N < 20:  # ( instance.n*instance.m*50/2000 ):
             # Select the parents
             # print("Selection")
             parent_1, parent_2 = GeneticAlgorithm.selection(
