@@ -124,6 +124,9 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
     def init_sol_method(self):
         return Heuristics.constructive
 
+    def get_objective(self):
+        return "Cmax"
+    
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
         by dividing the sum of minimal completion time between job pairs on the number of machines
