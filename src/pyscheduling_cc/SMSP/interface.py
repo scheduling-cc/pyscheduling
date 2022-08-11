@@ -17,8 +17,20 @@ class Constraints(Enum):
     def toString(cls):
         return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
 
+problems = {
+    ((Constraints.W),RootProblem.Objective.wiCi) : (sm.wiCi.wiCi_Instance,sm.wiCi.Heuristics,sm.wiCi.Metaheuristics),
+    ((Constraints.R, Constraints.W),RootProblem.Objective.wiCi) : (sm.riwiCi.riwiCi_Instance,sm.riwiCi.Heuristics,sm.riwiCi.Metaheuristics),
+    ((Constraints.D, Constraints.W),RootProblem.Objective.wiTi) : (sm.wiTi.wiTi_Instance,sm.wiTi.Heuristics,sm.wiTi.Metaheuristics),
+    ((Constraints.D, Constraints.R, Constraints.W),RootProblem.Objective.wiTi) : (sm.riwiTi.riwiTi_Instance,sm.riwiTi.Heuristics,sm.riwiTi.Metaheuristics), 
+    ((Constraints.D, Constraints.S, Constraints.W),RootProblem.Objective.wiTi) : (sm.sijwiTi.sijwiTi_Instance,sm.sijwiTi.Heuristics,sm.sijwiTi.Metaheuristics),
+    ((Constraints.D, Constraints.R ,Constraints.S, Constraints.W),RootProblem.Objective.wiTi) : (sm.risijwiTi.risijwiTi_Instance,sm.risijwiTi.Heuristics,sm.risijwiTi.Metaheuristics), 
+    ((Constraints.S, Constraints.W),RootProblem.Objective.Cmax) : (sm.sijCmax.sijCmax_Instance,sm.sijCmax.Heuristics,sm.sijCmax.Metaheuristics), 
+    ((Constraints.R, Constraints.S, Constraints.W),RootProblem.Objective.Cmax) : (sm.risijCmax.risijCmax_Instance,sm.risijCmax.Heuristics,sm.risijCmax.Metaheuristics)
+}
+
 @dataclass
 class Problem():
+    key = None
     instance : sm.SingleMachine.SingleInstance
     constraints : list[Constraints]
     objective : RootProblem.Objective
@@ -30,6 +42,22 @@ class Problem():
         self.constraints = []
         self.objective = None
 
+    def set_key(self):
+        if self.objective is not None and self.constraints != []: 
+            self.constraints.sort()
+            self.key = (tuple(self.constraints),self.objective)
+        else : self.key = None
+
+    def generate_random_new(self, **data):
+        if self.key is not None:
+            instance_class, heuristics_class, metaheuristics_class = problems[self.key]
+            self.instance = instance_class.generate_random(**data)
+            heuristics = heuristics_class.all_methods()
+            self.heuristics = dict(zip([func.__name__ for func in heuristics], heuristics))
+            metaheuristics = metaheuristics_class.all_methods()
+            self.metaheuristics = dict(zip([func.__name__ for func in metaheuristics], metaheuristics))
+        else: raise TypeError("Please add constraints or set objective")
+    
     def generate_random(self, **data):
         if Counter(self.constraints) == Counter([Constraints.W]) and self.objective == RootProblem.Objective.wiCi: 
             self.instance = sm.wiCi.wiCi_Instance.generate_random(**data)
@@ -71,11 +99,6 @@ class Problem():
         self.heuristics = dict(zip([func.__name__ for func in heuristics], heuristics))
         self.metaheuristics = dict(zip([func.__name__ for func in metaheuristics], metaheuristics))
 
-    def set_constraints(self, constraints : list[Constraints]):
-        for constraint in constraints :
-            if type(constraint) != Constraints : raise  TypeError("Only Constraints Enum elements are allowed :\n"+Constraints.toString())
-        self.constraints = constraints
-
     def add_constraints(self, constraints):
         if type(constraints) == list : 
             for constraint in constraints :
@@ -83,10 +106,12 @@ class Problem():
             self.constraints.extend([constraint for constraint in constraints if constraint not in self.constraints])
         elif (type(constraints) == Constraints) and (constraints not in self.constraints): self.constraints.append(constraints)
         else: raise  TypeError("Only Constraints Enum elements are allowed :\n"+Constraints.toString())
+        self.set_key()
 
     def remove_constraint(self, constraint : Constraints):
         if type(constraint) == Constraints : self.constraints.remove(constraint)
         else : raise  TypeError("Argument to remove is not a constraint")
+        self.set_key()
 
     def set_objective(self, objective : RootProblem.Objective):
         if type(objective) != RootProblem.Objective : raise TypeError("objective must be an Objective Enum element :\n"+RootProblem.Objective.toString())
@@ -94,6 +119,7 @@ class Problem():
             if(objective == RootProblem.Objective.wiTi) and Constraints.D not in self.constraints:
                 raise TypeError("Due dates must be added as a constraint in order to have Lateness as an objective")
             else : self.objective = objective
+        self.set_key()
 
     def solve(self, method : object, **data):
         if not callable(method):
@@ -102,5 +128,5 @@ class Problem():
             try:
                 return method(self.instance, **data)
             except:
-                print("Do correctly use the method as explained below :\n" +
+                raise TypeError("Do correctly use the method as explained below :\n" +
                         method.__doc__)
