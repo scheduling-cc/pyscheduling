@@ -9,7 +9,7 @@ from time import perf_counter
 
 import matplotlib.pyplot as plt
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling_cc.PMSP.PM_methods as pm_methods
@@ -125,7 +125,7 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
         return Heuristics.constructive
 
     def get_objective(self):
-        return Problem.Objective.Cmax
+        return RootProblem.Objective.Cmax
     
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
@@ -172,8 +172,8 @@ class ExactSolvers():
 class CSP():
 
     CPO_STATUS = {
-        "Feasible": Problem.SolveStatus.FEASIBLE,
-        "Optimal": Problem.SolveStatus.OPTIMAL
+        "Feasible": RootProblem.SolveStatus.FEASIBLE,
+        "Optimal": RootProblem.SolveStatus.OPTIMAL
     }
 
     class MyCallback(CpoCallback):
@@ -372,12 +372,12 @@ class CSP():
                 else:
                     kpis[f'Obj-{stop_t}'] = prev
 
-            solve_result = Problem.SolveResult(
+            solve_result = RootProblem.SolveResult(
                 best_solution=sol,
                 runtime=msol.get_infos()["TotalTime"],
                 time_to_best=mycallback.best_sol_time,
                 status=CSP.CPO_STATUS.get(
-                    msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
+                    msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
                 kpis=kpis
             )
 
@@ -390,8 +390,8 @@ class CSP():
 class MILP():
 
     GUROBI_STATUS = {
-        gp.GRB.INFEASIBLE: Problem.SolveStatus.INFEASIBLE,
-        gp.GRB.OPTIMAL: Problem.SolveStatus.OPTIMAL
+        gp.GRB.INFEASIBLE: RootProblem.SolveStatus.INFEASIBLE,
+        gp.GRB.OPTIMAL: RootProblem.SolveStatus.OPTIMAL
     }
 
     @staticmethod
@@ -424,7 +424,7 @@ class MILP():
     @staticmethod
     def build_callback(mycallback, stop_times=[300, 600, 3600, 7200]):
 
-        setattr(mycallback, "SOLVE_RESULT", Problem.SolveResult())
+        setattr(mycallback, "SOLVE_RESULT", RootProblem.SolveResult())
         setattr(mycallback, "CURR_BEST", None)
         setattr(mycallback, "stop_times", stop_times)
         setattr(mycallback, "best_values", dict())
@@ -569,12 +569,12 @@ class MILP():
                 else:
                     execTimes[f'Obj-{stop_t}'] = prev
 
-            solve_result = Problem.SolveResult(
+            solve_result = RootProblem.SolveResult(
                 best_solution=sol,
                 runtime=model.Runtime,
                 time_to_best=MILP.mycallback.SOLVE_RESULT.time_to_best,
                 status=MILP.GUROBI_STATUS.get(
-                    model.status, Problem.SolveStatus.FEASIBLE),
+                    model.status, RootProblem.SolveStatus.FEASIBLE),
                 kpis=execTimes
             )
 
@@ -637,7 +637,7 @@ class Heuristics():
             if (ci > solution.objective_value):
                 solution.objective_value = ci
 
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def ordered_constructive(instance: RmriSijkCmax_Instance, remaining_jobs_list=None, is_random: bool = False):
@@ -695,7 +695,7 @@ class Heuristics():
             if (ci > solution.objective_value):
                 solution.objective_value = ci
 
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def list_heuristic(instance: RmriSijkCmax_Instance, rule: int = 1, decreasing: bool = False):
@@ -989,10 +989,10 @@ class Metaheuristics(pm_methods.Metaheuristics_Cmax):
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = Problem.SolveResult()
+        solveResult = RootProblem.SolveResult()
         solveResult.best_solution, solveResult.all_solutions = GeneticAlgorithm.solve(
             instance, **kwargs)
-        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         solveResult.runtime = perf_counter() - startTime
         return solveResult
 

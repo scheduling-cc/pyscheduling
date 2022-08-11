@@ -7,7 +7,7 @@ from time import perf_counter
 
 from matplotlib import pyplot as plt
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
@@ -105,7 +105,7 @@ class sijwiTi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return Problem.Objective.wiTi
+        return RootProblem.Objective.wiTi
 
     def init_sol_method(self):
         return Heuristics.ACTS
@@ -133,7 +133,7 @@ class Heuristics():
             prev_job = taken_job
         solution.machine.objective=solution.machine.wiTi_index[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

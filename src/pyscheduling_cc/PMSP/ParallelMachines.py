@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -24,7 +24,7 @@ class GenerationLaw(Enum):
     NORMAL = 2
 
 @dataclass
-class ParallelInstance(Problem.Instance):
+class ParallelInstance(RootProblem.Instance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
@@ -525,7 +525,7 @@ class Machine:
 
 
 @dataclass
-class ParallelSolution(Problem.Solution):
+class ParallelSolution(RootProblem.Solution):
 
     machines: list[Machine]
 
@@ -719,7 +719,7 @@ class ParallelSolution(Problem.Solution):
         return is_valid
 
 
-class PM_LocalSearch(Problem.LocalSearch):
+class PM_LocalSearch(RootProblem.LocalSearch):
     @staticmethod
     def _inter_machine_insertion(solution: ParallelSolution):
         """For every job, verify if rescheduling it on the same machine at a different position or on a whole different machines gives a better solution

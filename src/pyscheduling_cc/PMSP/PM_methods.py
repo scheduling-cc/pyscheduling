@@ -2,7 +2,7 @@ from math import exp
 import random
 from time import perf_counter
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 import pyscheduling_cc.PMSP.ParallelMachines as pm
 
 class Metaheuristics_Cmax():
@@ -20,7 +20,7 @@ class Metaheuristics_Cmax():
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = Problem.SolveResult()
+        solveResult = RootProblem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(n_iterations):
@@ -64,7 +64,7 @@ class Metaheuristics_Cmax():
 
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         return solveResult
 
     @staticmethod
@@ -80,7 +80,7 @@ class Metaheuristics_Cmax():
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = Problem.SolveResult()
+        solveResult = RootProblem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(n_iterations):
@@ -118,7 +118,7 @@ class Metaheuristics_Cmax():
 
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         return solveResult
 
     @staticmethod
@@ -161,7 +161,7 @@ class Metaheuristics_Cmax():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return Problem.SolveResult()
+            return RootProblem.SolveResult()
 
         local_search = pm.PM_LocalSearch()
 
@@ -201,7 +201,7 @@ class Metaheuristics_Cmax():
             N += 1
 
         # Construct the solve result
-        solve_result = Problem.SolveResult(
+        solve_result = RootProblem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),
@@ -268,7 +268,7 @@ class Metaheuristics_Cmax():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return Problem.SolveResult()
+            return RootProblem.SolveResult()
 
         local_search = pm.PM_LocalSearch()
 
@@ -318,7 +318,7 @@ class Metaheuristics_Cmax():
             N += 1
 
         # Construct the solve result
-        solve_result = Problem.SolveResult(
+        solve_result = RootProblem.SolveResult(
             best_solution=solution_best,
             runtime=(perf_counter() - first_time),
             time_to_best=time_to_best,
