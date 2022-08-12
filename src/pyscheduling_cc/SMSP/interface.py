@@ -1,12 +1,11 @@
+from cProfile import label
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from collections import Counter
 
 
 from pyscheduling_cc.Problem import Objective
-import pyscheduling_cc.SMSP as sm
-import pyscheduling_cc.SMSP.wiCi as www
+from pyscheduling_cc.SMSP import *
 
 class Constraints(Enum):
     W = "weight"
@@ -18,21 +17,24 @@ class Constraints(Enum):
     def toString(cls):
         return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
 
+    def __lt__(self,other):
+        return self.name < other.name
+
 problems = {
-    ((Constraints.W),Objective.wiCi) : (sm.wiCi.wiCi_Instance,sm.wiCi.Heuristics,sm.wiCi.Metaheuristics),
-    ((Constraints.R, Constraints.W),Objective.wiCi) : (sm.riwiCi.riwiCi_Instance,sm.riwiCi.Heuristics,sm.riwiCi.Metaheuristics),
-    ((Constraints.D, Constraints.W),Objective.wiTi) : (sm.wiTi.wiTi_Instance,sm.wiTi.Heuristics,sm.wiTi.Metaheuristics),
-    ((Constraints.D, Constraints.R, Constraints.W),Objective.wiTi) : (sm.riwiTi.riwiTi_Instance,sm.riwiTi.Heuristics,sm.riwiTi.Metaheuristics), 
-    ((Constraints.D, Constraints.S, Constraints.W),Objective.wiTi) : (sm.sijwiTi.sijwiTi_Instance,sm.sijwiTi.Heuristics,sm.sijwiTi.Metaheuristics),
-    ((Constraints.D, Constraints.R ,Constraints.S, Constraints.W),Objective.wiTi) : (sm.risijwiTi.risijwiTi_Instance,sm.risijwiTi.Heuristics,sm.risijwiTi.Metaheuristics), 
-    ((Constraints.S, Constraints.W),Objective.Cmax) : (sm.sijCmax.sijCmax_Instance,sm.sijCmax.Heuristics,sm.sijCmax.Metaheuristics), 
-    ((Constraints.R, Constraints.S, Constraints.W),Objective.Cmax) : (sm.risijCmax.risijCmax_Instance,sm.risijCmax.Heuristics,sm.risijCmax.Metaheuristics)
+    ((Constraints.W,),Objective.wiCi) : (wiCi.wiCi_Instance,wiCi.Heuristics,wiCi.Metaheuristics),
+    ((Constraints.R, Constraints.W),Objective.wiCi) : (riwiCi.riwiCi_Instance,riwiCi.Heuristics,riwiCi.Metaheuristics),
+    ((Constraints.D, Constraints.W),Objective.wiTi) : (wiTi.wiTi_Instance,wiTi.Heuristics,wiTi.Metaheuristics),
+    ((Constraints.D, Constraints.R, Constraints.W),Objective.wiTi) : (riwiTi.riwiTi_Instance,riwiTi.Heuristics,riwiTi.Metaheuristics), 
+    ((Constraints.D, Constraints.S, Constraints.W),Objective.wiTi) : (sijwiTi.sijwiTi_Instance,sijwiTi.Heuristics,sijwiTi.Metaheuristics),
+    ((Constraints.D, Constraints.R ,Constraints.S, Constraints.W),Objective.wiTi) : (risijwiTi.risijwiTi_Instance,risijwiTi.Heuristics,risijwiTi.Metaheuristics), 
+    ((Constraints.S, Constraints.W),Objective.Cmax) : (sijCmax.sijCmax_Instance,sijCmax.Heuristics,sijCmax.Metaheuristics), 
+    ((Constraints.R, Constraints.S, Constraints.W),Objective.Cmax) : (risijCmax.risijCmax_Instance,risijCmax.Heuristics,risijCmax.Metaheuristics)
 }
 
 @dataclass
 class Problem():
     key = None
-    instance : sm.SingleMachine.SingleInstance
+    instance : SingleMachine.SingleInstance
     constraints : list[Constraints]
     objective : Objective
     heuristics = None
@@ -49,7 +51,7 @@ class Problem():
             self.key = (tuple(self.constraints),self.objective)
         else : self.key = None
 
-    def generate_random_new(self, **data):
+    def generate_random(self, **data):
         if self.key is not None:
             instance_class, heuristics_class, metaheuristics_class = problems[self.key]
 
@@ -61,47 +63,18 @@ class Problem():
             self.metaheuristics = dict(zip([func.__name__ for func in metaheuristics], metaheuristics))
         else: raise TypeError("Please add constraints or set objective")
     
-    def generate_random(self, **data):
-        if Counter(self.constraints) == Counter([Constraints.W]) and self.objective == Objective.wiCi: 
-            self.instance = sm.wiCi.wiCi_Instance.generate_random(**data)
-            heuristics = sm.wiCi.Heuristics.all_methods()
-            metaheuristics = sm.wiCi.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.W, Constraints.R]) and self.objective == Objective.wiCi: 
-            self.instance = sm.riwiCi.riwiCi_Instance.generate_random(**data)
-            heuristics = sm.riwiCi.Heuristics.all_methods()
-            metaheuristics = sm.riwiCi.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.D, Constraints.W]) and self.objective == Objective.wiTi: 
-            self.instance = sm.wiTi.wiTi_Instance.generate_random(**data)
-            heuristics = sm.wiTi.Heuristics.all_methods()
-            metaheuristics = sm.wiTi.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.D, Constraints.W, Constraints.R]) and self.objective == Objective.wiTi: 
-            self.instance = sm.riwiTi.riwiTi_Instance.generate_random(**data)
-            heuristics = sm.riwiTi.Heuristics.all_methods()
-            metaheuristics = sm.riwiTi.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.D, Constraints.W, Constraints.S]) and self.objective == Objective.wiTi: 
-            self.instance = sm.sijwiTi.sijwiTi_Instance.generate_random(**data)
-            heuristics = sm.sijwiTi.Heuristics.all_methods()
-            metaheuristics = sm.sijwiTi.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.D, Constraints.W, Constraints.R ,Constraints.S]) and self.objective == Objective.wiTi: 
-            self.instance = sm.risijwiTi.risijwiTi_Instance.generate_random(**data)
-            heuristics = sm.risijwiTi.Heuristics.all_methods()
-            metaheuristics = sm.risijwiTi.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.W, Constraints.S]) and self.objective == Objective.Cmax: 
-            self.instance = sm.sijCmax.sijCmax_Instance.generate_random(**data)
-            heuristics = sm.sijCmax.Heuristics.all_methods()
-            metaheuristics = sm.sijCmax.Metaheuristics.all_methods()
-        elif Counter(self.constraints) == Counter([Constraints.W, Constraints.R, Constraints.S]) and self.objective == Objective.Cmax: 
-            self.instance = sm.risijCmax.risijCmax_Instance.generate_random(**data)
-            heuristics = sm.risijCmax.Heuristics.all_methods()
-            metaheuristics = sm.risijCmax.Metaheuristics.all_methods()
-        else : 
-            if self.objective is None : raise TypeError("Please, initialize the objective")
-            else: raise TypeError("This configuration of constraints and objective is not offered in pyscheduling yet")
-        
+    def read_txt(self, path : Path):
+        if self.key is not None:
+            instance_class, heuristics_class, metaheuristics_class = problems[self.key]
+            
+            self.instance = instance_class.read_txt(path)
 
-        self.heuristics = dict(zip([func.__name__ for func in heuristics], heuristics))
-        self.metaheuristics = dict(zip([func.__name__ for func in metaheuristics], metaheuristics))
-
+            heuristics = heuristics_class.all_methods()
+            self.heuristics = dict(zip([func.__name__ for func in heuristics], heuristics))
+            metaheuristics = metaheuristics_class.all_methods()
+            self.metaheuristics = dict(zip([func.__name__ for func in metaheuristics], metaheuristics))
+        else: raise TypeError("Please add constraints or set objective")
+    
     def add_constraints(self, constraints):
         if type(constraints) == list : 
             for constraint in constraints :
