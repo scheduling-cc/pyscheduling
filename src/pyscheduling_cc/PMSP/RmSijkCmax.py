@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import choice as np_choice
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling_cc.PMSP.PM_methods as pm_methods
@@ -114,7 +114,7 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
         return Heuristics.constructive
 
     def get_objective(self):
-        return Problem.Objective.Cmax
+        return RootProblem.Objective.Cmax
     
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
@@ -156,8 +156,8 @@ class ExactSolvers():
 class CSP():
 
     CPO_STATUS = {
-        "Feasible": Problem.SolveStatus.FEASIBLE,
-        "Optimal": Problem.SolveStatus.OPTIMAL
+        "Feasible": RootProblem.SolveStatus.FEASIBLE,
+        "Optimal": RootProblem.SolveStatus.OPTIMAL
     }
 
     class MyCallback(CpoCallback):
@@ -319,12 +319,12 @@ class CSP():
                 "MemUsage": msol.get_infos()["MemoryUsage"]
             }
             
-            solve_result = Problem.SolveResult(
+            solve_result = RootProblem.SolveResult(
                 best_solution=sol,
                 runtime=msol.get_infos()["TotalTime"],
                 time_to_best= mycallback.best_sol_time,
                 status=CSP.CPO_STATUS.get(
-                    msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
+                    msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
                 kpis=kpis
             )
 
@@ -381,7 +381,7 @@ class Heuristics():
             if (ci > solution.objective_value):
                 solution.objective_value = ci
 
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def list_heuristic(instance: RmSijkCmax_Instance, rule=1, decreasing=False):
@@ -569,7 +569,7 @@ class Heuristics():
             solution.machines[taken_machine].last_job = taken_job
             if (ci > solution.objective_value):
                 solution.objective_value = ci
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @classmethod
     def all_methods(cls):
@@ -593,10 +593,10 @@ class Metaheuristics(pm_methods.Metaheuristics_Cmax):
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = Problem.SolveResult()
+        solveResult = RootProblem.SolveResult()
         AC = AntColony(instance=instance, **data)
         solveResult.best_solution, solveResult.all_solutions = AC.solve()
-        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         solveResult.runtime = perf_counter() - startTime
         return solveResult
 

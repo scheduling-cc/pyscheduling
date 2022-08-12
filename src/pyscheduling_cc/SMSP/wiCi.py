@@ -6,7 +6,7 @@ from time import perf_counter
 
 from matplotlib import pyplot as plt
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 from pyscheduling_cc.SMSP.SM_Methods import ExactSolvers
@@ -94,7 +94,7 @@ class Heuristics():
             solution.machine.job_schedule.append(SingleMachine.Job(job,0,0)) 
         solution.machine.total_weighted_completion_time(instance)
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

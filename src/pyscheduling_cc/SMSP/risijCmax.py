@@ -7,7 +7,7 @@ from time import perf_counter
 
 from matplotlib import pyplot as plt
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
@@ -99,7 +99,7 @@ class risijCmax_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return Problem.Objective.Cmax
+        return RootProblem.Objective.Cmax
 
     def init_sol_method(self):
         return Heuristics.constructive
@@ -154,7 +154,7 @@ class Heuristics(Methods.Heuristics_Cmax):
             if (ci > solution.objective_value):
                 solution.objective_value = ci
 
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
 
     @classmethod

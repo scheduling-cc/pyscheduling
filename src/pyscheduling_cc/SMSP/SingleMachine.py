@@ -8,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 
 import numpy as np
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from matplotlib import pyplot as plt
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
@@ -24,7 +24,7 @@ class GenerationLaw(Enum):
 
 
 @dataclass
-class SingleInstance(Problem.Instance):
+class SingleInstance(RootProblem.Instance):
 
     n: int  # n : Number of jobs
 
@@ -728,7 +728,7 @@ class Machine:
 
 
 @dataclass
-class SingleSolution(Problem.Solution):
+class SingleSolution(RootProblem.Solution):
 
     machine: Machine
 
@@ -893,14 +893,14 @@ class SingleSolution(Problem.Solution):
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
 
-class SM_LocalSearch(Problem.LocalSearch):
+class SM_LocalSearch(RootProblem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution : SingleSolution, objective : Problem.Objective):
-        if objective == Problem.Objective.wiCi:
+    def _intra_insertion(solution : SingleSolution, objective : RootProblem.Objective):
+        if objective == RootProblem.Objective.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             remove_insert = solution.machine.total_weighted_completion_time_remove_insert
-        elif objective == Problem.Objective.wiTi:
+        elif objective == RootProblem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             remove_insert = solution.machine.total_weighted_lateness_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
@@ -921,11 +921,11 @@ class SM_LocalSearch(Problem.LocalSearch):
         return solution
 
     @staticmethod
-    def _swap(solution : SingleSolution, objective : Problem.Objective):
-        if objective == Problem.Objective.wiCi:
+    def _swap(solution : SingleSolution, objective : RootProblem.Objective):
+        if objective == RootProblem.Objective.wiCi:
             set_objective = solution.wiCi
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == Problem.Objective.wiTi:
+        elif objective == RootProblem.Objective.wiTi:
             set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -947,7 +947,7 @@ class SM_LocalSearch(Problem.LocalSearch):
             set_objective()
         return solution
 
-    def improve(self, solution: SingleSolution, objective : Problem.Objective) -> SingleSolution:
+    def improve(self, solution: SingleSolution, objective : RootProblem.Objective) -> SingleSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -965,7 +965,7 @@ class SM_LocalSearch(Problem.LocalSearch):
 
 class NeighbourhoodGeneration():
     @staticmethod
-    def random_swap(solution: SingleSolution, objective : Problem.Objective, force_improve: bool = True):
+    def random_swap(solution: SingleSolution, objective : RootProblem.Objective, force_improve: bool = True):
         """Performs a random swap between 2 jobs on the same machine
 
         Args:
@@ -976,10 +976,10 @@ class NeighbourhoodGeneration():
             SingleSolution: New solution
         """
 
-        if objective == Problem.Objective.wiCi:
+        if objective == RootProblem.Objective.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == Problem.Objective.wiTi:
+        elif objective == RootProblem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             swap = solution.machine.total_weighted_lateness_swap
 
@@ -1044,7 +1044,7 @@ class NeighbourhoodGeneration():
         return solution
     
     @staticmethod
-    def lahc_neighbour(solution : SingleSolution, objective : Problem.Objective):
+    def lahc_neighbour(solution : SingleSolution, objective : RootProblem.Objective):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:

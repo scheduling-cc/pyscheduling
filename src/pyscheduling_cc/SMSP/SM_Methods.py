@@ -2,10 +2,11 @@ import random
 import sys
 from time import perf_counter
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 from pyscheduling_cc.Problem import Solver
-from pyscheduling_cc.SMSP.SingleMachine import Job, Objective
+from pyscheduling_cc.SMSP.SingleMachine import Job
+from pyscheduling_cc.Problem import Objective
 
 try:
     from docplex.cp.expression import INTERVAL_MAX
@@ -56,7 +57,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return Problem.SolveResult()
+            return RootProblem.SolveResult()
 
         local_search = SingleMachine.SM_LocalSearch()
 
@@ -95,7 +96,7 @@ class Metaheuristics():
             N += 1
 
         # Construct the solve result
-        solve_result = Problem.SolveResult(
+        solve_result = RootProblem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),
@@ -122,8 +123,8 @@ class ExactSolvers():
 class CSP():
 
     CPO_STATUS = {
-        "Feasible": Problem.SolveStatus.FEASIBLE,
-        "Optimal": Problem.SolveStatus.OPTIMAL
+        "Feasible": RootProblem.SolveStatus.FEASIBLE,
+        "Optimal": RootProblem.SolveStatus.OPTIMAL
     }
 
     class MyCallback(CpoCallback):
@@ -253,12 +254,12 @@ class CSP():
                 else:
                     kpis[f'Obj-{stop_t}'] = prev
 
-            solve_result = Problem.SolveResult(
+            solve_result = RootProblem.SolveResult(
                 best_solution=sol,
                 runtime=msol.get_infos()["TotalTime"],
                 time_to_best=mycallback.best_sol_time,
                 status=CSP.CPO_STATUS.get(
-                    msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
+                    msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
                 kpis=kpis
             )
 

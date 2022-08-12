@@ -7,7 +7,7 @@ from time import perf_counter
 
 from matplotlib import pyplot as plt
 
-import pyscheduling_cc.Problem as Problem
+import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
@@ -93,7 +93,7 @@ class riwiCi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
-        return Problem.Objective.wiCi
+        return RootProblem.Objective.wiCi
         
     def init_sol_method(self):
         return Heuristics.WSECi
@@ -121,7 +121,7 @@ class Heuristics():
             remaining_jobs_list.pop(0)
         solution.machine.objective=solution.machine.wiCi_index[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @staticmethod
     def WSAPT(instance : riwiCi_Instance):
@@ -151,7 +151,7 @@ class Heuristics():
 
         solution.machine.objective=solution.machine.wiCi_index[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @staticmethod
     def list_heuristic(instance : riwiCi_Instance, rule : int = 1):
@@ -182,7 +182,7 @@ class Heuristics():
             solution.machine.wiCi_index.append(wiCi)
         solution.machine.objective = solution.machine.wiCi_index[instance.n - 1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):
@@ -211,7 +211,7 @@ class Metaheuristics(Methods.Metaheuristics):
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return Problem.SolveResult()
+            return RootProblem.SolveResult()
 
         local_search = SingleMachine.SM_LocalSearch()
 
@@ -239,7 +239,7 @@ class Metaheuristics(Methods.Metaheuristics):
             N += 1
 
         # Construct the solve result
-        solve_result = Problem.SolveResult(
+        solve_result = RootProblem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),
