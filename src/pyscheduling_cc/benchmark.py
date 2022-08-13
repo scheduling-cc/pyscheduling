@@ -19,14 +19,20 @@ def write_excel(fname : Path, result):
         dict_writer.writeheader()
         dict_writer.writerows(result)
 
-def run_solver_instance(instances : list[Problem.Instance],methods : list[object],kwargs={}):
+def run_solver_instance(instances : list[Problem.Instance],methods_args : list[object],kwargs={}):
     #instances_names = [instance.name for instance in instances]
     #methods_names = [method.__name__ for method in methods]
     run_methods_on_instances = []
     for instance in instances :
         run_methods_on_instance = {}
-        for method in methods :
-            solve_result = method(instance, **kwargs)
+        for method_args in methods_args :
+            if type(method_args) == tuple : 
+                method = method_args[0]
+                args = method_args[1] | kwargs
+            else: 
+                method = method_args
+                args = kwargs
+            solve_result = method(instance, **args)
             run_methods_on_instance[method.__name__+"_objective"] = solve_result.best_solution.objective_value
             run_methods_on_instance[method.__name__+"_runtime"] = solve_result.runtime
         run_methods_on_instances.append(run_methods_on_instance)
