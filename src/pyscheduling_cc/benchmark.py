@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 import sys
 from pathlib import Path
@@ -5,6 +6,12 @@ import time
 import csv
 
 import pyscheduling_cc.Problem as Problem
+
+class Log(Enum):
+    objective = "objective_value"
+    runtime = "runtime"
+    nb_solution = "nb_solution"
+    status = "solve_status"
 
 def write_excel(fname : Path, result):
     """ Wrapper method to bypass pandas dependancy, mainly used in opale server
@@ -19,7 +26,7 @@ def write_excel(fname : Path, result):
         dict_writer.writeheader()
         dict_writer.writerows(result)
 
-def run_solver_instance(instances : list[Problem.Instance],methods_args : list[object],kwargs={}):
+def run_solver_instance(fname : Path, instances : list[Problem.Instance],methods_args : list[object],kwargs={}, log_param : list[Log] = [Log.objective,Log.runtime]):
     #instances_names = [instance.name for instance in instances]
     #methods_names = [method.__name__ for method in methods]
     run_methods_on_instances = []
@@ -33,10 +40,12 @@ def run_solver_instance(instances : list[Problem.Instance],methods_args : list[o
                 method = method_args
                 args = kwargs
             solve_result = method(instance, **args)
-            run_methods_on_instance[method.__name__+"_objective"] = solve_result.best_solution.objective_value
-            run_methods_on_instance[method.__name__+"_runtime"] = solve_result.runtime
+            if Log.objective in log_param : run_methods_on_instance[method.__name__+"_objective"] = solve_result.best_solution.objective_value
+            if Log.runtime in log_param : run_methods_on_instance[method.__name__+"_runtime"] = solve_result.runtime
+            if Log.nb_solution in log_param : run_methods_on_instance[method.__name__+"_runtime"] = len(solve_result.all_solutions)
+            if Log.status in log_param : run_methods_on_instance[method.__name__+"_runtime"] = solve_result.solve_status.name
         run_methods_on_instances.append(run_methods_on_instance)
 
-    write_excel("benchmark_results.csv",run_methods_on_instances)
+    write_excel(fname,run_methods_on_instances)
 
     return run_methods_on_instances
