@@ -265,7 +265,7 @@ class FlowShopInstance(RootProblem.Instance):
 
 @dataclass
 class Machine:
-
+    
     objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
@@ -338,7 +338,7 @@ class Machine:
 
 
 @dataclass
-class ParallelSolution(RootProblem.Solution):
+class FlowShopSolution(RootProblem.Solution):
 
     machines: list[Machine]
     job_schedule = list[int]
@@ -355,7 +355,7 @@ class ParallelSolution(RootProblem.Solution):
         if machines is None:
             self.machines = []
             for i in range(instance.m):
-                machine = Machine(i, 0, -1, [])
+                machine = Machine(0, -1, [])
                 self.machines.append(machine)
         else:
             self.machines = machines
@@ -371,7 +371,7 @@ class ParallelSolution(RootProblem.Solution):
         for m in self.machines:
             copy_machines.append(m.copy())
 
-        copy_solution = ParallelSolution(self.instance)
+        copy_solution = FlowShopSolution(self.instance)
         for i in range(self.instance.m):
             copy_solution.machines[i] = copy_machines[i]
         copy_solution.job_schedule = list(self.job_schedule)
