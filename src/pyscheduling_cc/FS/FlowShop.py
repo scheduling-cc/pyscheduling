@@ -441,6 +441,44 @@ class FlowShopSolution(RootProblem.Solution):
 
         self.objective_value = self.machines[self.instance.m - 1].objective
     
+    def idle_time_cmax_insert_last_pos(self, job_id : int):
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        ci = 0
+        prev_job = -1
+        job_schedule_len = len(self.job_schedule)
+        if job_schedule_len > 0:
+            ci = self.machines[0].job_schedule[job_schedule_len - 1].end_time
+            prev_job = self.machines[0].job_schedule[job_schedule_len - 1].id
+ 
+
+        if hasattr(self.instance,'S'):
+            if prev_job == -1:
+                setupTime = self.instance.S[0][job_id][job_id]
+            else:
+                setupTime = self.instance.S[0][prev_job][job_id]
+        else: setupTime = 0
+        startTime = ci
+        new_ci = startTime + setupTime + self.instance.P[job_id][0]
+
+        for machine_id in range(1,self.instance.m):
+            ci = new_ci
+            prev_job = -1
+            if job_schedule_len > 0:
+                ci = self.machines[machine_id].job_schedule[job_schedule_len - 1].end_time
+                prev_job = self.machines[machine_id].job_schedule[job_schedule_len - 1].id
+                if hasattr(self.instance,'S'):
+                    if prev_job == -1:
+                        setupTime = self.instance.S[machine_id][job_id][job_id]
+                    else:
+                        setupTime = self.instance.S[machine_id][prev_job][job_id]
+                else: setupTime = 0
+                startTime = max(ci,new_ci)
+                new_ci = startTime + setupTime + self.instance.P[job_id][machine_id]
+
+        return startTime,new_ci
+    
     def idle_time(self):
         last_machine = self.machines[self.instance.m-1]
         idleTime = last_machine.job_schedule[0].start_time
