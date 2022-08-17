@@ -600,7 +600,7 @@ class Machine:
                 proc_time = instance.P[job_i]
                 ci = startTime + setupTime + proc_time
 
-                self.job_schedule[i] = Job(job_i, startTime + setupTime, ci)
+                self.job_schedule[i] = Job(job_i, startTime, ci)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
                 self.wiTi_index[i] = wiTi
                 job_prev_i = job_i
@@ -901,6 +901,8 @@ class SingleSolution(RootProblem.Solution):
                 print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
                 is_valid = False
             set_jobs.add(job)
+
+            prev_job = job
 
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
