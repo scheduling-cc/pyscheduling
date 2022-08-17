@@ -914,6 +914,14 @@ class SingleSolution(RootProblem.Solution):
                 self.machine.total_weighted_lateness(self.instance)
         self.objective_value = self.machine.objective
 
+    def Cmax(self):
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        if self.instance != None:
+                self.machine.completion_time(self.instance)
+        self.objective_value = self.machine.objective
+
     def fix_objective(self):
         """Sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
