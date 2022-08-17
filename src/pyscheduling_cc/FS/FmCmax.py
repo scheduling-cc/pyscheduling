@@ -102,9 +102,15 @@ class Heuristics():
         Returns:
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
-        #start_time = perf_counter()
-        #solution = FlowShop.ParallelSolution(instance=instance)
-        pass
-        #return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        start_time = perf_counter()
+        solution = FlowShop.FlowShopSolution(instance=instance)
+        jobs = list(range(instance.n))
+        # m+1 to translate the set of numbers of m from [[0,m-1]] to [[1,m]]
+        # machine_id+1 to translate the set of numbers of machine_id from [[0,m-1]] to [[1,m]]
+        slope_index = lambda job_id : -sum([((instance.m + 1) - (2*(machine_id+1)-1))*instance.P[job_id][machine_id] for machine_id in range(instance.m)])
+        jobs.sort(reverse=True,key=slope_index)
+        solution.job_schedule = jobs
+        solution.cmax()
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
    
