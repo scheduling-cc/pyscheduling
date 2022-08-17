@@ -413,9 +413,9 @@ class FlowShopSolution(RootProblem.Solution):
             ci = startTime + setupTime + self.instance.P[job_id][0]
             self.machines[0].job_schedule[job_index] = (Job(job_id,startTime,ci))
             job_index += 1
+            prev_job = job_id
         self.machines[0].objective = ci
         self.machines[0].last_job = job_id
-
 
         prev_machine = 0
         for machine_id in range(1,self.instance.m):
@@ -436,6 +436,7 @@ class FlowShopSolution(RootProblem.Solution):
                 ci = startTime + setupTime + self.instance.P[job_id][machine_id]
                 self.machines[machine_id].job_schedule[job_index] = Job(job_id,startTime,ci)
                 job_index += 1
+                prev_job = job_id
             self.machines[machine_id].objective = ci
             self.machines[machine_id].last_job = job_id
 
