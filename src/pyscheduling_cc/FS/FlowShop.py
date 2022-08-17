@@ -383,13 +383,22 @@ class FlowShopSolution(RootProblem.Solution):
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
     
-    def cmax(self):
+    def init_machines_schedule(self):
+        for machine in self.machines :
+            machine.job_schedule = [Job(job_id,0,0) for job_id in self.job_schedule]
+    
+    def cmax(self, start_job_index : int = 0):
         """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
         """
+        if start_job_index == 0 : self.init_machines_schedule()
         ci = 0
         prev_job = -1
-        for job_id in self.job_schedule:
+        if start_job_index > 0:
+            ci = self.machines[0].job_schedule[start_job_index - 1].end_time
+            prev_job = self.machines[0].job_schedule[start_job_index - 1].id
+        job_index = start_job_index
+        for job_id in self.job_schedule[start_job_index:]:
             if hasattr(self.instance,'S'):
                 if prev_job == -1:
                     setupTime = self.instance.S[0][job_id][job_id]
@@ -398,7 +407,8 @@ class FlowShopSolution(RootProblem.Solution):
             else: setupTime = 0
             startTime = ci
             ci = startTime + setupTime + self.instance.P[job_id][0]
-            self.machines[0].job_schedule.append(Job(job_id,startTime,ci))
+            self.machines[0].job_schedule[job_index] = (Job(job_id,startTime,ci))
+            job_index += 1
         self.machines[0].objective = ci
         self.machines[0].last_job = job_id
 
@@ -407,8 +417,11 @@ class FlowShopSolution(RootProblem.Solution):
         for machine_id in range(1,self.instance.m):
             ci = self.machines[prev_machine].job_schedule[0].end_time
             prev_job = -1
-            job_index = 0
-            for job_id in self.job_schedule:
+            if start_job_index > 0:
+                ci = self.machines[0].job_schedule[start_job_index - 1].end_time
+                prev_job = self.machines[0].job_schedule[start_job_index - 1].id
+            job_index = start_job_index
+            for job_id in self.job_schedule[start_job_index:]:
                 if hasattr(self.instance,'S'):
                     if prev_job == -1:
                         setupTime = self.instance.S[machine_id][job_id][job_id]
