@@ -6,6 +6,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from tracemalloc import start
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -392,7 +393,7 @@ class FlowShopSolution(RootProblem.Solution):
             which equals to the maximal completion time of every machine
         """
         if start_job_index == 0 : self.init_machines_schedule()
-        if len(self.job_schedule) != len(self.machines[0].job_schedule) :
+        elif len(self.job_schedule) != len(self.machines[0].job_schedule):
             for machine in self.machines :
                 machine.job_schedule.insert(start_job_index,Job(0,0,0))
         ci = 0
@@ -421,8 +422,8 @@ class FlowShopSolution(RootProblem.Solution):
             ci = self.machines[prev_machine].job_schedule[0].end_time
             prev_job = -1
             if start_job_index > 0:
-                ci = self.machines[0].job_schedule[start_job_index - 1].end_time
-                prev_job = self.machines[0].job_schedule[start_job_index - 1].id
+                ci = self.machines[machine_id].job_schedule[start_job_index - 1].end_time
+                prev_job = self.machines[machine_id].job_schedule[start_job_index - 1].id
             job_index = start_job_index
             for job_id in self.job_schedule[start_job_index:]:
                 if hasattr(self.instance,'S'):
@@ -433,13 +434,74 @@ class FlowShopSolution(RootProblem.Solution):
                 else: setupTime = 0
                 startTime = max(ci,self.machines[prev_machine].job_schedule[job_index].end_time)
                 ci = startTime + setupTime + self.instance.P[job_id][machine_id]
-                self.machines[machine_id].job_schedule.append(Job(job_id,startTime,ci))
+                self.machines[machine_id].job_schedule[job_index] = Job(job_id,startTime,ci)
                 job_index += 1
             self.machines[machine_id].objective = ci
             self.machines[machine_id].last_job = job_id
 
         self.objective_value = self.machines[self.instance.m - 1].objective
 
+    def cmax_insert(self, pos : int, job_id : int, instance : FlowShopInstance):
+        ci = 0
+        prev_job = -1
+        if pos > 0:
+            ci = self.machines[0].job_schedule[pos - 1].end_time
+            prev_job = self.machines[0].job_schedule[pos - 1].id
+
+        if hasattr(self.instance,'S'):
+            if prev_job == -1:
+                setupTime = self.instance.S[0][job_id][job_id]
+            else:
+                setupTime = self.instance.S[0][prev_job][job_id]
+        else: setupTime = 0
+        startTime = ci
+        ci = startTime + setupTime + self.instance.P[job_id][0]
+        
+        job_index = pos + 1
+        for job_id in self.job_schedule[pos + 1:]:
+            print("here")
+            if hasattr(self.instance,'S'):
+                if prev_job == -1:
+                    setupTime = self.instance.S[0][job_id][job_id]
+                else:
+                    setupTime = self.instance.S[0][prev_job][job_id]
+            else: setupTime = 0
+            startTime = ci
+            ci = startTime + setupTime + self.instance.P[job_id][0]
+            job_index += 1
+
+        prev_machine = 0
+        for machine_id in range(1,self.instance.m):
+            ci = self.machines[prev_machine].job_schedule[0].end_time
+            prev_job = -1
+            if pos > 0:
+                ci = self.machines[machine_id].job_schedule[pos - 1].end_time
+                prev_job = self.machines[machine_id].job_schedule[pos - 1].id
+
+            if hasattr(self.instance,'S'):
+                if prev_job == -1:
+                    setupTime = self.instance.S[0][job_id][job_id]
+                else:
+                    setupTime = self.instance.S[0][prev_job][job_id]
+            else: setupTime = 0
+            startTime = ci
+            ci = startTime + setupTime + self.instance.P[job_id][0]
+
+            job_index = pos + 1
+            for job_id in self.job_schedule[pos + 1:]:
+                if hasattr(self.instance,'S'):
+                    if prev_job == -1:
+                        setupTime = self.instance.S[machine_id][job_id][job_id]
+                    else:
+                        setupTime = self.instance.S[machine_id][prev_job][job_id]
+                else: setupTime = 0
+                startTime = max(ci,self.machines[prev_machine].job_schedule[job_index].end_time)
+                ci = startTime + setupTime + self.instance.P[job_id][machine_id]
+                self.machines[machine_id].job_schedule.append(Job(job_id,startTime,ci))
+                job_index += 1
+
+        return ci
+    
     @classmethod
     def read_txt(cls, path: Path):
         """Read a solution from a txt file
