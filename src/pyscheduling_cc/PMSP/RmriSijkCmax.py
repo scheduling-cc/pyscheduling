@@ -681,7 +681,7 @@ class Heuristics():
                     taken_startTime = startTime
 
             # Apply the move
-            if (current_machine_schedule.last_job == -1):
+            if (solution.machines[taken_machine].last_job == -1):
                 ci = taken_startTime + instance.P[taken_job][taken_machine] +\
                     instance.S[taken_machine][taken_job][taken_job]  # Added Sj_ii for rabadi
             else:
