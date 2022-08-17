@@ -878,12 +878,24 @@ class SingleSolution(RootProblem.Solution):
         """
         set_jobs = set()
         is_valid = True
-        ci, expected_start_time = 0, 0
+        prev_job = None
+        ci, setup_time, expected_start_time = 0, 0, 0
         for i, element in enumerate(self.machine.job_schedule):
             job, startTime, endTime = element
             # Test End Time + start Time
-            expected_start_time = ci
-            ci +=  self.instance.P[job]
+            if hasattr(self.instance,'R'):
+                expected_start_time = max(self.instance.R[job],ci)
+            else:
+                expected_start_time = ci
+            if hasattr(self.instance,'S'):
+                if prev_job is None:
+                    setup_time = self.instance.S[job][job]
+                else:
+                    setup_time = self.instance.S[prev_job][job]
+            else: setup_time = 0
+
+            proc_time = self.instance.P[job]
+            ci = expected_start_time + proc_time + setup_time
 
             if startTime != expected_start_time or endTime != ci:
                 print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
