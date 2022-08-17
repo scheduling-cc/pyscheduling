@@ -102,15 +102,15 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
             path (Path): path to the resulting txt file
         """
         f = open(path, "w")
-        f.write(str(self.n)+" "+str(self.m)+"\n")
+        f.write(str(self.n)+"  "+str(self.m)+"\n")
         f.write(str(self.m)+"\n")
         for i in range(self.n):
             for j in range(self.m):
-                f.write(str(self.P[i][j])+"\t")
+                f.write("\t"+str(j)+"\t"+str(self.P[i][j]))
             f.write("\n")
         f.write("Release time\n")
         for i in range(self.n):
-            f.write(str(self.R[i])+"\t")
+            f.write("\t"+str(j)+"\t"+str(self.R[i]))
         f.write("\n")
         f.write("SSD\n")
         for i in range(self.m):
