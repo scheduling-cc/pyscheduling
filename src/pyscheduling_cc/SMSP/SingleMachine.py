@@ -1056,6 +1056,9 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         elif objective == RootProblem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             remove_insert = solution.machine.total_weighted_lateness_remove_insert
+        elif objective == RootProblem.Objective.Cmax:
+            fix_machine = solution.machine.completion_time
+            remove_insert = solution.machine.completion_time_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
             job = solution.machine.job_schedule[pos]
             objective = solution.machine.objective
@@ -1081,6 +1084,9 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         elif objective == RootProblem.Objective.wiTi:
             set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
+        elif objective == RootProblem.Objective.Cmax:
+            set_objective = solution.Cmax
+            swap = solution.machine.completion_time_swap
 
         job_schedule_len = len(solution.machine.job_schedule)
         move = None
