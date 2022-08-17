@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 from pyscheduling_cc.Problem import Objective
-from pyscheduling_cc.SMSP import *
+from pyscheduling_cc.PMSP import *
 
 class Constraints(Enum):
     W = "weight"
@@ -20,20 +20,14 @@ class Constraints(Enum):
         return self.name < other.name
 
 problems = {
-    ((Constraints.W,),Objective.wiCi) : (wiCi.wiCi_Instance,wiCi.Heuristics,wiCi.Metaheuristics),
-    ((Constraints.R, Constraints.W),Objective.wiCi) : (riwiCi.riwiCi_Instance,riwiCi.Heuristics,riwiCi.Metaheuristics),
-    ((Constraints.D, Constraints.W),Objective.wiTi) : (wiTi.wiTi_Instance,wiTi.Heuristics,wiTi.Metaheuristics),
-    ((Constraints.D, Constraints.R, Constraints.W),Objective.wiTi) : (riwiTi.riwiTi_Instance,riwiTi.Heuristics,riwiTi.Metaheuristics), 
-    ((Constraints.D, Constraints.S, Constraints.W),Objective.wiTi) : (sijwiTi.sijwiTi_Instance,sijwiTi.Heuristics,sijwiTi.Metaheuristics),
-    ((Constraints.D, Constraints.R ,Constraints.S, Constraints.W),Objective.wiTi) : (risijwiTi.risijwiTi_Instance,risijwiTi.Heuristics,risijwiTi.Metaheuristics), 
-    ((Constraints.S, Constraints.W),Objective.Cmax) : (sijCmax.sijCmax_Instance,sijCmax.Heuristics,sijCmax.Metaheuristics), 
-    ((Constraints.R, Constraints.S, Constraints.W),Objective.Cmax) : (risijCmax.risijCmax_Instance,risijCmax.Heuristics,risijCmax.Metaheuristics)
+    ((Constraints.S,),Objective.Cmax) : (RmSijkCmax.RmSijkCmax_Instance,RmSijkCmax.Heuristics,RmSijkCmax.Metaheuristics), 
+    ((Constraints.R, Constraints.S),Objective.Cmax) : (RmriSijkCmax.RmriSijkCmax_Instance,RmriSijkCmax.Heuristics,RmriSijkCmax.Metaheuristics)
 }
 
 @dataclass
 class Problem():
     key = None
-    instance : SingleMachine.SingleInstance
+    instance : ParallelMachines.ParallelInstance
     constraints : list[Constraints]
     objective : Objective
     heuristics = None
