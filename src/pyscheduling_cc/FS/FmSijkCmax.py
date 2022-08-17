@@ -12,7 +12,7 @@ import pyscheduling_cc.FS.FS_Methods as FS_Methods
 
 
 @dataclass
-class FmCmax_Instance(FlowShop.FlowShopInstance):
+class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
     P: list[list[int]] = field(default_factory=list)  # Processing time
     S: list[list[list[int]]] = field(default_factory=list) # Setup time
 
@@ -27,7 +27,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            FmCmax_Instance:
+            FmSijkCmax_Instance:
 
         """
         f = open(path, "r")
@@ -59,7 +59,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
-            FmCmax_Instance: the randomly generated instance
+            FmSijkCmax_Instance: the randomly generated instance
         """
         if(Pmin == -1):
             Pmin = randint(1, 100)
