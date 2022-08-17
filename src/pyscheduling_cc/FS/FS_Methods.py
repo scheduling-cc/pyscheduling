@@ -37,20 +37,17 @@ class Heuristics_Cmax():
 
         while len(remaining_jobs_list) > 0 :
             min_IT_factor = None
-            insert_pos = len(job_schedule)
+            old_idleTime = solution.idle_time()
             for job_id in remaining_jobs_list:
-                new_job_schedule = job_schedule + [job_id]
-                solution.job_schedule = new_job_schedule
-                solution.cmax(insert_pos)
-                print(solution)
-                factor = solution.idle_time()
+                last_job_startTime, new_cmax = solution.idle_time_cmax_insert_last_pos(job_id)
+                factor = old_idleTime + (last_job_startTime - solution.machines[instance.m-1].objective)
                 if min_IT_factor is None or factor < min_IT_factor:
                     min_IT_factor = factor
                     taken_job = job_id
             job_schedule.append(taken_job)
             remaining_jobs_list.remove(taken_job)
             solution.job_schedule = job_schedule
-            solution.cmax(insert_pos)
+            solution.cmax(len(job_schedule)-1)
 
 
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
