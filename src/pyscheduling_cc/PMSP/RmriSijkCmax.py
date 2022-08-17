@@ -102,15 +102,15 @@ class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
             path (Path): path to the resulting txt file
         """
         f = open(path, "w")
-        f.write(str(self.n)+" "+str(self.m)+"\n")
+        f.write(str(self.n)+"  "+str(self.m)+"\n")
         f.write(str(self.m)+"\n")
         for i in range(self.n):
             for j in range(self.m):
-                f.write(str(self.P[i][j])+"\t")
+                f.write("\t"+str(j)+"\t"+str(self.P[i][j]))
             f.write("\n")
         f.write("Release time\n")
         for i in range(self.n):
-            f.write(str(self.R[i])+"\t")
+            f.write("\t"+str(j)+"\t"+str(self.R[i]))
         f.write("\n")
         f.write("SSD\n")
         for i in range(self.m):
@@ -681,7 +681,7 @@ class Heuristics():
                     taken_startTime = startTime
 
             # Apply the move
-            if (current_machine_schedule.last_job == -1):
+            if (solution.machines[taken_machine].last_job == -1):
                 ci = taken_startTime + instance.P[taken_job][taken_machine] +\
                     instance.S[taken_machine][taken_job][taken_job]  # Added Sj_ii for rabadi
             else:

@@ -698,12 +698,16 @@ class ParallelSolution(RootProblem.Solution):
             for i, element in enumerate(machine.job_schedule):
                 job, startTime, endTime = element
                 # Test End Time + start Time
-                if prev_job is None:
-                    setup_time = self.instance.S[machine.machine_num][job][job]
-                    expected_start_time = 0
+                if hasattr(self.instance,'R'):
+                    expected_start_time = max(self.instance.R[job],ci)
                 else:
-                    setup_time = self.instance.S[machine.machine_num][prev_job][job]
                     expected_start_time = ci
+                if hasattr(self.instance,'S'):
+                    if prev_job is None:
+                        setup_time = self.instance.S[machine.machine_num][job][job]
+                    else:
+                        setup_time = self.instance.S[machine.machine_num][prev_job][job]
+                else: setup_time = 0
 
                 proc_time = self.instance.P[job][machine.machine_num]
                 ci = expected_start_time + proc_time + setup_time

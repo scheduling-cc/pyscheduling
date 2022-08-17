@@ -600,7 +600,7 @@ class Machine:
                 proc_time = instance.P[job_i]
                 ci = startTime + setupTime + proc_time
 
-                self.job_schedule[i] = Job(job_i, startTime + setupTime, ci)
+                self.job_schedule[i] = Job(job_i, startTime, ci)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
                 self.wiTi_index[i] = wiTi
                 job_prev_i = job_i
@@ -726,6 +726,145 @@ class Machine:
 
         return wiTi
 
+    def completion_time(self, instance : SingleInstance, startIndex : int = 0):
+        if len(self.job_schedule) > 0:
+            job_schedule_len = len(self.job_schedule)
+            if startIndex > 0: 
+                ci = self.job_schedule[startIndex - 1].end_time
+                job_prev_i = self.job_schedule[startIndex - 1].id
+            else: 
+                ci = 0
+                job_prev_i = self.job_schedule[startIndex].id
+            for i in range(startIndex,job_schedule_len):
+                job_i = self.job_schedule[i].id
+
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job_i]
+                ci = startTime + setupTime + proc_time
+
+                self.job_schedule[i] = Job(job_i, startTime, ci)
+                job_prev_i = job_i
+        self.objective = ci
+        return ci
+
+    def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
+        if pos > 0:
+            c_prev = self.job_schedule[pos - 1].end_time
+            job_prev_i = self.job_schedule[pos - 1].id
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job] - c_prev, 0)
+            else:
+                release_time = 0 
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job]
+            else:
+                setupTime = 0
+            ci = c_prev + release_time + setupTime +instance.P[job]
+        else: 
+            ci = instance.S[job][job] + instance.P[job]
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i]
+            ci = startTime + setupTime +proc_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+        first_pos = min(pos_remove, pos_insert)
+
+        ci = 0
+
+        job_prev_i=job
+        if first_pos > 0:  # There's at least one job in the schedule
+            ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
+        for i in range(first_pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            # If job needs to be inserted to position i
+            if i == pos_insert:
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job]
+                ci = startTime + setupTime + proc_time
+
+            # If the job_i is not the one to be removed
+            if i != pos_remove:
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job_i]
+                ci = startTime + setupTime + proc_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+        first_pos = min(pos_i, pos_j)
+
+        ci = 0
+        if pos_i == 0: job_prev_i = self.job_schedule[pos_j].id
+        else: job_prev_i = self.job_schedule[pos_i].id
+        if first_pos > 0:  # There's at least one job in the schedule
+            ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
+
+        for i in range(first_pos, len(self.job_schedule)):
+
+            if i == pos_i:  # We take pos_j
+                job_i = self.job_schedule[pos_j][0]  # (Id, startTime, endTime)
+            elif i == pos_j:  # We take pos_i
+                job_i = self.job_schedule[pos_i][0]
+            else:
+                job_i = self.job_schedule[i][0]  # Id of job in position i
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i]
+            ci = startTime + setupTime + proc_time
+
+            job_prev_i = job_i
+
+        return ci
+
+
 
 @dataclass
 class SingleSolution(RootProblem.Solution):
@@ -773,6 +912,14 @@ class SingleSolution(RootProblem.Solution):
         """
         if self.instance != None:
                 self.machine.total_weighted_lateness(self.instance)
+        self.objective_value = self.machine.objective
+
+    def Cmax(self):
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        if self.instance != None:
+                self.machine.completion_time(self.instance)
         self.objective_value = self.machine.objective
 
     def fix_objective(self):
@@ -878,17 +1025,31 @@ class SingleSolution(RootProblem.Solution):
         """
         set_jobs = set()
         is_valid = True
-        ci, expected_start_time = 0, 0
+        prev_job = None
+        ci, setup_time, expected_start_time = 0, 0, 0
         for i, element in enumerate(self.machine.job_schedule):
             job, startTime, endTime = element
             # Test End Time + start Time
-            expected_start_time = ci
-            ci +=  self.instance.P[job]
+            if hasattr(self.instance,'R'):
+                expected_start_time = max(self.instance.R[job],ci)
+            else:
+                expected_start_time = ci
+            if hasattr(self.instance,'S'):
+                if prev_job is None:
+                    setup_time = self.instance.S[job][job]
+                else:
+                    setup_time = self.instance.S[prev_job][job]
+            else: setup_time = 0
+
+            proc_time = self.instance.P[job]
+            ci = expected_start_time + proc_time + setup_time
 
             if startTime != expected_start_time or endTime != ci:
                 print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
                 is_valid = False
             set_jobs.add(job)
+
+            prev_job = job
 
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
@@ -903,6 +1064,9 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         elif objective == RootProblem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             remove_insert = solution.machine.total_weighted_lateness_remove_insert
+        elif objective == RootProblem.Objective.Cmax:
+            fix_machine = solution.machine.completion_time
+            remove_insert = solution.machine.completion_time_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
             job = solution.machine.job_schedule[pos]
             objective = solution.machine.objective
@@ -928,6 +1092,9 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         elif objective == RootProblem.Objective.wiTi:
             set_objective = solution.wiTi
             swap = solution.machine.total_weighted_lateness_swap
+        elif objective == RootProblem.Objective.Cmax:
+            set_objective = solution.Cmax
+            swap = solution.machine.completion_time_swap
 
         job_schedule_len = len(solution.machine.job_schedule)
         move = None
@@ -982,6 +1149,9 @@ class NeighbourhoodGeneration():
         elif objective == RootProblem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             swap = solution.machine.total_weighted_lateness_swap
+        elif objective == RootProblem.Objective.Cmax:
+            fix_machine = solution.machine.completion_time
+            swap = solution.machine.completion_time_swap
 
         machine_schedule = solution.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
