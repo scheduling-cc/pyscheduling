@@ -1149,6 +1149,9 @@ class NeighbourhoodGeneration():
         elif objective == RootProblem.Objective.wiTi:
             fix_machine = solution.machine.total_weighted_lateness
             swap = solution.machine.total_weighted_lateness_swap
+        elif objective == RootProblem.Objective.Cmax:
+            fix_machine = solution.machine.completion_time
+            swap = solution.machine.completion_time_swap
 
         machine_schedule = solution.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
