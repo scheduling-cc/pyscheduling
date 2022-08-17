@@ -31,7 +31,8 @@ class Heuristics_Cmax():
                 
         taken_pair = min_IT[0]
         job_schedule = [taken_pair[0],taken_pair[1]]
-
+        solution.job_schedule = job_schedule
+        solution.cmax()
         #step 3 :
         remaining_jobs_list = [job_id for job_id in list(range(instance.n)) if job_id not in job_schedule]
 
