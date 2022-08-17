@@ -1,15 +1,14 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint, uniform
-from statistics import mean
+from random import randint
+
 from time import perf_counter
 
-import numpy as np
-from numpy.random import choice as np_choice
 
 import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.FS.FlowShop as FlowShop
+import pyscheduling_cc.FS.FS_Methods as FS_Methods
 
 
 @dataclass
@@ -90,7 +89,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         return RootProblem.Objective.Cmax
 
 
-class Heuristics():
+class Heuristics(FS_Methods.Heuristics_Cmax):
 
     @staticmethod
     def slope(instance: FmCmax_Instance):
@@ -113,4 +112,11 @@ class Heuristics():
         solution.cmax()
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
-   
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
