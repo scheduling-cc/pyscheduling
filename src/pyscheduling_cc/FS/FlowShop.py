@@ -392,6 +392,9 @@ class FlowShopSolution(RootProblem.Solution):
             which equals to the maximal completion time of every machine
         """
         if start_job_index == 0 : self.init_machines_schedule()
+        if len(self.job_schedule) != len(self.machines[0].job_schedule) :
+            for machine in self.machines :
+                machine.job_schedule.insert(start_job_index,Job(0,0,0))
         ci = 0
         prev_job = -1
         if start_job_index > 0:
