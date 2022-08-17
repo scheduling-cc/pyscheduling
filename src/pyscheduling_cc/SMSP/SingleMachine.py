@@ -726,6 +726,145 @@ class Machine:
 
         return wiTi
 
+    def completion_time(self, instance : SingleInstance, startIndex : int = 0):
+        if len(self.job_schedule) > 0:
+            job_schedule_len = len(self.job_schedule)
+            if startIndex > 0: 
+                ci = self.job_schedule[startIndex - 1].end_time
+                job_prev_i = self.job_schedule[startIndex - 1].id
+            else: 
+                ci = 0
+                job_prev_i = self.job_schedule[startIndex].id
+            for i in range(startIndex,job_schedule_len):
+                job_i = self.job_schedule[i].id
+
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job_i]
+                ci = startTime + setupTime + proc_time
+
+                self.job_schedule[i] = Job(job_i, startTime, ci)
+                job_prev_i = job_i
+        self.objective = ci
+        return ci
+
+    def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
+        if pos > 0:
+            c_prev = self.job_schedule[pos - 1].end_time
+            job_prev_i = self.job_schedule[pos - 1].id
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job] - c_prev, 0)
+            else:
+                release_time = 0 
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job]
+            else:
+                setupTime = 0
+            ci = c_prev + release_time + setupTime +instance.P[job]
+        else: 
+            ci = instance.S[job][job] + instance.P[job]
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i]
+            ci = startTime + setupTime +proc_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+        first_pos = min(pos_remove, pos_insert)
+
+        ci = 0
+
+        job_prev_i=job
+        if first_pos > 0:  # There's at least one job in the schedule
+            ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
+        for i in range(first_pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            # If job needs to be inserted to position i
+            if i == pos_insert:
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job]
+                ci = startTime + setupTime + proc_time
+
+            # If the job_i is not the one to be removed
+            if i != pos_remove:
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job_i]
+                ci = startTime + setupTime + proc_time
+
+            job_prev_i = job_i
+
+        return ci
+
+    def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+        first_pos = min(pos_i, pos_j)
+
+        ci = 0
+        if pos_i == 0: job_prev_i = self.job_schedule[pos_j].id
+        else: job_prev_i = self.job_schedule[pos_i].id
+        if first_pos > 0:  # There's at least one job in the schedule
+            ci = self.job_schedule[first_pos - 1].end_time
+            job_prev_i = self.job_schedule[first_pos - 1].id
+
+        for i in range(first_pos, len(self.job_schedule)):
+
+            if i == pos_i:  # We take pos_j
+                job_i = self.job_schedule[pos_j][0]  # (Id, startTime, endTime)
+            elif i == pos_j:  # We take pos_i
+                job_i = self.job_schedule[pos_i][0]
+            else:
+                job_i = self.job_schedule[i][0]  # Id of job in position i
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i]
+            ci = startTime + setupTime + proc_time
+
+            job_prev_i = job_i
+
+        return ci
+
+
 
 @dataclass
 class SingleSolution(RootProblem.Solution):
