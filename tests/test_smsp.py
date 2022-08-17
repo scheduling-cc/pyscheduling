@@ -431,9 +431,9 @@ class TestsijCmax:
         solve_result = sijCmax.Heuristics.constructive(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
-    #def test_lahc(self, instance_zero):
-    #    solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
-    #    check_solve_result(solve_result)
+    def test_lahc(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        check_solve_result(solve_result)
 
 class TestrisijCmax:
 
@@ -488,6 +488,6 @@ class TestrisijCmax:
         solve_result = risijCmax.Heuristics.constructive(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
-    #def test_lahc(self, instance_zero):
-    #    solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
-    #    check_solve_result(solve_result)
+    def test_lahc(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        check_solve_result(solve_result)
