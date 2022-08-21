@@ -6,7 +6,6 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from tracemalloc import start
 
 import numpy as np
 import matplotlib.pyplot as plt
