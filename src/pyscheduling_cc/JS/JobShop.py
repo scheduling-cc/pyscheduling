@@ -90,7 +90,7 @@ class Graph:
 
 
 @dataclass
-class ParallelInstance(RootProblem.Instance):
+class JobShopInstance(RootProblem.Instance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
@@ -107,7 +107,7 @@ class ParallelInstance(RootProblem.Instance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            ParallelInstance:
+            JobShopInstance:
 
         """
         pass
@@ -121,7 +121,7 @@ class ParallelInstance(RootProblem.Instance):
             protocol (string): represents the protocol used to generate the instance
 
         Returns:
-            ParallelInstance:
+            JobShopInstance:
         """
         pass
 
@@ -326,12 +326,12 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"], machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def compute_completion_time(self, instance: ParallelInstance, startIndex: int = 0):
+    def compute_completion_time(self, instance: JobShopInstance, startIndex: int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
         works with both RmSijkCmax and RmriSijkCmax problems
 
         Args:
-            instance (ParallelInstance): The instance associated to the machine
+            instance (JobShopInstance): The instance associated to the machine
             startIndex (int) : The job index the function starts operating from
 
         Returns:
@@ -341,15 +341,15 @@ class Machine:
 
 
 @dataclass
-class ParallelSolution(RootProblem.Solution):
+class JobShopSolution(RootProblem.Solution):
 
     machines: list[Machine]
 
-    def __init__(self, instance: ParallelInstance = None, machines: list[Machine] = None, objective_value: int = 0):
+    def __init__(self, instance: JobShopInstance = None, machines: list[Machine] = None, objective_value: int = 0):
         """Constructor of RmSijkCmax_Solution
 
         Args:
-            instance (ParallelInstance, optional): Instance to be solved by the solution. Defaults to None.
+            instance (JobShopInstance, optional): Instance to be solved by the solution. Defaults to None.
             configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
             objective_value (int, optional): initial objective value of the solution. Defaults to 0.
         """
@@ -371,7 +371,7 @@ class ParallelSolution(RootProblem.Solution):
         for m in self.machines:
             copy_machines.append(m.copy())
 
-        copy_solution = ParallelSolution(self.instance)
+        copy_solution = JobShopSolution(self.instance)
         for i in range(self.instance.m):
             copy_solution.machines[i] = copy_machines[i]
         copy_solution.objective_value = self.objective_value
