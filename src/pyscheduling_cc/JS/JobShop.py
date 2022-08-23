@@ -1,5 +1,30 @@
+import json
+from platform import machine
+import sys
+import random
 from queue import PriorityQueue
+from enum import Enum
+from pathlib import Path
+from abc import abstractmethod
+from collections import namedtuple
 from dataclasses import dataclass, field
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+import pyscheduling_cc.Problem as RootProblem
+
+
+Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
+
+class GenerationProtocol(Enum):
+    VALLADA = 1
+
+
+class GenerationLaw(Enum):
+    UNIFORM = 1
+    NORMAL = 2
+
 
 @dataclass
 class Graph:
@@ -62,3 +87,411 @@ class Graph:
 
     def critical_path(self):
         return self.longest_path(self.source,self.sink)
+
+
+@dataclass
+class ParallelInstance(RootProblem.Instance):
+
+    n: int  # n : Number of jobs
+    m: int  # m : Number of machines
+
+    @classmethod
+    @abstractmethod
+    def read_txt(cls, path: Path):
+        """Read an instance from a txt file according to the problem's format
+
+        Args:
+            path (Path): path to the txt file of type Path from the pathlib module
+
+        Raises:
+            FileNotFoundError: when the file does not exist
+
+        Returns:
+            ParallelInstance:
+
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def generate_random(cls, protocol: str = None):
+        """Generate a random instance according to a predefined protocol
+
+        Args:
+            protocol (string): represents the protocol used to generate the instance
+
+        Returns:
+            ParallelInstance:
+        """
+        pass
+
+    @abstractmethod
+    def to_txt(self, path: Path) -> None:
+        """Export an instance to a txt file
+
+        Args:
+            path (Path): path to the resulting txt file
+        """
+        pass
+
+    def read_P(self, content: list[str], startIndex: int):
+        """Read the Processing time matrix from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the processing time matrix
+
+        Returns:
+           (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)
+        """
+        P = []  
+        i = startIndex
+        for _ in range(self.n):
+            ligne = content[i].strip().split('\t')
+            P_k = [tuple(int(ligne[j-1]),int(ligne[j])) for j in range(1, len(ligne), 2)]
+            P.append(P_k)
+            i += 1
+        return (P, i)
+
+    def read_R(self, content: list[str], startIndex: int):
+        """Read the release time table from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the release time table
+
+        Returns:
+           (list[int],int): (Table of release time, index of the next section of the instance)
+        """
+        pass
+
+    def read_S(self, content: list[str], startIndex: int):
+        """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the Setup time table of matrices
+
+        Returns:
+           (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
+        """
+        pass
+
+    def read_D(self, content: list[str], startIndex: int):
+        """Read the due time table from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the due time table
+
+        Returns:
+           (list[int],int): (Table of due time, index of the next section of the instance)
+        """
+        pass
+
+    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
+        """Random generation of processing time matrix
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Pmin (int): Minimal processing time
+            Pmax (int): Maximal processing time
+
+        Returns:
+           list[list[int]]: Matrix of processing time
+        """
+        P = []
+        visited_machine = list(range(self.m))
+        for j in range(self.n):
+            Pj = []
+            nb_operation_j = random.randint(1, self.m)
+            for _ in range(nb_operation_j):
+                machine_id = random.randint(1, self.m)
+                while(machine_id in Pj) : machine_id = random.randint(1, self.m)
+                visited_machine.remove(machine_id)
+                if law.name == "UNIFORM":  # Generate uniformly
+                    n = int(random.uniform(Pmin, Pmax))
+                elif law.name == "NORMAL":  # Use normal law
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+                    while n < Pmin or n > Pmax:
+                        value = np.random.normal(0, 1)
+                        n = int(abs(Pmin+Pmax*value))
+                Pj.append(tuple(machine_id,n))
+            P.append(Pj)
+
+            if len(visited_machine) > 0:
+                for job_list_id in len(P):
+                    for machine_id in range(job_list_id,len(visited_machine),self.n):
+                        if law.name == "UNIFORM":  # Generate uniformly
+                            n = int(random.uniform(Pmin, Pmax))
+                        elif law.name == "NORMAL":  # Use normal law
+                            value = np.random.normal(0, 1)
+                            n = int(abs(Pmin+Pmax*value))
+                            while n < Pmin or n > Pmax:
+                                value = np.random.normal(0, 1)
+                                n = int(abs(Pmin+Pmax*value))
+                        P[job_list_id].append(tuple(machine_id,n))
+        return P
+
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
+        """Random generation of release time table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            PJobs (list[list[float]]): Matrix of processing time
+            Pmin (int): Minimal processing time
+            Pmax (int): Maximal processing time
+            alpha (float): release time factor
+
+        Returns:
+            list[int]: release time table
+        """
+        pass
+
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+        """Random generation of setup time table of matrices
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            PJobs (list[list[float]]): Matrix of processing time
+            gamma (float): Setup time factor
+            Smin (int, optional): Minimal setup time . Defaults to 0.
+            Smax (int, optional): Maximal setup time. Defaults to 0.
+
+        Returns:
+            list[list[list[int]]]: Setup time table of matrix
+        """
+        pass
+
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
+        """Random generation of due time table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Pmin (int): Minimal processing time
+            Pmax (int): Maximal processing time
+
+        Returns:
+            list[int]: due time table
+        """
+        pass
+
+
+@dataclass
+class Machine:
+
+    machine_num: int
+    objective: int = 0
+    last_job: int = -1
+    job_schedule: list[Job] = field(default_factory=list)
+
+    def __init__(self, machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+        """Constructor of Machine
+
+        Args:
+            machine_num (int): ID of the machine
+            completion_time (int, optional): completion time of the last job of the machine. Defaults to 0.
+            last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
+            job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
+        """
+        self.machine_num = machine_num
+        self.objective = objective
+        self.last_job = last_job
+        if job_schedule is None:
+            self.job_schedule = []
+        else:
+            self.job_schedule = job_schedule
+
+    def __str__(self):
+        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
+
+    def __eq__(self, other):
+        same_machine = other.machine_num == self.machine_num
+        same_schedule = other.job_schedule == self.job_schedule
+        return (same_machine and same_schedule)
+
+    def copy(self):
+        return Machine(self.machine_num, self.objective, self.last_job, list(self.job_schedule))
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
+
+    @staticmethod
+    def fromDict(machine_dict):
+        return Machine(machine_dict["machine_num"], machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
+
+    def compute_completion_time(self, instance: ParallelInstance, startIndex: int = 0):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
+        works with both RmSijkCmax and RmriSijkCmax problems
+
+        Args:
+            instance (ParallelInstance): The instance associated to the machine
+            startIndex (int) : The job index the function starts operating from
+
+        Returns:
+            int: completion_time of the machine
+        """
+        pass
+
+
+@dataclass
+class ParallelSolution(RootProblem.Solution):
+
+    machines: list[Machine]
+
+    def __init__(self, instance: ParallelInstance = None, machines: list[Machine] = None, objective_value: int = 0):
+        """Constructor of RmSijkCmax_Solution
+
+        Args:
+            instance (ParallelInstance, optional): Instance to be solved by the solution. Defaults to None.
+            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
+            objective_value (int, optional): initial objective value of the solution. Defaults to 0.
+        """
+        self.instance = instance
+        if machines is None:
+            self.machines = []
+            for i in range(instance.m):
+                machine = Machine(i, 0, -1, [])
+                self.machines.append(machine)
+        else:
+            self.machines = machines
+        self.objective_value = 0
+
+    def __str__(self):
+        return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
+
+    def copy(self):
+        copy_machines = []
+        for m in self.machines:
+            copy_machines.append(m.copy())
+
+        copy_solution = ParallelSolution(self.instance)
+        for i in range(self.instance.m):
+            copy_solution.machines[i] = copy_machines[i]
+        copy_solution.objective_value = self.objective_value
+        return copy_solution
+
+    def __lt__(self, other):
+        if self.instance.get_objective().value > 0 :
+            return self.objective_value < other.objective_value
+        else : return other.objective_value < self.objective_value
+    
+    def cmax(self):
+        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        if self.instance != None:
+            for k in range(self.instance.m):
+                self.machines[k].compute_completion_time(self.instance)
+        self.objective_value = max(
+            [machine.completion_time for machine in self.machines])
+
+    def fix_cmax(self):
+        """Sets the objective_value of the solution to Cmax
+            which equals to the maximal completion time of every machine
+        """
+        self.objective_value = max(
+            [machine.completion_time for machine in self.machines])
+
+    @classmethod
+    def read_txt(cls, path: Path):
+        """Read a solution from a txt file
+
+        Args:
+            path (Path): path to the solution's txt file of type Path from pathlib
+
+        Returns:
+            RmSijkCmax_Solution:
+        """
+        f = open(path, "r")
+        content = f.read().split('\n')
+        objective_value_ = int(content[0].split(':')[1])
+        configuration_ = []
+        for i in range(2, len(content)):
+            line_content = content[i].split('|')
+            configuration_.append(Machine(int(line_content[0]), int(line_content[2]), job_schedule=[Job(
+                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[1].split(':')]]))
+        solution = cls(objective_value=objective_value_,
+                       machines=configuration_)
+        return solution
+
+    def to_txt(self, path: Path) -> None:
+        """Export the solution to a txt file
+
+        Args:
+            path (Path): path to the resulting txt file
+        """
+        f = open(path, "w")
+        f.write(self.__str__())
+        f.close()
+
+    def plot(self, path: Path = None) -> None:
+        """Plot the solution in an appropriate diagram"""
+        if "matplotlib" in sys.modules:
+            if self.instance is not None:
+                # Add Tasks ID
+                fig, gnt = plt.subplots()
+
+                # Setting labels for x-axis and y-axis
+                gnt.set_xlabel('seconds')
+                gnt.set_ylabel('Machines')
+
+                # Setting ticks on y-axis
+
+                ticks = []
+                ticks_labels = []
+                for i in range(len(self.machines)):
+                    ticks.append(10*(i+1) + 5)
+                    ticks_labels.append(str(i+1))
+
+                gnt.set_yticks(ticks)
+                # Labelling tickes of y-axis
+                gnt.set_yticklabels(ticks_labels)
+
+                # Setting graph attribute
+                gnt.grid(True)
+
+                for j in range(len(self.machines)):
+                    schedule = self.machines[j].job_schedule
+                    prev = -1
+                    prevEndTime = 0
+                    for element in schedule:
+                        job_index, startTime, endTime = element
+                        if prevEndTime < startTime:
+                            # Idle Time
+                            gnt.broken_barh(
+                                [(prevEndTime, startTime - prevEndTime)], ((j+1) * 10, 9), facecolors=('tab:gray'))
+                        if prev != -1:
+                            # Setup Time
+                            gnt.broken_barh([(startTime, self.instance.S[j][prev][job_index])], ((
+                                j+1) * 10, 9), facecolors=('tab:orange'))
+                            # Processing Time
+                            gnt.broken_barh([(startTime + self.instance.S[j][prev][job_index],
+                                            self.instance.P[job_index][j])], ((j+1) * 10, 9), facecolors=('tab:blue'))
+                        else:
+                            gnt.broken_barh([(startTime, self.instance.P[job_index][j])], ((
+                                j+1) * 10, 9), facecolors=('tab:blue'))
+                        prev = job_index
+                        prevEndTime = endTime
+                if path:
+                    plt.savefig(path)
+                else:
+                    plt.show()
+                return
+            else:
+                print("Please assign the solved instance to the solution object")
+        else:
+            print("Matplotlib is not installed, you can't use gant_plot")
+            return
+
+    def is_valid(self):
+        """
+        Check if solution respects the constraints
+        """
+        pass
