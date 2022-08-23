@@ -34,7 +34,7 @@ class Graph:
     vertices : list[tuple]
     edges : dict
 
-    def __init__(self, operations : list[list[tuple(int, int)]]):
+    def __init__(self, operations):
         self.vertices = [self.source,self.sink]
         self.edges = {}
         
@@ -49,16 +49,16 @@ class Graph:
             self.edges[((job[nb_operation - 1][0],job_index),self.sink)] = job[nb_operation - 1][1]
             job_index += 1
 
-    def add_edge(self, u : tuple(int, int), v : tuple(int, int), weight : int):
+    def add_edge(self, u, v, weight : int):
         self.edges[(u,v)] = weight
 
-    def get_edge(self, u : tuple(int, int), v : tuple(int, int)):
+    def get_edge(self, u, v):
         try:
             return self.edges[(u,v)]
         except:
             return -1
 
-    def dijkstra(self, start_vertex : tuple(int, int)):
+    def dijkstra(self, start_vertex):
         D = {v:-float('inf') for v in self.vertices}
         D[start_vertex] = 0
 
@@ -82,7 +82,7 @@ class Graph:
                             D[neighbor] = new_cost
         return D
 
-    def longest_path(self,u : tuple(int, int), v : tuple(int, int)):
+    def longest_path(self,u, v):
         return self.dijkstra(u)[v]
 
     def critical_path(self):
@@ -148,7 +148,7 @@ class JobShopInstance(RootProblem.Instance):
         i = startIndex
         for _ in range(self.n):
             ligne = content[i].strip().split('\t')
-            P_k = [tuple(int(ligne[j-1]),int(ligne[j])) for j in range(1, len(ligne), 2)]
+            P_k = [(int(ligne[j-1]),int(ligne[j])) for j in range(1, len(ligne), 2)]
             P.append(P_k)
             i += 1
         return (P, i)
@@ -205,11 +205,11 @@ class JobShopInstance(RootProblem.Instance):
         visited_machine = list(range(self.m))
         for j in range(self.n):
             Pj = []
-            nb_operation_j = random.randint(1, self.m)
+            nb_operation_j = random.randint(1, self.m-1)
             for _ in range(nb_operation_j):
-                machine_id = random.randint(1, self.m)
-                while(machine_id in Pj) : machine_id = random.randint(1, self.m)
-                visited_machine.remove(machine_id)
+                machine_id = random.randint(0, self.m-1)
+                while(machine_id in [i[0] for i in Pj]) : machine_id = random.randint(0, self.m-1) # checks recirculation
+                if machine_id in visited_machine: visited_machine.remove(machine_id)
                 if law.name == "UNIFORM":  # Generate uniformly
                     n = int(random.uniform(Pmin, Pmax))
                 elif law.name == "NORMAL":  # Use normal law
@@ -218,21 +218,21 @@ class JobShopInstance(RootProblem.Instance):
                     while n < Pmin or n > Pmax:
                         value = np.random.normal(0, 1)
                         n = int(abs(Pmin+Pmax*value))
-                Pj.append(tuple(machine_id,n))
+                Pj.append((machine_id,n))
             P.append(Pj)
-
-            if len(visited_machine) > 0:
-                for job_list_id in len(P):
-                    for machine_id in range(job_list_id,len(visited_machine),self.n):
-                        if law.name == "UNIFORM":  # Generate uniformly
-                            n = int(random.uniform(Pmin, Pmax))
-                        elif law.name == "NORMAL":  # Use normal law
+        #If there are some unused machine by any operation
+        if len(visited_machine) > 0:
+            for job_list_id in range(self.n):
+                for machine_id in range(job_list_id,len(visited_machine),self.n):
+                    if law.name == "UNIFORM":  # Generate uniformly
+                        n = int(random.uniform(Pmin, Pmax))
+                    elif law.name == "NORMAL":  # Use normal law
+                        value = np.random.normal(0, 1)
+                        n = int(abs(Pmin+Pmax*value))
+                        while n < Pmin or n > Pmax:
                             value = np.random.normal(0, 1)
                             n = int(abs(Pmin+Pmax*value))
-                            while n < Pmin or n > Pmax:
-                                value = np.random.normal(0, 1)
-                                n = int(abs(Pmin+Pmax*value))
-                        P[job_list_id].append(tuple(machine_id,n))
+                    P[job_list_id].append((machine_id,n))
         return P
 
     def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
