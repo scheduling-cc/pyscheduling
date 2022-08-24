@@ -1,5 +1,4 @@
 import json
-from platform import machine
 import sys
 import random
 from queue import PriorityQueue
@@ -13,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import pyscheduling_cc.Problem as RootProblem
+import pyscheduling_cc.SMSP.riPrecLmax as riPrecLmax
 
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
@@ -35,7 +35,7 @@ class Graph:
     edges : dict
 
     def __init__(self, operations):
-        self.vertices = [self.source,self.sink]
+        self.vertices = [(self.source,0),(self.sink,0)]
         self.edges = {}
         
         job_index = 0
@@ -43,9 +43,9 @@ class Graph:
             self.edges[(self.source,(job[0][0],job_index))] = 0
             nb_operation = len(job)
             for operation_ind in range(nb_operation - 1):
-                self.vertices.append((job[operation_ind][0],job_index))
+                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
                 self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
-            self.vertices.append((job[nb_operation - 1][0],job_index))
+            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
             self.edges[((job[nb_operation - 1][0],job_index),self.sink)] = job[nb_operation - 1][1]
             job_index += 1
 
@@ -58,28 +58,37 @@ class Graph:
         except:
             return -1
 
+    def get_operations_on_machine(self, machine_id : int):
+        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
+        if machine_id==0: vertices.remove((0,-1))
+        return vertices
+    
+    def add_disdjunctive_arcs(self, edges_to_add : list):
+        emanating_vertices = [edge[0] for edge in edges_to_add]
+        weights = [vertice[1] for vertice in self.vertices if vertice[0] in emanating_vertices]
+        for edge_ind in range(len(edges_to_add)):
+            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
+
     def dijkstra(self, start_vertex):
-        D = {v:-float('inf') for v in self.vertices}
+        vertices_list = [vertice[0] for vertice in self.vertices]
+        D = {v:-float('inf') for v in vertices_list}
         D[start_vertex] = 0
 
         pq = PriorityQueue()
         pq.put((0, start_vertex))
 
-        visited = []
-
         while not pq.empty():
             (dist, current_vertex) = pq.get()
-            visited.append(current_vertex)
 
-            for neighbor in self.vertices:
+            for neighbor in vertices_list:
                 if self.get_edge(current_vertex,neighbor) != -1:
                     distance = self.get_edge(current_vertex,neighbor)
-                    if neighbor not in visited:
-                        old_cost = D[neighbor]
-                        new_cost = D[current_vertex] + distance
-                        if new_cost > old_cost:
-                            pq.put((new_cost, neighbor))
-                            D[neighbor] = new_cost
+                    old_cost = D[neighbor]
+                    new_cost = D[current_vertex] + distance
+                    if new_cost > old_cost:
+                        pq.put((new_cost, neighbor))
+                        D[neighbor] = new_cost
+
         return D
 
     def longest_path(self,u, v):
@@ -87,6 +96,16 @@ class Graph:
 
     def critical_path(self):
         return self.longest_path(self.source,self.sink)
+
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int):
+        vertices = self.get_operations_on_machine(machine_id)
+        jobs_number = len(vertices)
+        P = []
+        for vertice in self.vertices :
+            if vertice[0] in vertices : P.append(vertice[1])
+        R = [self.longest_path(self.source,vertice) for vertice in vertices]
+        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
+        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D)
 
 
 @dataclass

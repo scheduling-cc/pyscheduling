@@ -83,3 +83,54 @@ class JmCmax_Instance(JobShop.JobShopInstance):
 
     def get_objective(self):
         return RootProblem.Objective.Cmax
+
+
+class Heuristics():
+
+    @staticmethod
+    def shifting_bottleneck(instance : JmCmax_Instance):
+        solution = JobShop.JobShopSolution(instance)
+        graph = JobShop.Graph(instance.P)
+        Cmax = graph.critical_path()
+        remaining_machines = list(range(instance.m))
+        scheduled_machines = []
+
+        while len(remaining_machines)>0:
+            Cmax = graph.critical_path()
+            machines_schedule = []
+            taken_solution = None
+            objective_value = None
+            taken_machine = None
+            edges_to_add = None
+            for machine in remaining_machines:
+                
+                Lmax_instance = graph.generate_riPrecLmax(machine,Cmax)
+                vertices = [op[1] for op in graph.get_operations_on_machine(machine)]
+                job_id_mapping = {i:vertices[i] for i in range(len(vertices))}
+                BB = JobShop.riPrecLmax.BB(Lmax_instance)
+                BB.solve()
+                mapped_IDs_solution = [JobShop.Job(job_id_mapping[job.id],job.start_time,job.end_time) for job in BB.best_solution]
+                if objective_value is None or objective_value < BB.objective_value:
+                    objective_value = BB.objective_value
+                    taken_solution = mapped_IDs_solution
+                    taken_machine = machine
+                    edges_to_add = [((machine,mapped_IDs_solution[ind].id),(machine,mapped_IDs_solution[ind+1].id)) for ind in range(len(BB.best_solution)-1)]
+
+
+            remaining_machines.remove(taken_machine)
+            scheduled_machines.append(taken_machine)
+            solution.machines[taken_machine].job_schedule = taken_solution
+            solution.machines[taken_machine].objective = taken_solution[len(taken_solution)-1].end_time
+            graph.add_disdjunctive_arcs(edges_to_add)
+            solution.objective_value = graph.critical_path()
+
+        return solution
+
+    @classmethod
+    def all_methods(cls):
+        """returns all the methods of the given Heuristics class
+
+        Returns:
+            list[object]: list of functions
+        """
+        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]

@@ -106,7 +106,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
             if start_index == len(release_time) :
                 start_index = len(release_time)
                 break
-        t = start_time
+        t = max(start_time,release_time[0])
         for instant in range(start_index-1,len(release_time)-1):
             remaining_job_list_released = [job for job in remaining_job_list if release_time_dict[job]<=t]
             remaining_job_list_released.sort(key = lambda job_id : self.D[job_id])
