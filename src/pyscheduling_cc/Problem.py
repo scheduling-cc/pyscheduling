@@ -213,6 +213,55 @@ class LocalSearch():
         return curr_sol
 
 
+class Branch_Bound():
+    root : object = None
+    best_solution : Solution = None
+    all_solution : list[Solution] = field(default_factory=list)
+
+    @dataclass
+    class Node():
+        lower_bound : float = None
+        if_solution : bool = False
+        partial_solution : object = None
+        sub_nodes : list[object] = field(default_factory=list)
+
+        def delete(self):
+            for node in self.sub_nodes : node.delete()
+            del self
+
+    def branch(self, node : Node):
+        pass
+    def bound(self, node : Node):
+        pass
+    def discard(self, root : Node, best_solution : float, objective : Objective):
+        if objective > 0 and root.lower_bound < best_solution : root = None
+        elif objective < 0 and root.lower_bound > best_solution : root = None
+        for node in root.sub_nodes :
+            if objective > 0 and node.lower_bound < best_solution : node = None
+            elif objective < 0 and node.lower_bound > best_solution : node = None
+
+    def objective(self, node : Node):
+        pass
+
+    def solve(self, instance : Instance, root : Node = None):
+        if root is None : 
+            root = self.Node()
+            self.root = root
+        if root.sub_nodes[0].if_solution is False :
+            for node in root.sub_nodes: self.bound(node)
+            sorted_sub_nodes = root.sub_nodes
+            sorted_sub_nodes.sort(reverse= instance.get_objective() > 0, key = lambda node : node.lower_bound)
+            for node in sorted_sub_nodes : self.solve(instance,node)
+        else :
+            for node in root.sub_nodes: 
+                self.objective(node)
+                self.all_solution.append(node.partial_solution)
+                if self.best_solution is None or self.best_solution < node.partial_solution :
+                    self.best_solution = node.partial_solution
+                self.discard(self.root,self.best_solution.objective_value,instance.get_objective())
+                
+                    
+
 @dataclass
 class Solver(ABC):
 
