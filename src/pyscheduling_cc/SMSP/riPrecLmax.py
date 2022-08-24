@@ -20,6 +20,9 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
     R: list[int] = field(default_factory=list) # release time
     D: list[int] = field(default_factory=list) # due time
 
+    def copy(self):
+        return riPrecLmax_Instance(str(self.name),self.n,list(self.P),list(self.R),list(self.D))
+
     @classmethod
     def read_txt(cls, path: Path):
         """Read an instance from a txt file according to the problem's format
@@ -92,13 +95,54 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
             f.write(str(self.D[i])+"\t")
         f.close()
 
+    def LB_preemptive_EDD(self, start_time : int = 0, jobs_list : list[int] = None):
+        if jobs_list is None: remaining_job_list = list(range(self.n))
+        remaining_job_list = list(jobs_list)
+        release_time = [self.R[job] for job in jobs_list]
+        release_time_dict = dict(zip(remaining_job_list, release_time))
+        processing_time = list(self.P)
+        release_time.sort()
+        maximum_lateness = 0
+        start_index = 0
+        
+        while(release_time[start_index]<start_time) : 
+            start_index += 1
+            if start_index == len(release_time) :
+                start_index = len(release_time)
+                break
+        t = start_time
+        for instant in range(start_index-1,len(release_time)-1):
+            remaining_job_list_released = [job for job in remaining_job_list if release_time_dict[job]<=t]
+            remaining_job_list_released.sort(key = lambda job_id : self.D[job_id])
+            
+            while(t < release_time[instant+1]):
+                job_id = remaining_job_list_released.pop(0)
+                exec_time = min(t+processing_time[job_id],release_time[instant+1]) - t
+                t += exec_time
+                processing_time[job_id] = processing_time[job_id] - exec_time
+                if processing_time[job_id] == 0 : 
+                    remaining_job_list.remove(job_id)
+                    maximum_lateness = max(maximum_lateness,max(t-self.D[job_id],0))
+
+        remaining_job_list_released = [job for job in remaining_job_list if release_time_dict[job]<=t]
+        remaining_job_list_released.sort(key = lambda job_id : self.D[job_id])
+        
+        while len(remaining_job_list) > 0:
+            job_id = remaining_job_list_released.pop(0)
+            t += processing_time[job_id]
+            processing_time[job_id] = 0
+            if processing_time[job_id] == 0 : 
+                remaining_job_list.remove(job_id)
+                maximum_lateness = max(maximum_lateness,max(t-self.D[job_id],0))
+
+        return maximum_lateness
 
     def get_objective(self):
-        return RootProblem.Objective.wiTi
+        return RootProblem.Objective.Lmax
 
     def init_sol_method(self):
         #return Heuristics.ACT_WSECi
-        pass
+        return None
 
 
 class Heuristics():
@@ -125,8 +169,41 @@ class Metaheuristics(Methods.Metaheuristics):
 
 class BB(RootProblem.Branch_Bound):
     def branch(self, node : RootProblem.Branch_Bound.Node):
-        pass
+        if node.partial_solution is None : 
+            remaining_job_list = [job for job in list(range(self.instance.n))]
+            partial_solution_len = 0
+            t = 0
+            node.partial_solution = []
+        else : 
+            partial_solution_job_id = [job.id for job in node.partial_solution]
+            remaining_job_list = [job for job in list(range(self.instance.n)) if job not in partial_solution_job_id]
+            partial_solution_len = len(node.partial_solution)
+            t = node.partial_solution[partial_solution_len-1].end_time
+        factor = None
+        for job in remaining_job_list:
+            calculated_factor = max(t,self.instance.R[job])+self.instance.P[job]
+            if factor is None or calculated_factor < factor:
+                factor = calculated_factor
+        node.sub_nodes = []
+        if partial_solution_len == self.instance.n - 1 : if_solution = True
+        else: if_solution = False
+        for job in remaining_job_list:
+            if self.instance.R[job] < factor :
+                startTime = max(t,self.instance.R[job])
+                new_partial_solution = node.partial_solution+[SingleMachine.Job(job,startTime,startTime+self.instance.P[job])]
+                sub_node = self.Node(if_solution=if_solution,partial_solution=new_partial_solution)
+                node.sub_nodes.append(sub_node)
+
     def bound(self, node : RootProblem.Branch_Bound.Node):
-        pass
+        maximum_lateness = self.objective(node)
+        partial_solution_job_id = [job.id for job in node.partial_solution]
+        remaining_jobs_list = [job for job in list(range(self.instance.n)) if job not in partial_solution_job_id]
+        startTime = node.partial_solution[len(node.partial_solution)-1].end_time
+        maximum_lateness = max(maximum_lateness,self.instance.LB_preemptive_EDD(startTime,remaining_jobs_list))
+        node.lower_bound = maximum_lateness
+
     def objective(self, node : RootProblem.Branch_Bound.Node):
-        pass
+        maximum_lateness = 0
+        for job in node.partial_solution:
+            maximum_lateness = max(maximum_lateness,max(job.end_time-self.instance.D[job.id],0))
+        return maximum_lateness
