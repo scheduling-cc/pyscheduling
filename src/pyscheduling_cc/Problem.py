@@ -264,11 +264,9 @@ class Branch_Bound():
                 if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound) :
                     self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
-                    print(self.best_solution)
                 elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
                     self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
-                    print(self.best_solution)
                 self.discard(self.root,self.objective_value,self.instance.get_objective())
                 
                     
