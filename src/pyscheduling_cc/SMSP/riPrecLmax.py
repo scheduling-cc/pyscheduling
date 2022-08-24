@@ -1,17 +1,13 @@
-from math import exp
 import sys
 from dataclasses import dataclass, field
 from random import randint, uniform
 from pathlib import Path
 from time import perf_counter
 
-from matplotlib import pyplot as plt
-
 import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
 import pyscheduling_cc.SMSP.SingleMachine as SingleMachine
 import pyscheduling_cc.SMSP.SM_Methods as Methods
-from pyscheduling_cc.SMSP.SM_Methods import ExactSolvers
 
 
 @dataclass
