@@ -7,6 +7,7 @@ class Objective(Enum):# Negative value are for minimization problems, Positive v
     Cmax = -1
     wiTi = -2
     wiCi = -3
+    Lmax = -4
 
     @classmethod
     def toString(cls):
@@ -212,9 +213,11 @@ class LocalSearch():
 
         return curr_sol
 
-
+@dataclass
 class Branch_Bound():
+    instance : Instance
     root : object = None
+    objective_value = None
     best_solution : Solution = None
     all_solution : list[Solution] = field(default_factory=list)
 
@@ -234,31 +237,39 @@ class Branch_Bound():
     def bound(self, node : Node):
         pass
     def discard(self, root : Node, best_solution : float, objective : Objective):
-        if objective > 0 and root.lower_bound < best_solution : root = None
-        elif objective < 0 and root.lower_bound > best_solution : root = None
+        if root.lower_bound is not None:
+            if objective.value > 0 and root.lower_bound < best_solution : root = None
+            elif objective.value < 0 and root.lower_bound > best_solution : root = None
         for node in root.sub_nodes :
-            if objective > 0 and node.lower_bound < best_solution : node = None
-            elif objective < 0 and node.lower_bound > best_solution : node = None
+            if objective.value > 0 and node.lower_bound < best_solution : node = None
+            elif objective.value < 0 and node.lower_bound > best_solution : node = None
 
     def objective(self, node : Node):
         pass
 
-    def solve(self, instance : Instance, root : Node = None):
+    def solve(self, root : Node = None):
         if root is None : 
             root = self.Node()
             self.root = root
+        self.branch(root) 
         if root.sub_nodes[0].if_solution is False :
             for node in root.sub_nodes: self.bound(node)
             sorted_sub_nodes = root.sub_nodes
-            sorted_sub_nodes.sort(reverse= instance.get_objective() > 0, key = lambda node : node.lower_bound)
-            for node in sorted_sub_nodes : self.solve(instance,node)
+            sorted_sub_nodes.sort(reverse= self.instance.get_objective().value > 0, key = lambda node : node.lower_bound)
+            for node in sorted_sub_nodes : self.solve(node)
         else :
             for node in root.sub_nodes: 
-                self.objective(node)
+                node.lower_bound = self.objective(node)
                 self.all_solution.append(node.partial_solution)
-                if self.best_solution is None or self.best_solution < node.partial_solution :
+                if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound) :
                     self.best_solution = node.partial_solution
-                self.discard(self.root,self.best_solution.objective_value,instance.get_objective())
+                    self.objective_value = node.lower_bound
+                    print(self.best_solution)
+                elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
+                    self.best_solution = node.partial_solution
+                    self.objective_value = node.lower_bound
+                    print(self.best_solution)
+                self.discard(self.root,self.objective_value,self.instance.get_objective())
                 
                     
 
