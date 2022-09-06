@@ -30,7 +30,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            riPrecLmax_Instance:
+            riPrecLmax_Instance: created instance
 
         """
         f = open(path, "r")
@@ -47,13 +47,13 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
 
     @classmethod
     def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha : float = 0.0, due_time_factor : float = 0.0, InstanceName: str = ""):
-        """Random generation of RmSijkCmax problem instance
+        """Random generation of riPrecLmax problem instance
 
         Args:
             jobs_number (int): number of jobs of the instance
             protocol (SingleMachine.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
             law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
-            Pmin (int, optional): Minimal processing time. Defaults to -1.
+            Pmin (int, optional): Minimal processing time. Defaults to 1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
@@ -92,6 +92,16 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def LB_preemptive_EDD(self, start_time : int = 0, jobs_list : list[int] = None):
+        """returns the objective value returned by applying the preemptive EDD rule on the instance
+        object from a given starting time and remaining jobs list to be scheduled
+
+        Args:
+            start_time (int, optional): Instant of the beginning of the schedule. Defaults to 0.
+            jobs_list (list[int], optional): Remaining jobs list to be scheduled. Defaults to None.
+
+        Returns:
+            int: lower bound of the instance
+        """
         if jobs_list is None: remaining_job_list = list(range(self.n))
         remaining_job_list = list(jobs_list)
         release_time = [self.R[job] for job in jobs_list]
@@ -134,10 +144,20 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         return maximum_lateness
 
     def get_objective(self):
+        """to get the objective tackled by the instance
+
+        Returns:
+            RootProblem.Objective: Maximal Lateness
+        """
         return RootProblem.Objective.Lmax
 
     def init_sol_method(self):
         #return Heuristics.ACT_WSECi
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
         return None
 
 
@@ -165,6 +185,11 @@ class Metaheuristics(Methods.Metaheuristics):
 
 class BB(RootProblem.Branch_Bound):
     def branch(self, node : RootProblem.Branch_Bound.Node):
+        """Branching rule from Pinedo book page 44
+
+        Args:
+            node (RootProblem.Branch_Bound.Node): node to branch from
+        """
         if node.partial_solution is None : 
             remaining_job_list = [job for job in list(range(self.instance.n))]
             partial_solution_len = 0
@@ -191,6 +216,11 @@ class BB(RootProblem.Branch_Bound):
                 node.sub_nodes.append(sub_node)
 
     def bound(self, node : RootProblem.Branch_Bound.Node):
+        """affects the preemptive_EDD value to the lower bound attribute of the node
+
+        Args:
+            node (RootProblem.Branch_Bound.Node): the node to bound
+        """
         maximum_lateness = self.objective(node)
         partial_solution_job_id = [job.id for job in node.partial_solution]
         remaining_jobs_list = [job for job in list(range(self.instance.n)) if job not in partial_solution_job_id]
@@ -199,6 +229,14 @@ class BB(RootProblem.Branch_Bound):
         node.lower_bound = maximum_lateness
 
     def objective(self, node : RootProblem.Branch_Bound.Node):
+        """Objective value evaluator
+
+        Args:
+            node (RootProblem.Branch_Bound.Node): node to be evaluated as a solution
+
+        Returns:
+            int: maximum lateness
+        """
         maximum_lateness = 0
         for job in node.partial_solution:
             maximum_lateness = max(maximum_lateness,max(job.end_time-self.instance.D[job.id],0))
