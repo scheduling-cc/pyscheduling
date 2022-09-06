@@ -152,7 +152,6 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         return RootProblem.Objective.Lmax
 
     def init_sol_method(self):
-        #return Heuristics.ACT_WSECi
         """Returns the default solving method
 
         Returns:
