@@ -10,7 +10,12 @@ class Objective(Enum):# Negative value are for minimization problems, Positive v
     Lmax = -4
 
     @classmethod
-    def toString(cls):
+    def to_string(cls):
+        """Print the available objective functions
+
+        Returns:
+            str: name of every objective in different lines
+        """
         return cls.Cmax.name + "\n" + cls.wiTi.name + "\n" + cls.wiCi.name
 
 @dataclass
@@ -229,14 +234,35 @@ class Branch_Bound():
         sub_nodes : list[object] = field(default_factory=list)
 
         def delete(self):
+            """To delete the variable definitely
+            """
             for node in self.sub_nodes : node.delete()
             del self
 
     def branch(self, node : Node):
+        """branching strategy, to be redefined
+
+        Args:
+            node (Node): node to branch from
+        """
         pass
+    
     def bound(self, node : Node):
+        """bounding method, to be redefined
+
+        Args:
+            node (Node): node to bound
+        """
         pass
+    
     def discard(self, root : Node, best_solution : float, objective : Objective):
+        """prunes the search tree sections where we are certain a better solution will not be find there
+
+        Args:
+            root (Node): root node of the tree
+            best_solution (float): best objective value
+            objective (Objective): objective to be considered, to know if it's a minimization or a maximization problem
+        """
         if root.lower_bound is not None:
             if objective.value > 0 and root.lower_bound < best_solution : root = None
             elif objective.value < 0 and root.lower_bound > best_solution : root = None
@@ -245,9 +271,19 @@ class Branch_Bound():
             elif objective.value < 0 and node.lower_bound > best_solution : node = None
 
     def objective(self, node : Node):
+        """objective value evaluator, to be redefined
+
+        Args:
+            node (Node): node to be evaluated as a complete solution
+        """
         pass
 
     def solve(self, root : Node = None):
+        """recursive function to perform Branch&Bound on the instance attribute
+
+        Args:
+            root (Node, optional): starting node. Defaults to None.
+        """
         if root is None : 
             root = self.Node()
             self.root = root
