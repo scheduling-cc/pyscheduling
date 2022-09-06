@@ -1,13 +1,21 @@
 import random
 from time import perf_counter
 
-
-
 import pyscheduling_cc.Problem as RootProblem
 import pyscheduling_cc.FS.FlowShop as FlowShop
 
 class Heuristics_Cmax():
+
     def MINIT(instance : FlowShop.FlowShopInstance):
+        """Gupta's MINIT heuristic which is based on iteratively scheduling a new job at the end
+        so that it minimizes the idle time at the last machine
+
+        Args:
+            instance (FlowShop.FlowShopInstance): Instance to be solved
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
         start_time = perf_counter()
         solution = FlowShop.FlowShopSolution(instance=instance)
 

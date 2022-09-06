@@ -309,6 +309,15 @@ class Machine:
         return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
     def completion_time(self, instance : FlowShopInstance, startIndex : int = 0):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the maximal completion time
+
+        Args:
+            instance (SingleInstance): The instance associated to the machine
+            startIndex (int) : The job index the function starts operating from
+
+        Returns:
+            int: Makespan
+        """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
             if startIndex > 0: 
@@ -348,7 +357,8 @@ class FlowShopSolution(RootProblem.Solution):
 
         Args:
             instance (FlowShopInstance, optional): Instance to be solved by the solution. Defaults to None.
-            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
+            machines (list[Machine], optional): list of machines of the instance. Defaults to None.
+            job_schedule (list[int], optional): sequence of scheduled jobs. Defaults to None.
             objective_value (int, optional): initial objective value of the solution. Defaults to 0.
         """
         self.instance = instance
@@ -384,12 +394,17 @@ class FlowShopSolution(RootProblem.Solution):
         else : return other.objective_value < self.objective_value
     
     def init_machines_schedule(self):
+        """Fills the job_schedule of every machine from job_schedule of Solution
+        """
         for machine in self.machines :
             machine.job_schedule = [Job(job_id,0,0) for job_id in self.job_schedule]
     
     def cmax(self, start_job_index : int = 0):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job
+         at every machine and returns the maximal completion time which is the completion time of the last machine
+
+        Args:
+            start_job_index (int, optional): starting index to update the job_schedule from for every stage (machine). Defaults to 0.
         """
         if start_job_index == 0 : self.init_machines_schedule()
         elif len(self.job_schedule) != len(self.machines[0].job_schedule):
@@ -442,8 +457,14 @@ class FlowShopSolution(RootProblem.Solution):
         self.objective_value = self.machines[self.instance.m - 1].objective
     
     def idle_time_cmax_insert_last_pos(self, job_id : int):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+        """returns start_time and completion_time of job_id if scheduled at the end of job_schedule
+        at every stage (machine)
+
+        Args:
+            job_id (int): job to be scheduled at the end
+
+        Returns:
+            int, int: start_time of job_id, completion_time of job_id
         """
         ci = 0
         prev_job = -1
@@ -480,6 +501,11 @@ class FlowShopSolution(RootProblem.Solution):
         return startTime,new_ci
     
     def idle_time(self):
+        """returns the idle time of the last machine
+
+        Returns:
+            int: idle time of the last machine
+        """
         last_machine = self.machines[self.instance.m-1]
         idleTime = last_machine.job_schedule[0].start_time
         for job_index in range(len(last_machine.job_schedule)-1):
@@ -494,7 +520,7 @@ class FlowShopSolution(RootProblem.Solution):
             path (Path): path to the solution's txt file of type Path from pathlib
 
         Returns:
-            RmSijkCmax_Solution:
+            FlowShopSolution:
         """
         f = open(path, "r")
         content = f.read().split('\n')
@@ -519,7 +545,7 @@ class FlowShopSolution(RootProblem.Solution):
         f.close()
 
     def plot(self, path: Path = None) -> None:
-        """Plot the solution in an appropriate diagram"""
+        """Plot the solution in a gantt diagram"""
         if "matplotlib" in sys.modules:
             if self.instance is not None:
                 # Add Tasks ID
