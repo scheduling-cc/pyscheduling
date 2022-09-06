@@ -40,7 +40,7 @@ class SingleInstance(RootProblem.Instance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            ParallelInstance:
+            SingleInstance:
 
         """
         pass
@@ -54,7 +54,7 @@ class SingleInstance(RootProblem.Instance):
             protocol (string): represents the protocol used to generate the instance
 
         Returns:
-            ParallelInstance:
+            SingleInstance:
         """
         pass
 
@@ -68,7 +68,7 @@ class SingleInstance(RootProblem.Instance):
         pass
 
     def read_P(self, content: list[str], startIndex: int):
-        """Read the Processing time matrix from a list of lines extracted from the file of the instance
+        """Read the Processing time table from a list of lines extracted from the file of the instance
 
         Args:
             content (list[str]): lines of the file of the instance
@@ -85,7 +85,7 @@ class SingleInstance(RootProblem.Instance):
         return (P, i+1)
 
     def read_W(self, content: list[str], startIndex: int):
-        """Read the Processing time matrix from a list of lines extracted from the file of the instance
+        """Read the Processing time table from a list of lines extracted from the file of the instance
 
         Args:
             content (list[str]): lines of the file of the instance
@@ -119,7 +119,7 @@ class SingleInstance(RootProblem.Instance):
         return (ri, i+1)
 
     def read_S(self, content: list[str], startIndex: int):
-        """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
+        """Read the Setup time matrix from a list of lines extracted from the file of the instance
 
         Args:
             content (list[str]): lines of the file of the instance
@@ -238,7 +238,7 @@ class SingleInstance(RootProblem.Instance):
         return ri
 
     def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], gamma: float, Smin: int = 0, Smax: int = 0):
-        """Random generation of setup time table of matrices
+        """Random generation of setup time matrix
 
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
@@ -359,15 +359,14 @@ class Machine:
         return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
     def total_weighted_completion_time(self, instance: SingleInstance, startIndex: int = 0):
-        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
-        works with both RmSijkCmax and RmriSijkCmax problems
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the total weighted completion time
 
         Args:
-            instance (ParallelInstance): The instance associated to the machine
+            instance (SingleInstance): The instance associated to the machine
             startIndex (int) : The job index the function starts operating from
 
         Returns:
-            int: objective of the machine
+            int: Total weighted lateness
         """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
@@ -411,13 +410,13 @@ class Machine:
 
     def total_weighted_completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
         """
-        Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+        Computes the machine's total wighted completion time if we insert "job" at "pos" in the machine's job_schedule
         Args:
             job (int): id of the inserted job
             pos (int): position where the job is inserted in the machine
-            instance (ParallelInstance): the current problem instance
+            instance (SingleInstance): the current problem instance
         Returns:
-            ci (int) : completion time
+            int : total weighted completion time
         """
         if pos > 0:
             c_prev = self.job_schedule[pos - 1].end_time
@@ -457,15 +456,15 @@ class Machine:
 
     def total_weighted_completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """
-        Computes the machine's completion time if we remove job at position "pos_remove" 
+        Computes the machine's total weighted completion time if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
         Args:
             pos_remove (int): position of the job to be removed
             job (int): id of the inserted job
             pos_insert (int): position where the job is inserted in the machine
-            instance (ParallelInstance): the current problem instance
+            instance (SingleInstance): the current problem instance
         Returns:
-            ci (int) : completion time
+            int: total weighted completion time
         """
         first_pos = min(pos_remove, pos_insert)
 
@@ -513,14 +512,14 @@ class Machine:
 
     def total_weighted_completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
         """
-        Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
+        Computes the machine's total weighted completion time if we insert swap jobs at position "pos_i" and "pos_j"
         in the machine's job_schedule
         Args:
             pos_i (int): position of the first job to be swapped
             pos_j (int): position of the second job to be swapped
-            instance (ParallelInstance): the current problem instance
+            instance (SingleInstance): the current problem instance
         Returns:
-            ci (int) : completion time
+            int : total weighted completion time
         """
         first_pos = min(pos_i, pos_j)
 
@@ -559,14 +558,14 @@ class Machine:
         return wiCi
 
     def total_weighted_lateness(self, instance: SingleInstance, startIndex: int = 0):
-        """_summary_
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the total weighted lateness
 
         Args:
-            instance (SingleInstance): _description_
-            startIndex (int, optional): _description_. Defaults to 0.
+            instance (SingleInstance): The instance associated to the machine
+            startIndex (int) : The job index the function starts operating from
 
         Returns:
-            _type_: _description_
+            int: Total weighted lateness
         """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
@@ -608,6 +607,15 @@ class Machine:
         return wiTi
 
     def total_weighted_lateness_insert(self, job: int, pos: int, instance: SingleInstance):
+        """
+        Computes the machine's total wighted lateness if we insert "job" at "pos" in the machine's job_schedule
+        Args:
+            job (int): id of the inserted job
+            pos (int): position where the job is inserted in the machine
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int : total weighted lateness
+        """
         if pos > 0:
             c_prev = self.job_schedule[pos - 1].end_time
             job_prev_i = self.job_schedule[pos - 1].id
@@ -645,6 +653,17 @@ class Machine:
         return wiTi
 
     def total_weighted_lateness_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+        """
+        Computes the machine's total weighted lateness if we remove job at position "pos_remove" 
+        and insert "job" at "pos" in the machine's job_schedule
+        Args:
+            pos_remove (int): position of the job to be removed
+            job (int): id of the inserted job
+            pos_insert (int): position where the job is inserted in the machine
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int: total weighted lateness
+        """
         first_pos = min(pos_remove, pos_insert)
 
         ci = 0
@@ -690,6 +709,16 @@ class Machine:
         return wiTi
 
     def total_weighted_lateness_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+        """
+        Computes the machine's total weighted lateness if we insert swap jobs at position "pos_i" and "pos_j"
+        in the machine's job_schedule
+        Args:
+            pos_i (int): position of the first job to be swapped
+            pos_j (int): position of the second job to be swapped
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int : total weighted lateness
+        """
         first_pos = min(pos_i, pos_j)
 
         ci = 0
@@ -727,6 +756,15 @@ class Machine:
         return wiTi
 
     def completion_time(self, instance : SingleInstance, startIndex : int = 0):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the maximal completion time
+
+        Args:
+            instance (SingleInstance): The instance associated to the machine
+            startIndex (int) : The job index the function starts operating from
+
+        Returns:
+            int: Makespan
+        """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
             if startIndex > 0: 
@@ -755,6 +793,15 @@ class Machine:
         return ci
 
     def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
+        """
+        Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+        Args:
+            job (int): id of the inserted job
+            pos (int): position where the job is inserted in the machine
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int : completion time
+        """
         if pos > 0:
             c_prev = self.job_schedule[pos - 1].end_time
             job_prev_i = self.job_schedule[pos - 1].id
@@ -789,6 +836,17 @@ class Machine:
         return ci
 
     def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+        """
+        Computes the machine's completion time if we remove job at position "pos_remove" 
+        and insert "job" at "pos" in the machine's job_schedule
+        Args:
+            pos_remove (int): position of the job to be removed
+            job (int): id of the inserted job
+            pos_insert (int): position where the job is inserted in the machine
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int: Completion time
+        """
         first_pos = min(pos_remove, pos_insert)
 
         ci = 0
@@ -831,6 +889,16 @@ class Machine:
         return ci
 
     def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+        """
+        Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
+        in the machine's job_schedule
+        Args:
+            pos_i (int): position of the first job to be swapped
+            pos_j (int): position of the second job to be swapped
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int : completion time
+        """
         first_pos = min(pos_i, pos_j)
 
         ci = 0
@@ -899,32 +967,28 @@ class SingleSolution(RootProblem.Solution):
         else : return other.objective_value < self.objective_value
 
     def wiCi(self):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+        """Sets the job_schedule of the machine and affects the total weighted completion time to the objective_value attribute
         """
         if self.instance != None:
                 self.machine.total_weighted_completion_time(self.instance)
         self.objective_value = self.machine.objective
 
     def wiTi(self):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+        """Sets the job_schedule of the machine and affects the total weighted lateness to the objective_value attribute
         """
         if self.instance != None:
                 self.machine.total_weighted_lateness(self.instance)
         self.objective_value = self.machine.objective
 
     def Cmax(self):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+        """Sets the job_schedule of the machine and affects the makespan to the objective_value attribute
         """
         if self.instance != None:
                 self.machine.completion_time(self.instance)
         self.objective_value = self.machine.objective
 
     def fix_objective(self):
-        """Sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+        """Sets the objective_value attribute of the solution to the objective attribute of the machine
         """
         self.objective_value = self.machine.objective
 
@@ -959,7 +1023,7 @@ class SingleSolution(RootProblem.Solution):
         f.close()
 
     def plot(self, path: Path = None) -> None:
-        """Plot the solution in an appropriate diagram"""
+        """Plot the solution in a gantt diagram"""
         if "matplotlib" in sys.modules:
             if self.instance is not None:
                 # Add Tasks ID
@@ -1058,6 +1122,15 @@ class SM_LocalSearch(RootProblem.LocalSearch):
 
     @staticmethod
     def _intra_insertion(solution : SingleSolution, objective : RootProblem.Objective):
+        """Iterates through the job schedule and try to reschedule every job at a better position to improve the solution
+
+        Args:
+            solution (SingleSolution): solution to improve
+            objective (RootProblem.Objective): objective to consider
+
+        Returns:
+            SingleSolution: improved solution
+        """
         if objective == RootProblem.Objective.wiCi:
             fix_machine = solution.machine.total_weighted_completion_time
             remove_insert = solution.machine.total_weighted_completion_time_remove_insert
@@ -1086,6 +1159,15 @@ class SM_LocalSearch(RootProblem.LocalSearch):
 
     @staticmethod
     def _swap(solution : SingleSolution, objective : RootProblem.Objective):
+        """Iterates through the job schedule and choose the best swap between 2 jobs to improve the solution
+
+        Args:
+            solution (SingleSolution): solution to improve
+            objective (RootProblem.Objective): objective to consider
+
+        Returns:
+            SingleSolution: improved solution
+        """
         if objective == RootProblem.Objective.wiCi:
             set_objective = solution.wiCi
             swap = solution.machine.total_weighted_completion_time_swap
@@ -1133,10 +1215,11 @@ class SM_LocalSearch(RootProblem.LocalSearch):
 class NeighbourhoodGeneration():
     @staticmethod
     def random_swap(solution: SingleSolution, objective : RootProblem.Objective, force_improve: bool = True):
-        """Performs a random swap between 2 jobs on the same machine
+        """Performs a random swap between 2 jobs
 
         Args:
             solution (SingleSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
             force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
 
         Returns:

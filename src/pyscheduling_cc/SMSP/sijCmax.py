@@ -1,11 +1,8 @@
-from math import exp
 import sys
 from dataclasses import dataclass, field
 from random import randint, uniform
 from pathlib import Path
 from time import perf_counter
-
-from matplotlib import pyplot as plt
 
 import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
@@ -46,7 +43,7 @@ class sijCmax_Instance(SingleMachine.SingleInstance):
 
     @classmethod
     def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Pmin: int = 1, Pmax: int = -1, Gamma : float = 0.0, Smin : int = -1, Smax : int = -1, InstanceName: str = ""):
-        """Random generation of RmSijkCmax problem instance
+        """Random generation of sijCmax problem instance
 
         Args:
             jobs_number (int): number of jobs of the instance
@@ -54,6 +51,9 @@ class sijCmax_Instance(SingleMachine.SingleInstance):
             law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
+            Gamma (float, optional): Setup time factor. Defaults to 0.0.
+            Smin (int, optional) : Minimal setup time. Defaults to -1.
+            Smax (int, optional) : Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
@@ -91,9 +91,19 @@ class sijCmax_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
+        """to get the objective tackled by the instance
+
+        Returns:
+            RootProblem.Objective: Makespan
+        """
         return RootProblem.Objective.Cmax
 
     def init_sol_method(self):
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
         return Heuristics.constructive
 
 
@@ -103,13 +113,13 @@ class Heuristics(Methods.Heuristics_Cmax):
     
     @staticmethod
     def constructive(instance: sijCmax_Instance):
-        """the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
+        """the greedy constructive heuristic to find an initial solution of sijCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
 
         Args:
-            instance (RmSijkCmax_Instance): Instance to be solved by the heuristic
+            instance (sijCmax_Instance): Instance to be solved by the heuristic
 
         Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
+            RootProblem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
         solution = SingleMachine.SingleSolution(instance=instance)
