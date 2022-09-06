@@ -1,19 +1,21 @@
 import json
 import sys
 import random
+from queue import PriorityQueue
+from enum import Enum
+from pathlib import Path
 from abc import abstractmethod
 from collections import namedtuple
 from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 import pyscheduling_cc.Problem as RootProblem
+import pyscheduling_cc.SMSP.riPrecLmax as riPrecLmax
+
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
-
 
 class GenerationProtocol(Enum):
     VALLADA = 1
@@ -23,8 +25,91 @@ class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
+
 @dataclass
-class FlowShopInstance(RootProblem.Instance):
+class Graph:
+    source = (-1,0)
+    sink = (0,-1)
+
+    vertices : list[tuple]
+    edges : dict
+
+    def __init__(self, operations):
+        self.vertices = [(self.source,0),(self.sink,0)]
+        self.edges = {}
+        
+        job_index = 0
+        for job in operations:
+            self.edges[(self.source,(job[0][0],job_index))] = 0
+            nb_operation = len(job)
+            for operation_ind in range(nb_operation - 1):
+                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
+                self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
+            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
+            self.edges[((job[nb_operation - 1][0],job_index),self.sink)] = job[nb_operation - 1][1]
+            job_index += 1
+
+    def add_edge(self, u, v, weight : int):
+        self.edges[(u,v)] = weight
+
+    def get_edge(self, u, v):
+        try:
+            return self.edges[(u,v)]
+        except:
+            return -1
+
+    def get_operations_on_machine(self, machine_id : int):
+        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
+        if machine_id==0: vertices.remove((0,-1))
+        return vertices
+    
+    def add_disdjunctive_arcs(self, edges_to_add : list):
+        emanating_vertices = [edge[0] for edge in edges_to_add]
+        weights = [vertice[1] for vertice in self.vertices if vertice[0] in emanating_vertices]
+        for edge_ind in range(len(edges_to_add)):
+            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
+
+    def dijkstra(self, start_vertex):
+        vertices_list = [vertice[0] for vertice in self.vertices]
+        D = {v:-float('inf') for v in vertices_list}
+        D[start_vertex] = 0
+
+        pq = PriorityQueue()
+        pq.put((0, start_vertex))
+
+        while not pq.empty():
+            (dist, current_vertex) = pq.get()
+
+            for neighbor in vertices_list:
+                if self.get_edge(current_vertex,neighbor) != -1:
+                    distance = self.get_edge(current_vertex,neighbor)
+                    old_cost = D[neighbor]
+                    new_cost = D[current_vertex] + distance
+                    if new_cost > old_cost:
+                        pq.put((new_cost, neighbor))
+                        D[neighbor] = new_cost
+
+        return D
+
+    def longest_path(self,u, v):
+        return self.dijkstra(u)[v]
+
+    def critical_path(self):
+        return self.longest_path(self.source,self.sink)
+
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int):
+        vertices = self.get_operations_on_machine(machine_id)
+        jobs_number = len(vertices)
+        P = []
+        for vertice in self.vertices :
+            if vertice[0] in vertices : P.append(vertice[1])
+        R = [self.longest_path(self.source,vertice) for vertice in vertices]
+        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
+        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D)
+
+
+@dataclass
+class JobShopInstance(RootProblem.Instance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
@@ -41,7 +126,7 @@ class FlowShopInstance(RootProblem.Instance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            FlowShopInstance:
+            JobShopInstance:
 
         """
         pass
@@ -55,7 +140,7 @@ class FlowShopInstance(RootProblem.Instance):
             protocol (string): represents the protocol used to generate the instance
 
         Returns:
-            FlowShopInstance:
+            JobShopInstance:
         """
         pass
 
@@ -78,11 +163,11 @@ class FlowShopInstance(RootProblem.Instance):
         Returns:
            (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)
         """
-        P = []  # Matrix P_jk : Execution time of job j on machine k
+        P = []  
         i = startIndex
         for _ in range(self.n):
             ligne = content[i].strip().split('\t')
-            P_k = [int(ligne[j]) for j in range(1, self.m*2, 2)]
+            P_k = [(int(ligne[j-1]),int(ligne[j])) for j in range(1, len(ligne), 2)]
             P.append(P_k)
             i += 1
         return (P, i)
@@ -97,12 +182,7 @@ class FlowShopInstance(RootProblem.Instance):
         Returns:
            (list[int],int): (Table of release time, index of the next section of the instance)
         """
-        i = startIndex + 1
-        ligne = content[i].strip().split('\t')
-        ri = []  # Table : Release time of job i
-        for j in range(1, len(ligne), 2):
-            ri.append(int(ligne[j]))
-        return (ri, i+1)
+        pass
 
     def read_S(self, content: list[str], startIndex: int):
         """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
@@ -114,20 +194,7 @@ class FlowShopInstance(RootProblem.Instance):
         Returns:
            (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
         """
-        i = startIndex
-        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1  # Skip SSD
-        endIndex = startIndex+1+self.n*self.m+self.m
-        while i != endIndex:
-            i = i+1  # Skip Mk
-            Si = []
-            for k in range(self.n):
-                ligne = content[i].strip().split('\t')
-                Sij = [int(ligne[j]) for j in range(self.n)]
-                Si.append(Sij)
-                i += 1
-            S.append(Si)
-        return (S, i)
+        pass
 
     def read_D(self, content: list[str], startIndex: int):
         """Read the due time table from a list of lines extracted from the file of the instance
@@ -139,12 +206,7 @@ class FlowShopInstance(RootProblem.Instance):
         Returns:
            (list[int],int): (Table of due time, index of the next section of the instance)
         """
-        i = startIndex + 1
-        ligne = content[i].strip().split('\t')
-        di = []  # Table : Due time of job i
-        for j in range(1, len(ligne), 2):
-            di.append(int(ligne[j]))
-        return (di, i+1)
+        pass
 
     def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
@@ -159,9 +221,14 @@ class FlowShopInstance(RootProblem.Instance):
            list[list[int]]: Matrix of processing time
         """
         P = []
+        visited_machine = list(range(self.m))
         for j in range(self.n):
             Pj = []
-            for i in range(self.m):
+            nb_operation_j = random.randint(1, self.m-1)
+            for _ in range(nb_operation_j):
+                machine_id = random.randint(0, self.m-1)
+                while(machine_id in [i[0] for i in Pj]) : machine_id = random.randint(0, self.m-1) # checks recirculation
+                if machine_id in visited_machine: visited_machine.remove(machine_id)
                 if law.name == "UNIFORM":  # Generate uniformly
                     n = int(random.uniform(Pmin, Pmax))
                 elif law.name == "NORMAL":  # Use normal law
@@ -170,9 +237,21 @@ class FlowShopInstance(RootProblem.Instance):
                     while n < Pmin or n > Pmax:
                         value = np.random.normal(0, 1)
                         n = int(abs(Pmin+Pmax*value))
-                Pj.append(n)
+                Pj.append((machine_id,n))
             P.append(Pj)
-
+        #If there are some unused machine by any operation
+        if len(visited_machine) > 0:
+            for job_list_id in range(self.n):
+                for machine_id in range(job_list_id,len(visited_machine),self.n):
+                    if law.name == "UNIFORM":  # Generate uniformly
+                        n = int(random.uniform(Pmin, Pmax))
+                    elif law.name == "NORMAL":  # Use normal law
+                        value = np.random.normal(0, 1)
+                        n = int(abs(Pmin+Pmax*value))
+                        while n < Pmin or n > Pmax:
+                            value = np.random.normal(0, 1)
+                            n = int(abs(Pmin+Pmax*value))
+                    P[job_list_id].append((machine_id,n))
         return P
 
     def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
@@ -189,22 +268,7 @@ class FlowShopInstance(RootProblem.Instance):
         Returns:
             list[int]: release time table
         """
-        ri = []
-        for j in range(self.n):
-            sum_p = sum(PJobs[j])
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(0, alpha * (sum_p / self.m)))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            ri.append(n)
-
-        return ri
+        pass
 
     def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
@@ -220,33 +284,7 @@ class FlowShopInstance(RootProblem.Instance):
         Returns:
             list[list[list[int]]]: Setup time table of matrix
         """
-        S = []
-        for i in range(self.m):
-            Si = []
-            for j in range(self.n):
-                Sij = []
-                for k in range(self.n):
-                    if j == k:
-                        Sij.append(0)  # check space values
-                    else:
-                        if law.name == "UNIFORM":  # Use uniform law
-                            min_p = min(PJobs[k][i], PJobs[j][i])
-                            max_p = max(PJobs[k][i], PJobs[j][i])
-                            Smin = int(gamma * min_p)
-                            Smax = int(gamma * max_p)
-                            Sij.append(int(random.uniform(Smin, Smax)))
-
-                        elif law.name == "NORMAL":  # Use normal law
-                            value = np.random.normal(0, 1)
-                            setup = int(abs(Smin+Smax*value))
-                            while setup < Smin or setup > Smax:
-                                value = np.random.normal(0, 1)
-                                setup = int(abs(Smin+Smax*value))
-                            Sij.append(setup)
-                Si.append(Sij)
-            S.append(Si)
-
-        return S
+        pass
 
     def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
         """Random generation of due time table
@@ -265,20 +303,22 @@ class FlowShopInstance(RootProblem.Instance):
 
 @dataclass
 class Machine:
-    
+
+    machine_num: int
     objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-    
-    
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+
+    def __init__(self, machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
         """Constructor of Machine
 
         Args:
-            objective (int, optional): completion time of the last job of the machine. Defaults to 0.
+            machine_num (int): ID of the machine
+            completion_time (int, optional): completion time of the last job of the machine. Defaults to 0.
             last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
             job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
         """
+        self.machine_num = machine_num
         self.objective = objective
         self.last_job = last_job
         if job_schedule is None:
@@ -287,18 +327,15 @@ class Machine:
             self.job_schedule = job_schedule
 
     def __str__(self):
-        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
+        return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
 
     def __eq__(self, other):
+        same_machine = other.machine_num == self.machine_num
         same_schedule = other.job_schedule == self.job_schedule
-        return (same_schedule)
+        return (same_machine and same_schedule)
 
     def copy(self):
-        if self.wiCi_index is None and self.wiTi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule))
-        elif self.wiCi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule),wiTi_index=list(self.wiTi_index))
-        else: return Machine(self.objective, self.last_job, list(self.job_schedule),wiCi_index=list(self.wiCi_index))
+        return Machine(self.machine_num, self.objective, self.last_job, list(self.job_schedule))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -306,48 +343,32 @@ class Machine:
 
     @staticmethod
     def fromDict(machine_dict):
-        return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
+        return Machine(machine_dict["machine_num"], machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def completion_time(self, instance : FlowShopInstance, startIndex : int = 0):
-        if len(self.job_schedule) > 0:
-            job_schedule_len = len(self.job_schedule)
-            if startIndex > 0: 
-                ci = self.job_schedule[startIndex - 1].end_time
-                job_prev_i = self.job_schedule[startIndex - 1].id
-            else: 
-                ci = 0
-                job_prev_i = self.job_schedule[startIndex].id
-            for i in range(startIndex,job_schedule_len):
-                job_i = self.job_schedule[i].id
+    def compute_completion_time(self, instance: JobShopInstance, startIndex: int = 0):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
+        works with both RmSijkCmax and RmriSijkCmax problems
 
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
+        Args:
+            instance (JobShopInstance): The instance associated to the machine
+            startIndex (int) : The job index the function starts operating from
 
-                self.job_schedule[i] = Job(job_i, startTime, ci)
-                job_prev_i = job_i
-        self.objective = ci
-        return ci
+        Returns:
+            int: completion_time of the machine
+        """
+        pass
 
 
 @dataclass
-class FlowShopSolution(RootProblem.Solution):
+class JobShopSolution(RootProblem.Solution):
 
     machines: list[Machine]
-    job_schedule = list[int]
 
-    def __init__(self, instance: FlowShopInstance = None, machines: list[Machine] = None, job_schedule : list[int] = None, objective_value: int = 0):
+    def __init__(self, instance: JobShopInstance = None, machines: list[Machine] = None, objective_value: int = 0):
         """Constructor of RmSijkCmax_Solution
 
         Args:
-            instance (FlowShopInstance, optional): Instance to be solved by the solution. Defaults to None.
+            instance (JobShopInstance, optional): Instance to be solved by the solution. Defaults to None.
             configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
             objective_value (int, optional): initial objective value of the solution. Defaults to 0.
         """
@@ -355,26 +376,23 @@ class FlowShopSolution(RootProblem.Solution):
         if machines is None:
             self.machines = []
             for i in range(instance.m):
-                machine = Machine(0, -1, [])
+                machine = Machine(i, 0, -1, [])
                 self.machines.append(machine)
         else:
             self.machines = machines
-        if job_schedule is None: job_schedule = []
-        else: self.job_schedule = job_schedule
         self.objective_value = 0
 
     def __str__(self):
-        return "Objective : " + str(self.objective_value) + "\n" + "Jobs sequence : " + "\t".join(map(str, self.job_schedule)) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
+        return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
 
     def copy(self):
         copy_machines = []
         for m in self.machines:
             copy_machines.append(m.copy())
 
-        copy_solution = FlowShopSolution(self.instance)
+        copy_solution = JobShopSolution(self.instance)
         for i in range(self.instance.m):
             copy_solution.machines[i] = copy_machines[i]
-        copy_solution.job_schedule = list(self.job_schedule)
         copy_solution.objective_value = self.objective_value
         return copy_solution
 
@@ -383,109 +401,23 @@ class FlowShopSolution(RootProblem.Solution):
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
     
-    def init_machines_schedule(self):
-        for machine in self.machines :
-            machine.job_schedule = [Job(job_id,0,0) for job_id in self.job_schedule]
-    
-    def cmax(self, start_job_index : int = 0):
+    def cmax(self):
         """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
         """
-        if start_job_index == 0 : self.init_machines_schedule()
-        elif len(self.job_schedule) != len(self.machines[0].job_schedule):
-            for machine in self.machines :
-                machine.job_schedule.insert(start_job_index,Job(0,0,0))
-        ci = 0
-        prev_job = -1
-        if start_job_index > 0:
-            ci = self.machines[0].job_schedule[start_job_index - 1].end_time
-            prev_job = self.machines[0].job_schedule[start_job_index - 1].id
-        job_index = start_job_index
-        for job_id in self.job_schedule[start_job_index:]:
-            if hasattr(self.instance,'S'):
-                if prev_job == -1:
-                    setupTime = self.instance.S[0][job_id][job_id]
-                else:
-                    setupTime = self.instance.S[0][prev_job][job_id]
-            else: setupTime = 0
-            startTime = ci
-            ci = startTime + setupTime + self.instance.P[job_id][0]
-            self.machines[0].job_schedule[job_index] = (Job(job_id,startTime,ci))
-            job_index += 1
-            prev_job = job_id
-        self.machines[0].objective = ci
-        self.machines[0].last_job = job_id
+        if self.instance != None:
+            for k in range(self.instance.m):
+                self.machines[k].compute_completion_time(self.instance)
+        self.objective_value = max(
+            [machine.completion_time for machine in self.machines])
 
-        prev_machine = 0
-        for machine_id in range(1,self.instance.m):
-            ci = self.machines[prev_machine].job_schedule[0].end_time
-            prev_job = -1
-            if start_job_index > 0:
-                ci = self.machines[machine_id].job_schedule[start_job_index - 1].end_time
-                prev_job = self.machines[machine_id].job_schedule[start_job_index - 1].id
-            job_index = start_job_index
-            for job_id in self.job_schedule[start_job_index:]:
-                if hasattr(self.instance,'S'):
-                    if prev_job == -1:
-                        setupTime = self.instance.S[machine_id][job_id][job_id]
-                    else:
-                        setupTime = self.instance.S[machine_id][prev_job][job_id]
-                else: setupTime = 0
-                startTime = max(ci,self.machines[prev_machine].job_schedule[job_index].end_time)
-                ci = startTime + setupTime + self.instance.P[job_id][machine_id]
-                self.machines[machine_id].job_schedule[job_index] = Job(job_id,startTime,ci)
-                job_index += 1
-                prev_job = job_id
-            self.machines[machine_id].objective = ci
-            self.machines[machine_id].last_job = job_id
-
-        self.objective_value = self.machines[self.instance.m - 1].objective
-    
-    def idle_time_cmax_insert_last_pos(self, job_id : int):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+    def fix_cmax(self):
+        """Sets the objective_value of the solution to Cmax
             which equals to the maximal completion time of every machine
         """
-        ci = 0
-        prev_job = -1
-        job_schedule_len = len(self.job_schedule)
-        if job_schedule_len > 0:
-            ci = self.machines[0].job_schedule[job_schedule_len - 1].end_time
-            prev_job = self.machines[0].job_schedule[job_schedule_len - 1].id
- 
+        self.objective_value = max(
+            [machine.completion_time for machine in self.machines])
 
-        if hasattr(self.instance,'S'):
-            if prev_job == -1:
-                setupTime = self.instance.S[0][job_id][job_id]
-            else:
-                setupTime = self.instance.S[0][prev_job][job_id]
-        else: setupTime = 0
-        startTime = ci
-        new_ci = startTime + setupTime + self.instance.P[job_id][0]
-
-        for machine_id in range(1,self.instance.m):
-            ci = new_ci
-            prev_job = -1
-            if job_schedule_len > 0:
-                ci = self.machines[machine_id].job_schedule[job_schedule_len - 1].end_time
-                prev_job = self.machines[machine_id].job_schedule[job_schedule_len - 1].id
-                if hasattr(self.instance,'S'):
-                    if prev_job == -1:
-                        setupTime = self.instance.S[machine_id][job_id][job_id]
-                    else:
-                        setupTime = self.instance.S[machine_id][prev_job][job_id]
-                else: setupTime = 0
-                startTime = max(ci,new_ci)
-                new_ci = startTime + setupTime + self.instance.P[job_id][machine_id]
-
-        return startTime,new_ci
-    
-    def idle_time(self):
-        last_machine = self.machines[self.instance.m-1]
-        idleTime = last_machine.job_schedule[0].start_time
-        for job_index in range(len(last_machine.job_schedule)-1):
-            idleTime += last_machine.job_schedule[job_index+1].start_time - last_machine.job_schedule[job_index].end_time
-        return idleTime
-    
     @classmethod
     def read_txt(cls, path: Path):
         """Read a solution from a txt file
@@ -581,13 +513,4 @@ class FlowShopSolution(RootProblem.Solution):
         """
         Check if solution respects the constraints
         """
-        return True
-
-
-class FS_LocalSearch(RootProblem.LocalSearch):
-    pass
-    
-
-
-class NeighbourhoodGeneration():
-    pass
+        pass
