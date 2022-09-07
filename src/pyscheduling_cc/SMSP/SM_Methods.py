@@ -19,7 +19,7 @@ class Metaheuristics():
 
     @staticmethod
     def lahc(instance : SingleMachine.SingleInstance, **kwargs):
-        """ Returns the solution using the LAHC algorithm
+        """Returns the solution using the LAHC algorithm
         Args:
             instance (SingleMachine.SingleInstance): Instance object to solve
             Lfa (int, optional): Size of the candidates list. Defaults to 25.

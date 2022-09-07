@@ -410,6 +410,7 @@ class Machine:
 
     def total_weighted_completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
         """Computes the machine's total wighted completion time if we insert "job" at "pos" in the machine's job_schedule
+        
         Args:
             job (int): id of the inserted job
             pos (int): position where the job is inserted in the machine
@@ -456,6 +457,7 @@ class Machine:
     def total_weighted_completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """Computes the machine's total weighted completion time if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
+        
         Args:
             pos_remove (int): position of the job to be removed
             job (int): id of the inserted job
@@ -788,6 +790,7 @@ class Machine:
 
     def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
         """Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+
         Args:
             job (int): id of the inserted job
             pos (int): position where the job is inserted in the machine
@@ -831,6 +834,7 @@ class Machine:
     def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """Computes the machine's completion time if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
+        
         Args:
             pos_remove (int): position of the job to be removed
             job (int): id of the inserted job
@@ -883,6 +887,7 @@ class Machine:
     def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
         """Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
         in the machine's job_schedule
+        
         Args:
             pos_i (int): position of the first job to be swapped
             pos_j (int): position of the second job to be swapped
