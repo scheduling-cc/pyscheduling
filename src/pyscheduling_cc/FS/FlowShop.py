@@ -454,6 +454,8 @@ class FlowShopSolution(RootProblem.Solution):
             self.machines[machine_id].objective = ci
             self.machines[machine_id].last_job = job_id
 
+            prev_machine = machine_id
+
         self.objective_value = self.machines[self.instance.m - 1].objective
     
     def idle_time_cmax_insert_last_pos(self, job_id : int):
