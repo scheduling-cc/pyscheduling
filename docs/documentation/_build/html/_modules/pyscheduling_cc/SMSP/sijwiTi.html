@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyscheduling_cc.SMSP.sijwiTi &mdash; pyscheduling_cc  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> pyscheduling_cc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyscheduling_cc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyscheduling_cc.SMSP.sijwiTi</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyscheduling_cc.SMSP.sijwiTi</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span><span class="p">,</span> <span class="n">uniform</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
+
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="k">as</span> <span class="nn">RootProblem</span>
+<span class="kn">from</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="kn">import</span> <span class="n">Solver</span>
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.SMSP.SingleMachine</span> <span class="k">as</span> <span class="nn">SingleMachine</span>
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.SMSP.SM_Methods</span> <span class="k">as</span> <span class="nn">Methods</span>
+<span class="kn">from</span> <span class="nn">pyscheduling_cc.SMSP.SM_Methods</span> <span class="kn">import</span> <span class="n">ExactSolvers</span>
+
+
+<div class="viewcode-block" id="sijwiTi_Instance"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.sijwiTi_Instance">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">sijwiTi_Instance</span><span class="p">(</span><span class="n">SingleMachine</span><span class="o">.</span><span class="n">SingleInstance</span><span class="p">):</span>
+    <span class="n">W</span> <span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span> <span class="c1"># Jobs weights</span>
+    <span class="n">P</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># Processing time</span>
+    <span class="n">D</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span> <span class="c1"># Due time</span>
+    <span class="n">S</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span> <span class="c1"># Setup time</span>
+
+<div class="viewcode-block" id="sijwiTi_Instance.read_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.sijwiTi_Instance.read_txt">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read_txt</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read an instance from a txt file according to the problem&#39;s format</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the txt file of type Path from the pathlib module</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: when the file does not exist</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            sijwiTi_Instance:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">ligne0</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ligne0</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># number of jobs</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">read_P</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">read_W</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">read_D</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">read_S</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">instance</span></div>
+
+<div class="viewcode-block" id="sijwiTi_Instance.generate_random"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.sijwiTi_Instance.generate_random">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generate_random</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">jobs_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="n">protocol</span><span class="p">:</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">GenerationProtocol</span> <span class="o">=</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">GenerationProtocol</span><span class="o">.</span><span class="n">BASE</span><span class="p">,</span> <span class="n">law</span><span class="p">:</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">GenerationLaw</span> <span class="o">=</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">GenerationLaw</span><span class="o">.</span><span class="n">UNIFORM</span><span class="p">,</span> <span class="n">Wmin</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Wmax</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">,</span><span class="n">Pmin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">due_time_factor</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Gamma</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Smin</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Smax</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">InstanceName</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Random generation of sijwiTi problem instance</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            jobs_number (int): number of jobs of the instance</span>
+<span class="sd">            protocol (SingleMachine.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.</span>
+<span class="sd">            law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.</span>
+<span class="sd">            Wmin (int, optional): Minimal weight. Defaults to 1.</span>
+<span class="sd">            Wmax (int, optional): Maximal weight. Defaults to 1.</span>
+<span class="sd">            Pmin (int, optional): Minimal processing time. Defaults to -1.</span>
+<span class="sd">            Pmax (int, optional): Maximal processing time. Defaults to -1.</span>
+<span class="sd">            due_time_factor (float, optional): Due time factor. Defaults to 0.0.</span>
+<span class="sd">            Gamma (float, optional): Setup time factor. Defaults to 0.0.</span>
+<span class="sd">            Smin (int, optional) : Minimal setup time. Defaults to -1.</span>
+<span class="sd">            Smax (int, optional) : Maximal setup time. Defaults to -1.</span>
+<span class="sd">            InstanceName (str, optional): name to give to the instance. Defaults to &quot;&quot;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            sijwiTi_Instance: the randomly generated instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Pmax</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Pmax</span> <span class="o">=</span> <span class="n">Pmin</span> <span class="o">+</span> <span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">due_time_factor</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="n">due_time_factor</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Gamma</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="n">Gamma</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">uniform</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Smin</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Smin</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Smax</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Smax</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="n">Smin</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">InstanceName</span><span class="p">,</span> <span class="n">jobs_number</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">generate_P</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">law</span><span class="p">,</span> <span class="n">Pmin</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">generate_W</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span><span class="n">law</span><span class="p">,</span> <span class="n">Wmin</span><span class="p">,</span> <span class="n">Wmax</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">generate_D</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span><span class="n">law</span><span class="p">,</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">,</span><span class="n">Pmin</span><span class="p">,</span><span class="n">Pmax</span><span class="p">,</span><span class="n">due_time_factor</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">generate_S</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span><span class="n">law</span><span class="p">,</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">,</span><span class="n">Gamma</span><span class="p">,</span><span class="n">Smin</span><span class="p">,</span><span class="n">Smax</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span></div>
+
+<div class="viewcode-block" id="sijwiTi_Instance.to_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.sijwiTi_Instance.to_txt">[docs]</a>    <span class="k">def</span> <span class="nf">to_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Export an instance to a txt file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the resulting txt file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Processing time</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Weights</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Due time</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">SSD</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="sijwiTi_Instance.get_objective"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.sijwiTi_Instance.get_objective">[docs]</a>    <span class="k">def</span> <span class="nf">get_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;to get the objective tackled by the instance</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            RootProblem.Objective: Total wighted Lateness</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">Objective</span><span class="o">.</span><span class="n">wiTi</span></div>
+
+<div class="viewcode-block" id="sijwiTi_Instance.init_sol_method"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.sijwiTi_Instance.init_sol_method">[docs]</a>    <span class="k">def</span> <span class="nf">init_sol_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the default solving method</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            object: default solving method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Heuristics</span><span class="o">.</span><span class="n">ACTS</span></div></div>
+
+
+
+<div class="viewcode-block" id="Heuristics"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Heuristics">[docs]</a><span class="k">class</span> <span class="nc">Heuristics</span><span class="p">():</span>
+    
+<div class="viewcode-block" id="Heuristics.ACTS"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Heuristics.ACTS">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ACTS</span><span class="p">(</span><span class="n">instance</span> <span class="p">:</span> <span class="n">sijwiTi_Instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Appearant Cost Tardiness with Setup</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (sijwiTi_Instance): Instance to be solved</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            RootProblem.SolveResult: SolveResult of the instance by the method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">startTime</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">SingleSolution</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+        <span class="n">solution</span><span class="o">.</span><span class="n">machine</span><span class="o">.</span><span class="n">wiTi_index</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ci</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">wiTi</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">prev_job</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">while</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">remaining_jobs_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">prev_job</span><span class="p">,</span> <span class="n">taken_job</span> <span class="o">=</span> <span class="n">Heuristics_HelperFunctions</span><span class="o">.</span><span class="n">ACTS_Sorting</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span><span class="n">remaining_jobs_list</span><span class="p">,</span><span class="n">ci</span><span class="p">,</span><span class="n">prev_job</span><span class="p">)</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machine</span><span class="o">.</span><span class="n">job_schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SingleMachine</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">taken_job</span><span class="p">,</span><span class="n">ci</span><span class="p">,</span><span class="n">ci</span><span class="o">+</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">prev_job</span><span class="p">][</span><span class="n">taken_job</span><span class="p">]</span><span class="o">+</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">taken_job</span><span class="p">]))</span>
+            <span class="n">ci</span> <span class="o">+=</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">prev_job</span><span class="p">][</span><span class="n">taken_job</span><span class="p">]</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">taken_job</span><span class="p">]</span>
+            <span class="n">wiTi</span> <span class="o">+=</span> <span class="n">instance</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="n">taken_job</span><span class="p">]</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">ci</span><span class="o">-</span><span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">[</span><span class="n">taken_job</span><span class="p">],</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machine</span><span class="o">.</span><span class="n">wiTi_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wiTi</span><span class="p">)</span>
+            <span class="n">remaining_jobs_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">taken_job</span><span class="p">)</span>
+            <span class="n">prev_job</span> <span class="o">=</span> <span class="n">taken_job</span>
+        <span class="n">solution</span><span class="o">.</span><span class="n">machine</span><span class="o">.</span><span class="n">objective</span><span class="o">=</span><span class="n">solution</span><span class="o">.</span><span class="n">machine</span><span class="o">.</span><span class="n">wiTi_index</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">solution</span><span class="o">.</span><span class="n">fix_objective</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">(</span><span class="n">best_solution</span><span class="o">=</span><span class="n">solution</span><span class="p">,</span><span class="n">runtime</span><span class="o">=</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">startTime</span><span class="p">,</span><span class="n">solutions</span><span class="o">=</span><span class="p">[</span><span class="n">solution</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Heuristics.all_methods"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Heuristics.all_methods">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">all_methods</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns all the methods of the given Heuristics class</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[object]: list of functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">func</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;all_methods&quot;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="Metaheuristics"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Metaheuristics">[docs]</a><span class="k">class</span> <span class="nc">Metaheuristics</span><span class="p">(</span><span class="n">Methods</span><span class="o">.</span><span class="n">Metaheuristics</span><span class="p">):</span>
+<div class="viewcode-block" id="Metaheuristics.all_methods"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Metaheuristics.all_methods">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">all_methods</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns all the methods of the given Heuristics class</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[object]: list of functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">func</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;all_methods&quot;</span><span class="p">]</span></div></div>
+
+<div class="viewcode-block" id="Heuristics_HelperFunctions"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Heuristics_HelperFunctions">[docs]</a><span class="k">class</span> <span class="nc">Heuristics_HelperFunctions</span><span class="p">():</span>
+
+<div class="viewcode-block" id="Heuristics_HelperFunctions.ACTS_Sorting"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Heuristics_HelperFunctions.ACTS_Sorting">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ACTS_Sorting</span><span class="p">(</span><span class="n">instance</span> <span class="p">:</span> <span class="n">sijwiTi_Instance</span><span class="p">,</span> <span class="n">remaining_jobs</span> <span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">t</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_job</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the prev_job and the job to be scheduled next based on ACTS rule.</span>
+<span class="sd">        It returns a couple of previous job scheduled and the new job to be scheduled. The previous job will be the</span>
+<span class="sd">        same than the taken job if it&#39;s the first time when the rule is applied, is the same prev_job passed as</span>
+<span class="sd">        argument to the function otherwise. This is to avoid extra-ifs and thus not slowing the execution of </span>
+<span class="sd">        the heuristic</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (sijwiTi_Instance): Instance to be solved</span>
+<span class="sd">            remaining_jobs (list[int]): list of remaining jobs id on which the rule will be applied</span>
+<span class="sd">            t (int): the current time</span>
+<span class="sd">            prev_job (int): last scheduled job id</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int, int: previous job scheduled, taken job to be scheduled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sumP</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">)</span>
+        <span class="n">sumS</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">sumSi</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">sumS</span> <span class="o">+=</span> <span class="n">sumSi</span>
+        <span class="n">K1</span><span class="p">,</span> <span class="n">K2</span> <span class="o">=</span> <span class="n">Heuristics_HelperFunctions</span><span class="o">.</span><span class="n">ACTS_Tuning</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+        <span class="n">rule</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">prev_j</span><span class="p">,</span><span class="n">job_id</span> <span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="n">job_id</span><span class="p">])</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">job_id</span><span class="p">]))</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">[</span><span class="n">job_id</span><span class="p">]</span><span class="o">-</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">job_id</span><span class="p">]</span><span class="o">-</span><span class="n">t</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">K1</span><span class="o">*</span><span class="n">sumP</span><span class="p">))</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">prev_j</span><span class="p">][</span><span class="n">job_id</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">K2</span><span class="o">*</span><span class="n">sumS</span><span class="p">))</span>
+        <span class="n">max_rule_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">prev_job</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">remaining_jobs</span><span class="p">:</span>
+                <span class="n">rule_value</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="n">job</span><span class="p">,</span><span class="n">job</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">max_rule_value</span><span class="o">&lt;</span><span class="n">rule_value</span><span class="p">:</span> 
+                    <span class="n">max_rule_value</span> <span class="o">=</span> <span class="n">rule_value</span>
+                    <span class="n">taken_job</span> <span class="o">=</span> <span class="n">job</span>
+            <span class="k">return</span> <span class="n">taken_job</span><span class="p">,</span> <span class="n">taken_job</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">remaining_jobs</span><span class="p">:</span>
+                <span class="n">rule_value</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="n">prev_job</span><span class="p">,</span><span class="n">job</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">max_rule_value</span><span class="o">&lt;</span><span class="n">rule_value</span><span class="p">:</span> 
+                    <span class="n">max_rule_value</span> <span class="o">=</span> <span class="n">rule_value</span>
+                    <span class="n">taken_job</span> <span class="o">=</span> <span class="n">job</span>
+            <span class="k">return</span> <span class="n">prev_job</span><span class="p">,</span> <span class="n">taken_job</span></div>
+        
+
+<div class="viewcode-block" id="Heuristics_HelperFunctions.ACTS_Tuning"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/sijwiTi/index.html#pyscheduling_cc.SMSP.sijwiTi.Heuristics_HelperFunctions.ACTS_Tuning">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ACTS_Tuning</span><span class="p">(</span><span class="n">instance</span> <span class="p">:</span> <span class="n">sijwiTi_Instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Analyze the instance to consequently tune the ACTS. For now, the tuning is static.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (sijwiTi_Instance): Instance tackled by ACTS heuristic</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int, int: K1 , K2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Tightness</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="nb">sum</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">))</span>
+        <span class="n">Range</span> <span class="o">=</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">))</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mi">1</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, scheduling-cc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

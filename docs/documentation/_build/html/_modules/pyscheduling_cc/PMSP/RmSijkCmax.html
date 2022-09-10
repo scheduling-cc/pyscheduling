@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyscheduling_cc.PMSP.RmSijkCmax &mdash; pyscheduling_cc  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> pyscheduling_cc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyscheduling_cc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyscheduling_cc.PMSP.RmSijkCmax</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyscheduling_cc.PMSP.RmSijkCmax</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span><span class="p">,</span> <span class="n">uniform</span>
+<span class="kn">from</span> <span class="nn">statistics</span> <span class="kn">import</span> <span class="n">mean</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">choice</span> <span class="k">as</span> <span class="n">np_choice</span>
+
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="k">as</span> <span class="nn">RootProblem</span>
+<span class="kn">from</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="kn">import</span> <span class="n">Solver</span>
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.PMSP.ParallelMachines</span> <span class="k">as</span> <span class="nn">ParallelMachines</span>
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.PMSP.PM_methods</span> <span class="k">as</span> <span class="nn">pm_methods</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">docplex</span>
+    <span class="kn">from</span> <span class="nn">docplex.cp.model</span> <span class="kn">import</span> <span class="n">CpoModel</span>
+    <span class="kn">from</span> <span class="nn">docplex.cp.solver.cpo_callback</span> <span class="kn">import</span> <span class="n">CpoCallback</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="RmSijkCmax_Instance"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RmSijkCmax_Instance</span><span class="p">(</span><span class="n">ParallelMachines</span><span class="o">.</span><span class="n">ParallelInstance</span><span class="p">):</span>
+    <span class="n">P</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># Processing time</span>
+    <span class="n">S</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># Setup time</span>
+
+<div class="viewcode-block" id="RmSijkCmax_Instance.read_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance.read_txt">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read_txt</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read an instance from a txt file according to the problem&#39;s format</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the txt file of type Path from the pathlib module</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: when the file does not exist</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            RmSijkCmax_Instance:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">ligne0</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ligne0</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># number of configuration</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ligne0</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># number of jobs</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">read_P</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">read_S</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">instance</span></div>
+
+<div class="viewcode-block" id="RmSijkCmax_Instance.generate_random"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance.generate_random">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generate_random</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">jobs_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">configuration_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">GenerationProtocol</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">GenerationProtocol</span><span class="o">.</span><span class="n">VALLADA</span><span class="p">,</span> <span class="n">law</span><span class="p">:</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">GenerationLaw</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">GenerationLaw</span><span class="o">.</span><span class="n">UNIFORM</span><span class="p">,</span> <span class="n">Pmin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Smin</span><span class="p">:</span>  <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Smax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">InstanceName</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Random generation of RmSijkCmax problem instance</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            jobs_number (int): number of jobs of the instance</span>
+<span class="sd">            configuration_number (int): number of machines of the instance</span>
+<span class="sd">            protocol (ParallelMachines.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to ParallelMachines.GenerationProtocol.VALLADA.</span>
+<span class="sd">            law (ParallelMachines.GenerationLaw, optional): probablistic law of generation. Defaults to ParallelMachines.GenerationLaw.UNIFORM.</span>
+<span class="sd">            Pmin (int, optional): Minimal processing time. Defaults to -1.</span>
+<span class="sd">            Pmax (int, optional): Maximal processing time. Defaults to -1.</span>
+<span class="sd">            Gamma (float, optional): Setup time factor. Defaults to 0.0.</span>
+<span class="sd">            Smin (int, optional): Minimal setup time. Defaults to -1.</span>
+<span class="sd">            Smax (int, optional): Maximal setup time. Defaults to -1.</span>
+<span class="sd">            InstanceName (str, optional): name to give to the instance. Defaults to &quot;&quot;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            RmSijkCmax_Instance: the randomly generated instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Pmin</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Pmin</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Pmax</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Pmax</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="n">Pmin</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Gamma</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="n">Gamma</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">uniform</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Smin</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Smin</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">Smax</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">Smax</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="n">Smin</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">InstanceName</span><span class="p">,</span> <span class="n">jobs_number</span><span class="p">,</span> <span class="n">configuration_number</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">generate_P</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">law</span><span class="p">,</span> <span class="n">Pmin</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">generate_S</span><span class="p">(</span>
+            <span class="n">protocol</span><span class="p">,</span> <span class="n">law</span><span class="p">,</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Smin</span><span class="p">,</span> <span class="n">Smax</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span></div>
+
+<div class="viewcode-block" id="RmSijkCmax_Instance.to_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance.to_txt">[docs]</a>    <span class="k">def</span> <span class="nf">to_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Export an instance to a txt file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the resulting txt file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;  &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;SSD</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;M&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RmSijkCmax_Instance.init_sol_method"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance.init_sol_method">[docs]</a>    <span class="k">def</span> <span class="nf">init_sol_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Heuristics</span><span class="o">.</span><span class="n">constructive</span></div>
+
+<div class="viewcode-block" id="RmSijkCmax_Instance.get_objective"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance.get_objective">[docs]</a>    <span class="k">def</span> <span class="nf">get_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">Objective</span><span class="o">.</span><span class="n">Cmax</span></div>
+    
+<div class="viewcode-block" id="RmSijkCmax_Instance.lower_bound"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.RmSijkCmax_Instance.lower_bound">[docs]</a>    <span class="k">def</span> <span class="nf">lower_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the lower bound of maximal completion time of the instance </span>
+<span class="sd">        by dividing the sum of minimal completion time between job pairs on the number of machines</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Lower Bound of maximal completion time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Preparing ranges</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="c1"># Compute lower bound</span>
+        <span class="n">sum_j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">all_max_r_j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>
+            <span class="n">min_j</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">min_r_j</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">M</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>  <span class="c1"># (t for t in E if t != j ):</span>
+                    <span class="k">if</span> <span class="n">min_j</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_j</span><span class="p">:</span>
+                        <span class="n">min_j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">min_r_j</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_r_j</span><span class="p">:</span>
+                        <span class="n">min_r_j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">sum_j</span> <span class="o">+=</span> <span class="n">min_j</span>
+            <span class="n">all_max_r_j</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_max_r_j</span><span class="p">,</span> <span class="n">min_r_j</span><span class="p">)</span>
+
+        <span class="n">lb1</span> <span class="o">=</span> <span class="n">sum_j</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">LB</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">lb1</span><span class="p">,</span> <span class="n">all_max_r_j</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">LB</span></div></div>
+
+
+<div class="viewcode-block" id="ExactSolvers"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.ExactSolvers">[docs]</a><span class="k">class</span> <span class="nc">ExactSolvers</span><span class="p">():</span>
+
+<div class="viewcode-block" id="ExactSolvers.csp"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.ExactSolvers.csp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">csp</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CSP</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="CSP"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.CSP">[docs]</a><span class="k">class</span> <span class="nc">CSP</span><span class="p">():</span>
+
+    <span class="n">CPO_STATUS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Feasible&quot;</span><span class="p">:</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">FEASIBLE</span><span class="p">,</span>
+        <span class="s2">&quot;Optimal&quot;</span><span class="p">:</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">OPTIMAL</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="CSP.MyCallback"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.CSP.MyCallback">[docs]</a>    <span class="k">class</span> <span class="nc">MyCallback</span><span class="p">(</span><span class="n">CpoCallback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A callback used to log the value of cmax at different timestamps</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            CpoCallback (_type_): Inherits from CpoCallback</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stop_times</span><span class="o">=</span><span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">3600</span><span class="p">,</span> <span class="mi">7200</span><span class="p">]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span> <span class="o">=</span> <span class="n">stop_times</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_sol_time</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_sol</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CSP.MyCallback.invoke"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.CSP.MyCallback.invoke">[docs]</a>        <span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">jsol</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s2">&quot;Solution&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nb_sol</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">solve_time</span> <span class="o">=</span> <span class="n">jsol</span><span class="o">.</span><span class="n">get_info</span><span class="p">(</span><span class="s1">&#39;SolveTime&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_sol_time</span> <span class="o">=</span> <span class="n">solve_time</span>
+
+                <span class="c1"># Go to the next stop time</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">)</span> <span class="ow">and</span> <span class="n">solve_time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">):</span>
+                    <span class="c1"># Get important elements</span>
+                    <span class="n">obj_val</span> <span class="o">=</span> <span class="n">jsol</span><span class="o">.</span><span class="n">get_objective_values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span><span class="p">]]</span> <span class="o">=</span> <span class="n">obj_val</span></div></div>
+
+<div class="viewcode-block" id="CSP._transform_csp_solution"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.CSP._transform_csp_solution">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_transform_csp_solution</span><span class="p">(</span><span class="n">msol</span><span class="p">,</span> <span class="n">T_ki</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transforms cp optimizer interval variable into a solution </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            msol (): CPO solution</span>
+<span class="sd">            T_ki (list[list[interval_var]]): Interval variables represening jobs</span>
+<span class="sd">            instance (RmSijkCmax_Instance): instance corresponding to the solution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ParallelSolution: cpoptimizer&#39;s solution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">ParallelSolution</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">k_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">msol</span><span class="p">[</span><span class="n">T_ki</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">msol</span><span class="p">[</span><span class="n">T_ki</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">end</span> <span class="o">=</span> <span class="n">msol</span><span class="p">[</span><span class="n">T_ki</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">k_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ParallelMachines</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+            
+            <span class="n">k_tasks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">k_tasks</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">sol</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">job_schedule</span> <span class="o">=</span> <span class="n">k_tasks</span>
+        
+        <span class="n">sol</span><span class="o">.</span><span class="n">cmax</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sol</span></div>
+
+<div class="viewcode-block" id="CSP.solve"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.CSP.solve">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the solution using the Cplex - CP optimizer solver</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (Instance): Instance object to solve</span>
+<span class="sd">            log_path (str, optional): Path to the log file to output cp optimizer log. Defaults to None to disable logging.</span>
+<span class="sd">            time_limit (int, optional): Time limit for executing the solver. Defaults to 300s.</span>
+<span class="sd">            threads (int, optional): Number of threads to set for cp optimizer solver. Defaults to 1.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SolveResult: The object represeting the solving process result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;docplex&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+            
+            <span class="c1"># Extracting parameters</span>
+            <span class="n">log_path</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">time_limit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_limit&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+            <span class="n">nb_threads</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;threads&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">stop_times</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;stop_times&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">time_limit</span> <span class="o">//</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_limit</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">time_limit</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">//</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_limit</span><span class="p">])</span>
+
+            <span class="c1"># Preparing ranges</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+            <span class="n">LB</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">lower_bound</span><span class="p">()</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">CpoModel</span><span class="p">(</span><span class="s2">&quot;pmspModel&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Preparing transition matrices</span>
+            <span class="n">trans_matrix</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">k_matrix</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                    <span class="n">ele</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">k_matrix</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ele</span>
+                    <span class="n">k_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ele</span>
+                    
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                        <span class="n">k_matrix</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                
+                <span class="n">trans_matrix</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">transition_matrix</span><span class="p">(</span><span class="n">k_matrix</span><span class="p">)</span>
+
+            <span class="c1"># Cumul function</span>
+            <span class="n">usage</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">step_at</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># Mother tasks</span>
+            <span class="n">E_j</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">interval_var</span><span class="p">(</span> <span class="n">optional</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;E[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span>
+                <span class="n">E_j</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="n">usage</span> <span class="o">+=</span> <span class="n">model</span><span class="o">.</span><span class="n">pulse</span><span class="p">(</span><span class="n">task</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">T_ki</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">M_ik</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">M</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>
+                    <span class="n">task</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">interval_var</span><span class="p">(</span> <span class="n">size</span><span class="o">=</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">],</span> <span class="n">optional</span><span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;T[</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">,</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span>
+                    <span class="n">T_ki</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">k</span><span class="p">,[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                    <span class="n">M_ik</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">i</span><span class="p">,[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+            <span class="c1"># A task is executed in one machine only</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">alternative</span><span class="p">(</span><span class="n">E_j</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">M_ik</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+            <span class="c1"># A task can only process one task at a time and includes a setup time between consecutive tasks</span>
+            <span class="n">first_task</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">interval_var</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;first_task&#39;</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">start_of</span><span class="p">(</span><span class="n">first_task</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
+            <span class="n">Seq_k</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">M</span><span class="p">:</span>
+                <span class="n">types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">seq_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">first_task</span><span class="p">]</span>
+                <span class="n">seq_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">T_ki</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                <span class="n">Seq_k</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sequence_var</span><span class="p">(</span> <span class="n">seq_list</span><span class="p">,</span> <span class="n">types</span> <span class="p">)</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">no_overlap</span><span class="p">(</span><span class="n">Seq_k</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">trans_matrix</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="p">)</span> 
+            
+            <span class="c1"># Cumulative function usage limit</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">usage</span> <span class="o">&lt;=</span> <span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+            <span class="c1"># Lower bound and objective</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">max</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">end_of</span><span class="p">(</span><span class="n">E_j</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span> <span class="p">)</span> <span class="o">&gt;=</span> <span class="n">LB</span> <span class="p">)</span> 
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">max</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">end_of</span><span class="p">(</span><span class="n">E_j</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span> <span class="p">)))</span> <span class="c1"># Cmax</span>
+
+            <span class="c1"># Adding callback to log stats</span>
+            <span class="n">mycallback</span> <span class="o">=</span> <span class="n">CSP</span><span class="o">.</span><span class="n">MyCallback</span><span class="p">(</span><span class="n">stop_times</span><span class="o">=</span><span class="n">stop_times</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add_solver_callback</span><span class="p">(</span><span class="n">mycallback</span><span class="p">)</span>
+
+            <span class="n">msol</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">LogVerbosity</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span> <span class="n">Workers</span><span class="o">=</span><span class="n">nb_threads</span><span class="p">,</span> <span class="n">TimeLimit</span><span class="o">=</span><span class="n">time_limit</span><span class="p">,</span> <span class="n">LogPeriod</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span>
+                               <span class="n">trace_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">add_log_to_solution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">RelativeOptimalityTolerance</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">log_path</span><span class="p">:</span>
+                <span class="n">logFile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+                <span class="n">logFile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msol</span><span class="o">.</span><span class="n">get_solver_log</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;!&quot;</span><span class="p">)))</span>
+
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">CSP</span><span class="o">.</span><span class="n">_transform_csp_solution</span><span class="p">(</span><span class="n">msol</span><span class="p">,</span> <span class="n">T_ki</span><span class="p">,</span> <span class="n">instance</span><span class="p">)</span>
+
+            <span class="c1"># Construct the solve result</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;ObjBound&quot;</span><span class="p">:</span> <span class="n">msol</span><span class="o">.</span><span class="n">get_objective_bounds</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;MemUsage&quot;</span><span class="p">:</span> <span class="n">msol</span><span class="o">.</span><span class="n">get_infos</span><span class="p">()[</span><span class="s2">&quot;MemoryUsage&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+            
+            <span class="n">solve_result</span> <span class="o">=</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">(</span>
+                <span class="n">best_solution</span><span class="o">=</span><span class="n">sol</span><span class="p">,</span>
+                <span class="n">runtime</span><span class="o">=</span><span class="n">msol</span><span class="o">.</span><span class="n">get_infos</span><span class="p">()[</span><span class="s2">&quot;TotalTime&quot;</span><span class="p">],</span>
+                <span class="n">time_to_best</span><span class="o">=</span> <span class="n">mycallback</span><span class="o">.</span><span class="n">best_sol_time</span><span class="p">,</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">CSP</span><span class="o">.</span><span class="n">CPO_STATUS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">msol</span><span class="o">.</span><span class="n">get_solve_status</span><span class="p">(),</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">INFEASIBLE</span><span class="p">),</span>
+                <span class="n">kpis</span><span class="o">=</span><span class="n">kpis</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">solve_result</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Docplex import error: you can not use this solver&quot;</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Heuristics"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.Heuristics">[docs]</a><span class="k">class</span> <span class="nc">Heuristics</span><span class="p">():</span>
+
+<div class="viewcode-block" id="Heuristics.constructive"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.Heuristics.constructive">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">constructive</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="n">RmSijkCmax_Instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (RmSijkCmax_Instance): Instance to be solved by the heuristic</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Problem.SolveResult: the solver result of the execution of the heuristic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">ParallelSolution</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">)</span>
+        <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_jobs_list</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_factor</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">remaining_jobs_list</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                    <span class="n">current_machine_schedule</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">last_job</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="n">factor</span> <span class="o">=</span> <span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> \
+                            <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">factor</span> <span class="o">=</span> <span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> \
+                            <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> \
+                            <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">last_job</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">min_factor</span> <span class="ow">or</span> <span class="p">(</span><span class="n">min_factor</span> <span class="o">&gt;</span> <span class="n">factor</span><span class="p">):</span>
+                        <span class="n">min_factor</span> <span class="o">=</span> <span class="n">factor</span>
+                        <span class="n">taken_job</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="n">taken_machine</span> <span class="o">=</span> <span class="n">j</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">last_job</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">ci</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> \
+                    <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">taken_job</span><span class="p">][</span><span class="n">taken_machine</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ci</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">taken_job</span><span class="p">][</span><span class="n">taken_machine</span><span class="p">]</span> <span class="o">+</span> \
+                    <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">][</span><span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">last_job</span><span class="p">][</span><span class="n">taken_job</span><span class="p">]</span>
+
+            <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">job_schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ParallelMachines</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span>
+                <span class="n">taken_job</span><span class="p">,</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span><span class="p">,</span> <span class="n">ci</span><span class="p">))</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">=</span> <span class="n">ci</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">last_job</span> <span class="o">=</span> <span class="n">taken_job</span>
+
+            <span class="n">remaining_jobs_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">taken_job</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ci</span> <span class="o">&gt;</span> <span class="n">solution</span><span class="o">.</span><span class="n">objective_value</span><span class="p">):</span>
+                <span class="n">solution</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">=</span> <span class="n">ci</span>
+
+        <span class="k">return</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">(</span><span class="n">best_solution</span><span class="o">=</span><span class="n">solution</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">,</span> <span class="n">solutions</span><span class="o">=</span><span class="p">[</span><span class="n">solution</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Heuristics.list_heuristic"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.Heuristics.list_heuristic">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">list_heuristic</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="n">RmSijkCmax_Instance</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">decreasing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (_type_): Instance to be solved by the heuristic</span>
+<span class="sd">            rule (int, optional): ID of the rule to follow by the heuristic. Defaults to 1.</span>
+<span class="sd">            decreasing (bool, optional): _description_. Defaults to False.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Problem.SolveResult: the solver result of the execution of the heuristic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">ParallelSolution</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Mean Processings</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">mean</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Min Processings</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># Mean Processings + Mean Setups</span>
+            <span class="n">setup_means</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span><span class="p">(</span><span class="n">means_list</span><span class="p">)</span> <span class="k">for</span> <span class="n">means_list</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">[</span><span class="n">mean</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">mean</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="n">setup_means</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># Max Processings</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># IS1</span>
+            <span class="n">max_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">max_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>  <span class="c1"># IS2</span>
+            <span class="n">min_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">min_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>  <span class="c1"># IS3</span>
+            <span class="n">min_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">min_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>  <span class="c1"># IS4</span>
+            <span class="n">max_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">max_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>  <span class="c1"># IS5</span>
+            <span class="n">max_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">max_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>  <span class="c1"># IS6</span>
+            <span class="n">min_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">min_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">11</span><span class="p">:</span>  <span class="c1"># IS7</span>
+            <span class="n">max_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">max_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">12</span><span class="p">:</span>  <span class="c1"># IS8</span>
+            <span class="n">min_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">min_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">13</span><span class="p">:</span>  <span class="c1"># IS9</span>
+            <span class="n">min_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">min_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">14</span><span class="p">:</span>  <span class="c1"># IS10</span>
+            <span class="n">max_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">max_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">15</span><span class="p">:</span>  <span class="c1"># IS11</span>
+            <span class="n">max_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">max_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">16</span><span class="p">:</span>  <span class="c1"># IS12</span>
+            <span class="n">min_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">min_setup</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">17</span><span class="p">:</span>  <span class="c1"># IS13</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">18</span><span class="p">:</span>  <span class="c1"># IS14</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">19</span><span class="p">:</span>  <span class="c1"># IS15</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">20</span><span class="p">:</span>  <span class="c1"># IS16</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">21</span><span class="p">:</span>  <span class="c1"># IS17</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">22</span><span class="p">:</span>  <span class="c1"># IS18</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">23</span><span class="p">:</span>  <span class="c1"># IS19</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">24</span><span class="p">:</span>  <span class="c1"># IS20</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">25</span><span class="p">:</span>  <span class="c1"># IS21</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">26</span><span class="p">:</span>  <span class="c1"># IS22</span>
+            <span class="n">proc_div_setup</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]]</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">proc_div_setup</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">27</span><span class="p">:</span>  <span class="c1"># Mean Setup</span>
+            <span class="n">setup_means</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span><span class="p">(</span><span class="n">means_list</span><span class="p">)</span> <span class="k">for</span> <span class="n">means_list</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">[</span><span class="n">mean</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">setup_means</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">28</span><span class="p">:</span>  <span class="c1"># Min Setup</span>
+            <span class="n">setup_mins</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">min_list</span><span class="p">)</span> <span class="k">for</span> <span class="n">min_list</span> <span class="ow">in</span> <span class="p">[[</span><span class="nb">min</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                                          <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">setup_mins</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="mi">29</span><span class="p">:</span>  <span class="c1"># Max Setup</span>
+            <span class="n">setup_max</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">max_list</span><span class="p">)</span> <span class="k">for</span> <span class="n">max_list</span> <span class="ow">in</span> <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                                         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]]</span>
+            <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">setup_max</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)]</span>
+
+        <span class="n">remaining_jobs_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">remaining_jobs_list</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">job</span><span class="p">:</span> <span class="n">job</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="n">decreasing</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">remaining_jobs_list</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">element</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">min_factor</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">current_machine_schedule</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">last_job</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># First Job</span>
+                    <span class="n">factor</span> <span class="o">=</span> <span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> \
+                        <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">factor</span> <span class="o">=</span> <span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> \
+                        <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> \
+                        <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">current_machine_schedule</span><span class="o">.</span><span class="n">last_job</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">min_factor</span> <span class="ow">or</span> <span class="p">(</span><span class="n">min_factor</span> <span class="o">&gt;</span> <span class="n">factor</span><span class="p">):</span>
+                    <span class="n">min_factor</span> <span class="o">=</span> <span class="n">factor</span>
+                    <span class="n">taken_job</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="n">taken_machine</span> <span class="o">=</span> <span class="n">j</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">last_job</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">ci</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> \
+                    <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">taken_job</span><span class="p">][</span><span class="n">taken_machine</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ci</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">+</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">taken_job</span><span class="p">][</span><span class="n">taken_machine</span><span class="p">]</span> <span class="o">+</span> \
+                    <span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">][</span><span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">last_job</span><span class="p">][</span><span class="n">taken_job</span><span class="p">]</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">job_schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ParallelMachines</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span>
+                <span class="n">taken_job</span><span class="p">,</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span><span class="p">,</span> <span class="n">ci</span><span class="p">))</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">completion_time</span> <span class="o">=</span> <span class="n">ci</span>
+            <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">taken_machine</span><span class="p">]</span><span class="o">.</span><span class="n">last_job</span> <span class="o">=</span> <span class="n">taken_job</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ci</span> <span class="o">&gt;</span> <span class="n">solution</span><span class="o">.</span><span class="n">objective_value</span><span class="p">):</span>
+                <span class="n">solution</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">=</span> <span class="n">ci</span>
+        <span class="k">return</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">(</span><span class="n">best_solution</span><span class="o">=</span><span class="n">solution</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">,</span> <span class="n">solutions</span><span class="o">=</span><span class="p">[</span><span class="n">solution</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Heuristics.all_methods"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.Heuristics.all_methods">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">all_methods</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns all the methods of the given Heuristics class</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[object]: list of functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">func</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;all_methods&quot;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="Metaheuristics"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.Metaheuristics">[docs]</a><span class="k">class</span> <span class="nc">Metaheuristics</span><span class="p">(</span><span class="n">pm_methods</span><span class="o">.</span><span class="n">Metaheuristics_Cmax</span><span class="p">):</span>
+<div class="viewcode-block" id="Metaheuristics.antColony"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.Metaheuristics.antColony">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">antColony</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="n">RmSijkCmax_Instance</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the solution using the ant colony algorithm</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (RmSijkCmax_Instance): Instance to be solved</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Problem.SolveResult: the solver result of the execution of the metaheuristic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">startTime</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">solveResult</span> <span class="o">=</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">()</span>
+        <span class="n">AC</span> <span class="o">=</span> <span class="n">AntColony</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">solveResult</span><span class="o">.</span><span class="n">best_solution</span><span class="p">,</span> <span class="n">solveResult</span><span class="o">.</span><span class="n">all_solutions</span> <span class="o">=</span> <span class="n">AC</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+        <span class="n">solveResult</span><span class="o">.</span><span class="n">solve_status</span> <span class="o">=</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">FEASIBLE</span>
+        <span class="n">solveResult</span><span class="o">.</span><span class="n">runtime</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">startTime</span>
+        <span class="k">return</span> <span class="n">solveResult</span></div></div>
+
+
+<div class="viewcode-block" id="AntColony"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony">[docs]</a><span class="k">class</span> <span class="nc">AntColony</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">RmSijkCmax_Instance</span><span class="p">,</span> <span class="n">n_ants</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span> <span class="n">n_best</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                 <span class="n">n_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">phi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.081</span><span class="p">,</span> <span class="n">evaporation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+                 <span class="n">q0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">best_ants</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">pheromone_init</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            distances (2D numpy.array): Square matrix of distances. Diagonal is assumed to be np.inf.</span>
+<span class="sd">            n_ants (int): Number of ants running per iteration</span>
+<span class="sd">            n_best (int): Number of best ants who deposit pheromone</span>
+<span class="sd">            n_iteration (int): Number of iterations</span>
+<span class="sd">            decay (float): Rate it which pheromone decays. The pheromone value is multiplied by decay, so 0.95 will lead to decay, 0.5 to much faster decay.</span>
+<span class="sd">            alpha (int or float): exponenet on pheromone, higher alpha gives pheromone more weight. Default=1</span>
+<span class="sd">            beta (int or float): exponent on distance, higher beta give distance more weight. Default=1</span>
+<span class="sd">        Example:</span>
+<span class="sd">            ant_colony = AntColony(german_distances, 100, 20, 2000, 0.95, alpha=1, beta=2)          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_ants</span> <span class="o">=</span> <span class="n">n_ants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_best</span> <span class="o">=</span> <span class="n">n_best</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iterations</span> <span class="o">=</span> <span class="n">n_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaporation</span> <span class="o">=</span> <span class="n">evaporation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q0</span> <span class="o">=</span> <span class="n">q0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_ants</span> <span class="o">=</span> <span class="n">best_ants</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pheromone_init</span> <span class="o">=</span> <span class="n">pheromone_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">LB</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_graph</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AntColony.solve"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Main method used to solve the problem and call the different steps</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SolveResult: Object containing the solution and useful metrics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shortest_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">all_time_shortest_cmax</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iterations</span><span class="p">):</span>
+            <span class="n">all_solutions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_all_paths</span><span class="p">()</span>
+            <span class="n">all_solutions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">improve_best_ants</span><span class="p">(</span><span class="n">all_solutions</span><span class="p">)</span>
+
+            <span class="n">shortest_path</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">all_solutions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">longest_path</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_solutions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">shortest_path</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">longest_path</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reinit_graph</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">shortest_path</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">all_time_shortest_cmax</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">all_time_shortest_cmax</span> <span class="o">=</span> <span class="n">shortest_path</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spread_pheronome_global</span><span class="p">(</span><span class="n">all_solutions</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_time_shortest_cmax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">solution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">solution</span> <span class="ow">in</span> <span class="n">all_solutions</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="AntColony.init_graph"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.init_graph">[docs]</a>    <span class="k">def</span> <span class="nf">init_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initialize the two stage graph with initial values of pheromone</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[np.array]: list of the two stage graph consisting of np.array elements</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">aco_graph</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Initializing pheromone</span>
+        <span class="n">pheromone_stage_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pheromone_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">pheromone_stage_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pheromone_init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">aco_graph</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pheromone_stage_1</span><span class="p">)</span>
+        <span class="n">aco_graph</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pheromone_stage_2</span><span class="p">)</span>
+
+        <span class="c1"># Compute LB</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">LB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">lower_bound</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">aco_graph</span></div>
+
+<div class="viewcode-block" id="AntColony.spread_pheronome_global"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.spread_pheronome_global">[docs]</a>    <span class="k">def</span> <span class="nf">spread_pheronome_global</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_solutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ParallelMachines</span><span class="o">.</span><span class="n">ParallelSolution</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Update pheromone levels globally after finding new solutions</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            all_solutions (list[RmSijkCmax_Solution]): list of generated solutions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sorted_solutions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_solutions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">solution</span><span class="p">,</span> <span class="n">cmax_i</span> <span class="ow">in</span> <span class="n">sorted_solutions</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">n_best</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">machine_k</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">task_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">machine_k</span><span class="o">.</span><span class="n">job_schedule</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">task_i</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                      <span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">LB</span> <span class="o">/</span> <span class="n">cmax_i</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">prev_task</span> <span class="o">=</span> <span class="n">machine_k</span><span class="o">.</span><span class="n">job_schedule</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">,</span> <span class="n">prev_task</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                          <span class="n">task_i</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">LB</span> <span class="o">/</span> <span class="n">cmax_i</span></div>
+
+<div class="viewcode-block" id="AntColony.improve_best_ants"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.improve_best_ants">[docs]</a>    <span class="k">def</span> <span class="nf">improve_best_ants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_solutions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply local search to the best solution</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            all_solutions (_type_): list of all generated solutions</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[RmSijkCmax_Solution]: list of updated solutions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sorted_solutions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_solutions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">local_search</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">PM_LocalSearch</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">solution</span><span class="p">,</span> <span class="n">cmax_i</span> <span class="ow">in</span> <span class="n">sorted_solutions</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">best_ants</span><span class="p">]:</span>
+            <span class="n">solution</span> <span class="o">=</span> <span class="n">local_search</span><span class="o">.</span><span class="n">improve</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sorted_solutions</span></div>
+
+<div class="viewcode-block" id="AntColony.gen_all_paths"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.gen_all_paths">[docs]</a>    <span class="k">def</span> <span class="nf">gen_all_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls the gen_path function to generate all solutions from ants paths</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[RmSijkCmax_Solution]: list of new solutions  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_solutions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_ants</span><span class="p">):</span>
+            <span class="n">solution_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_path</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">solution_i</span><span class="p">:</span>
+                <span class="n">all_solutions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">solution_i</span><span class="p">,</span> <span class="n">solution_i</span><span class="o">.</span><span class="n">objective_value</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">all_solutions</span></div>
+
+<div class="viewcode-block" id="AntColony.gen_path"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.gen_path">[docs]</a>    <span class="k">def</span> <span class="nf">gen_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate one new solution from one ant&#39;s path, it calls the two stages: affect_tasks and sequence_tasks</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            RmSijkCmax_Solution: new solution from ant&#39;s path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Stage 1 : Task Affectation</span>
+        <span class="n">affectation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affect_tasks</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">affectation</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Stage 2 : Task Sequencing</span>
+        <span class="n">solution_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence_tasks</span><span class="p">(</span><span class="n">affectation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">solution_path</span></div>
+
+<div class="viewcode-block" id="AntColony.affect_tasks"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.affect_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">affect_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates an affectation from the first stage graph and the path the ant went through</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[list[int]]: List of tasks inside each machine </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pheromone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">affectation</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">(</span><span class="n">pheromone</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> \
+                <span class="p">((</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                    <span class="n">row</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">affectation</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">machine</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">norm_row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">/</span> <span class="n">row</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">all_inds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pheromone</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                    <span class="n">machine</span> <span class="o">=</span> <span class="n">np_choice</span><span class="p">(</span><span class="n">all_inds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">norm_row</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">q0</span><span class="p">:</span>
+                <span class="n">machine</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norm_row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">/</span> <span class="n">row</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="n">all_inds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pheromone</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="n">machine</span> <span class="o">=</span> <span class="n">np_choice</span><span class="p">(</span><span class="n">all_inds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">norm_row</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Spread Pheromone Locally</span>
+            <span class="n">pheromone</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">machine</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">evaporation</span><span class="p">)</span> <span class="o">*</span> <span class="n">pheromone</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">machine</span><span class="p">]</span>
+
+            <span class="n">affectation</span><span class="p">[</span><span class="n">machine</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">affectation</span></div>
+
+<div class="viewcode-block" id="AntColony.sequence_tasks"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.sequence_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">sequence_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">affectation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uses the affectation from stage 1 to sequence tasks inside machines using stage 2 of the graph</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            affectation (list[list[int]]): affectation to machines</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ParallelMachines.ParallelSolution: complete solution of one ant</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pheromone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">solution_path</span> <span class="o">=</span> <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">ParallelSolution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">affectation</span><span class="p">)):</span>
+            <span class="n">machine_schedule</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">affectation</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">first_task</span> <span class="o">=</span> <span class="n">affectation</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">affectation</span><span class="p">[</span><span class="n">m</span><span class="p">]))]</span>
+                <span class="n">machine_schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ParallelMachines</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">first_task</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                <span class="n">prev</span> <span class="o">=</span> <span class="n">first_task</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">affectation</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">pheromone_i</span> <span class="o">=</span> <span class="n">pheromone</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">prev</span><span class="p">]</span>
+                    <span class="n">next_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pick_task</span><span class="p">(</span><span class="n">prev</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">pheromone_i</span><span class="p">,</span> <span class="n">affectation</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="p">[</span>
+                                               <span class="n">job</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">machine_schedule</span><span class="p">])</span>
+
+                    <span class="c1"># Spread Pheromone Locally</span>
+                    <span class="n">pheromone_i</span><span class="p">[</span><span class="n">next_task</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaporation</span><span class="p">)</span> <span class="o">*</span> <span class="n">pheromone_i</span><span class="p">[</span><span class="n">next_task</span><span class="p">]</span>
+
+                    <span class="n">machine_schedule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">ParallelMachines</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">next_task</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+            <span class="n">current_machine</span> <span class="o">=</span> <span class="n">solution_path</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="n">current_machine</span><span class="o">.</span><span class="n">job_schedule</span> <span class="o">=</span> <span class="n">machine_schedule</span>
+            <span class="n">current_machine</span><span class="o">.</span><span class="n">compute_completion_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span>
+
+        <span class="n">solution_path</span><span class="o">.</span><span class="n">cmax</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">solution_path</span></div>
+
+<div class="viewcode-block" id="AntColony.pick_task"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.pick_task">[docs]</a>    <span class="k">def</span> <span class="nf">pick_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">pheromone</span><span class="p">,</span> <span class="n">affected_tasks</span><span class="p">,</span> <span class="n">visited</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Select a task to affect according to pheromone levels and the graph&#39;s state</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prev (int): previous segment in the graph</span>
+<span class="sd">            m (int): number of machines</span>
+<span class="sd">            pheromone (np.array): pheromone levels</span>
+<span class="sd">            affected_tasks (list): list of affected tasks</span>
+<span class="sd">            visited (list): list of visited segments</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: next task to affect</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pheromone_cp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pheromone</span><span class="p">)</span>
+
+        <span class="n">pheromone_cp</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pheromone_cp</span><span class="p">[</span><span class="n">affected_tasks</span><span class="p">]</span> <span class="o">=</span> <span class="n">pheromone</span><span class="p">[</span><span class="n">affected_tasks</span><span class="p">]</span>
+        <span class="n">pheromone_cp</span><span class="p">[</span><span class="n">visited</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pheromone_cp</span><span class="p">[</span><span class="n">prev</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">setups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">prev</span><span class="p">])</span>
+        <span class="n">setups</span><span class="p">[</span><span class="n">prev</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">setups</span><span class="p">[</span><span class="n">visited</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">q0</span><span class="p">:</span>
+            <span class="n">next_task</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span>
+                <span class="n">pheromone_cp</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">((</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">setups</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">pheromone_cp</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">((</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">setups</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+            <span class="n">norm_row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">/</span> <span class="n">row</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">all_inds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">next_task</span> <span class="o">=</span> <span class="n">np_choice</span><span class="p">(</span><span class="n">all_inds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">norm_row</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">next_task</span></div>
+
+<div class="viewcode-block" id="AntColony.reinit_graph"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/PMSP/RmSijkCmax/index.html#pyscheduling_cc.PMSP.RmSijkCmax.AntColony.reinit_graph">[docs]</a>    <span class="k">def</span> <span class="nf">reinit_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reinitialize the graph&#39;s pheromone levels when the premature convergence is detected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">r2</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">r2</span> <span class="o">&lt;</span> <span class="n">r1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pheromone_init</span>
+
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                    <span class="n">r4</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">r4</span> <span class="o">&lt;</span> <span class="n">r3</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">aco_graph</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pheromone_init</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, scheduling-cc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

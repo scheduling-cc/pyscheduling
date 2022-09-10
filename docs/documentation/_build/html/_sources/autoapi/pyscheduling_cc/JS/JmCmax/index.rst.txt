@@ -1,0 +1,118 @@
+:py:mod:`pyscheduling_cc.JS.JmCmax`
+===================================
+
+.. py:module:: pyscheduling_cc.JS.JmCmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling_cc.JS.JmCmax.JmCmax_Instance
+   pyscheduling_cc.JS.JmCmax.Heuristics
+
+
+
+
+.. py:class:: JmCmax_Instance
+
+   Bases: :py:obj:`pyscheduling_cc.JS.JobShop.JobShopInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :list[list[int]]
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :rtype: JmCmax_Instance
+
+
+   .. py:method:: generate_random(jobs_number: int, configuration_number: int, protocol: pyscheduling_cc.JS.JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: pyscheduling_cc.JS.JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = '')
+      :classmethod:
+
+      Random generation of JmCmax problem instance
+
+      :param jobs_number: number of jobs of the instance
+      :type jobs_number: int
+      :param configuration_number: number of machines of the instance
+      :type configuration_number: int
+      :param protocol: given protocol of generation of random instances. Defaults to JobShop.GenerationProtocol.VALLADA.
+      :type protocol: JobShop.GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to JobShop.GenerationLaw.UNIFORM.
+      :type law: JobShop.GenerationLaw, optional
+      :param Pmin: Minimal processing time. Defaults to -1.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to -1.
+      :type Pmax: int, optional
+      :param InstanceName: name to give to the instance. Defaults to "".
+      :type InstanceName: str, optional
+
+      :returns: the randomly generated instance
+      :rtype: JmCmax_Instance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: init_sol_method()
+
+      Returns the default solving method
+
+      :returns: default solving method
+      :rtype: object
+
+
+   .. py:method:: get_objective()
+
+      to get the objective tackled by the instance
+
+      :returns: Makespan
+      :rtype: RootProblem.Objective
+
+
+
+.. py:class:: Heuristics
+
+   .. py:method:: shifting_bottleneck(instance: JmCmax_Instance)
+      :staticmethod:
+
+      Shifting bottlenech heuristic, Pinedo page 193
+
+      :param instance: Instance to be solved
+      :type instance: JmCmax_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of the given Heuristics class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+

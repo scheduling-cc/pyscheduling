@@ -1,0 +1,34 @@
+:py:mod:`pyscheduling_cc.FS.FS_Methods`
+=======================================
+
+.. py:module:: pyscheduling_cc.FS.FS_Methods
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling_cc.FS.FS_Methods.Heuristics_Cmax
+
+
+
+
+.. py:class:: Heuristics_Cmax
+
+   .. py:method:: MINIT()
+
+      Gupta's MINIT heuristic which is based on iteratively scheduling a new job at the end
+      so that it minimizes the idle time at the last machine
+
+      :param instance: Instance to be solved
+      :type instance: FlowShop.FlowShopInstance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

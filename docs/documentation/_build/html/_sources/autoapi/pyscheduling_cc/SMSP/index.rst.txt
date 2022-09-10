@@ -1,0 +1,26 @@
+:py:mod:`pyscheduling_cc.SMSP`
+==============================
+
+.. py:module:: pyscheduling_cc.SMSP
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   SM_Methods/index.rst
+   SingleMachine/index.rst
+   interface/index.rst
+   riPrecLmax/index.rst
+   risijCmax/index.rst
+   risijwiTi/index.rst
+   riwiCi/index.rst
+   riwiTi/index.rst
+   sijCmax/index.rst
+   sijwiTi/index.rst
+   wiCi/index.rst
+   wiTi/index.rst
+
+

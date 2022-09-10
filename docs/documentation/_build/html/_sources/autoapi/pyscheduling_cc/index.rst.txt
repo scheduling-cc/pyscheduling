@@ -1,0 +1,37 @@
+:py:mod:`pyscheduling_cc`
+=========================
+
+.. py:module:: pyscheduling_cc
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   FS/index.rst
+   JS/index.rst
+   PMSP/index.rst
+   SMSP/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   Problem/index.rst
+   benchmark/index.rst
+   pyscheduling_cc/index.rst
+
+
+Package Contents
+----------------
+
+.. py:data:: __version__
+   
+
+   
+

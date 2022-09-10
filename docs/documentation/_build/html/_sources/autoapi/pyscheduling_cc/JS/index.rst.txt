@@ -1,0 +1,16 @@
+:py:mod:`pyscheduling_cc.JS`
+============================
+
+.. py:module:: pyscheduling_cc.JS
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   JmCmax/index.rst
+   JobShop/index.rst
+
+
