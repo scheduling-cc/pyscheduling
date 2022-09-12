@@ -124,19 +124,17 @@ class Metaheuristics_Cmax():
     @staticmethod
     def lahc(instance: pm.ParallelInstance, **kwargs):
         """ Returns the solution using the LAHC algorithm
+
         Args:
             instance (ParallelInstance): Instance object to solve
             Lfa (int, optional): Size of the candidates list. Defaults to 25.
             n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
-            Non_improv (int, optional): LAHC stops when the number of iterations without
-                improvement is achieved. Defaults to 50.
-            LS (bool, optional): Flag to apply local search at each iteration or not.
-                Defaults to True.
-            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
-                else n_iterations is taken Defaults to None
-            init_sol_method: The method used to get the initial solution. 
-                Defaults to "constructive"
+            Non_improv (int, optional): LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
+            LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. Defaults to "constructive"
             seed (int, optional): Seed for the random operators to make the algo deterministic
+
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
@@ -212,27 +210,21 @@ class Metaheuristics_Cmax():
 
     @staticmethod
     def SA(instance: pm.ParallelInstance, **kwargs):
-        """ Returns the solution using the simulated annealing algorithm or the restricted simulated annealing
-        algorithm
+        """ Returns the solution using the simulated annealing algorithm or the restricted simulated annealing algorithm
+        
         Args:
             instance (ParallelInstance): Instance object to solve
             T0 (float, optional): Initial temperature. Defaults to 1.1.
             Tf (float, optional): Final temperature. Defaults to 0.01.
             k (float, optional): Acceptance facture. Defaults to 0.1.
             b (float, optional): Cooling factor. Defaults to 0.97.
-            q0 (int, optional): Probability to apply restricted swap compared to
-            restricted insertion. Defaults to 0.5.
+            q0 (int, optional): Probability to apply restricted swap compared to restricted insertion. Defaults to 0.5.
             n_iterations (int, optional): Number of iterations for each temperature. Defaults to 10.
-            Non_improv (int, optional): SA stops when the number of iterations without
-                improvement is achieved. Defaults to 500.
-            LS (bool, optional): Flag to apply local search at each iteration or not. 
-                Defaults to True.
-            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
-                else n_iterations is taken Defaults to None
-            init_sol_method: The method used to get the initial solution. 
-                Defaults to "constructive"
-            seed (int, optional): Seed for the random operators to make the 
-                algo deterministic if fixed. Defaults to None.
+            Non_improv (int, optional): SA stops when the number of iterations without improvement is achieved. Defaults to 500.
+            LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. Defaults to "constructive"
+            seed (int, optional): Seed for the random operators to make the algo deterministic if fixed. Defaults to None.
 
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic

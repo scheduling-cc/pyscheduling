@@ -1,0 +1,628 @@
+:py:mod:`pyscheduling_cc.PMSP.ParallelMachines`
+===============================================
+
+.. py:module:: pyscheduling_cc.PMSP.ParallelMachines
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling_cc.PMSP.ParallelMachines.GenerationProtocol
+   pyscheduling_cc.PMSP.ParallelMachines.GenerationLaw
+   pyscheduling_cc.PMSP.ParallelMachines.ParallelInstance
+   pyscheduling_cc.PMSP.ParallelMachines.Machine
+   pyscheduling_cc.PMSP.ParallelMachines.ParallelSolution
+   pyscheduling_cc.PMSP.ParallelMachines.PM_LocalSearch
+   pyscheduling_cc.PMSP.ParallelMachines.NeighbourhoodGeneration
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling_cc.PMSP.ParallelMachines.Job
+
+
+.. py:data:: Job
+   
+
+   
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: VALLADA
+      :annotation: = 1
+
+      
+
+
+.. py:class:: GenerationLaw
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: UNIFORM
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: NORMAL
+      :annotation: = 2
+
+      
+
+
+.. py:class:: ParallelInstance
+
+   Bases: :py:obj:`pyscheduling_cc.Problem.Instance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+   .. py:attribute:: m
+      :annotation: :int
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+      :abstractmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :rtype: ParallelInstance
+
+
+   .. py:method:: generate_random(protocol: str = None)
+      :classmethod:
+      :abstractmethod:
+
+      Generate a random instance according to a predefined protocol
+
+      :param protocol: represents the protocol used to generate the instance
+      :type protocol: string
+
+      :rtype: ParallelInstance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+      :abstractmethod:
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: read_P(content: list[str], startIndex: int)
+
+      Read the Processing time matrix from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the processing time matrix
+      :type startIndex: int
+
+      :returns: (Matrix of processing time, index of the next section of the instance)
+      :rtype: (list[list[int]],int)
+
+
+   .. py:method:: read_R(content: list[str], startIndex: int)
+
+      Read the release time table from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the release time table
+      :type startIndex: int
+
+      :returns: (Table of release time, index of the next section of the instance)
+      :rtype: (list[int],int)
+
+
+   .. py:method:: read_S(content: list[str], startIndex: int)
+
+      Read the Setup time table of matrices from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the Setup time table of matrices
+      :type startIndex: int
+
+      :returns: (Table of matrices of setup time, index of the next section of the instance)
+      :rtype: (list[list[list[int]]],int)
+
+
+   .. py:method:: read_D(content: list[str], startIndex: int)
+
+      Read the due time table from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the due time table
+      :type startIndex: int
+
+      :returns: (Table of due time, index of the next section of the instance)
+      :rtype: (list[int],int)
+
+
+   .. py:method:: generate_P(protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int)
+
+      Random generation of processing time matrix
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param Pmin: Minimal processing time
+      :type Pmin: int
+      :param Pmax: Maximal processing time
+      :type Pmax: int
+
+      :returns: Matrix of processing time
+      :rtype: list[list[int]]
+
+
+   .. py:method:: generate_R(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float)
+
+      Random generation of release time table
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param PJobs: Matrix of processing time
+      :type PJobs: list[list[float]]
+      :param Pmin: Minimal processing time
+      :type Pmin: int
+      :param Pmax: Maximal processing time
+      :type Pmax: int
+      :param alpha: release time factor
+      :type alpha: float
+
+      :returns: release time table
+      :rtype: list[int]
+
+
+   .. py:method:: generate_S(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0)
+
+      Random generation of setup time table of matrices
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param PJobs: Matrix of processing time
+      :type PJobs: list[list[float]]
+      :param gamma: Setup time factor
+      :type gamma: float
+      :param Smin: Minimal setup time . Defaults to 0.
+      :type Smin: int, optional
+      :param Smax: Maximal setup time. Defaults to 0.
+      :type Smax: int, optional
+
+      :returns: Setup time table of matrix
+      :rtype: list[list[list[int]]]
+
+
+   .. py:method:: generate_D(protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax)
+
+      Random generation of due time table
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param Pmin: Minimal processing time
+      :type Pmin: int
+      :param Pmax: Maximal processing time
+      :type Pmax: int
+
+      :returns: due time table
+      :rtype: list[int]
+
+
+
+.. py:class:: Machine(machine_num: int, completion_time: int = 0, last_job: int = -1, job_schedule: list[Job] = None)
+
+   .. py:attribute:: machine_num
+      :annotation: :int
+
+      
+
+   .. py:attribute:: completion_time
+      :annotation: :int = 0
+
+      
+
+   .. py:attribute:: last_job
+      :annotation: :int
+
+      
+
+   .. py:attribute:: job_schedule
+      :annotation: :list[Job]
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: __eq__(other)
+
+      Return self==value.
+
+
+   .. py:method:: copy()
+
+
+   .. py:method:: toJSON()
+
+
+   .. py:method:: fromDict(machine_dict)
+      :staticmethod:
+
+
+   .. py:method:: compute_completion_time(instance: ParallelInstance, startIndex: int = 0)
+
+      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
+      works with both RmSijkCmax and RmriSijkCmax problems
+
+      :param instance: The instance associated to the machine
+      :type instance: ParallelInstance
+      :param startIndex: The job index the function starts operating from
+      :type startIndex: int
+
+      :returns: completion_time of the machine
+      :rtype: int
+
+
+   .. py:method:: completion_time_insert(job: int, pos: int, instance: ParallelInstance)
+
+      Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+      :param job: id of the inserted job
+      :type job: int
+      :param pos: position where the job is inserted in the machine
+      :type pos: int
+      :param instance: the current problem instance
+      :type instance: ParallelInstance
+
+      :returns: completion time
+      :rtype: ci (int)
+
+
+   .. py:method:: completion_time_remove(pos: int, instance: ParallelInstance)
+
+      Computes the machine's completion time if we remove the job at "pos" in the machine's job_schedule
+      :param pos: position of the job to be removed
+      :type pos: int
+      :param instance: the current problem instance
+      :type instance: ParallelInstance
+
+      :returns: completion time
+      :rtype: ci (int)
+
+
+   .. py:method:: completion_time_remove_insert(pos_remove: int, job: int, pos_insert: int, instance: ParallelInstance)
+
+      Computes the machine's completion time if we remove job at position "pos_remove"
+      and insert "job" at "pos" in the machine's job_schedule
+      :param pos_remove: position of the job to be removed
+      :type pos_remove: int
+      :param job: id of the inserted job
+      :type job: int
+      :param pos_insert: position where the job is inserted in the machine
+      :type pos_insert: int
+      :param instance: the current problem instance
+      :type instance: ParallelInstance
+
+      :returns: completion time
+      :rtype: ci (int)
+
+
+   .. py:method:: completion_time_swap(pos_i: int, pos_j: int, instance: ParallelInstance)
+
+      Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
+      in the machine's job_schedule
+      :param pos_i: position of the first job to be swapped
+      :type pos_i: int
+      :param pos_j: position of the second job to be swapped
+      :type pos_j: int
+      :param instance: the current problem instance
+      :type instance: ParallelInstance
+
+      :returns: completion time
+      :rtype: ci (int)
+
+
+
+.. py:class:: ParallelSolution(instance: ParallelInstance = None, machines: list[Machine] = None, objective_value: int = 0)
+
+   Bases: :py:obj:`pyscheduling_cc.Problem.Solution`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: machines
+      :annotation: :list[Machine]
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: copy()
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+   .. py:method:: __lt__(other)
+
+      Return self<value.
+
+
+   .. py:method:: cmax()
+
+      Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+      which equals to the maximal completion time of every machine
+
+
+   .. py:method:: tmp_cmax(temp_ci={})
+
+      returns the cmax of a solution according to the the ci in the dict temp_ci if present,
+      if not it takes the ci of the machine, this doesn't modify the "cmax" of the machine.
+
+
+   .. py:method:: fix_cmax()
+
+      Sets the objective_value of the solution to Cmax
+      which equals to the maximal completion time of every machine
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: RmSijkCmax_Solution
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: plot(path: pathlib.Path = None) -> None
+
+      Plot the solution in an appropriate diagram
+
+
+   .. py:method:: is_valid()
+
+      Check if solution respects the constraints
+
+
+
+.. py:class:: PM_LocalSearch(methods: list[object] = None, copy_solution: bool = False)
+
+   Bases: :py:obj:`pyscheduling_cc.Problem.LocalSearch`
+
+   .. py:method:: _inter_machine_insertion(solution: ParallelSolution)
+      :staticmethod:
+
+      For every job, verify if rescheduling it on the same machine at a different position or on a whole different machines gives a better solution
+
+      :param solution: The initial solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: Improved solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: _internal_swap(solution: ParallelSolution)
+      :staticmethod:
+
+      Swap between 2 jobs on the same machine whose completion_time is maximal if it gives a better solution
+
+      :param solution: The initial solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: Improved solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: _external_swap(solution: ParallelSolution)
+      :staticmethod:
+
+      Swap between 2 jobs on different machines, where one of the machines has the maximal completion_time among all
+
+      :param solution: The initial solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: Improved solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: _external_insertion(solution: ParallelSolution)
+      :staticmethod:
+
+      Delete a job from the machine whose completion_time is maximal and insert it on another one
+
+      :param solution: The initial solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: Improved solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: _balance(solution: ParallelSolution)
+      :staticmethod:
+
+      Reschedule jobs between machines in order to balance their completion_time thus giving a better solution
+
+      :param solution: The initial solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: Improved solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: best_insertion_machine(solution: ParallelSolution, machine_id: int, job_id: int)
+      :staticmethod:
+
+      Find the best position to insert a job job_id in the machine machine_id
+
+      :param solution: Solution to be improved
+      :type solution: ParallelSolution
+      :param machine_id: ID of the machine
+      :type machine_id: int
+      :param job_id: ID of the job
+      :type job_id: int
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+
+.. py:class:: NeighbourhoodGeneration
+
+   .. py:method:: random_swap(solution: ParallelSolution, force_improve: bool = True, internal: bool = False)
+      :staticmethod:
+
+      Performs a random swap between 2 jobs on the same machine or on different machines
+
+      :param solution: Solution to be improved
+      :type solution: ParallelSolution
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param internal: If true, applies the swap between jobs on the same machine only. Defaults to False.
+      :type internal: bool, optional
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: random_inter_machine_insertion(solution: ParallelSolution, force_improve: bool = True)
+      :staticmethod:
+
+      Removes randomly a job from a machine and insert it on the same machine in different possition or another machine
+
+      :param solution: Solution to be improved
+      :type solution: ParallelSolution
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: restricted_swap(solution: ParallelSolution)
+      :staticmethod:
+
+      Performs a random swap between 2 jobs of 2 different machines whose completion time is equal
+      to the maximal completion time. If it's not possible, performs the move between a job on
+      the machine whose completion time is equel to the maximal completion time and another
+      one
+
+      :param solution: Solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: restricted_insert(solution: ParallelSolution)
+      :staticmethod:
+
+      Performs a random inter_machine_insertion between 2 different machines whose
+      completion time is equal to the maximal completion time. If it's not possible, performs the
+      move between a job on the machine whose completion time is equel to the
+      maximal completion time and another one
+
+      :param solution: Solution to be improved
+      :type solution: ParallelSolution
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: lahc_neighbour(solution_i)
+      :staticmethod:
+
+      Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+      :param solution_i: Solution to be improved
+      :type solution_i: ParallelSolution
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: SA_neighbour(solution: ParallelSolution)
+      :staticmethod:
+
+      Generates a neighbour solution of the given solution for the SA metaheuristic
+
+      :param solution_i: Solution to be improved
+      :type solution_i: ParallelSolution
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: RSA_neighbour(solution: ParallelInstance, q0: float)
+      :staticmethod:
+
+      Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+      :param solution_i: Solution to be improved
+      :type solution_i: ParallelSolution
+      :param q0: Probability to apply restricted swap compared to
+      :type q0: float
+      :param restricted insertion.:
+
+      :returns: New solution
+      :rtype: ParallelSolution
+
+
+

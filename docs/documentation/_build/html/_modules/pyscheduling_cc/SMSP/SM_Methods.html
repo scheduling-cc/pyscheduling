@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyscheduling_cc.SMSP.SM_Methods &mdash; pyscheduling_cc  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> pyscheduling_cc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyscheduling_cc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyscheduling_cc.SMSP.SM_Methods</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyscheduling_cc.SMSP.SM_Methods</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
+
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="k">as</span> <span class="nn">RootProblem</span>
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.SMSP.SingleMachine</span> <span class="k">as</span> <span class="nn">SingleMachine</span>
+<span class="kn">from</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="kn">import</span> <span class="n">Solver</span>
+<span class="kn">from</span> <span class="nn">pyscheduling_cc.SMSP.SingleMachine</span> <span class="kn">import</span> <span class="n">Job</span>
+<span class="kn">from</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="kn">import</span> <span class="n">Objective</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">docplex.cp.expression</span> <span class="kn">import</span> <span class="n">INTERVAL_MAX</span>
+    <span class="kn">from</span> <span class="nn">docplex.cp.model</span> <span class="kn">import</span> <span class="n">CpoModel</span>
+    <span class="kn">from</span> <span class="nn">docplex.cp.solver.cpo_callback</span> <span class="kn">import</span> <span class="n">CpoCallback</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="Metaheuristics"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Metaheuristics">[docs]</a><span class="k">class</span> <span class="nc">Metaheuristics</span><span class="p">():</span>
+
+<div class="viewcode-block" id="Metaheuristics.lahc"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Metaheuristics.lahc">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">lahc</span><span class="p">(</span><span class="n">instance</span> <span class="p">:</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">SingleInstance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the solution using the LAHC algorithm</span>
+<span class="sd">        Args:</span>
+<span class="sd">            instance (SingleMachine.SingleInstance): Instance object to solve</span>
+<span class="sd">            Lfa (int, optional): Size of the candidates list. Defaults to 25.</span>
+<span class="sd">            n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.</span>
+<span class="sd">            Non_improv (int, optional): LAHC stops when the number of iterations without</span>
+<span class="sd">                improvement is achieved. Defaults to 50.</span>
+<span class="sd">            LS (bool, optional): Flag to apply local search at each iteration or not.</span>
+<span class="sd">                Defaults to True.</span>
+<span class="sd">            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, </span>
+<span class="sd">                else n_iterations is taken Defaults to None</span>
+<span class="sd">            init_sol_method: The method used to get the initial solution. </span>
+<span class="sd">                Defaults to &quot;WSECi&quot;</span>
+<span class="sd">            seed (int, optional): Seed for the random operators to make the algo deterministic</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Problem.SolveResult: the solver result of the execution of the metaheuristic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Extracting parameters</span>
+        <span class="n">time_limit_factor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_limit_factor&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">init_sol_method</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;init_sol_method&quot;</span><span class="p">,</span> <span class="n">instance</span><span class="o">.</span><span class="n">init_sol_method</span><span class="p">())</span>
+        <span class="n">Lfa</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Lfa&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+        <span class="n">n_iterations</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_iterations&quot;</span><span class="p">,</span> <span class="mi">500000</span><span class="p">)</span>
+        <span class="n">Non_improv</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Non_improv&quot;</span><span class="p">,</span> <span class="mi">50000</span><span class="p">)</span>
+        <span class="n">LS</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LS&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">seed</span><span class="p">:</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="n">first_time</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">time_limit_factor</span><span class="p">:</span>
+            <span class="n">time_limit</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">instance</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="n">time_limit_factor</span>
+
+        <span class="c1"># Generate init solutoin using the initial solution method</span>
+        <span class="n">solution_init</span> <span class="o">=</span> <span class="n">init_sol_method</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span><span class="o">.</span><span class="n">best_solution</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">solution_init</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">()</span>
+
+        <span class="n">local_search</span> <span class="o">=</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">SM_LocalSearch</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">LS</span><span class="p">:</span>
+            <span class="n">solution_init</span> <span class="o">=</span> <span class="n">local_search</span><span class="o">.</span><span class="n">improve</span><span class="p">(</span>
+                <span class="n">solution_init</span><span class="p">,</span><span class="n">instance</span><span class="o">.</span><span class="n">get_objective</span><span class="p">())</span>  <span class="c1"># Improve it with LS</span>
+
+        <span class="n">all_solutions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">solution_best</span> <span class="o">=</span> <span class="n">solution_init</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Save the current best solution</span>
+        <span class="n">all_solutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solution_best</span><span class="p">)</span>
+        <span class="n">lahc_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">solution_init</span><span class="o">.</span><span class="n">objective_value</span><span class="p">]</span> <span class="o">*</span> <span class="n">Lfa</span>  <span class="c1"># Create LAHC list</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">time_to_best</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">first_time</span>
+        <span class="n">current_solution</span> <span class="o">=</span> <span class="n">solution_init</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n_iterations</span> <span class="ow">and</span> <span class="n">N</span> <span class="o">&lt;</span> <span class="n">Non_improv</span><span class="p">:</span>
+            <span class="c1"># check time limit if exists</span>
+            <span class="k">if</span> <span class="n">time_limit_factor</span> <span class="ow">and</span> <span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">first_time</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">time_limit</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">solution_i</span> <span class="o">=</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">NeighbourhoodGeneration</span><span class="o">.</span><span class="n">lahc_neighbour</span><span class="p">(</span>
+                <span class="n">current_solution</span><span class="p">,</span><span class="n">instance</span><span class="o">.</span><span class="n">get_objective</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">LS</span><span class="p">:</span>
+                <span class="n">solution_i</span> <span class="o">=</span> <span class="n">local_search</span><span class="o">.</span><span class="n">improve</span><span class="p">(</span><span class="n">solution_i</span><span class="p">,</span><span class="n">instance</span><span class="o">.</span><span class="n">get_objective</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">solution_i</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">&lt;</span> <span class="n">current_solution</span><span class="o">.</span><span class="n">objective_value</span> <span class="ow">or</span> <span class="n">solution_i</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">&lt;</span> <span class="n">lahc_list</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="n">Lfa</span><span class="p">]:</span>
+                <span class="n">current_solution</span> <span class="o">=</span> <span class="n">solution_i</span>
+                <span class="k">if</span> <span class="n">solution_i</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">&lt;</span> <span class="n">solution_best</span><span class="o">.</span><span class="n">objective_value</span><span class="p">:</span>
+                    <span class="n">all_solutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solution_i</span><span class="p">)</span>
+                    <span class="n">solution_best</span> <span class="o">=</span> <span class="n">solution_i</span>
+                    <span class="n">time_to_best</span> <span class="o">=</span> <span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">first_time</span><span class="p">)</span>
+                    <span class="n">N</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">lahc_list</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="n">Lfa</span><span class="p">]</span> <span class="o">=</span> <span class="n">solution_i</span><span class="o">.</span><span class="n">objective_value</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">N</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Construct the solve result</span>
+        <span class="n">solve_result</span> <span class="o">=</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">(</span>
+            <span class="n">best_solution</span><span class="o">=</span><span class="n">solution_best</span><span class="p">,</span>
+            <span class="n">solutions</span><span class="o">=</span><span class="n">all_solutions</span><span class="p">,</span>
+            <span class="n">runtime</span><span class="o">=</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">first_time</span><span class="p">),</span>
+            <span class="n">time_to_best</span><span class="o">=</span><span class="n">time_to_best</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">solve_result</span></div>
+    
+<div class="viewcode-block" id="Metaheuristics.all_methods"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Metaheuristics.all_methods">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">all_methods</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns all the methods of the given Heuristics class</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[object]: list of functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">func</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;all_methods&quot;</span><span class="p">]</span></div></div>
+
+<div class="viewcode-block" id="ExactSolvers"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.ExactSolvers">[docs]</a><span class="k">class</span> <span class="nc">ExactSolvers</span><span class="p">():</span>
+
+<div class="viewcode-block" id="ExactSolvers.csp"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.ExactSolvers.csp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">csp</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CSP</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="CSP"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.CSP">[docs]</a><span class="k">class</span> <span class="nc">CSP</span><span class="p">():</span>
+
+    <span class="n">CPO_STATUS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Feasible&quot;</span><span class="p">:</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">FEASIBLE</span><span class="p">,</span>
+        <span class="s2">&quot;Optimal&quot;</span><span class="p">:</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">OPTIMAL</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="CSP.MyCallback"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.CSP.MyCallback">[docs]</a>    <span class="k">class</span> <span class="nc">MyCallback</span><span class="p">(</span><span class="n">CpoCallback</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stop_times</span><span class="o">=</span><span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">3600</span><span class="p">,</span> <span class="mi">7200</span><span class="p">]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span> <span class="o">=</span> <span class="n">stop_times</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_sol_time</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_sol</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CSP.MyCallback.invoke"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.CSP.MyCallback.invoke">[docs]</a>        <span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">jsol</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s2">&quot;Solution&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nb_sol</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">solve_time</span> <span class="o">=</span> <span class="n">jsol</span><span class="o">.</span><span class="n">get_info</span><span class="p">(</span><span class="s1">&#39;SolveTime&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_sol_time</span> <span class="o">=</span> <span class="n">solve_time</span>
+
+                <span class="c1"># Go to the next stop time</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">)</span> <span class="ow">and</span> <span class="n">solve_time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">):</span>
+                    <span class="c1"># Get important elements</span>
+                    <span class="n">obj_val</span> <span class="o">=</span> <span class="n">jsol</span><span class="o">.</span><span class="n">get_objective_values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_times</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_idx</span><span class="p">]]</span> <span class="o">=</span> <span class="n">obj_val</span></div></div>
+
+<div class="viewcode-block" id="CSP._csp_transform_solution"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.CSP._csp_transform_solution">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_csp_transform_solution</span><span class="p">(</span><span class="n">msol</span><span class="p">,</span> <span class="n">E_i</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">objective</span> <span class="p">:</span> <span class="n">Objective</span><span class="p">):</span>
+
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">create_solution</span><span class="p">()</span>
+        <span class="n">k_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">msol</span><span class="p">[</span><span class="n">E_i</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">msol</span><span class="p">[</span><span class="n">E_i</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">k_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Job</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">start</span><span class="p">,</span><span class="n">end</span><span class="p">))</span>
+            
+            <span class="n">k_tasks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">k_tasks</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">sol</span><span class="o">.</span><span class="n">machine</span><span class="o">.</span><span class="n">job_schedule</span> <span class="o">=</span> <span class="n">k_tasks</span>
+        
+        <span class="k">if</span> <span class="n">objective</span> <span class="o">==</span> <span class="n">Objective</span><span class="o">.</span><span class="n">wiCi</span><span class="p">:</span>
+            <span class="n">sol</span><span class="o">.</span><span class="n">wiCi</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">objective</span> <span class="o">==</span> <span class="n">Objective</span><span class="o">.</span><span class="n">wiTi</span><span class="p">:</span>
+            <span class="n">sol</span><span class="o">.</span><span class="n">wiTi</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">objective</span> <span class="o">==</span> <span class="n">Objective</span><span class="o">.</span><span class="n">Cmax</span><span class="p">:</span>
+            <span class="n">sol</span><span class="o">.</span><span class="n">cmax</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">sol</span></div>
+    
+<div class="viewcode-block" id="CSP.solve"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.CSP.solve">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the solution using the Cplex - CP optimizer solver</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (Instance): Instance object to solve</span>
+<span class="sd">            objective (str): The objective to optimize. Defaults to wiCi</span>
+<span class="sd">            log_path (str, optional): Path to the log file to output cp optimizer log. Defaults to None to disable logging.</span>
+<span class="sd">            time_limit (int, optional): Time limit for executing the solver. Defaults to 300s.</span>
+<span class="sd">            threads (int, optional): Number of threads to set for cp optimizer solver. Defaults to 1.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SolveResult: The object represeting the solving process result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;docplex&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+            <span class="c1"># Extracting parameters</span>
+            <span class="n">objective</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;objective&quot;</span><span class="p">,</span> <span class="s2">&quot;wiCi&quot;</span><span class="p">)</span>
+            <span class="n">log_path</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">time_limit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_limit&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+            <span class="n">nb_threads</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;threads&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">stop_times</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;stop_times&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">time_limit</span> <span class="o">//</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_limit</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">time_limit</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">//</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_limit</span><span class="p">])</span>
+
+            <span class="n">E</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+            <span class="c1"># Construct the model</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">CpoModel</span><span class="p">(</span><span class="s2">&quot;smspModel&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Jobs interval_vars including the release date and processing times constraints</span>
+            <span class="n">E_i</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span><span class="p">:</span>
+                <span class="n">start_period</span> <span class="o">=</span> <span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">INTERVAL_MAX</span><span class="p">)</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">INTERVAL_MAX</span><span class="p">)</span>
+                <span class="n">job_i</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">interval_var</span><span class="p">(</span> <span class="n">start</span> <span class="o">=</span> <span class="n">start_period</span><span class="p">,</span>
+                                            <span class="n">size</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">optional</span><span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;E[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span>
+                <span class="n">E_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_i</span><span class="p">)</span>
+
+            <span class="c1"># Sequential execution on the machine</span>
+            <span class="n">machine_sequence</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sequence_var</span><span class="p">(</span> <span class="n">E_i</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">E</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">no_overlap</span><span class="p">(</span><span class="n">machine_sequence</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="c1"># Define the objective </span>
+            <span class="k">if</span> <span class="n">objective</span> <span class="o">==</span> <span class="n">Objective</span><span class="o">.</span><span class="n">wiCi</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">instance</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">end_of</span><span class="p">(</span><span class="n">E_i</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span> <span class="p">)</span> <span class="p">))</span> <span class="c1"># sum_{i in E} wi * ci</span>
+            <span class="k">elif</span> <span class="n">objective</span> <span class="o">==</span> <span class="n">Objective</span><span class="o">.</span><span class="n">wiTi</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span> 
+                    <span class="nb">sum</span><span class="p">(</span> <span class="n">instance</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">end_of</span><span class="p">(</span><span class="n">E_i</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="n">instance</span><span class="o">.</span><span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span> <span class="p">)</span> <span class="c1"># sum_{i in E} wi * Ti</span>
+                <span class="p">))</span>
+            <span class="k">elif</span> <span class="n">objective</span> <span class="o">==</span> <span class="n">Objective</span><span class="o">.</span><span class="n">Cmax</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span> <span class="nb">max</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">end_of</span><span class="p">(</span><span class="n">E_i</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">E</span> <span class="p">)</span> <span class="p">))</span> <span class="c1"># max_{i in E} ci </span>
+
+            <span class="c1"># Link the callback to save stats of the solve process</span>
+            <span class="n">mycallback</span> <span class="o">=</span> <span class="n">CSP</span><span class="o">.</span><span class="n">MyCallback</span><span class="p">(</span><span class="n">stop_times</span><span class="o">=</span><span class="n">stop_times</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add_solver_callback</span><span class="p">(</span><span class="n">mycallback</span><span class="p">)</span>
+
+            <span class="c1"># Run the model</span>
+            <span class="n">msol</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">LogVerbosity</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span> <span class="n">Workers</span><span class="o">=</span><span class="n">nb_threads</span><span class="p">,</span> <span class="n">TimeLimit</span><span class="o">=</span><span class="n">time_limit</span><span class="p">,</span> <span class="n">LogPeriod</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span>
+                               <span class="n">log_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trace_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_log_to_solution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">RelativeOptimalityTolerance</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># Logging solver&#39;s infos if log_path is specified</span>
+            <span class="k">if</span> <span class="n">log_path</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logFile</span><span class="p">:</span>
+                    <span class="n">logFile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msol</span><span class="o">.</span><span class="n">get_solver_log</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;!&quot;</span><span class="p">)))</span>
+                    <span class="n">logFile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">CSP</span><span class="o">.</span><span class="n">_csp_transform_solution</span><span class="p">(</span><span class="n">msol</span><span class="p">,</span> <span class="n">E_i</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">objective</span><span class="p">)</span>
+
+            <span class="c1"># Construct the solve result</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;ObjValue&quot;</span><span class="p">:</span> <span class="n">msol</span><span class="o">.</span><span class="n">get_objective_value</span><span class="p">(),</span>
+                <span class="s2">&quot;ObjBound&quot;</span><span class="p">:</span> <span class="n">msol</span><span class="o">.</span><span class="n">get_objective_bounds</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;MemUsage&quot;</span><span class="p">:</span> <span class="n">msol</span><span class="o">.</span><span class="n">get_infos</span><span class="p">()[</span><span class="s2">&quot;MemoryUsage&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">for</span> <span class="n">stop_t</span> <span class="ow">in</span> <span class="n">mycallback</span><span class="o">.</span><span class="n">stop_times</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">stop_t</span> <span class="ow">in</span> <span class="n">mycallback</span><span class="o">.</span><span class="n">best_values</span><span class="p">:</span>
+                    <span class="n">kpis</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;Obj-</span><span class="si">{</span><span class="n">stop_t</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mycallback</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="n">stop_t</span><span class="p">]</span>
+                    <span class="n">prev</span> <span class="o">=</span> <span class="n">mycallback</span><span class="o">.</span><span class="n">best_values</span><span class="p">[</span><span class="n">stop_t</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">kpis</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;Obj-</span><span class="si">{</span><span class="n">stop_t</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prev</span>
+
+            <span class="n">solve_result</span> <span class="o">=</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveResult</span><span class="p">(</span>
+                <span class="n">best_solution</span><span class="o">=</span><span class="n">sol</span><span class="p">,</span>
+                <span class="n">runtime</span><span class="o">=</span><span class="n">msol</span><span class="o">.</span><span class="n">get_infos</span><span class="p">()[</span><span class="s2">&quot;TotalTime&quot;</span><span class="p">],</span>
+                <span class="n">time_to_best</span><span class="o">=</span><span class="n">mycallback</span><span class="o">.</span><span class="n">best_sol_time</span><span class="p">,</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">CSP</span><span class="o">.</span><span class="n">CPO_STATUS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">msol</span><span class="o">.</span><span class="n">get_solve_status</span><span class="p">(),</span> <span class="n">RootProblem</span><span class="o">.</span><span class="n">SolveStatus</span><span class="o">.</span><span class="n">INFEASIBLE</span><span class="p">),</span>
+                <span class="n">kpis</span><span class="o">=</span><span class="n">kpis</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">solve_result</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Docplex import error: you can not use this solver&quot;</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Heuristics_HelperFunctions"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Heuristics_HelperFunctions">[docs]</a><span class="k">class</span> <span class="nc">Heuristics_HelperFunctions</span><span class="p">():</span>
+
+<div class="viewcode-block" id="Heuristics_HelperFunctions.rule_candidate"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Heuristics_HelperFunctions.rule_candidate">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">rule_candidate</span><span class="p">(</span><span class="n">remaining_jobs</span> <span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">rule</span> <span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">reverse</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract the highest index job using the specific passed rule.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            remaining_jobs (list[int]): The list of jobs on which we apply the rule</span>
+<span class="sd">            rule (object): The rule (function) which is used in the heuristic in order to extract the candidate job</span>
+<span class="sd">            reverse (bool, optional): When true, the candidate returned is the job with the highest value returned by the rule.</span>
+<span class="sd">            When false, returns the job with the lowest value returned by the rule. Defaults to True.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: returns the job candidate by the given rule from remaining_jobs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">max_rule_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">min_rule_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">remaining_jobs</span><span class="p">:</span>
+            <span class="n">rule_value</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">max_rule_value</span><span class="o">&lt;</span><span class="n">rule_value</span><span class="p">:</span> 
+                <span class="n">max_rule_value</span> <span class="o">=</span> <span class="n">rule_value</span>
+                <span class="n">taken_job_max</span> <span class="o">=</span> <span class="n">job</span>
+            <span class="k">if</span> <span class="n">min_rule_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">min_rule_value</span><span class="o">&gt;</span><span class="n">rule_value</span><span class="p">:</span>
+                <span class="n">min_rule_value</span> <span class="o">=</span> <span class="n">rule_value</span>
+                <span class="n">taken_job_min</span> <span class="o">=</span> <span class="n">job</span>
+        <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span> <span class="k">return</span> <span class="n">taken_job_max</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">taken_job_min</span></div></div>
+
+<div class="viewcode-block" id="Heuristics_Cmax"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Heuristics_Cmax">[docs]</a><span class="k">class</span> <span class="nc">Heuristics_Cmax</span><span class="p">():</span>
+<div class="viewcode-block" id="Heuristics_Cmax.meta_raps"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Heuristics_Cmax.meta_raps">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">meta_raps</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">SingleInstance</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nb_exec</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the solution using the meta-raps algorithm</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (SingleInstance): The instance to be solved by the heuristic</span>
+<span class="sd">            p (float): probability of taking the greedy best solution</span>
+<span class="sd">            r (int): percentage of moves to consider to select the best move</span>
+<span class="sd">            nb_exec (int): Number of execution of the heuristic</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Problem.SolveResult: the solver result of the execution of the heuristic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Heuristics_Cmax.grasp"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/SMSP/SM_Methods/index.html#pyscheduling_cc.SMSP.SM_Methods.Heuristics_Cmax.grasp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">grasp</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="n">SingleMachine</span><span class="o">.</span><span class="n">SingleInstance</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">nb_exec</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the solution using the grasp algorithm</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (SingleInstance): Instance to be solved by the heuristic</span>
+<span class="sd">            x (_type_): percentage of moves to consider to select the best move</span>
+<span class="sd">            nb_exec (int): Number of execution of the heuristic</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Problem.SolveResult: the solver result of the execution of the heuristic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+ 
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, scheduling-cc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

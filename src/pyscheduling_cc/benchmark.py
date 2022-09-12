@@ -27,6 +27,19 @@ def write_excel(fname : Path, result):
         dict_writer.writerows(result)
 
 def run_solver_instance(fname : Path, instances : list[Problem.Instance],methods_args : list[object],kwargs={}, log_param : list[Log] = [Log.objective,Log.runtime]):
+    """Performs the benchmark of a list of methods on a list of instances, creates a csv file of the results and
+    outputs the results
+
+    Args:
+        fname (Path): output filename
+        instances (list[Problem.Instance]): List of instances to solve
+        methods_args (list[object]): List of either methods or couple of method and its extra-arguments.
+        kwargs (dict, optional): Extra-arguments for all methods. Defaults to {}.
+        log_param (list[Log], optional): parameters to be logged. Defaults to [Log.objective,Log.runtime].
+
+    Returns:
+        dict: result of the benchmark
+    """
     #instances_names = [instance.name for instance in instances]
     #methods_names = [method.__name__ for method in methods]
     run_methods_on_instances = []

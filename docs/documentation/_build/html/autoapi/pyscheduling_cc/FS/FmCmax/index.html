@@ -1,0 +1,925 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>pyscheduling_cc.FS.FmCmax &#8212; pyscheduling_cc  documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/pyscheduling.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/clipboard.min.js"></script>
+    <script src="../../../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/pyscheduling_cc/FS/FmCmax/index';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="pyscheduling_cc.FS.FmSijkCmax" href="../FmSijkCmax/index.html" />
+    <link rel="prev" title="pyscheduling_cc.FS.FlowShop" href="../FlowShop/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="None">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../../index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     pyscheduling_cc
+    </span>
+   </code>
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="../index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.FS
+      </span>
+     </code>
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="../FS_Methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.FS.FS_Methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../FlowShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.FS.FlowShop
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.FS.FmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../FmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.FS.FmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../JS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.JS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-3">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.JS.JmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JobShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.JS.JobShop
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../PMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.PMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/PM_methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.PMSP.PM_methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/ParallelMachines/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.PMSP.ParallelMachines
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.PMSP.RmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.PMSP.RmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.PMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../SMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.SMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/SM_Methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.SM_Methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/SingleMachine/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.SingleMachine
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riPrecLmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.riPrecLmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/risijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.risijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/risijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.risijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.riwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.riwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/sijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.sijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/sijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.sijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/wiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.wiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/wiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling_cc.SMSP.wiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../Problem/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.Problem
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../benchmark/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.benchmark
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../pyscheduling_cc/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling_cc.pyscheduling_cc
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="module-pyscheduling_cc.FS.FmCmax">
+<span id="pyscheduling-cc-fs-fmcmax"></span><h1><a class="reference internal" href="#module-pyscheduling_cc.FS.FmCmax" title="pyscheduling_cc.FS.FmCmax"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling_cc.FS.FmCmax</span></code></a><a class="headerlink" href="#module-pyscheduling_cc.FS.FmCmax" title="Permalink to this headline">#</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance" title="pyscheduling_cc.FS.FmCmax.FmCmax_Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FmCmax_Instance</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling_cc.FS.FmCmax.Heuristics" title="pyscheduling_cc.FS.FmCmax.Heuristics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Heuristics</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling_cc.FS.FmCmax.</span></span><span class="sig-name descname"><span class="pre">FmCmax_Instance</span></span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../FlowShop/index.html#pyscheduling_cc.FS.FlowShop.FlowShopInstance" title="pyscheduling_cc.FS.FlowShop.FlowShopInstance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling_cc.FS.FlowShop.FlowShopInstance</span></code></a></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance.P">
+<span class="sig-name descname"><span class="pre">P</span></span><em class="property"><span class="w"> </span><span class="pre">:list[list[int]]</span></em><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.P" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance.read_txt">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.read_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Read an instance from a txt file according to the problem’s format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the txt file of type Path from the pathlib module</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – when the file does not exist</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance" title="pyscheduling_cc.FS.FmCmax.FmCmax_Instance">FmCmax_Instance</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobs_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../FlowShop/index.html#pyscheduling_cc.FS.FlowShop.GenerationProtocol" title="pyscheduling_cc.FS.FlowShop.GenerationProtocol"><span class="pre">pyscheduling_cc.FS.FlowShop.GenerationProtocol</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">FlowShop.GenerationProtocol.VALLADA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../FlowShop/index.html#pyscheduling_cc.FS.FlowShop.GenerationLaw" title="pyscheduling_cc.FS.FlowShop.GenerationLaw"><span class="pre">pyscheduling_cc.FS.FlowShop.GenerationLaw</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">FlowShop.GenerationLaw.UNIFORM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">InstanceName</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.generate_random" title="Permalink to this definition">#</a></dt>
+<dd><p>Random generation of FmCmax problem instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>jobs_number</strong> (<em>int</em>) – number of jobs of the instance</p></li>
+<li><p><strong>configuration_number</strong> (<em>int</em>) – number of machines of the instance</p></li>
+<li><p><strong>protocol</strong> (<a class="reference internal" href="../FlowShop/index.html#pyscheduling_cc.FS.FlowShop.GenerationProtocol" title="pyscheduling_cc.FS.FlowShop.GenerationProtocol"><em>FlowShop.GenerationProtocol</em></a><em>, </em><em>optional</em>) – given protocol of generation of random instances. Defaults to FlowShop.GenerationProtocol.VALLADA.</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="../FlowShop/index.html#pyscheduling_cc.FS.FlowShop.GenerationLaw" title="pyscheduling_cc.FS.FlowShop.GenerationLaw"><em>FlowShop.GenerationLaw</em></a><em>, </em><em>optional</em>) – probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.</p></li>
+<li><p><strong>Pmin</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimal processing time. Defaults to -1.</p></li>
+<li><p><strong>Pmax</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximal processing time. Defaults to -1.</p></li>
+<li><p><strong>InstanceName</strong> (<em>str</em><em>, </em><em>optional</em>) – name to give to the instance. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the randomly generated instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance" title="pyscheduling_cc.FS.FmCmax.FmCmax_Instance">FmCmax_Instance</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance.to_txt">
+<span class="sig-name descname"><span class="pre">to_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.to_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Export an instance to a txt file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the resulting txt file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance.init_sol_method">
+<span class="sig-name descname"><span class="pre">init_sol_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.init_sol_method" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the default solving method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>default solving method</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.FmCmax_Instance.get_objective">
+<span class="sig-name descname"><span class="pre">get_objective</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.get_objective" title="Permalink to this definition">#</a></dt>
+<dd><p>to get the objective tackled by the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Makespan</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>RootProblem.Objective</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.Heuristics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling_cc.FS.FmCmax.</span></span><span class="sig-name descname"><span class="pre">Heuristics</span></span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.Heuristics" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../FS_Methods/index.html#pyscheduling_cc.FS.FS_Methods.Heuristics_Cmax" title="pyscheduling_cc.FS.FS_Methods.Heuristics_Cmax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling_cc.FS.FS_Methods.Heuristics_Cmax</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.Heuristics.slope">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance" title="pyscheduling_cc.FS.FmCmax.FmCmax_Instance"><span class="pre">FmCmax_Instance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.Heuristics.slope" title="Permalink to this definition">#</a></dt>
+<dd><p>Inspired from Jonhson’s rule, this heuristic schedules first the jobs with the smallest processing times on the first machines</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance" title="pyscheduling_cc.FS.FmCmax.FmCmax_Instance"><em>FmCmax_Instance</em></a>) – Instance to be solved by the heuristic</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the solver result of the execution of the heuristic</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling_cc.Problem.SolveResult" title="pyscheduling_cc.Problem.SolveResult">Problem.SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling_cc.FS.FmCmax.Heuristics.all_methods">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_methods</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling_cc.FS.FmCmax.Heuristics.all_methods" title="Permalink to this definition">#</a></dt>
+<dd><p>returns all the methods of the given Heuristics class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of functions</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[object]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../FlowShop/index.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling_cc.FS.FlowShop</span></code></p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="../FmSijkCmax/index.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling_cc.FS.FmSijkCmax</span></code></p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fas fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-contents">
+   Module Contents
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#classes">
+     Classes
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance">
+       FmCmax_Instance
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.P">
+         P
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.read_txt">
+         read_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.generate_random">
+         generate_random
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.to_txt">
+         to_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.init_sol_method">
+         init_sol_method
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.FmCmax_Instance.get_objective">
+         get_objective
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.Heuristics">
+       Heuristics
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.Heuristics.slope">
+         slope
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling_cc.FS.FmCmax.Heuristics.all_methods">
+         all_methods
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../../../../_sources/autoapi/pyscheduling_cc/FS/FmCmax/index.rst.txt">
+        <i class="fas fa-file-alt"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, scheduling-cc.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

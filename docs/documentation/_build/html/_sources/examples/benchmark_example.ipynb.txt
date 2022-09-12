@@ -1,0 +1,115 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Benchmark sample"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We start by importing the benchmark module and the corresponding problem module, in the following we will use the single machine interface :"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pyscheduling_cc.SMSP.interface as sm \n",
+    "import pyscheduling_cc.benchmark as benchmark"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We then create our instances :"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "problem = sm.Problem()\n",
+    "problem.add_constraints([sm.Constraints.W,sm.Constraints.D])\n",
+    "problem.set_objective(sm.Objective.wiTi)\n",
+    "problem.generate_random(jobs_number=20,Wmax=10,InstanceName=\"testInstance1\")\n",
+    "instance1 = problem.instance\n",
+    "problem.generate_random(jobs_number=20,Wmax=10,InstanceName=\"testInstance2\")\n",
+    "instance2 = problem.instance\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We run the benchmark using a list of methods :"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[{'ACT_objective': 11082,\n",
+       "  'ACT_runtime': 0.00030320000001893277,\n",
+       "  'MS_objective': 27122,\n",
+       "  'MS_runtime': 0.0001490000000217151,\n",
+       "  'WSPT_objective': 18189,\n",
+       "  'WSPT_runtime': 6.270000000085929e-05},\n",
+       " {'ACT_objective': 713,\n",
+       "  'ACT_runtime': 0.0002741999999784639,\n",
+       "  'MS_objective': 1107,\n",
+       "  'MS_runtime': 0.00012420000001611697,\n",
+       "  'WSPT_objective': 1328,\n",
+       "  'WSPT_runtime': 5.040000002054512e-05}]"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "benchmark.run_solver_instance(\"benchmark_results\",[instance1,instance2],problem.heuristics.values())"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3.9.12 ('pyscheduling')",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.12"
+  },
+  "orig_nbformat": 4,
+  "vscode": {
+   "interpreter": {
+    "hash": "5680f738cc3aa8dc0f2caa6f4f7f94524a25cee02af6591b567881b90e17c616"
+   }
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

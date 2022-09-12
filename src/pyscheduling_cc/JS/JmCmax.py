@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from random import randint
-
 from time import perf_counter
 
 
@@ -41,7 +40,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
 
     @classmethod
     def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
-        """Random generation of RmSijkCmax problem instance
+        """Random generation of JmCmax problem instance
 
         Args:
             jobs_number (int): number of jobs of the instance
@@ -78,10 +77,19 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         f.close()
 
     def init_sol_method(self):
-        #return Heuristics.shifting_bottleneck
-        pass
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
+        return Heuristics.shifting_bottleneck
 
     def get_objective(self):
+        """to get the objective tackled by the instance
+
+        Returns:
+            RootProblem.Objective: Makespan
+        """
         return RootProblem.Objective.Cmax
 
 
@@ -89,6 +97,14 @@ class Heuristics():
 
     @staticmethod
     def shifting_bottleneck(instance : JmCmax_Instance):
+        """Shifting bottlenech heuristic, Pinedo page 193
+
+        Args:
+            instance (JmCmax_Instance): Instance to be solved
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
         solution = JobShop.JobShopSolution(instance)
         graph = JobShop.Graph(instance.P)
         Cmax = graph.critical_path()

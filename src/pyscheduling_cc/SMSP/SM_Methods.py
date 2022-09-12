@@ -19,20 +19,18 @@ class Metaheuristics():
 
     @staticmethod
     def lahc(instance : SingleMachine.SingleInstance, **kwargs):
-        """ Returns the solution using the LAHC algorithm
+        """Returns the solution using the LAHC algorithm
+
         Args:
             instance (SingleMachine.SingleInstance): Instance object to solve
             Lfa (int, optional): Size of the candidates list. Defaults to 25.
             n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
-            Non_improv (int, optional): LAHC stops when the number of iterations without
-                improvement is achieved. Defaults to 50.
-            LS (bool, optional): Flag to apply local search at each iteration or not.
-                Defaults to True.
-            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, 
-                else n_iterations is taken Defaults to None
-            init_sol_method: The method used to get the initial solution. 
-                Defaults to "WSECi"
+            Non_improv (int, optional): LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
+            LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. Defaults to "WSECi"
             seed (int, optional): Seed for the random operators to make the algo deterministic
+            
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """

@@ -1,0 +1,475 @@
+:py:mod:`pyscheduling_cc.JS.JobShop`
+====================================
+
+.. py:module:: pyscheduling_cc.JS.JobShop
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling_cc.JS.JobShop.GenerationProtocol
+   pyscheduling_cc.JS.JobShop.GenerationLaw
+   pyscheduling_cc.JS.JobShop.Graph
+   pyscheduling_cc.JS.JobShop.JobShopInstance
+   pyscheduling_cc.JS.JobShop.Machine
+   pyscheduling_cc.JS.JobShop.JobShopSolution
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling_cc.JS.JobShop.Job
+
+
+.. py:data:: Job
+   
+
+   
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: VALLADA
+      :annotation: = 1
+
+      
+
+
+.. py:class:: GenerationLaw
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: UNIFORM
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: NORMAL
+      :annotation: = 2
+
+      
+
+
+.. py:class:: Graph(operations)
+
+   .. py:attribute:: source
+      
+
+      
+
+   .. py:attribute:: sink
+      
+
+      
+
+   .. py:attribute:: vertices
+      :annotation: :list[tuple]
+
+      
+
+   .. py:attribute:: edges
+      :annotation: :dict
+
+      
+
+   .. py:method:: add_edge(u, v, weight: int)
+
+      Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
+
+      :param u: operation
+      :type u: tuple(int,int)
+      :param v: operation
+      :type v: tuple(int,int)
+      :param weight: processing time of operation u
+      :type weight: int
+
+
+   .. py:method:: get_edge(u, v)
+
+      returns the weight of the edge from u to v
+
+      :param u: operation
+      :type u: tuple(int,int)
+      :param v: operation
+      :type v: tuple(int,int)
+
+      :returns: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
+      :rtype: int
+
+
+   .. py:method:: get_operations_on_machine(machine_id: int)
+
+      returns the vertices corresponding to operations to be executed on machine_id
+
+      :param machine_id: id of a machine
+      :type machine_id: int
+
+      :returns: list of operations to be executed on machine_id
+      :rtype: list[tuple(int,int)]
+
+
+   .. py:method:: add_disdjunctive_arcs(edges_to_add: list)
+
+      Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
+
+      :param edges_to_add: list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
+      :type edges_to_add: list[tuple(tuple(int,int),tuple(int,int))]
+
+
+   .. py:method:: dijkstra(start_vertex)
+
+      Evaluate the longest distance from the start_vertex to every other vertex
+
+      :param start_vertex: starting vertex
+      :type start_vertex: tuple(int,int)
+
+      :returns: int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
+      :rtype: dict{tuple(int,int)
+
+
+   .. py:method:: longest_path(u, v)
+
+      returns the longest distance from vertex u to vertex v
+
+      :param u: operation
+      :type u: tuple(int,int)
+      :param v: operation
+      :type v: tuple(int,int)
+
+      :returns: longest distance, is -inf if v is unreachable from u
+      :rtype: int
+
+
+   .. py:method:: critical_path()
+
+      returns the distance of the critical path which corresponds to the Makespan
+
+      :returns: critical path distance
+      :rtype: int
+
+
+   .. py:method:: generate_riPrecLmax(machine_id: int, Cmax: int)
+
+      generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+      :param machine_id: id of the machine
+      :type machine_id: int
+      :param Cmax: current makespan
+      :type Cmax: int
+
+      :returns: generated 1|ri,prec|Lmax instance
+      :rtype: riPrecLmax_Instance
+
+
+
+.. py:class:: JobShopInstance
+
+   Bases: :py:obj:`pyscheduling_cc.Problem.Instance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+   .. py:attribute:: m
+      :annotation: :int
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+      :abstractmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :rtype: JobShopInstance
+
+
+   .. py:method:: generate_random(protocol: str = None)
+      :classmethod:
+      :abstractmethod:
+
+      Generate a random instance according to a predefined protocol
+
+      :param protocol: represents the protocol used to generate the instance
+      :type protocol: string
+
+      :rtype: JobShopInstance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+      :abstractmethod:
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: read_P(content: list[str], startIndex: int)
+
+      Read the Processing time matrix from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the processing time matrix
+      :type startIndex: int
+
+      :returns: (Matrix of processing time, index of the next section of the instance)
+      :rtype: (list[list[int]],int)
+
+
+   .. py:method:: read_R(content: list[str], startIndex: int)
+
+      Read the release time table from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the release time table
+      :type startIndex: int
+
+      :returns: (Table of release time, index of the next section of the instance)
+      :rtype: (list[int],int)
+
+
+   .. py:method:: read_S(content: list[str], startIndex: int)
+
+      Read the Setup time table of matrices from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the Setup time table of matrices
+      :type startIndex: int
+
+      :returns: (Table of matrices of setup time, index of the next section of the instance)
+      :rtype: (list[list[list[int]]],int)
+
+
+   .. py:method:: read_D(content: list[str], startIndex: int)
+
+      Read the due time table from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the due time table
+      :type startIndex: int
+
+      :returns: (Table of due time, index of the next section of the instance)
+      :rtype: (list[int],int)
+
+
+   .. py:method:: generate_P(protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int)
+
+      Random generation of processing time matrix
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param Pmin: Minimal processing time
+      :type Pmin: int
+      :param Pmax: Maximal processing time
+      :type Pmax: int
+
+      :returns: Matrix of processing time
+      :rtype: list[list[int]]
+
+
+   .. py:method:: generate_R(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float)
+
+      Random generation of release time table
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param PJobs: Matrix of processing time
+      :type PJobs: list[list[float]]
+      :param Pmin: Minimal processing time
+      :type Pmin: int
+      :param Pmax: Maximal processing time
+      :type Pmax: int
+      :param alpha: release time factor
+      :type alpha: float
+
+      :returns: release time table
+      :rtype: list[int]
+
+
+   .. py:method:: generate_S(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0)
+
+      Random generation of setup time table of matrices
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param PJobs: Matrix of processing time
+      :type PJobs: list[list[float]]
+      :param gamma: Setup time factor
+      :type gamma: float
+      :param Smin: Minimal setup time . Defaults to 0.
+      :type Smin: int, optional
+      :param Smax: Maximal setup time. Defaults to 0.
+      :type Smax: int, optional
+
+      :returns: Setup time table of matrix
+      :rtype: list[list[list[int]]]
+
+
+   .. py:method:: generate_D(protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax)
+
+      Random generation of due time table
+
+      :param protocol: given protocol of generation of random instances
+      :type protocol: GenerationProtocol
+      :param law: probablistic law of generation
+      :type law: GenerationLaw
+      :param Pmin: Minimal processing time
+      :type Pmin: int
+      :param Pmax: Maximal processing time
+      :type Pmax: int
+
+      :returns: due time table
+      :rtype: list[int]
+
+
+
+.. py:class:: Machine(machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None)
+
+   .. py:attribute:: machine_num
+      :annotation: :int
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :int = 0
+
+      
+
+   .. py:attribute:: last_job
+      :annotation: :int
+
+      
+
+   .. py:attribute:: job_schedule
+      :annotation: :list[Job]
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: __eq__(other)
+
+      Return self==value.
+
+
+   .. py:method:: copy()
+
+
+   .. py:method:: toJSON()
+
+
+   .. py:method:: fromDict(machine_dict)
+      :staticmethod:
+
+
+   .. py:method:: compute_completion_time(instance: JobShopInstance, startIndex: int = 0)
+
+
+
+.. py:class:: JobShopSolution(instance: JobShopInstance = None, machines: list[Machine] = None, objective_value: int = 0)
+
+   Bases: :py:obj:`pyscheduling_cc.Problem.Solution`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: machines
+      :annotation: :list[Machine]
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: copy()
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+   .. py:method:: __lt__(other)
+
+      Return self<value.
+
+
+   .. py:method:: cmax()
+
+
+   .. py:method:: fix_cmax()
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: JobShopSolution
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: plot(path: pathlib.Path = None) -> None
+
+      Plot the solution in a gantt diagram
+
+
+   .. py:method:: is_valid()
+
+      Check if solution respects the constraints
+
+
+

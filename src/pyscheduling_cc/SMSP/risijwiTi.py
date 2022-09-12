@@ -1,11 +1,8 @@
 from math import exp
-import sys
 from dataclasses import dataclass, field
 from random import randint, uniform
 from pathlib import Path
 from time import perf_counter
-
-from matplotlib import pyplot as plt
 
 import pyscheduling_cc.Problem as RootProblem
 from pyscheduling_cc.Problem import Solver
@@ -52,14 +49,21 @@ class risijwiTi_Instance(SingleMachine.SingleInstance):
 
     @classmethod
     def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin : int = 1, Wmax : int = 1 ,Pmin: int = 1, Pmax: int = -1, alpha : float = 0.0, due_time_factor : float = 0.0, Gamma : float = 0.0, Smin : int = -1, Smax : int = -1, InstanceName: str = ""):
-        """Random generation of RmSijkCmax problem instance
+        """Random generation of risijwiTi problem instance
 
         Args:
             jobs_number (int): number of jobs of the instance
             protocol (SingleMachine.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
             law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+            Wmin (int, optional): Minimal weight. Defaults to 1.
+            Wmax (int, optional): Maximal weight. Defaults to 1.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
+            alpha (float, optional): Release time factor. Defaults to 0.0.
+            due_time_factor (float, optional): Due time factor. Defaults to 0.0.
+            Gamma (float, optional): Setup time factor. Defaults to 0.0.
+            Smin (int, optional) : Minimal setup time. Defaults to -1.
+            Smax (int, optional) : Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
@@ -113,9 +117,19 @@ class risijwiTi_Instance(SingleMachine.SingleInstance):
         f.close()
 
     def get_objective(self):
+        """to get the objective tackled by the instance
+
+        Returns:
+            RootProblem.Objective: Total wighted lateness
+        """
         return RootProblem.Objective.wiTi
 
     def init_sol_method(self):
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
         return Heuristics.ACTS_WSECi
 
 
@@ -123,6 +137,14 @@ class Heuristics():
     
     @staticmethod
     def ACTS_WSECi(instance : risijwiTi_Instance):
+        """Appearant Tardiness Cost with Setup heuristic using WSECi rule instead of WSPT
+
+        Args:
+            instance (risijwiTi_Instance): Instance to be solved
+
+        Returns:
+            RootProblem.SolveResult: Solve Result of the instance by the method
+        """
         startTime = perf_counter()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiTi_index = []
@@ -167,6 +189,21 @@ class Heuristics_HelperFunctions():
 
     @staticmethod
     def ACTS_WSECi_Sorting(instance : risijwiTi_Instance, remaining_jobs : list[SingleMachine.Job], t : int, prev_job : int):
+        """Returns the prev_job and the job to be scheduled next based on ACTS_WSECi rule.
+        It returns a couple of previous job scheduled and the new job to be scheduled. The previous job will be the
+        same than the taken job if it's the first time when the rule is applied, is the same prev_job passed as
+        argument to the function otherwise. This is to avoid extra-ifs and thus not slowing the execution of 
+        the heuristic
+
+        Args:
+            instance (risijwiTi_Instance): Instance tackled by the ACTS_WSECi heuristic
+            remaining_jobs (list[SingleMachine.Job]): Remaining jobs list to be scheduled
+            t (int): current time
+            prev_job (int): Previous scheduled job, necessary for setup time
+
+        Returns:
+           int, int: previous job scheduled, taken job to be scheduled
+        """
         sumP = sum(instance.P)
         sumS = 0
         for i in range(instance.n):
@@ -194,6 +231,14 @@ class Heuristics_HelperFunctions():
 
     @staticmethod
     def ACTS_WSECi_Tuning(instance : risijwiTi_Instance):
+        """Analyze the instance to consequently tune the ACTS_WSECi. For now, the tuning is static.
+
+        Args:
+            instance (risijwiTi_Instance): Instance tackled by ACTS_WSECi heuristic
+
+        Returns:
+            int, int: K1 , K2
+        """
         Tightness = 1 - sum(instance.D)/(instance.n*sum(instance.P))
         Range = (max(instance.D)-min(instance.D))/sum(instance.P)
         return 0.2, 1

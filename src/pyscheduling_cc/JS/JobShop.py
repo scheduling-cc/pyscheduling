@@ -35,6 +35,11 @@ class Graph:
     edges : dict
 
     def __init__(self, operations):
+        """Creates the dijunctives graph from a JmCmax processing times table
+
+        Args:
+            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
+        """
         self.vertices = [(self.source,0),(self.sink,0)]
         self.edges = {}
         
@@ -50,26 +55,64 @@ class Graph:
             job_index += 1
 
     def add_edge(self, u, v, weight : int):
+        """Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
+
+        Args:
+            u (tuple(int,int)): operation
+            v (tuple(int,int)): operation
+            weight (int): processing time of operation u
+        """
         self.edges[(u,v)] = weight
 
     def get_edge(self, u, v):
+        """returns the weight of the edge from u to v
+
+        Args:
+            u (tuple(int,int)): operation
+            v (tuple(int,int)): operation
+            
+
+        Returns:
+            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
+        """
         try:
             return self.edges[(u,v)]
         except:
             return -1
 
     def get_operations_on_machine(self, machine_id : int):
+        """returns the vertices corresponding to operations to be executed on machine_id
+
+        Args:
+            machine_id (int): id of a machine
+
+        Returns:
+            list[tuple(int,int)]: list of operations to be executed on machine_id
+        """
         vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
         if machine_id==0: vertices.remove((0,-1))
         return vertices
     
     def add_disdjunctive_arcs(self, edges_to_add : list):
+        """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
+
+        Args:
+            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
+        """
         emanating_vertices = [edge[0] for edge in edges_to_add]
         weights = [vertice[1] for vertice in self.vertices if vertice[0] in emanating_vertices]
         for edge_ind in range(len(edges_to_add)):
             self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
 
     def dijkstra(self, start_vertex):
+        """Evaluate the longest distance from the start_vertex to every other vertex
+
+        Args:
+            start_vertex (tuple(int,int)): starting vertex
+
+        Returns:
+            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
+        """
         vertices_list = [vertice[0] for vertice in self.vertices]
         D = {v:-float('inf') for v in vertices_list}
         D[start_vertex] = 0
@@ -92,12 +135,35 @@ class Graph:
         return D
 
     def longest_path(self,u, v):
+        """returns the longest distance from vertex u to vertex v
+
+        Args:
+            u (tuple(int,int)): operation
+            v (tuple(int,int)): operation
+
+        Returns:
+            int: longest distance, is -inf if v is unreachable from u
+        """
         return self.dijkstra(u)[v]
 
     def critical_path(self):
+        """returns the distance of the critical path which corresponds to the Makespan
+
+        Returns:
+            int: critical path distance
+        """
         return self.longest_path(self.source,self.sink)
 
     def generate_riPrecLmax(self, machine_id : int, Cmax : int):
+        """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+        Args:
+            machine_id (int): id of the machine
+            Cmax (int): current makespan
+
+        Returns:
+            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance
+        """
         vertices = self.get_operations_on_machine(machine_id)
         jobs_number = len(vertices)
         P = []
@@ -314,7 +380,7 @@ class Machine:
 
         Args:
             machine_num (int): ID of the machine
-            completion_time (int, optional): completion time of the last job of the machine. Defaults to 0.
+            objective (int, optional): completion time of the last job of the machine. Defaults to 0.
             last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
             job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
         """
@@ -346,16 +412,6 @@ class Machine:
         return Machine(machine_dict["machine_num"], machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
     def compute_completion_time(self, instance: JobShopInstance, startIndex: int = 0):
-        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
-        works with both RmSijkCmax and RmriSijkCmax problems
-
-        Args:
-            instance (JobShopInstance): The instance associated to the machine
-            startIndex (int) : The job index the function starts operating from
-
-        Returns:
-            int: completion_time of the machine
-        """
         pass
 
 
@@ -369,7 +425,7 @@ class JobShopSolution(RootProblem.Solution):
 
         Args:
             instance (JobShopInstance, optional): Instance to be solved by the solution. Defaults to None.
-            configuration (list[ParallelMachines.Machine], optional): list of machines of the instance. Defaults to None.
+            machines (list[Machine], optional): list of machines of the instance. Defaults to None.
             objective_value (int, optional): initial objective value of the solution. Defaults to 0.
         """
         self.instance = instance
@@ -402,21 +458,10 @@ class JobShopSolution(RootProblem.Solution):
         else : return other.objective_value < self.objective_value
     
     def cmax(self):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
-        """
-        if self.instance != None:
-            for k in range(self.instance.m):
-                self.machines[k].compute_completion_time(self.instance)
-        self.objective_value = max(
-            [machine.completion_time for machine in self.machines])
+        pass
 
     def fix_cmax(self):
-        """Sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
-        """
-        self.objective_value = max(
-            [machine.completion_time for machine in self.machines])
+        pass
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -426,7 +471,7 @@ class JobShopSolution(RootProblem.Solution):
             path (Path): path to the solution's txt file of type Path from pathlib
 
         Returns:
-            RmSijkCmax_Solution:
+            JobShopSolution:
         """
         f = open(path, "r")
         content = f.read().split('\n')
@@ -451,7 +496,7 @@ class JobShopSolution(RootProblem.Solution):
         f.close()
 
     def plot(self, path: Path = None) -> None:
-        """Plot the solution in an appropriate diagram"""
+        """Plot the solution in a gantt diagram"""
         if "matplotlib" in sys.modules:
             if self.instance is not None:
                 # Add Tasks ID

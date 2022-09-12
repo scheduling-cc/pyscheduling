@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyscheduling_cc.JS.JobShop &mdash; pyscheduling_cc  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> pyscheduling_cc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyscheduling_cc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyscheduling_cc.JS.JobShop</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyscheduling_cc.JS.JobShop</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">PriorityQueue</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.Problem</span> <span class="k">as</span> <span class="nn">RootProblem</span>
+<span class="kn">import</span> <span class="nn">pyscheduling_cc.SMSP.riPrecLmax</span> <span class="k">as</span> <span class="nn">riPrecLmax</span>
+
+
+<span class="n">Job</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Job&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;start_time&#39;</span><span class="p">,</span> <span class="s1">&#39;end_time&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="GenerationProtocol"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.GenerationProtocol">[docs]</a><span class="k">class</span> <span class="nc">GenerationProtocol</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">VALLADA</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="GenerationLaw"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.GenerationLaw">[docs]</a><span class="k">class</span> <span class="nc">GenerationLaw</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">UNIFORM</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">NORMAL</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Graph</span><span class="p">:</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sink</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">vertices</span> <span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span>
+    <span class="n">edges</span> <span class="p">:</span> <span class="nb">dict</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operations</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates the dijunctives graph from a JmCmax processing times table</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink</span><span class="p">,</span><span class="mi">0</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="n">job_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">operations</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,(</span><span class="n">job</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">job_index</span><span class="p">))]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">nb_operation</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">operation_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_operation</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">job</span><span class="p">[</span><span class="n">operation_ind</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">job_index</span><span class="p">),</span><span class="n">job</span><span class="p">[</span><span class="n">operation_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[((</span><span class="n">job</span><span class="p">[</span><span class="n">operation_ind</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">job_index</span><span class="p">),(</span><span class="n">job</span><span class="p">[</span><span class="n">operation_ind</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">job_index</span><span class="p">))]</span> <span class="o">=</span> <span class="n">job</span><span class="p">[</span><span class="n">operation_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">job</span><span class="p">[</span><span class="n">nb_operation</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">job_index</span><span class="p">),</span><span class="n">job</span><span class="p">[</span><span class="n">nb_operation</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[((</span><span class="n">job</span><span class="p">[</span><span class="n">nb_operation</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">job_index</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">sink</span><span class="p">)]</span> <span class="o">=</span> <span class="n">job</span><span class="p">[</span><span class="n">nb_operation</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">job_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Graph.add_edge"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">weight</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an edge from operation u to operation v with weight corresponding to the processing time of operation u</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (tuple(int,int)): operation</span>
+<span class="sd">            v (tuple(int,int)): operation</span>
+<span class="sd">            weight (int): processing time of operation u</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="n">weight</span></div>
+
+<div class="viewcode-block" id="Graph.get_edge"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.get_edge">[docs]</a>    <span class="k">def</span> <span class="nf">get_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns the weight of the edge from u to v</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (tuple(int,int)): operation</span>
+<span class="sd">            v (tuple(int,int)): operation</span>
+<span class="sd">            </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Graph.get_operations_on_machine"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.get_operations_on_machine">[docs]</a>    <span class="k">def</span> <span class="nf">get_operations_on_machine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">machine_id</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns the vertices corresponding to operations to be executed on machine_id</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            machine_id (int): id of a machine</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[tuple(int,int)]: list of operations to be executed on machine_id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">vertice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">vertice</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="k">if</span> <span class="n">vertice</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">machine_id</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">machine_id</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">vertices</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">vertices</span></div>
+    
+<div class="viewcode-block" id="Graph.add_disdjunctive_arcs"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.add_disdjunctive_arcs">[docs]</a>    <span class="k">def</span> <span class="nf">add_disdjunctive_arcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges_to_add</span> <span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add disjunctive arcs to the graph corresponding to the operations schedule on a machine</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">emanating_vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges_to_add</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">vertice</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">vertice</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="k">if</span> <span class="n">vertice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">emanating_vertices</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">edge_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edges_to_add</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">edges_to_add</span><span class="p">[</span><span class="n">edge_ind</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">edges_to_add</span><span class="p">[</span><span class="n">edge_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">weights</span><span class="p">[</span><span class="n">edge_ind</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Graph.dijkstra"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.dijkstra">[docs]</a>    <span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_vertex</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the longest distance from the start_vertex to every other vertex</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            start_vertex (tuple(int,int)): starting vertex</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vertices_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">vertice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">vertice</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span><span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vertices_list</span><span class="p">}</span>
+        <span class="n">D</span><span class="p">[</span><span class="n">start_vertex</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">pq</span> <span class="o">=</span> <span class="n">PriorityQueue</span><span class="p">()</span>
+        <span class="n">pq</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">start_vertex</span><span class="p">))</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">pq</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+            <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">current_vertex</span><span class="p">)</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">vertices_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_edge</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">,</span><span class="n">neighbor</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_edge</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">,</span><span class="n">neighbor</span><span class="p">)</span>
+                    <span class="n">old_cost</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span>
+                    <span class="n">new_cost</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">current_vertex</span><span class="p">]</span> <span class="o">+</span> <span class="n">distance</span>
+                    <span class="k">if</span> <span class="n">new_cost</span> <span class="o">&gt;</span> <span class="n">old_cost</span><span class="p">:</span>
+                        <span class="n">pq</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">new_cost</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">))</span>
+                        <span class="n">D</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_cost</span>
+
+        <span class="k">return</span> <span class="n">D</span></div>
+
+<div class="viewcode-block" id="Graph.longest_path"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.longest_path">[docs]</a>    <span class="k">def</span> <span class="nf">longest_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns the longest distance from vertex u to vertex v</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            u (tuple(int,int)): operation</span>
+<span class="sd">            v (tuple(int,int)): operation</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: longest distance, is -inf if v is unreachable from u</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dijkstra</span><span class="p">(</span><span class="n">u</span><span class="p">)[</span><span class="n">v</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Graph.critical_path"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.critical_path">[docs]</a>    <span class="k">def</span> <span class="nf">critical_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns the distance of the critical path which corresponds to the Makespan</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: critical path distance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">longest_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">sink</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Graph.generate_riPrecLmax"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Graph.generate_riPrecLmax">[docs]</a>    <span class="k">def</span> <span class="nf">generate_riPrecLmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">machine_id</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Cmax</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;generate an instance of 1|ri,prec|Lmax instance of the machine machine_id</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            machine_id (int): id of the machine</span>
+<span class="sd">            Cmax (int): current makespan</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_operations_on_machine</span><span class="p">(</span><span class="n">machine_id</span><span class="p">)</span>
+        <span class="n">jobs_number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">vertice</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="p">:</span>
+            <span class="k">if</span> <span class="n">vertice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vertice</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">longest_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span><span class="n">vertice</span><span class="p">)</span> <span class="k">for</span> <span class="n">vertice</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="n">Cmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">longest_path</span><span class="p">(</span><span class="n">vertices</span><span class="p">[</span><span class="n">vertice_ind</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">sink</span><span class="p">)</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="n">vertice_ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">vertice_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="n">riPrecLmax</span><span class="o">.</span><span class="n">riPrecLmax_Instance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">jobs_number</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span><span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span><span class="n">D</span><span class="o">=</span><span class="n">D</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JobShopInstance"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">JobShopInstance</span><span class="p">(</span><span class="n">RootProblem</span><span class="o">.</span><span class="n">Instance</span><span class="p">):</span>
+
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># n : Number of jobs</span>
+    <span class="n">m</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># m : Number of machines</span>
+
+<div class="viewcode-block" id="JobShopInstance.read_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.read_txt">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">read_txt</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read an instance from a txt file according to the problem&#39;s format</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the txt file of type Path from the pathlib module</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: when the file does not exist</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            JobShopInstance:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.generate_random"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.generate_random">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate_random</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a random instance according to a predefined protocol</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            protocol (string): represents the protocol used to generate the instance</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            JobShopInstance:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.to_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.to_txt">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">to_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Export an instance to a txt file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the resulting txt file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.read_P"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.read_P">[docs]</a>    <span class="k">def</span> <span class="nf">read_P</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">startIndex</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read the Processing time matrix from a list of lines extracted from the file of the instance</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content (list[str]): lines of the file of the instance</span>
+<span class="sd">            startIndex (int): Index from where starts the processing time matrix</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="p">[]</span>  
+        <span class="n">i</span> <span class="o">=</span> <span class="n">startIndex</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">ligne</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">P_k</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">ligne</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span><span class="nb">int</span><span class="p">(</span><span class="n">ligne</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ligne</span><span class="p">),</span> <span class="mi">2</span><span class="p">)]</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">P_k</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.read_R"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.read_R">[docs]</a>    <span class="k">def</span> <span class="nf">read_R</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">startIndex</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read the release time table from a list of lines extracted from the file of the instance</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content (list[str]): lines of the file of the instance</span>
+<span class="sd">            startIndex (int): Index from where starts the release time table</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           (list[int],int): (Table of release time, index of the next section of the instance)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.read_S"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.read_S">[docs]</a>    <span class="k">def</span> <span class="nf">read_S</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">startIndex</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read the Setup time table of matrices from a list of lines extracted from the file of the instance</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content (list[str]): lines of the file of the instance</span>
+<span class="sd">            startIndex (int): Index from where starts the Setup time table of matrices</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.read_D"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.read_D">[docs]</a>    <span class="k">def</span> <span class="nf">read_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">startIndex</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read the due time table from a list of lines extracted from the file of the instance</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content (list[str]): lines of the file of the instance</span>
+<span class="sd">            startIndex (int): Index from where starts the due time table</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           (list[int],int): (Table of due time, index of the next section of the instance)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.generate_P"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.generate_P">[docs]</a>    <span class="k">def</span> <span class="nf">generate_P</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">GenerationProtocol</span><span class="p">,</span> <span class="n">law</span><span class="p">:</span> <span class="n">GenerationLaw</span><span class="p">,</span> <span class="n">Pmin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Random generation of processing time matrix</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            protocol (GenerationProtocol): given protocol of generation of random instances</span>
+<span class="sd">            law (GenerationLaw): probablistic law of generation</span>
+<span class="sd">            Pmin (int): Minimal processing time</span>
+<span class="sd">            Pmax (int): Maximal processing time</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           list[list[int]]: Matrix of processing time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">visited_machine</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">Pj</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">nb_operation_j</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_operation_j</span><span class="p">):</span>
+                <span class="n">machine_id</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">while</span><span class="p">(</span><span class="n">machine_id</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Pj</span><span class="p">])</span> <span class="p">:</span> <span class="n">machine_id</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># checks recirculation</span>
+                <span class="k">if</span> <span class="n">machine_id</span> <span class="ow">in</span> <span class="n">visited_machine</span><span class="p">:</span> <span class="n">visited_machine</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">machine_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">law</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;UNIFORM&quot;</span><span class="p">:</span>  <span class="c1"># Generate uniformly</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">Pmin</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">law</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;NORMAL&quot;</span><span class="p">:</span>  <span class="c1"># Use normal law</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Pmin</span><span class="o">+</span><span class="n">Pmax</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+                    <span class="k">while</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">Pmin</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">Pmax</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Pmin</span><span class="o">+</span><span class="n">Pmax</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+                <span class="n">Pj</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">machine_id</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Pj</span><span class="p">)</span>
+        <span class="c1">#If there are some unused machine by any operation</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">visited_machine</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">job_list_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">machine_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">job_list_id</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">visited_machine</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">law</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;UNIFORM&quot;</span><span class="p">:</span>  <span class="c1"># Generate uniformly</span>
+                        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">Pmin</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="n">law</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;NORMAL&quot;</span><span class="p">:</span>  <span class="c1"># Use normal law</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Pmin</span><span class="o">+</span><span class="n">Pmax</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+                        <span class="k">while</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">Pmin</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">Pmax</span><span class="p">:</span>
+                            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                            <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Pmin</span><span class="o">+</span><span class="n">Pmax</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+                    <span class="n">P</span><span class="p">[</span><span class="n">job_list_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">machine_id</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">P</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.generate_R"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.generate_R">[docs]</a>    <span class="k">def</span> <span class="nf">generate_R</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">GenerationProtocol</span><span class="p">,</span> <span class="n">law</span><span class="p">:</span> <span class="n">GenerationLaw</span><span class="p">,</span> <span class="n">PJobs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Pmin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Random generation of release time table</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            protocol (GenerationProtocol): given protocol of generation of random instances</span>
+<span class="sd">            law (GenerationLaw): probablistic law of generation</span>
+<span class="sd">            PJobs (list[list[float]]): Matrix of processing time</span>
+<span class="sd">            Pmin (int): Minimal processing time</span>
+<span class="sd">            Pmax (int): Maximal processing time</span>
+<span class="sd">            alpha (float): release time factor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[int]: release time table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.generate_S"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.generate_S">[docs]</a>    <span class="k">def</span> <span class="nf">generate_S</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">GenerationProtocol</span><span class="p">,</span> <span class="n">law</span><span class="p">:</span> <span class="n">GenerationLaw</span><span class="p">,</span> <span class="n">PJobs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Smin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Smax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Random generation of setup time table of matrices</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            protocol (GenerationProtocol): given protocol of generation of random instances</span>
+<span class="sd">            law (GenerationLaw): probablistic law of generation</span>
+<span class="sd">            PJobs (list[list[float]]): Matrix of processing time</span>
+<span class="sd">            gamma (float): Setup time factor</span>
+<span class="sd">            Smin (int, optional): Minimal setup time . Defaults to 0.</span>
+<span class="sd">            Smax (int, optional): Maximal setup time. Defaults to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[list[list[int]]]: Setup time table of matrix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopInstance.generate_D"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopInstance.generate_D">[docs]</a>    <span class="k">def</span> <span class="nf">generate_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">GenerationProtocol</span><span class="p">,</span> <span class="n">law</span><span class="p">:</span> <span class="n">GenerationLaw</span><span class="p">,</span> <span class="n">Pmin</span><span class="p">,</span> <span class="n">Pmax</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Random generation of due time table</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            protocol (GenerationProtocol): given protocol of generation of random instances</span>
+<span class="sd">            law (GenerationLaw): probablistic law of generation</span>
+<span class="sd">            Pmin (int): Minimal processing time</span>
+<span class="sd">            Pmax (int): Maximal processing time</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[int]: due time table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Machine"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Machine</span><span class="p">:</span>
+
+    <span class="n">machine_num</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">objective</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">last_job</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">job_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Job</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">machine_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">objective</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">last_job</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">job_schedule</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Job</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Constructor of Machine</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            machine_num (int): ID of the machine</span>
+<span class="sd">            objective (int, optional): completion time of the last job of the machine. Defaults to 0.</span>
+<span class="sd">            last_job (int, optional): ID of the last job set on the machine. Defaults to -1.</span>
+<span class="sd">            job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">machine_num</span> <span class="o">=</span> <span class="n">machine_num</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">objective</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_job</span> <span class="o">=</span> <span class="n">last_job</span>
+        <span class="k">if</span> <span class="n">job_schedule</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">job_schedule</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">job_schedule</span> <span class="o">=</span> <span class="n">job_schedule</span>
+
+<div class="viewcode-block" id="Machine.__str__"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine.__str__">[docs]</a>    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">machine_num</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span> <span class="o">+</span> <span class="s2">&quot; : &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">[(</span><span class="n">job</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_schedule</span><span class="p">]))</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Machine.__eq__"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">same_machine</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">machine_num</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine_num</span>
+        <span class="n">same_schedule</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">job_schedule</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_schedule</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">same_machine</span> <span class="ow">and</span> <span class="n">same_schedule</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Machine.copy"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Machine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">machine_num</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_job</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">job_schedule</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Machine.toJSON"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine.toJSON">[docs]</a>    <span class="k">def</span> <span class="nf">toJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">,</span>
+                          <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Machine.fromDict"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine.fromDict">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fromDict</span><span class="p">(</span><span class="n">machine_dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Machine</span><span class="p">(</span><span class="n">machine_dict</span><span class="p">[</span><span class="s2">&quot;machine_num&quot;</span><span class="p">],</span> <span class="n">machine_dict</span><span class="p">[</span><span class="s2">&quot;objective&quot;</span><span class="p">],</span> <span class="n">machine_dict</span><span class="p">[</span><span class="s2">&quot;last_job&quot;</span><span class="p">],</span> <span class="n">machine_dict</span><span class="p">[</span><span class="s2">&quot;job_schedule&quot;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Machine.compute_completion_time"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.Machine.compute_completion_time">[docs]</a>    <span class="k">def</span> <span class="nf">compute_completion_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">JobShopInstance</span><span class="p">,</span> <span class="n">startIndex</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="JobShopSolution"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">JobShopSolution</span><span class="p">(</span><span class="n">RootProblem</span><span class="o">.</span><span class="n">Solution</span><span class="p">):</span>
+
+    <span class="n">machines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Machine</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">JobShopInstance</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">machines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Machine</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">objective_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor of RmSijkCmax_Solution</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            instance (JobShopInstance, optional): Instance to be solved by the solution. Defaults to None.</span>
+<span class="sd">            machines (list[Machine], optional): list of machines of the instance. Defaults to None.</span>
+<span class="sd">            objective_value (int, optional): initial objective value of the solution. Defaults to 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">instance</span>
+        <span class="k">if</span> <span class="n">machines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">machines</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">machine</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">[])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">machines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">machine</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">machines</span> <span class="o">=</span> <span class="n">machines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="JobShopSolution.__str__"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.__str__">[docs]</a>    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Objective : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">machines</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.copy"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">copy_machines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">machines</span><span class="p">:</span>
+            <span class="n">copy_machines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+        <span class="n">copy_solution</span> <span class="o">=</span> <span class="n">JobShopSolution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">copy_solution</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy_machines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">copy_solution</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_value</span>
+        <span class="k">return</span> <span class="n">copy_solution</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.__lt__"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.__lt__">[docs]</a>    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">get_objective</span><span class="p">()</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">objective_value</span>
+        <span class="k">else</span> <span class="p">:</span> <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">objective_value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_value</span></div>
+    
+<div class="viewcode-block" id="JobShopSolution.cmax"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.cmax">[docs]</a>    <span class="k">def</span> <span class="nf">cmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.fix_cmax"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.fix_cmax">[docs]</a>    <span class="k">def</span> <span class="nf">fix_cmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.read_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.read_txt">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read_txt</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read a solution from a txt file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the solution&#39;s txt file of type Path from pathlib</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            JobShopSolution:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">objective_value_</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">configuration_</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)):</span>
+            <span class="n">line_content</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+            <span class="n">configuration_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Machine</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">line_content</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">line_content</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">job_schedule</span><span class="o">=</span><span class="p">[</span><span class="n">Job</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">job</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">line_content</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)]]))</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">objective_value</span><span class="o">=</span><span class="n">objective_value_</span><span class="p">,</span>
+                       <span class="n">machines</span><span class="o">=</span><span class="n">configuration_</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">solution</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.to_txt"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.to_txt">[docs]</a>    <span class="k">def</span> <span class="nf">to_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Export the solution to a txt file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path): path to the resulting txt file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.plot"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Plot the solution in a gantt diagram&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;matplotlib&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Add Tasks ID</span>
+                <span class="n">fig</span><span class="p">,</span> <span class="n">gnt</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+                <span class="c1"># Setting labels for x-axis and y-axis</span>
+                <span class="n">gnt</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;seconds&#39;</span><span class="p">)</span>
+                <span class="n">gnt</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Machines&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Setting ticks on y-axis</span>
+
+                <span class="n">ticks</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">ticks_labels</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">machines</span><span class="p">)):</span>
+                    <span class="n">ticks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>
+                    <span class="n">ticks_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+                <span class="n">gnt</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+                <span class="c1"># Labelling tickes of y-axis</span>
+                <span class="n">gnt</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">ticks_labels</span><span class="p">)</span>
+
+                <span class="c1"># Setting graph attribute</span>
+                <span class="n">gnt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">machines</span><span class="p">)):</span>
+                    <span class="n">schedule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">machines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">job_schedule</span>
+                    <span class="n">prev</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="n">prevEndTime</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">schedule</span><span class="p">:</span>
+                        <span class="n">job_index</span><span class="p">,</span> <span class="n">startTime</span><span class="p">,</span> <span class="n">endTime</span> <span class="o">=</span> <span class="n">element</span>
+                        <span class="k">if</span> <span class="n">prevEndTime</span> <span class="o">&lt;</span> <span class="n">startTime</span><span class="p">:</span>
+                            <span class="c1"># Idle Time</span>
+                            <span class="n">gnt</span><span class="o">.</span><span class="n">broken_barh</span><span class="p">(</span>
+                                <span class="p">[(</span><span class="n">prevEndTime</span><span class="p">,</span> <span class="n">startTime</span> <span class="o">-</span> <span class="n">prevEndTime</span><span class="p">)],</span> <span class="p">((</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">facecolors</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;tab:gray&#39;</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="n">prev</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="c1"># Setup Time</span>
+                            <span class="n">gnt</span><span class="o">.</span><span class="n">broken_barh</span><span class="p">([(</span><span class="n">startTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">prev</span><span class="p">][</span><span class="n">job_index</span><span class="p">])],</span> <span class="p">((</span>
+                                <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">facecolors</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;tab:orange&#39;</span><span class="p">))</span>
+                            <span class="c1"># Processing Time</span>
+                            <span class="n">gnt</span><span class="o">.</span><span class="n">broken_barh</span><span class="p">([(</span><span class="n">startTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">prev</span><span class="p">][</span><span class="n">job_index</span><span class="p">],</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">job_index</span><span class="p">][</span><span class="n">j</span><span class="p">])],</span> <span class="p">((</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">facecolors</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;tab:blue&#39;</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">gnt</span><span class="o">.</span><span class="n">broken_barh</span><span class="p">([(</span><span class="n">startTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">job_index</span><span class="p">][</span><span class="n">j</span><span class="p">])],</span> <span class="p">((</span>
+                                <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">facecolors</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;tab:blue&#39;</span><span class="p">))</span>
+                        <span class="n">prev</span> <span class="o">=</span> <span class="n">job_index</span>
+                        <span class="n">prevEndTime</span> <span class="o">=</span> <span class="n">endTime</span>
+                <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Please assign the solved instance to the solution object&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Matplotlib is not installed, you can&#39;t use gant_plot&quot;</span><span class="p">)</span>
+            <span class="k">return</span></div>
+
+<div class="viewcode-block" id="JobShopSolution.is_valid"><a class="viewcode-back" href="../../../autoapi/pyscheduling_cc/JS/JobShop/index.html#pyscheduling_cc.JS.JobShop.JobShopSolution.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if solution respects the constraints</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, scheduling-cc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

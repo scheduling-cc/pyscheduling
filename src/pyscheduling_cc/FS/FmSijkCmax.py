@@ -44,7 +44,7 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
 
     @classmethod
     def generate_random(cls, jobs_number: int, configuration_number: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.VALLADA, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, Gamma: float = 0.0, Smin:  int = -1, Smax: int = -1, InstanceName: str = ""):
-        """Random generation of RmSijkCmax problem instance
+        """Random generation of FmSijkCmax problem instance
 
         Args:
             jobs_number (int): number of jobs of the instance
@@ -100,9 +100,19 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
         f.close()
 
     def init_sol_method(self):
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
         return Heuristics.MINIT
 
     def get_objective(self):
+        """to get the objective tackled by the instance
+
+        Returns:
+            RootProblem.Objective: Makespan
+        """
         return RootProblem.Objective.Cmax
 
 

@@ -162,7 +162,7 @@ class Problem():
             TypeError: In case the method is not properly used
 
         Returns:
-            _type_: _description_
+            RootProblem.SolveResult: SolveResult of the instance by the method
         """
         if not callable(method):
             raise ValueError("Argument passed to solve method is not a function")

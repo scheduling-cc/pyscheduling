@@ -42,7 +42,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
 
     @classmethod
     def generate_random(cls, jobs_number: int, configuration_number: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.VALLADA, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
-        """Random generation of RmSijkCmax problem instance
+        """Random generation of FmCmax problem instance
 
         Args:
             jobs_number (int): number of jobs of the instance
@@ -51,9 +51,6 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
             law (FlowShop.GenerationLaw, optional): probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
-            Gamma (float, optional): Setup time factor. Defaults to 0.0.
-            Smin (int, optional): Minimal setup time. Defaults to -1.
-            Smax (int, optional): Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
@@ -83,9 +80,19 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         f.close()
 
     def init_sol_method(self):
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
         return Heuristics.slope
 
     def get_objective(self):
+        """to get the objective tackled by the instance
+
+        Returns:
+            RootProblem.Objective: Makespan
+        """
         return RootProblem.Objective.Cmax
 
 
@@ -93,7 +100,7 @@ class Heuristics(FS_Methods.Heuristics_Cmax):
 
     @staticmethod
     def slope(instance: FmCmax_Instance):
-        """the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
+        """Inspired from Jonhson's rule, this heuristic schedules first the jobs with the smallest processing times on the first machines
 
         Args:
             instance (FmCmax_Instance): Instance to be solved by the heuristic
