@@ -22,7 +22,7 @@
    "source": [
     "%load_ext autoreload\n",
     "%autoreload 2\n",
-    "import pyscheduling_cc.FS.FmCmax as fs"
+    "import pyscheduling.FS.FmCmax as fs"
    ]
   },
   {
@@ -98,7 +98,7 @@
   "orig_nbformat": 4,
   "vscode": {
    "interpreter": {
-    "hash": "5680f738cc3aa8dc0f2caa6f4f7f94524a25cee02af6591b567881b90e17c616"
+    "hash": "fa7cdbb78ab82d427a6b02c171e3c48e0658c2b720f18feff16576a8f3200f32"
    }
   }
  },

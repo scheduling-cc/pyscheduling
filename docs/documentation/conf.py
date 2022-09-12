@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'pyscheduling_cc'
+project = 'pyscheduling'
 copyright = '2022, scheduling-cc'
 author = 'scheduling-cc'
 

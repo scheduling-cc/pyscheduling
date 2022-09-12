@@ -1,0 +1,19 @@
+:py:mod:`pyscheduling.PMSP`
+===========================
+
+.. py:module:: pyscheduling.PMSP
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   PM_methods/index.rst
+   ParallelMachines/index.rst
+   RmSijkCmax/index.rst
+   RmriSijkCmax/index.rst
+   interface/index.rst
+
+

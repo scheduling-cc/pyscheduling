@@ -1,0 +1,407 @@
+:py:mod:`pyscheduling.Problem`
+==============================
+
+.. py:module:: pyscheduling.Problem
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.Problem.Objective
+   pyscheduling.Problem.Instance
+   pyscheduling.Problem.Solution
+   pyscheduling.Problem.SolveStatus
+   pyscheduling.Problem.SolveResult
+   pyscheduling.Problem.LocalSearch
+   pyscheduling.Problem.Branch_Bound
+   pyscheduling.Problem.Solver
+
+
+
+
+.. py:class:: Objective
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: Cmax
+      
+
+      
+
+   .. py:attribute:: wiTi
+      
+
+      
+
+   .. py:attribute:: wiCi
+      
+
+      
+
+   .. py:attribute:: Lmax
+      
+
+      
+
+   .. py:method:: to_string()
+      :classmethod:
+
+      Print the available objective functions
+
+      :returns: name of every objective in different lines
+      :rtype: str
+
+
+
+.. py:class:: Instance
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: name
+      :annotation: :str
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+      :abstractmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :rtype: Instance
+
+
+   .. py:method:: generate_random(protocol: str = None)
+      :classmethod:
+      :abstractmethod:
+
+      Generate a random instance according to a predefined protocol
+
+      :param protocol: represents the protocol used to generate the instance
+      :type protocol: string
+
+      :rtype: Instance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+      :abstractmethod:
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+
+.. py:class:: Solution
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: instance
+      :annotation: :Instance
+
+      
+
+   .. py:attribute:: objective_value
+      :annotation: :int
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+      :abstractmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: Solution
+
+
+   .. py:method:: get_objective() -> int
+      :property:
+
+      Return the objective value of the solution
+
+      :returns: objective value
+      :rtype: int
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+      :abstractmethod:
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: plot() -> None
+      :abstractmethod:
+
+      Plot the solution in an appropriate diagram
+
+
+   .. py:method:: copy()
+      :abstractmethod:
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+
+.. py:class:: SolveStatus
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: INFEASIBLE
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: FEASIBLE
+      :annotation: = 2
+
+      
+
+   .. py:attribute:: OPTIMAL
+      :annotation: = 3
+
+      
+
+
+.. py:class:: SolveResult(best_solution: Solution = None, runtime: float = -1, time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE, solutions: list[Solution] = None, kpis: list[str, object] = None)
+
+   .. py:attribute:: all_solutions
+      :annotation: :list[Solution]
+
+      
+
+   .. py:attribute:: best_solution
+      :annotation: :Solution
+
+      
+
+   .. py:attribute:: time_to_best
+      :annotation: :float
+
+      
+
+   .. py:attribute:: solve_status
+      :annotation: :SolveStatus
+
+      
+
+   .. py:attribute:: runtime
+      :annotation: :float
+
+      
+
+   .. py:attribute:: kpis
+      :annotation: :dict[str, object]
+
+      
+
+   .. py:method:: nb_solutions() -> int
+      :property:
+
+      Returns the number of solutions as an instance attribute (property)
+
+      :returns: number of solutions
+      :rtype: int
+
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+
+.. py:class:: LocalSearch(methods: list[object] = None, copy_solution: bool = False)
+
+   .. py:attribute:: methods
+      :annotation: :list[object]
+
+      
+
+   .. py:attribute:: copy_solution
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of a given LocalSearch class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+   .. py:method:: improve(solution: Solution) -> Solution
+
+      Improves a solution by iteratively calling local search operators
+
+      :param solution: current solution
+      :type solution: Solution
+
+      :returns: improved solution
+      :rtype: Solution
+
+
+
+.. py:class:: Branch_Bound
+
+   .. py:class:: Node
+
+      .. py:attribute:: lower_bound
+         :annotation: :float
+
+         
+
+      .. py:attribute:: if_solution
+         :annotation: :bool = False
+
+         
+
+      .. py:attribute:: partial_solution
+         :annotation: :object
+
+         
+
+      .. py:attribute:: sub_nodes
+         :annotation: :list[object]
+
+         
+
+      .. py:method:: delete()
+
+         To delete the variable definitely
+
+
+
+
+   .. py:attribute:: instance
+      :annotation: :Instance
+
+      
+
+   .. py:attribute:: root
+      :annotation: :object
+
+      
+
+   .. py:attribute:: objective_value
+      
+
+      
+
+   .. py:attribute:: best_solution
+      :annotation: :Solution
+
+      
+
+   .. py:attribute:: all_solution
+      :annotation: :list[Solution]
+
+      
+
+   .. py:method:: branch(node: Node)
+
+      branching strategy, to be redefined
+
+      :param node: node to branch from
+      :type node: Node
+
+
+   .. py:method:: bound(node: Node)
+
+      bounding method, to be redefined
+
+      :param node: node to bound
+      :type node: Node
+
+
+   .. py:method:: discard(root: Node, best_solution: float, objective: Objective)
+
+      prunes the search tree sections where we are certain a better solution will not be find there
+
+      :param root: root node of the tree
+      :type root: Node
+      :param best_solution: best objective value
+      :type best_solution: float
+      :param objective: objective to be considered, to know if it's a minimization or a maximization problem
+      :type objective: Objective
+
+
+   .. py:method:: objective(node: Node)
+
+      objective value evaluator, to be redefined
+
+      :param node: node to be evaluated as a complete solution
+      :type node: Node
+
+
+   .. py:method:: solve(root: Node = None)
+
+      recursive function to perform Branch&Bound on the instance attribute
+
+      :param root: starting node. Defaults to None.
+      :type root: Node, optional
+
+
+
+.. py:class:: Solver(method: object)
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: method
+      :annotation: :object
+
+      
+
+   .. py:method:: solve(instance: Instance, **data) -> SolveResult
+
+      Solves the instance and returns the corresponding solve result
+
+      :param instance: instance to be solved
+      :type instance: Instance
+
+      :returns:
+
+                object containing information about the solving process
+                            and result
+      :rtype: SolveResult
+
+
+

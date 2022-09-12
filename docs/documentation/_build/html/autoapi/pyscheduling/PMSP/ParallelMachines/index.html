@@ -1,0 +1,1871 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>pyscheduling.PMSP.ParallelMachines &#8212; pyscheduling  documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/pyscheduling.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/clipboard.min.js"></script>
+    <script src="../../../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/pyscheduling/PMSP/ParallelMachines/index';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="pyscheduling.PMSP.RmSijkCmax" href="../RmSijkCmax/index.html" />
+    <link rel="prev" title="pyscheduling.PMSP.PM_methods" href="../PM_methods/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="None">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../../index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     pyscheduling
+    </span>
+   </code>
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../FS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.FS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FS_Methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FS_Methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FlowShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FlowShop
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../JS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.JS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-3">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JobShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JobShop
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="../index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.PMSP
+      </span>
+     </code>
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="../PM_methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.PM_methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.ParallelMachines
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../RmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../RmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../SMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.SMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/SM_Methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.SM_Methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/SingleMachine/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.SingleMachine
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riPrecLmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riPrecLmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/risijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/risijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/sijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/sijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/wiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/wiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../Problem/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.Problem
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../benchmark/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.benchmark
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../pyscheduling/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.pyscheduling
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="module-pyscheduling.PMSP.ParallelMachines">
+<span id="pyscheduling-pmsp-parallelmachines"></span><h1><a class="reference internal" href="#module-pyscheduling.PMSP.ParallelMachines" title="pyscheduling.PMSP.ParallelMachines"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.PMSP.ParallelMachines</span></code></a><a class="headerlink" href="#module-pyscheduling.PMSP.ParallelMachines" title="Permalink to this headline">#</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenerationProtocol</span></code></a></p></td>
+<td><p>Generic enumeration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenerationLaw</span></code></a></p></td>
+<td><p>Generic enumeration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParallelInstance</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.Machine" title="pyscheduling.PMSP.ParallelMachines.Machine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParallelSolution</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch" title="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PM_LocalSearch</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration" title="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NeighbourhoodGeneration</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.Job" title="pyscheduling.PMSP.ParallelMachines.Job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Job</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Job">
+<span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">Job</span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Job" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.GenerationProtocol">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">GenerationProtocol</span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Generic enumeration.</p>
+<p>Derive from this class to define new enumerations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.GenerationProtocol.VALLADA">
+<span class="sig-name descname"><span class="pre">VALLADA</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol.VALLADA" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.GenerationLaw">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">GenerationLaw</span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Generic enumeration.</p>
+<p>Derive from this class to define new enumerations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.GenerationLaw.UNIFORM">
+<span class="sig-name descname"><span class="pre">UNIFORM</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw.UNIFORM" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.GenerationLaw.NORMAL">
+<span class="sig-name descname"><span class="pre">NORMAL</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw.NORMAL" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">ParallelInstance</span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.Instance" title="pyscheduling.Problem.Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.Problem.Instance</span></code></a></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.n">
+<span class="sig-name descname"><span class="pre">n</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.n" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.m">
+<span class="sig-name descname"><span class="pre">m</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.m" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_txt">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Read an instance from a txt file according to the problem’s format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the txt file of type Path from the pathlib module</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – when the file does not exist</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance">ParallelInstance</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_random">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_random" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate a random instance according to a predefined protocol</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>protocol</strong> (<em>string</em>) – represents the protocol used to generate the instance</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance">ParallelInstance</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.to_txt">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.to_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Export an instance to a txt file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the resulting txt file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_P">
+<span class="sig-name descname"><span class="pre">read_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_P" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the Processing time matrix from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the processing time matrix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Matrix of processing time, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[list[int]],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_R">
+<span class="sig-name descname"><span class="pre">read_R</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_R" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the release time table from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the release time table</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Table of release time, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[int],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_S">
+<span class="sig-name descname"><span class="pre">read_S</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_S" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the Setup time table of matrices from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the Setup time table of matrices</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Table of matrices of setup time, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[list[list[int]]],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_D">
+<span class="sig-name descname"><span class="pre">read_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_D" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the due time table from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the due time table</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Table of due time, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[int],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_P">
+<span class="sig-name descname"><span class="pre">generate_P</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><span class="pre">GenerationProtocol</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><span class="pre">GenerationLaw</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_P" title="Permalink to this definition">#</a></dt>
+<dd><p>Random generation of processing time matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>protocol</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><em>GenerationProtocol</em></a>) – given protocol of generation of random instances</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><em>GenerationLaw</em></a>) – probablistic law of generation</p></li>
+<li><p><strong>Pmin</strong> (<em>int</em>) – Minimal processing time</p></li>
+<li><p><strong>Pmax</strong> (<em>int</em>) – Maximal processing time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Matrix of processing time</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[list[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_R">
+<span class="sig-name descname"><span class="pre">generate_R</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><span class="pre">GenerationProtocol</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><span class="pre">GenerationLaw</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">PJobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_R" title="Permalink to this definition">#</a></dt>
+<dd><p>Random generation of release time table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>protocol</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><em>GenerationProtocol</em></a>) – given protocol of generation of random instances</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><em>GenerationLaw</em></a>) – probablistic law of generation</p></li>
+<li><p><strong>PJobs</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Matrix of processing time</p></li>
+<li><p><strong>Pmin</strong> (<em>int</em>) – Minimal processing time</p></li>
+<li><p><strong>Pmax</strong> (<em>int</em>) – Maximal processing time</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – release time factor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>release time table</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_S">
+<span class="sig-name descname"><span class="pre">generate_S</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><span class="pre">GenerationProtocol</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><span class="pre">GenerationLaw</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">PJobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Smin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Smax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_S" title="Permalink to this definition">#</a></dt>
+<dd><p>Random generation of setup time table of matrices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>protocol</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><em>GenerationProtocol</em></a>) – given protocol of generation of random instances</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><em>GenerationLaw</em></a>) – probablistic law of generation</p></li>
+<li><p><strong>PJobs</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Matrix of processing time</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – Setup time factor</p></li>
+<li><p><strong>Smin</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimal setup time . Defaults to 0.</p></li>
+<li><p><strong>Smax</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximal setup time. Defaults to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Setup time table of matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[list[list[int]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_D">
+<span class="sig-name descname"><span class="pre">generate_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><span class="pre">GenerationProtocol</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><span class="pre">GenerationLaw</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_D" title="Permalink to this definition">#</a></dt>
+<dd><p>Random generation of due time table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>protocol</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><em>GenerationProtocol</em></a>) – given protocol of generation of random instances</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><em>GenerationLaw</em></a>) – probablistic law of generation</p></li>
+<li><p><strong>Pmin</strong> (<em>int</em>) – Minimal processing time</p></li>
+<li><p><strong>Pmax</strong> (<em>int</em>) – Maximal processing time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>due time table</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">Machine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">machine_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completion_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_job</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_schedule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Job</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.machine_num">
+<span class="sig-name descname"><span class="pre">machine_num</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.machine_num" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.completion_time">
+<span class="sig-name descname"><span class="pre">completion_time</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.last_job">
+<span class="sig-name descname"><span class="pre">last_job</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.last_job" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.job_schedule">
+<span class="sig-name descname"><span class="pre">job_schedule</span></span><em class="property"><span class="w"> </span><span class="pre">:list[Job]</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.job_schedule" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.__str__" title="Permalink to this definition">#</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.__eq__">
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.__eq__" title="Permalink to this definition">#</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.copy" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.toJSON">
+<span class="sig-name descname"><span class="pre">toJSON</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.toJSON" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.fromDict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fromDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">machine_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.fromDict" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.compute_completion_time">
+<span class="sig-name descname"><span class="pre">compute_completion_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.compute_completion_time" title="Permalink to this definition">#</a></dt>
+<dd><p>Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the final completion_time,
+works with both RmSijkCmax and RmriSijkCmax problems</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><em>ParallelInstance</em></a>) – The instance associated to the machine</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – The job index the function starts operating from</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>completion_time of the machine</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.completion_time_insert">
+<span class="sig-name descname"><span class="pre">completion_time_insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_insert" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes the machine’s completion time if we insert “job” at “pos” in the machine’s job_schedule
+:param job: id of the inserted job
+:type job: int
+:param pos: position where the job is inserted in the machine
+:type pos: int
+:param instance: the current problem instance
+:type instance: ParallelInstance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>completion time</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>ci (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.completion_time_remove">
+<span class="sig-name descname"><span class="pre">completion_time_remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_remove" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes the machine’s completion time if we remove the job at “pos” in the machine’s job_schedule
+:param pos: position of the job to be removed
+:type pos: int
+:param instance: the current problem instance
+:type instance: ParallelInstance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>completion time</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>ci (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.completion_time_remove_insert">
+<span class="sig-name descname"><span class="pre">completion_time_remove_insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_remove</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_insert</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_remove_insert" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes the machine’s completion time if we remove job at position “pos_remove”
+and insert “job” at “pos” in the machine’s job_schedule
+:param pos_remove: position of the job to be removed
+:type pos_remove: int
+:param job: id of the inserted job
+:type job: int
+:param pos_insert: position where the job is inserted in the machine
+:type pos_insert: int
+:param instance: the current problem instance
+:type instance: ParallelInstance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>completion time</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>ci (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.Machine.completion_time_swap">
+<span class="sig-name descname"><span class="pre">completion_time_swap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_j</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_swap" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes the machine’s completion time if we insert swap jobs at position “pos_i” and “pos_j”
+in the machine’s job_schedule
+:param pos_i: position of the first job to be swapped
+:type pos_i: int
+:param pos_j: position of the second job to be swapped
+:type pos_j: int
+:param instance: the current problem instance
+:type instance: ParallelInstance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>completion time</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>ci (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">ParallelSolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">machines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.Machine" title="pyscheduling.PMSP.ParallelMachines.Machine"><span class="pre">Machine</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.Solution" title="pyscheduling.Problem.Solution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.Problem.Solution</span></code></a></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.machines">
+<span class="sig-name descname"><span class="pre">machines</span></span><em class="property"><span class="w"> </span><span class="pre">:list[Machine]</span></em><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.machines" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.__str__" title="Permalink to this definition">#</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.copy" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a copy to the current solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>copy of the current solution</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.Solution" title="pyscheduling.Problem.Solution">Solution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.__lt__">
+<span class="sig-name descname"><span class="pre">__lt__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.__lt__" title="Permalink to this definition">#</a></dt>
+<dd><p>Return self&lt;value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.cmax">
+<span class="sig-name descname"><span class="pre">cmax</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.cmax" title="Permalink to this definition">#</a></dt>
+<dd><p>Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
+which equals to the maximal completion time of every machine</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.tmp_cmax">
+<span class="sig-name descname"><span class="pre">tmp_cmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp_ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.tmp_cmax" title="Permalink to this definition">#</a></dt>
+<dd><p>returns the cmax of a solution according to the the ci in the dict temp_ci if present,
+if not it takes the ci of the machine, this doesn’t modify the “cmax” of the machine.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.fix_cmax">
+<span class="sig-name descname"><span class="pre">fix_cmax</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.fix_cmax" title="Permalink to this definition">#</a></dt>
+<dd><p>Sets the objective_value of the solution to Cmax
+which equals to the maximal completion time of every machine</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.read_txt">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.read_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Read a solution from a txt file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the solution’s txt file of type Path from pathlib</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>RmSijkCmax_Solution</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.to_txt">
+<span class="sig-name descname"><span class="pre">to_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.to_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Export the solution to a txt file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the resulting txt file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.plot" title="Permalink to this definition">#</a></dt>
+<dd><p>Plot the solution in an appropriate diagram</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.ParallelSolution.is_valid">
+<span class="sig-name descname"><span class="pre">is_valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.is_valid" title="Permalink to this definition">#</a></dt>
+<dd><p>Check if solution respects the constraints</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">PM_LocalSearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methods</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.LocalSearch" title="pyscheduling.Problem.LocalSearch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.Problem.LocalSearch</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._inter_machine_insertion">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_inter_machine_insertion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._inter_machine_insertion" title="Permalink to this definition">#</a></dt>
+<dd><p>For every job, verify if rescheduling it on the same machine at a different position or on a whole different machines gives a better solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – The initial solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Improved solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._internal_swap">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_internal_swap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._internal_swap" title="Permalink to this definition">#</a></dt>
+<dd><p>Swap between 2 jobs on the same machine whose completion_time is maximal if it gives a better solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – The initial solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Improved solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._external_swap">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_external_swap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._external_swap" title="Permalink to this definition">#</a></dt>
+<dd><p>Swap between 2 jobs on different machines, where one of the machines has the maximal completion_time among all</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – The initial solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Improved solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._external_insertion">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_external_insertion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._external_insertion" title="Permalink to this definition">#</a></dt>
+<dd><p>Delete a job from the machine whose completion_time is maximal and insert it on another one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – The initial solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Improved solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._balance">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_balance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._balance" title="Permalink to this definition">#</a></dt>
+<dd><p>Reschedule jobs between machines in order to balance their completion_time thus giving a better solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – The initial solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Improved solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.PM_LocalSearch.best_insertion_machine">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">best_insertion_machine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">machine_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch.best_insertion_machine" title="Permalink to this definition">#</a></dt>
+<dd><p>Find the best position to insert a job job_id in the machine machine_id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p></li>
+<li><p><strong>machine_id</strong> (<em>int</em>) – ID of the machine</p></li>
+<li><p><strong>job_id</strong> (<em>int</em>) – ID of the job</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.ParallelMachines.</span></span><span class="sig-name descname"><span class="pre">NeighbourhoodGeneration</span></span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.random_swap">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_swap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_improve</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.random_swap" title="Permalink to this definition">#</a></dt>
+<dd><p>Performs a random swap between 2 jobs on the same machine or on different machines</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p></li>
+<li><p><strong>force_improve</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, to apply the move, it must improve the solution. Defaults to True.</p></li>
+<li><p><strong>internal</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, applies the swap between jobs on the same machine only. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.random_inter_machine_insertion">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_inter_machine_insertion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_improve</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.random_inter_machine_insertion" title="Permalink to this definition">#</a></dt>
+<dd><p>Removes randomly a job from a machine and insert it on the same machine in different possition or another machine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p></li>
+<li><p><strong>force_improve</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, to apply the move, it must improve the solution. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.restricted_swap">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">restricted_swap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.restricted_swap" title="Permalink to this definition">#</a></dt>
+<dd><p>Performs a random swap between 2 jobs of 2 different machines whose completion time is equal
+to the maximal completion time. If it’s not possible, performs the move between a job on
+the machine whose completion time is equel to the maximal completion time and another
+one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.restricted_insert">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">restricted_insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.restricted_insert" title="Permalink to this definition">#</a></dt>
+<dd><p>Performs a random inter_machine_insertion between 2 different machines whose
+completion time is equal to the maximal completion time. If it’s not possible, performs the
+move between a job on the machine whose completion time is equel to the
+maximal completion time and another one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.lahc_neighbour">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lahc_neighbour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution_i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.lahc_neighbour" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates a neighbour solution of the given solution for the lahc metaheuristic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution_i</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.SA_neighbour">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SA_neighbour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">ParallelSolution</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.SA_neighbour" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates a neighbour solution of the given solution for the SA metaheuristic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>solution_i</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.RSA_neighbour">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RSA_neighbour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><span class="pre">ParallelInstance</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.RSA_neighbour" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates a neighbour solution of the given solution for the lahc metaheuristic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solution_i</strong> (<a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><em>ParallelSolution</em></a>) – Solution to be improved</p></li>
+<li><p><strong>q0</strong> (<em>float</em>) – Probability to apply restricted swap compared to</p></li>
+<li><p><strong>insertion.</strong> (<em>restricted</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../PM_methods/index.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.PMSP.PM_methods</span></code></p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="../RmSijkCmax/index.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.PMSP.RmSijkCmax</span></code></p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fas fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-contents">
+   Module Contents
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#classes">
+     Classes
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#attributes">
+     Attributes
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Job">
+       Job
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol">
+       GenerationProtocol
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.GenerationProtocol.VALLADA">
+         VALLADA
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw">
+       GenerationLaw
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw.UNIFORM">
+         UNIFORM
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.GenerationLaw.NORMAL">
+         NORMAL
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance">
+       ParallelInstance
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.n">
+         n
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.m">
+         m
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_txt">
+         read_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_random">
+         generate_random
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.to_txt">
+         to_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_P">
+         read_P
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_R">
+         read_R
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_S">
+         read_S
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.read_D">
+         read_D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_P">
+         generate_P
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_R">
+         generate_R
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_S">
+         generate_S
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelInstance.generate_D">
+         generate_D
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine">
+       Machine
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.machine_num">
+         machine_num
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time">
+         completion_time
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.last_job">
+         last_job
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.job_schedule">
+         job_schedule
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.__str__">
+         __str__
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.__eq__">
+         __eq__
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.copy">
+         copy
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.toJSON">
+         toJSON
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.fromDict">
+         fromDict
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.compute_completion_time">
+         compute_completion_time
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_insert">
+         completion_time_insert
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_remove">
+         completion_time_remove
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_remove_insert">
+         completion_time_remove_insert
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.Machine.completion_time_swap">
+         completion_time_swap
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution">
+       ParallelSolution
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.machines">
+         machines
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.__str__">
+         __str__
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.copy">
+         copy
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.__lt__">
+         __lt__
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.cmax">
+         cmax
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.tmp_cmax">
+         tmp_cmax
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.fix_cmax">
+         fix_cmax
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.read_txt">
+         read_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.to_txt">
+         to_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.plot">
+         plot
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.ParallelSolution.is_valid">
+         is_valid
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch">
+       PM_LocalSearch
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._inter_machine_insertion">
+         _inter_machine_insertion
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._internal_swap">
+         _internal_swap
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._external_swap">
+         _external_swap
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._external_insertion">
+         _external_insertion
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch._balance">
+         _balance
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.PM_LocalSearch.best_insertion_machine">
+         best_insertion_machine
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration">
+       NeighbourhoodGeneration
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.random_swap">
+         random_swap
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.random_inter_machine_insertion">
+         random_inter_machine_insertion
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.restricted_swap">
+         restricted_swap
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.restricted_insert">
+         restricted_insert
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.lahc_neighbour">
+         lahc_neighbour
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.SA_neighbour">
+         SA_neighbour
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.ParallelMachines.NeighbourhoodGeneration.RSA_neighbour">
+         RSA_neighbour
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../../../../_sources/autoapi/pyscheduling/PMSP/ParallelMachines/index.rst.txt">
+        <i class="fas fa-file-alt"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, scheduling-cc.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

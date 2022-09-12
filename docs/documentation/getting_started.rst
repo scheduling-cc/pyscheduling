@@ -21,18 +21,18 @@ Installation
     Installing stable release (v0.3.0)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    Pyscheduling_cc can be installed via pip from `PyPI <https://pypi.org/project/reservoirpy>`__.
+    pyscheduling can be installed via pip from `PyPI <https://pypi.org/project/reservoirpy>`__.
 
     ++++++++++++++++++++++
 
     .. code-block:: bash
 
-        pip install pyscheduling_cc
+        pip install pyscheduling
 
     ---
     :column: col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3
 
-    How to use Pyscheduling_cc
+    How to use pyscheduling
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     See examples of use here :

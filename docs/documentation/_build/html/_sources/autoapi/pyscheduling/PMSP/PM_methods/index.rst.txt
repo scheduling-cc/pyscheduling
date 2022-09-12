@@ -1,0 +1,121 @@
+:py:mod:`pyscheduling.PMSP.PM_methods`
+======================================
+
+.. py:module:: pyscheduling.PMSP.PM_methods
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.PM_methods.Metaheuristics_Cmax
+
+
+
+
+.. py:class:: Metaheuristics_Cmax
+
+   .. py:method:: meta_raps(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 100)
+      :staticmethod:
+
+      Returns the solution using the meta-raps algorithm
+
+      :param instance: The instance to be solved by the metaheuristic
+      :type instance: ParallelInstance
+      :param p: probability of taking the greedy best solution
+      :type p: float
+      :param r: percentage of moves to consider to select the best move
+      :type r: float
+      :param n_iterations: Number of execution of the metaheuristic
+      :type n_iterations: int
+
+      :returns: the solver result of the execution of the metaheuristic
+      :rtype: Problem.SolveResult
+
+
+   .. py:method:: grasp(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, x: float = 0.5, n_iterations: int = 100)
+      :staticmethod:
+
+      Returns the solution using the grasp algorithm
+
+      :param instance: Instance to be solved by the metaheuristic
+      :type instance: ParallelInstance
+      :param x: percentage of moves to consider to select the best move
+      :type x: float
+      :param n_iterations: Number of execution of the metaheuristic
+      :type n_iterations: int
+
+      :returns: the solver result of the execution of the metaheuristic
+      :rtype: Problem.SolveResult
+
+
+   .. py:method:: lahc(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, **kwargs)
+      :staticmethod:
+
+      Returns the solution using the LAHC algorithm
+
+      :param instance: Instance object to solve
+      :type instance: ParallelInstance
+      :param Lfa: Size of the candidates list. Defaults to 25.
+      :type Lfa: int, optional
+      :param n_iterations: Number of iterations of LAHC. Defaults to 300.
+      :type n_iterations: int, optional
+      :param Non_improv: LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
+      :type Non_improv: int, optional
+      :param LS: Flag to apply local search at each iteration or not. Defaults to True.
+      :type LS: bool, optional
+      :param time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+      :param init_sol_method: The method used to get the initial solution. Defaults to "constructive"
+      :param seed: Seed for the random operators to make the algo deterministic
+      :type seed: int, optional
+
+      :returns: the solver result of the execution of the metaheuristic
+      :rtype: Problem.SolveResult
+
+
+   .. py:method:: SA(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, **kwargs)
+      :staticmethod:
+
+      Returns the solution using the simulated annealing algorithm or the restricted simulated annealing algorithm
+
+      :param instance: Instance object to solve
+      :type instance: ParallelInstance
+      :param T0: Initial temperature. Defaults to 1.1.
+      :type T0: float, optional
+      :param Tf: Final temperature. Defaults to 0.01.
+      :type Tf: float, optional
+      :param k: Acceptance facture. Defaults to 0.1.
+      :type k: float, optional
+      :param b: Cooling factor. Defaults to 0.97.
+      :type b: float, optional
+      :param q0: Probability to apply restricted swap compared to restricted insertion. Defaults to 0.5.
+      :type q0: int, optional
+      :param n_iterations: Number of iterations for each temperature. Defaults to 10.
+      :type n_iterations: int, optional
+      :param Non_improv: SA stops when the number of iterations without improvement is achieved. Defaults to 500.
+      :type Non_improv: int, optional
+      :param LS: Flag to apply local search at each iteration or not. Defaults to True.
+      :type LS: bool, optional
+      :param time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+      :param init_sol_method: The method used to get the initial solution. Defaults to "constructive"
+      :param seed: Seed for the random operators to make the algo deterministic if fixed. Defaults to None.
+      :type seed: int, optional
+
+      :returns: the solver result of the execution of the metaheuristic
+      :rtype: Problem.SolveResult
+
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of the given Heuristics class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+

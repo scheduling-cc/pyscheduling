@@ -1,9 +1,9 @@
-.. pyscheduling_cc documentation master file, created by
+.. pyscheduling documentation master file, created by
    sphinx-quickstart on Wed Sep  7 14:28:40 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyscheduling_cc's documentation!
+Welcome to pyscheduling's documentation!
 ===========================================
 
 .. toctree::
@@ -26,7 +26,7 @@ Welcome to pyscheduling_cc's documentation!
    Getting started
    ^^^^^^^^^^^^^^^
 
-   A quick introduction to Pyscheduling_cc basic concepts, from installation
+   A quick introduction to pyscheduling basic concepts, from installation
    to your first scheduling problem solver.
 
    +++
@@ -42,7 +42,7 @@ Welcome to pyscheduling_cc's documentation!
    Examples
    ^^^^^^^^^^^^^^^
 
-   Some code samples to show how to use Pyscheduling_cc
+   Some code samples to show how to use pyscheduling
 
    +++
 
@@ -57,7 +57,7 @@ Welcome to pyscheduling_cc's documentation!
    API reference
    ^^^^^^^^^^^^^
 
-   The Pyscheduling_cc API documentation, with detailed descriptions of all
+   The pyscheduling API documentation, with detailed descriptions of all
    its components.
 
    +++

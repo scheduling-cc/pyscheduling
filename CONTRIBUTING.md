@@ -40,10 +40,10 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up `pyscheduling_cc` for local development.
+Ready to contribute? Here's how to set up `pyscheduling` for local development.
 
-1. Download a copy of `pyscheduling_cc` locally.
-2. Install `pyscheduling_cc` using `poetry`:
+1. Download a copy of `pyscheduling` locally.
+2. Install `pyscheduling` using `poetry`:
 
     ```console
     $ poetry install
@@ -69,5 +69,5 @@ Before you submit a pull request, check that it meets these guidelines:
 
 ## Code of Conduct
 
-Please note that the `pyscheduling_cc` project is released with a
+Please note that the `pyscheduling` project is released with a
 Code of Conduct. By contributing to this project you agree to abide by its terms.

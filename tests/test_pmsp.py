@@ -2,9 +2,9 @@ import os
 import sys
 
 import pytest
-from pyscheduling_cc.PMSP import RmriSijkCmax, RmSijkCmax, PM_methods
-from pyscheduling_cc.PMSP.ParallelMachines import ParallelSolution, PM_LocalSearch
-from pyscheduling_cc.Problem import SolveResult, SolveStatus
+from pyscheduling.PMSP import RmriSijkCmax, RmSijkCmax, PM_methods
+from pyscheduling.PMSP.ParallelMachines import ParallelSolution, PM_LocalSearch
+from pyscheduling.Problem import SolveResult, SolveStatus
 
 # Helper functions
 def check_solve_result(solve_result, expected_nb_sol=None):

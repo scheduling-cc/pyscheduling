@@ -1,0 +1,1358 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>pyscheduling.PMSP.RmSijkCmax &#8212; pyscheduling  documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/pyscheduling.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/clipboard.min.js"></script>
+    <script src="../../../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/pyscheduling/PMSP/RmSijkCmax/index';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="pyscheduling.PMSP.RmriSijkCmax" href="../RmriSijkCmax/index.html" />
+    <link rel="prev" title="pyscheduling.PMSP.ParallelMachines" href="../ParallelMachines/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="None">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../../index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     pyscheduling
+    </span>
+   </code>
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../FS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.FS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FS_Methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FS_Methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FlowShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FlowShop
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../JS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.JS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-3">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JobShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JobShop
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="../index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.PMSP
+      </span>
+     </code>
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="../PM_methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.PM_methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../ParallelMachines/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.ParallelMachines
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../RmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../SMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.SMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/SM_Methods/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.SM_Methods
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/SingleMachine/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.SingleMachine
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riPrecLmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riPrecLmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/risijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/risijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/riwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/sijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/sijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/wiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../SMSP/wiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../Problem/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.Problem
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../benchmark/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.benchmark
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../pyscheduling/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.pyscheduling
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="module-pyscheduling.PMSP.RmSijkCmax">
+<span id="pyscheduling-pmsp-rmsijkcmax"></span><h1><a class="reference internal" href="#module-pyscheduling.PMSP.RmSijkCmax" title="pyscheduling.PMSP.RmSijkCmax"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.PMSP.RmSijkCmax</span></code></a><a class="headerlink" href="#module-pyscheduling.PMSP.RmSijkCmax" title="Permalink to this headline">#</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RmSijkCmax_Instance</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.ExactSolvers" title="pyscheduling.PMSP.RmSijkCmax.ExactSolvers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExactSolvers</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.CSP" title="pyscheduling.PMSP.RmSijkCmax.CSP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSP</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics" title="pyscheduling.PMSP.RmSijkCmax.Heuristics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Heuristics</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.Metaheuristics" title="pyscheduling.PMSP.RmSijkCmax.Metaheuristics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Metaheuristics</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.AntColony" title="pyscheduling.PMSP.RmSijkCmax.AntColony"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AntColony</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.RmSijkCmax.</span></span><span class="sig-name descname"><span class="pre">RmSijkCmax_Instance</span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.ParallelInstance" title="pyscheduling.PMSP.ParallelMachines.ParallelInstance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.PMSP.ParallelMachines.ParallelInstance</span></code></a></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.P">
+<span class="sig-name descname"><span class="pre">P</span></span><em class="property"><span class="w"> </span><span class="pre">:list[list[int]]</span></em><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.P" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.S">
+<span class="sig-name descname"><span class="pre">S</span></span><em class="property"><span class="w"> </span><span class="pre">:list[list[list[int]]]</span></em><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.S" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.read_txt">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.read_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Read an instance from a txt file according to the problem’s format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the txt file of type Path from the pathlib module</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – when the file does not exist</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance">RmSijkCmax_Instance</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobs_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><span class="pre">pyscheduling.PMSP.ParallelMachines.GenerationProtocol</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelMachines.GenerationProtocol.VALLADA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><span class="pre">pyscheduling.PMSP.ParallelMachines.GenerationLaw</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelMachines.GenerationLaw.UNIFORM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Smin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Smax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">InstanceName</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.generate_random" title="Permalink to this definition">#</a></dt>
+<dd><p>Random generation of RmSijkCmax problem instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>jobs_number</strong> (<em>int</em>) – number of jobs of the instance</p></li>
+<li><p><strong>configuration_number</strong> (<em>int</em>) – number of machines of the instance</p></li>
+<li><p><strong>protocol</strong> (<a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.GenerationProtocol" title="pyscheduling.PMSP.ParallelMachines.GenerationProtocol"><em>ParallelMachines.GenerationProtocol</em></a><em>, </em><em>optional</em>) – given protocol of generation of random instances. Defaults to ParallelMachines.GenerationProtocol.VALLADA.</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.GenerationLaw" title="pyscheduling.PMSP.ParallelMachines.GenerationLaw"><em>ParallelMachines.GenerationLaw</em></a><em>, </em><em>optional</em>) – probablistic law of generation. Defaults to ParallelMachines.GenerationLaw.UNIFORM.</p></li>
+<li><p><strong>Pmin</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimal processing time. Defaults to -1.</p></li>
+<li><p><strong>Pmax</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximal processing time. Defaults to -1.</p></li>
+<li><p><strong>Gamma</strong> (<em>float</em><em>, </em><em>optional</em>) – Setup time factor. Defaults to 0.0.</p></li>
+<li><p><strong>Smin</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimal setup time. Defaults to -1.</p></li>
+<li><p><strong>Smax</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximal setup time. Defaults to -1.</p></li>
+<li><p><strong>InstanceName</strong> (<em>str</em><em>, </em><em>optional</em>) – name to give to the instance. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the randomly generated instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance">RmSijkCmax_Instance</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.to_txt">
+<span class="sig-name descname"><span class="pre">to_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.to_txt" title="Permalink to this definition">#</a></dt>
+<dd><p>Export an instance to a txt file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – path to the resulting txt file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.init_sol_method">
+<span class="sig-name descname"><span class="pre">init_sol_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.init_sol_method" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.get_objective">
+<span class="sig-name descname"><span class="pre">get_objective</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.get_objective" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.lower_bound">
+<span class="sig-name descname"><span class="pre">lower_bound</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.lower_bound" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes the lower bound of maximal completion time of the instance
+by dividing the sum of minimal completion time between job pairs on the number of machines</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Lower Bound of maximal completion time</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.ExactSolvers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.RmSijkCmax.</span></span><span class="sig-name descname"><span class="pre">ExactSolvers</span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.ExactSolvers" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.ExactSolvers.csp">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">csp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.ExactSolvers.csp" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.CSP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.RmSijkCmax.</span></span><span class="sig-name descname"><span class="pre">CSP</span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.CSP" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.CSP.MyCallback">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MyCallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stop_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[300,</span> <span class="pre">600,</span> <span class="pre">3600,</span> <span class="pre">7200]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.CSP.MyCallback" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">docplex.cp.solver.cpo_callback.CpoCallback</span></code></p>
+<p>A callback used to log the value of cmax at different timestamps</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>CpoCallback</strong> (<em>_type_</em>) – Inherits from CpoCallback</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.CSP.MyCallback.invoke">
+<span class="sig-name descname"><span class="pre">invoke</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jsol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.CSP.MyCallback.invoke" title="Permalink to this definition">#</a></dt>
+<dd><p>Notify the callback about a solver event.</p>
+<p>This method is called every time an event is notified by the CPO solver.
+Associated to the event, the solver information is provided as a an object of class
+class:<cite>~docplex.cp.solution.CpoSolveResult</cite> that is instantiated with information available at this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solver</strong> – Originator CPO solver (object of class <code class="xref py py-class docutils literal notranslate"><span class="pre">CpoSolver</span></code>)</p></li>
+<li><p><strong>event</strong> – Event id, string with value in ALL_CALLBACK_EVENTS</p></li>
+<li><p><strong>sres</strong> – Solver data, object of class <code class="xref py py-class docutils literal notranslate"><span class="pre">CpoSolveResult</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.CSP.CPO_STATUS">
+<span class="sig-name descname"><span class="pre">CPO_STATUS</span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.CSP.CPO_STATUS" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.CSP._transform_csp_solution">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_transform_csp_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T_ki</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.CSP._transform_csp_solution" title="Permalink to this definition">#</a></dt>
+<dd><p>Transforms cp optimizer interval variable into a solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>(</strong><strong>)</strong> (<em>msol</em>) – CPO solution</p></li>
+<li><p><strong>T_ki</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>interval_var</em><em>]</em><em>]</em>) – Interval variables represening jobs</p></li>
+<li><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><em>RmSijkCmax_Instance</em></a>) – instance corresponding to the solution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cpoptimizer’s solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.CSP.solve">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.CSP.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the solution using the Cplex - CP optimizer solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.Instance" title="pyscheduling.Problem.Instance"><em>Instance</em></a>) – Instance object to solve</p></li>
+<li><p><strong>log_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the log file to output cp optimizer log. Defaults to None to disable logging.</p></li>
+<li><p><strong>time_limit</strong> (<em>int</em><em>, </em><em>optional</em>) – Time limit for executing the solver. Defaults to 300s.</p></li>
+<li><p><strong>threads</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of threads to set for cp optimizer solver. Defaults to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The object represeting the solving process result</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult">SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.Heuristics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.RmSijkCmax.</span></span><span class="sig-name descname"><span class="pre">Heuristics</span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.Heuristics.constructive">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">constructive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><span class="pre">RmSijkCmax_Instance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics.constructive" title="Permalink to this definition">#</a></dt>
+<dd><p>the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><em>RmSijkCmax_Instance</em></a>) – Instance to be solved by the heuristic</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the solver result of the execution of the heuristic</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult">Problem.SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.Heuristics.list_heuristic">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_heuristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><span class="pre">RmSijkCmax_Instance</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decreasing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics.list_heuristic" title="Permalink to this definition">#</a></dt>
+<dd><p>list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<em>_type_</em>) – Instance to be solved by the heuristic</p></li>
+<li><p><strong>rule</strong> (<em>int</em><em>, </em><em>optional</em>) – ID of the rule to follow by the heuristic. Defaults to 1.</p></li>
+<li><p><strong>decreasing</strong> (<em>bool</em><em>, </em><em>optional</em>) – _description_. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the solver result of the execution of the heuristic</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult">Problem.SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.Heuristics.all_methods">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_methods</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics.all_methods" title="Permalink to this definition">#</a></dt>
+<dd><p>returns all the methods of the given Heuristics class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of functions</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[object]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.Metaheuristics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.RmSijkCmax.</span></span><span class="sig-name descname"><span class="pre">Metaheuristics</span></span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.Metaheuristics" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../PM_methods/index.html#pyscheduling.PMSP.PM_methods.Metaheuristics_Cmax" title="pyscheduling.PMSP.PM_methods.Metaheuristics_Cmax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.PMSP.PM_methods.Metaheuristics_Cmax</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.Metaheuristics.antColony">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">antColony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><span class="pre">RmSijkCmax_Instance</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.Metaheuristics.antColony" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the solution using the ant colony algorithm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><em>RmSijkCmax_Instance</em></a>) – Instance to be solved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the solver result of the execution of the metaheuristic</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult">Problem.SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.PMSP.RmSijkCmax.</span></span><span class="sig-name descname"><span class="pre">AntColony</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><span class="pre">RmSijkCmax_Instance</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ants</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_best</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.081</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaporation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_ants</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pheromone_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>Main method used to solve the problem and call the different steps</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Object containing the solution and useful metrics</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult">SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.init_graph">
+<span class="sig-name descname"><span class="pre">init_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.init_graph" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize the two stage graph with initial values of pheromone</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of the two stage graph consisting of np.array elements</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.spread_pheronome_global">
+<span class="sig-name descname"><span class="pre">spread_pheronome_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_solutions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution"><span class="pre">pyscheduling.PMSP.ParallelMachines.ParallelSolution</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.spread_pheronome_global" title="Permalink to this definition">#</a></dt>
+<dd><p>Update pheromone levels globally after finding new solutions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>all_solutions</strong> (<em>list</em><em>[</em><em>RmSijkCmax_Solution</em><em>]</em>) – list of generated solutions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.improve_best_ants">
+<span class="sig-name descname"><span class="pre">improve_best_ants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_solutions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.improve_best_ants" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply local search to the best solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>all_solutions</strong> (<em>_type_</em>) – list of all generated solutions</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of updated solutions</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[RmSijkCmax_Solution]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.gen_all_paths">
+<span class="sig-name descname"><span class="pre">gen_all_paths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.gen_all_paths" title="Permalink to this definition">#</a></dt>
+<dd><p>Calls the gen_path function to generate all solutions from ants paths</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of new solutions</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[RmSijkCmax_Solution]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.gen_path">
+<span class="sig-name descname"><span class="pre">gen_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.gen_path" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate one new solution from one ant’s path, it calls the two stages: affect_tasks and sequence_tasks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>new solution from ant’s path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>RmSijkCmax_Solution</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.affect_tasks">
+<span class="sig-name descname"><span class="pre">affect_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.affect_tasks" title="Permalink to this definition">#</a></dt>
+<dd><p>Generates an affectation from the first stage graph and the path the ant went through</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of tasks inside each machine</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[list[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.sequence_tasks">
+<span class="sig-name descname"><span class="pre">sequence_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">affectation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.sequence_tasks" title="Permalink to this definition">#</a></dt>
+<dd><p>Uses the affectation from stage 1 to sequence tasks inside machines using stage 2 of the graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>affectation</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>int</em><em>]</em><em>]</em>) – affectation to machines</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complete solution of one ant</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../ParallelMachines/index.html#pyscheduling.PMSP.ParallelMachines.ParallelSolution" title="pyscheduling.PMSP.ParallelMachines.ParallelSolution">ParallelMachines.ParallelSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.pick_task">
+<span class="sig-name descname"><span class="pre">pick_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pheromone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affected_tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visited</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.pick_task" title="Permalink to this definition">#</a></dt>
+<dd><p>Select a task to affect according to pheromone levels and the graph’s state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prev</strong> (<em>int</em>) – previous segment in the graph</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – number of machines</p></li>
+<li><p><strong>pheromone</strong> (<em>np.array</em>) – pheromone levels</p></li>
+<li><p><strong>affected_tasks</strong> (<em>list</em>) – list of affected tasks</p></li>
+<li><p><strong>visited</strong> (<em>list</em>) – list of visited segments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>next task to affect</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.PMSP.RmSijkCmax.AntColony.reinit_graph">
+<span class="sig-name descname"><span class="pre">reinit_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.reinit_graph" title="Permalink to this definition">#</a></dt>
+<dd><p>Reinitialize the graph’s pheromone levels when the premature convergence is detected</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../ParallelMachines/index.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.PMSP.ParallelMachines</span></code></p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="../RmriSijkCmax/index.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.PMSP.RmriSijkCmax</span></code></p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fas fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-contents">
+   Module Contents
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#classes">
+     Classes
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance">
+       RmSijkCmax_Instance
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.P">
+         P
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.S">
+         S
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.read_txt">
+         read_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.generate_random">
+         generate_random
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.to_txt">
+         to_txt
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.init_sol_method">
+         init_sol_method
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.get_objective">
+         get_objective
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance.lower_bound">
+         lower_bound
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.ExactSolvers">
+       ExactSolvers
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.ExactSolvers.csp">
+         csp
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.CSP">
+       CSP
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.CSP.MyCallback">
+         MyCallback
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.CSP.MyCallback.invoke">
+           invoke
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.CSP.CPO_STATUS">
+         CPO_STATUS
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.CSP._transform_csp_solution">
+         _transform_csp_solution
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.CSP.solve">
+         solve
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics">
+       Heuristics
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics.constructive">
+         constructive
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics.list_heuristic">
+         list_heuristic
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.Heuristics.all_methods">
+         all_methods
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.Metaheuristics">
+       Metaheuristics
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.Metaheuristics.antColony">
+         antColony
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony">
+       AntColony
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.solve">
+         solve
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.init_graph">
+         init_graph
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.spread_pheronome_global">
+         spread_pheronome_global
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.improve_best_ants">
+         improve_best_ants
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.gen_all_paths">
+         gen_all_paths
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.gen_path">
+         gen_path
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.affect_tasks">
+         affect_tasks
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.sequence_tasks">
+         sequence_tasks
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.pick_task">
+         pick_task
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.PMSP.RmSijkCmax.AntColony.reinit_graph">
+         reinit_graph
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../../../../_sources/autoapi/pyscheduling/PMSP/RmSijkCmax/index.rst.txt">
+        <i class="fas fa-file-alt"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, scheduling-cc.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

@@ -1,25 +1,24 @@
-# pyscheduling_cc
+# pyscheduling
 
 THE python package to solve scheduling problems
 
 ## Installation
 
 ```bash
-$ pip install pyscheduling_cc
+$ pip install pyscheduling
 ```
 
 ## Usage
 
 ```python
-import pyscheduling_cc as pyscheduling
-import pyscheduling_cc.ParallelMachines as pmsp
-import pyscheduling_cc.RmSijkCmax as pmsp_sijk
+import pyscheduling.SMSP.interface as sm
 
-instance = pmsp_sijk.RmSijkCmax_Instance.generate_random(150,10)
-solver = pyscheduling.Problem.Solver(pmsp_sijk.Heuristics.constructive)
-solve_result = solver.solve(instance)
-LSOperator = pmsp.PM_LocalSearch()
-LSOperator.improve(solve_result.best_solution)
+problem = sm.Problem()
+problem.add_constraints([sm.Constraints.W,sm.Constraints.D])
+problem.set_objective(sm.Objective.wiTi)
+problem.generate_random(jobs_number=20,Wmax=10)
+solution = problem.solve(problem.heuristics["ACT"])
+print(solution)
 ```
 
 ## Contributing
@@ -28,4 +27,4 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`pyscheduling_cc` was created by the scheduling-cc organization. It is licensed under the terms of the MIT license.
+`pyscheduling` was created by the scheduling-cc organization. It is licensed under the terms of the MIT license.

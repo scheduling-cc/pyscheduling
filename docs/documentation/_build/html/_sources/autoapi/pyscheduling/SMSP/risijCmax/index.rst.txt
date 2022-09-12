@@ -1,0 +1,151 @@
+:py:mod:`pyscheduling.SMSP.risijCmax`
+=====================================
+
+.. py:module:: pyscheduling.SMSP.risijCmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.risijCmax.risijCmax_Instance
+   pyscheduling.SMSP.risijCmax.Heuristics
+   pyscheduling.SMSP.risijCmax.Metaheuristics
+
+
+
+
+.. py:class:: risijCmax_Instance
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :list[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :list[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :list[list[int]]
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :rtype: risijCmax_Instance
+
+
+   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha: float = 0.0, Gamma: float = 0.0, Smin: int = -1, Smax: int = -1, InstanceName: str = '')
+      :classmethod:
+
+      Random generation of risijCmax problem instance
+
+      :param jobs_number: number of jobs of the instance
+      :type jobs_number: int
+      :param protocol: given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
+      :type protocol: SingleMachine.GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+      :type law: SingleMachine.GenerationLaw, optional
+      :param Pmin: Minimal processing time. Defaults to 1.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to -1.
+      :type Pmax: int, optional
+      :param alpha: Release time factor. Defaults to 0.0.
+      :type alpha: float, optional
+      :param Gamma: Setup time factor. Defaults to 0.0.
+      :type Gamma: float, optional
+      :param Smin: Minimal setup time. Defaults to -1.
+      :type Smin: int, optional
+      :param Smax: Maximal setup time. Defaults to -1.
+      :type Smax: int, optional
+      :param InstanceName: name to give to the instance. Defaults to "".
+      :type InstanceName: str, optional
+
+      :returns: the randomly generated instance
+      :rtype: risijCmax_Instance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: get_objective()
+
+      to get the objective tackled by the instance
+
+      :returns: Makespan
+      :rtype: RootProblem.Objective
+
+
+   .. py:method:: init_sol_method()
+
+      Returns the default solving method
+
+      :returns: default solving method
+      :rtype: object
+
+
+
+.. py:class:: Heuristics
+
+   Bases: :py:obj:`pyscheduling.SMSP.SM_Methods.Heuristics_Cmax`
+
+   .. py:method:: constructive(instance: risijCmax_Instance)
+      :staticmethod:
+
+      the greedy constructive heuristic to find an initial solution of risijCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
+
+      :param instance: Instance to be solved by the heuristic
+      :type instance: risijCmax_Instance
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of the given Heuristics class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+
+.. py:class:: Metaheuristics
+
+   Bases: :py:obj:`pyscheduling.SMSP.SM_Methods.Metaheuristics`
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of the given Heuristics class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+

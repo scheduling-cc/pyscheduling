@@ -1,0 +1,187 @@
+:py:mod:`pyscheduling.SMSP.riwiCi`
+==================================
+
+.. py:module:: pyscheduling.SMSP.riwiCi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.riwiCi.riwiCi_Instance
+   pyscheduling.SMSP.riwiCi.Heuristics
+   pyscheduling.SMSP.riwiCi.Metaheuristics
+
+
+
+
+.. py:class:: riwiCi_Instance
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: W
+      :annotation: :list[int]
+
+      
+
+   .. py:attribute:: P
+      :annotation: :list[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :list[int]
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :rtype: riwiCi_Instance
+
+
+   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin: int = 1, Wmax: int = 1, Pmin: int = 1, Pmax: int = -1, Alpha: float = 0.0, InstanceName: str = '')
+      :classmethod:
+
+      Random generation of riwiCi problem instance
+
+      :param jobs_number: number of jobs of the instance
+      :type jobs_number: int
+      :param protocol: given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
+      :type protocol: SingleMachine.GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+      :type law: SingleMachine.GenerationLaw, optional
+      :param Wmin: Minimal weight. Defaults to 1.
+      :type Wmin: int, optional
+      :param Wmax: Maximal weight. Defaults to 1.
+      :type Wmax: int, optional
+      :param Pmin: Minimal processing time. Defaults to -1.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to -1.
+      :type Pmax: int, optional
+      :param Alpha: Release time factor. Defaults to 0.0.
+      :type Alpha: float,optional
+      :param InstanceName: name to give to the instance. Defaults to "".
+      :type InstanceName: str, optional
+
+      :returns: the randomly generated instance
+      :rtype: riwiCi_Instance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: get_objective()
+
+      to get the objective tackled by the instance
+
+      :returns: Total wighted completion time
+      :rtype: RootProblem.Objective
+
+
+   .. py:method:: init_sol_method()
+
+      Returns the default solving method
+
+      :returns: default solving method
+      :rtype: object
+
+
+
+.. py:class:: Heuristics
+
+   .. py:method:: WSECi(instance: riwiCi_Instance)
+      :staticmethod:
+
+      Weighted Shortest Expected Completion time, dynamic dispatching rule inspired from WSPT but adds release
+      time to processing time
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: WSAPT(instance: riwiCi_Instance)
+      :staticmethod:
+
+      Weighted Shortest Available Processing time, dynamic dispatching rule inspired from WSPT but considers
+      available jobs only at a given time t
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: list_heuristic(instance: riwiCi_Instance, rule: int = 1)
+      :staticmethod:
+
+      contains a list of static dispatching rules to be chosen from
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+      :param rule: Index of the rule to use. Defaults to 1.
+      :type rule: int, optional
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of the given Heuristics class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+
+.. py:class:: Metaheuristics
+
+   Bases: :py:obj:`pyscheduling.SMSP.SM_Methods.Metaheuristics`
+
+   .. py:method:: iterative_LS(instance: riwiCi_Instance, **kwargs)
+      :staticmethod:
+
+      Applies LocalSearch on the current solution iteratively
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of the given Heuristics class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+

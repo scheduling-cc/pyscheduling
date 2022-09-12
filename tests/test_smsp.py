@@ -2,9 +2,9 @@ import os
 import sys
 
 import pytest
-from pyscheduling_cc.SMSP import *
-import pyscheduling_cc.SMSP.SM_Methods as SM_Methods
-from pyscheduling_cc.Problem import SolveResult, SolveStatus
+from pyscheduling.SMSP import *
+import pyscheduling.SMSP.SM_Methods as SM_Methods
+from pyscheduling.Problem import SolveResult, SolveStatus
 
 # Helper functions
 def check_solve_result(solve_result, expected_nb_sol=None):
