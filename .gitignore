@@ -9,3 +9,4 @@
 **.code-workspace
 **.pyc
 **.lock
+**/dist
