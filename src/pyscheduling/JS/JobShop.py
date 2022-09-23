@@ -458,7 +458,37 @@ class JobShopSolution(RootProblem.Solution):
         else : return other.objective_value < self.objective_value
     
     def cmax(self):
-        pass
+        P_copy = [[(0,operation) for operation in job] for job in self.instance.P]
+        remaining_machines = list(range(0,self.instance.m))
+        remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines}
+        while len(remaining_machines) > 0 :
+            for machine_id in remaining_machines :
+                current_time = remaining_machines_current_job_index[machine_id][1]
+                next_job_index = remaining_machines_current_job_index[machine_id][0]
+                current_job = self.machines[machine_id].job_schedule[next_job_index][0]
+                while machine_id == P_copy[current_job][0][1][0] :
+                    startTime = max(current_time,P_copy[current_job][0][0])
+                    endTime = startTime + P_copy[current_job][0][1][1]
+                    self.machines[machine_id].job_schedule[next_job_index] = Job(current_job,
+                    startTime,endTime)
+                    
+                    current_time = endTime
+                    next_job_index += 1
+
+                    P_copy[current_job].pop(0)
+                    if len(P_copy[current_job])>0 : P_copy[current_job][0] = (current_time,P_copy[current_job][0][1])
+                    
+                    if next_job_index == len(self.machines[machine_id].job_schedule) :
+                        self.machines[machine_id].objective = current_time
+                        self.machines[machine_id].last_job = current_job
+                        remaining_machines.remove(machine_id)
+                        break
+                    else :
+                        current_job = self.machines[machine_id].job_schedule[next_job_index][0]
+                remaining_machines_current_job_index[machine_id] = (next_job_index,current_time)
+
+        self.objective_value = max([machine.objective for machine in self.machines])
+
 
     def fix_cmax(self):
         pass
