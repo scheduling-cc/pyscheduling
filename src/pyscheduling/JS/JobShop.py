@@ -458,6 +458,8 @@ class JobShopSolution(RootProblem.Solution):
         else : return other.objective_value < self.objective_value
     
     def cmax(self):
+        """Sets the schedule of each machine then sets the makespan
+        """
         P_copy = [[(0,operation) for operation in job] for job in self.instance.P]
         remaining_machines = list(range(0,self.instance.m))
         remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines}
