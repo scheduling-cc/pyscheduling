@@ -460,7 +460,7 @@ class JobShopSolution(RootProblem.Solution):
     def cmax(self):
         """Sets the schedule of each machine then sets the makespan
         """
-        P_copy = [[(0,operation) for operation in job] for job in self.instance.P]
+        jobs_progression = [(0,0) for job in range(self.instance.n)]
         remaining_machines = list(range(0,self.instance.m))
         remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines}
         while len(remaining_machines) > 0 :
@@ -468,18 +468,17 @@ class JobShopSolution(RootProblem.Solution):
                 current_time = remaining_machines_current_job_index[machine_id][1]
                 next_job_index = remaining_machines_current_job_index[machine_id][0]
                 current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                while machine_id == P_copy[current_job][0][1][0] :
-                    startTime = max(current_time,P_copy[current_job][0][0])
-                    endTime = startTime + P_copy[current_job][0][1][1]
+                while machine_id == self.instance.P[current_job][jobs_progression[current_job][0]][0] :
+                    startTime = max(current_time,jobs_progression[current_job][1])
+                    endTime = startTime + self.instance.P[current_job][jobs_progression[current_job][0]][1]
                     self.machines[machine_id].job_schedule[next_job_index] = Job(current_job,
                     startTime,endTime)
                     
                     current_time = endTime
                     next_job_index += 1
 
-                    P_copy[current_job].pop(0)
-                    if len(P_copy[current_job])>0 : P_copy[current_job][0] = (current_time,P_copy[current_job][0][1])
-                    
+                    jobs_progression[current_job] = (jobs_progression[current_job][0]+1, current_time)
+
                     if next_job_index == len(self.machines[machine_id].job_schedule) :
                         self.machines[machine_id].objective = current_time
                         self.machines[machine_id].last_job = current_job
