@@ -447,7 +447,8 @@ class FlowShopSolution(RootProblem.Solution):
                         setupTime = self.instance.S[machine_id][prev_job][job_id]
                 else: setupTime = 0
                 startTime = max(ci,self.machines[prev_machine].job_schedule[job_index].end_time)
-                ci = startTime + setupTime + self.instance.P[job_id][machine_id]
+                remaining_setupTime = max(setupTime-(startTime-ci),0)
+                ci = startTime + remaining_setupTime + self.instance.P[job_id][machine_id]
                 self.machines[machine_id].job_schedule[job_index] = Job(job_id,startTime,ci)
                 job_index += 1
                 prev_job = job_id
@@ -498,7 +499,8 @@ class FlowShopSolution(RootProblem.Solution):
                         setupTime = self.instance.S[machine_id][prev_job][job_id]
                 else: setupTime = 0
                 startTime = max(ci,new_ci)
-                new_ci = startTime + setupTime + self.instance.P[job_id][machine_id]
+                remaining_setupTime = max(setupTime-(startTime-ci),0)
+                new_ci = startTime + remaining_setupTime + self.instance.P[job_id][machine_id]
 
         return startTime,new_ci
     
