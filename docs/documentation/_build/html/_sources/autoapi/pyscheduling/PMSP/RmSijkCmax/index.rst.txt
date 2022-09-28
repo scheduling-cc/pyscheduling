@@ -13,14 +13,27 @@ Classes
 .. autoapisummary::
 
    pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance
-   pyscheduling.PMSP.RmSijkCmax.ExactSolvers
    pyscheduling.PMSP.RmSijkCmax.CSP
+   pyscheduling.PMSP.RmSijkCmax.ExactSolvers
    pyscheduling.PMSP.RmSijkCmax.Heuristics
    pyscheduling.PMSP.RmSijkCmax.Metaheuristics
    pyscheduling.PMSP.RmSijkCmax.AntColony
 
 
 
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmSijkCmax.DOCPLEX_IMPORTED
+
+
+.. py:data:: DOCPLEX_IMPORTED
+   
+
+   
 
 .. py:class:: RmSijkCmax_Instance
 
@@ -106,13 +119,6 @@ Classes
 
 
 
-.. py:class:: ExactSolvers
-
-   .. py:method:: csp(instance, **kwargs)
-      :staticmethod:
-
-
-
 .. py:class:: CSP
 
    .. py:class:: MyCallback(stop_times=[300, 600, 3600, 7200])
@@ -175,6 +181,9 @@ Classes
       :returns: The object represeting the solving process result
       :rtype: SolveResult
 
+
+
+.. py:class:: ExactSolvers
 
 
 .. py:class:: Heuristics

@@ -13,15 +13,34 @@ Classes
 .. autoapisummary::
 
    pyscheduling.PMSP.RmriSijkCmax.RmriSijkCmax_Instance
-   pyscheduling.PMSP.RmriSijkCmax.ExactSolvers
    pyscheduling.PMSP.RmriSijkCmax.CSP
    pyscheduling.PMSP.RmriSijkCmax.MILP
+   pyscheduling.PMSP.RmriSijkCmax.ExactSolvers
    pyscheduling.PMSP.RmriSijkCmax.Heuristics
    pyscheduling.PMSP.RmriSijkCmax.Metaheuristics
    pyscheduling.PMSP.RmriSijkCmax.GeneticAlgorithm
 
 
 
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmriSijkCmax.GUROBI_IMPORTED
+   pyscheduling.PMSP.RmriSijkCmax.DOCPLEX_IMPORTED
+
+
+.. py:data:: GUROBI_IMPORTED
+   
+
+   
+
+.. py:data:: DOCPLEX_IMPORTED
+   
+
+   
 
 .. py:class:: RmriSijkCmax_Instance
 
@@ -111,17 +130,6 @@ Classes
 
       :returns: Lower Bound of maximal completion time
       :rtype: int
-
-
-
-.. py:class:: ExactSolvers
-
-   .. py:method:: csp(instance, **kwargs)
-      :staticmethod:
-
-
-   .. py:method:: milp(instance, **kwargs)
-      :staticmethod:
 
 
 
@@ -228,6 +236,9 @@ Classes
       :returns: The object represeting the solving process result
       :rtype: SolveResult
 
+
+
+.. py:class:: ExactSolvers
 
 
 .. py:class:: Heuristics

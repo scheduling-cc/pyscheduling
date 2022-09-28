@@ -27,8 +27,8 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/pyscheduling.css" />
   
@@ -615,11 +615,36 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.JS.JmCmax.JmCmax_Instance" title="pyscheduling.JS.JmCmax.JmCmax_Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JmCmax_Instance</span></code></a></p></td>
 <td><p>Helper class that provides a standard way to create an ABC using</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.JS.JmCmax.ExactSolvers" title="pyscheduling.JS.JmCmax.ExactSolvers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExactSolvers</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.JS.JmCmax.CSP" title="pyscheduling.JS.JmCmax.CSP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSP</span></code></a></p></td>
+<td><p></p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.JS.JmCmax.Heuristics" title="pyscheduling.JS.JmCmax.Heuristics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Heuristics</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.JS.JmCmax.DOCPLEX_IMPORTED" title="pyscheduling.JS.JmCmax.DOCPLEX_IMPORTED"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DOCPLEX_IMPORTED</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.DOCPLEX_IMPORTED">
+<span class="sig-prename descclassname"><span class="pre">pyscheduling.JS.JmCmax.</span></span><span class="sig-name descname"><span class="pre">DOCPLEX_IMPORTED</span></span><a class="headerlink" href="#pyscheduling.JS.JmCmax.DOCPLEX_IMPORTED" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.JmCmax_Instance">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.JS.JmCmax.</span></span><span class="sig-name descname"><span class="pre">JmCmax_Instance</span></span><a class="headerlink" href="#pyscheduling.JS.JmCmax.JmCmax_Instance" title="Permalink to this definition">#</a></dt>
@@ -715,6 +740,95 @@ inheritance.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.ExactSolvers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.JS.JmCmax.</span></span><span class="sig-name descname"><span class="pre">ExactSolvers</span></span><a class="headerlink" href="#pyscheduling.JS.JmCmax.ExactSolvers" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.CSP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.JS.JmCmax.</span></span><span class="sig-name descname"><span class="pre">CSP</span></span><a class="headerlink" href="#pyscheduling.JS.JmCmax.CSP" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.CSP.MyCallback">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MyCallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stop_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[300,</span> <span class="pre">600,</span> <span class="pre">3600,</span> <span class="pre">7200]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.JS.JmCmax.CSP.MyCallback" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">docplex.cp.solver.cpo_callback.CpoCallback</span></code></p>
+<p>A callback used to log the value of cmax at different timestamps</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>CpoCallback</strong> (<em>_type_</em>) – Inherits from CpoCallback</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.CSP.MyCallback.invoke">
+<span class="sig-name descname"><span class="pre">invoke</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jsol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.JS.JmCmax.CSP.MyCallback.invoke" title="Permalink to this definition">#</a></dt>
+<dd><p>Notify the callback about a solver event.</p>
+<p>This method is called every time an event is notified by the CPO solver.
+Associated to the event, the solver information is provided as a an object of class
+class:<cite>~docplex.cp.solution.CpoSolveResult</cite> that is instantiated with information available at this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solver</strong> – Originator CPO solver (object of class <code class="xref py py-class docutils literal notranslate"><span class="pre">CpoSolver</span></code>)</p></li>
+<li><p><strong>event</strong> – Event id, string with value in ALL_CALLBACK_EVENTS</p></li>
+<li><p><strong>sres</strong> – Solver data, object of class <code class="xref py py-class docutils literal notranslate"><span class="pre">CpoSolveResult</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.CSP.CPO_STATUS">
+<span class="sig-name descname"><span class="pre">CPO_STATUS</span></span><a class="headerlink" href="#pyscheduling.JS.JmCmax.CSP.CPO_STATUS" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.CSP._transform_csp_solution">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_transform_csp_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">types_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.JS.JmCmax.CSP._transform_csp_solution" title="Permalink to this definition">#</a></dt>
+<dd><p>Transforms cp optimizer interval variable into a solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>(</strong><strong>)</strong> (<em>msol</em>) – CPO solution</p></li>
+<li><p><strong>M_k</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>interval_var</em><em>]</em><em>]</em>) – Interval variables represening jobs inside machines k</p></li>
+<li><p><strong>types_k</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – List of job ids inside each machine k</p></li>
+<li><p><strong>instance</strong> (<a class="reference internal" href="../../PMSP/RmSijkCmax/index.html#pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance" title="pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance"><em>RmSijkCmax_Instance</em></a>) – instance corresponding to the solution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cpoptimizer’s solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../JobShop/index.html#pyscheduling.JS.JobShop.JobShopSolution" title="pyscheduling.JS.JobShop.JobShopSolution">JobShopSolution</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.CSP.solve">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.JS.JmCmax.CSP.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the solution using the Cplex - CP optimizer solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.Instance" title="pyscheduling.Problem.Instance"><em>Instance</em></a>) – Instance object to solve</p></li>
+<li><p><strong>log_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the log file to output cp optimizer log. Defaults to None to disable logging.</p></li>
+<li><p><strong>time_limit</strong> (<em>int</em><em>, </em><em>optional</em>) – Time limit for executing the solver. Defaults to 300s.</p></li>
+<li><p><strong>threads</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of threads to set for cp optimizer solver. Defaults to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The object represeting the solving process result</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult">SolveResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="pyscheduling.JS.JmCmax.Heuristics">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.JS.JmCmax.</span></span><span class="sig-name descname"><span class="pre">Heuristics</span></span><a class="headerlink" href="#pyscheduling.JS.JmCmax.Heuristics" title="Permalink to this definition">#</a></dt>
 <dd><dl class="py method">
@@ -801,7 +915,17 @@ inheritance.</p>
     <a class="reference internal nav-link" href="#classes">
      Classes
     </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#attributes">
+     Attributes
+    </a>
     <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.DOCPLEX_IMPORTED">
+       DOCPLEX_IMPORTED
+      </a>
+     </li>
      <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.JmCmax_Instance">
        JmCmax_Instance
@@ -835,6 +959,45 @@ inheritance.</p>
        <li class="toc-h5 nav-item toc-entry">
         <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.JmCmax_Instance.get_objective">
          get_objective
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.ExactSolvers">
+       ExactSolvers
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.CSP">
+       CSP
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.CSP.MyCallback">
+         MyCallback
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.CSP.MyCallback.invoke">
+           invoke
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.CSP.CPO_STATUS">
+         CPO_STATUS
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.CSP._transform_csp_solution">
+         _transform_csp_solution
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.JS.JmCmax.CSP.solve">
+         solve
         </a>
        </li>
       </ul>

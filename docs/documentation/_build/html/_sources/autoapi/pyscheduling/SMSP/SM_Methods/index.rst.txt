@@ -13,13 +13,26 @@ Classes
 .. autoapisummary::
 
    pyscheduling.SMSP.SM_Methods.Metaheuristics
-   pyscheduling.SMSP.SM_Methods.ExactSolvers
    pyscheduling.SMSP.SM_Methods.CSP
+   pyscheduling.SMSP.SM_Methods.ExactSolvers
    pyscheduling.SMSP.SM_Methods.Heuristics_HelperFunctions
    pyscheduling.SMSP.SM_Methods.Heuristics_Cmax
 
 
 
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.SM_Methods.DOCPLEX_IMPORTED
+
+
+.. py:data:: DOCPLEX_IMPORTED
+   
+
+   
 
 .. py:class:: Metaheuristics
 
@@ -54,13 +67,6 @@ Classes
 
       :returns: list of functions
       :rtype: list[object]
-
-
-
-.. py:class:: ExactSolvers
-
-   .. py:method:: csp(instance, **kwargs)
-      :staticmethod:
 
 
 
@@ -119,6 +125,9 @@ Classes
       :returns: The object represeting the solving process result
       :rtype: SolveResult
 
+
+
+.. py:class:: ExactSolvers
 
 
 .. py:class:: Heuristics_HelperFunctions
