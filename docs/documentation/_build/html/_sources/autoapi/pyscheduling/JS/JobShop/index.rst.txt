@@ -439,6 +439,9 @@ Attributes
 
    .. py:method:: cmax()
 
+      Sets the schedule of each machine then sets the makespan
+
+
 
    .. py:method:: fix_cmax()
 

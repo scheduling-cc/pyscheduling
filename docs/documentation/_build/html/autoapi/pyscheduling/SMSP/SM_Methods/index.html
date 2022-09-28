@@ -27,8 +27,8 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/pyscheduling.css" />
   
@@ -615,10 +615,10 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.Metaheuristics" title="pyscheduling.SMSP.SM_Methods.Metaheuristics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Metaheuristics</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers" title="pyscheduling.SMSP.SM_Methods.ExactSolvers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExactSolvers</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.CSP" title="pyscheduling.SMSP.SM_Methods.CSP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSP</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.CSP" title="pyscheduling.SMSP.SM_Methods.CSP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSP</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers" title="pyscheduling.SMSP.SM_Methods.ExactSolvers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExactSolvers</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.Heuristics_HelperFunctions" title="pyscheduling.SMSP.SM_Methods.Heuristics_HelperFunctions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Heuristics_HelperFunctions</span></code></a></p></td>
@@ -629,6 +629,25 @@
 </tr>
 </tbody>
 </table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.SM_Methods.DOCPLEX_IMPORTED" title="pyscheduling.SMSP.SM_Methods.DOCPLEX_IMPORTED"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DOCPLEX_IMPORTED</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.SM_Methods.DOCPLEX_IMPORTED">
+<span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.SM_Methods.</span></span><span class="sig-name descname"><span class="pre">DOCPLEX_IMPORTED</span></span><a class="headerlink" href="#pyscheduling.SMSP.SM_Methods.DOCPLEX_IMPORTED" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="pyscheduling.SMSP.SM_Methods.Metaheuristics">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.SM_Methods.</span></span><span class="sig-name descname"><span class="pre">Metaheuristics</span></span><a class="headerlink" href="#pyscheduling.SMSP.SM_Methods.Metaheuristics" title="Permalink to this definition">#</a></dt>
@@ -671,16 +690,6 @@
 </dd>
 </dl>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyscheduling.SMSP.SM_Methods.ExactSolvers">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.SM_Methods.</span></span><span class="sig-name descname"><span class="pre">ExactSolvers</span></span><a class="headerlink" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers" title="Permalink to this definition">#</a></dt>
-<dd><dl class="py method">
-<dt class="sig sig-object py" id="pyscheduling.SMSP.SM_Methods.ExactSolvers.csp">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">csp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers.csp" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -749,6 +758,11 @@ class:<cite>~docplex.cp.solution.CpoSolveResult</cite> that is instantiated with
 </dd></dl>
 
 </dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.SM_Methods.ExactSolvers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.SM_Methods.</span></span><span class="sig-name descname"><span class="pre">ExactSolvers</span></span><a class="headerlink" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyscheduling.SMSP.SM_Methods.Heuristics_HelperFunctions">
@@ -877,7 +891,17 @@ class:<cite>~docplex.cp.solution.CpoSolveResult</cite> that is instantiated with
     <a class="reference internal nav-link" href="#classes">
      Classes
     </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#attributes">
+     Attributes
+    </a>
     <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.DOCPLEX_IMPORTED">
+       DOCPLEX_IMPORTED
+      </a>
+     </li>
      <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.Metaheuristics">
        Metaheuristics
@@ -891,18 +915,6 @@ class:<cite>~docplex.cp.solution.CpoSolveResult</cite> that is instantiated with
        <li class="toc-h5 nav-item toc-entry">
         <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.Metaheuristics.all_methods">
          all_methods
-        </a>
-       </li>
-      </ul>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers">
-       ExactSolvers
-      </a>
-      <ul class="nav section-nav flex-column">
-       <li class="toc-h5 nav-item toc-entry">
-        <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers.csp">
-         csp
         </a>
        </li>
       </ul>
@@ -940,6 +952,11 @@ class:<cite>~docplex.cp.solution.CpoSolveResult</cite> that is instantiated with
         </a>
        </li>
       </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.ExactSolvers">
+       ExactSolvers
+      </a>
      </li>
      <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#pyscheduling.SMSP.SM_Methods.Heuristics_HelperFunctions">
