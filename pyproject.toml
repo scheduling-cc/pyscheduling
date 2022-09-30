@@ -3,7 +3,7 @@ name = "pyscheduling"
 version = "0.1.3"
 description = "THE python package to solve scheduling problems"
 authors = ["Amine ATHMANI", "Taha ARBAOUI", "Akram LAISSAOUI"]
-license = "MIT"
+license = "CC-BY-NC-ND-4.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
