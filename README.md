@@ -27,4 +27,4 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`pyscheduling` was created by the scheduling-cc organization. It is licensed under the terms of the MIT license.
+`pyscheduling` was created by the scheduling-cc organization. CC-BY-NC-ND-4.0.

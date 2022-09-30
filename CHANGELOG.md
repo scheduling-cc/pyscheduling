@@ -18,3 +18,6 @@
 
 - Added multiple SMSP variants, Added flowshop and jobshop scheduling problems (stucture and few methods)
 
+## v0.1.4 (30/09/2022)
+
+- First public release, fixed some bugs from v0.1.3 and distributed to pypi
