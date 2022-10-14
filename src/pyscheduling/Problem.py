@@ -266,9 +266,9 @@ class Branch_Bound():
         if root.lower_bound is not None:
             if objective.value > 0 and root.lower_bound < best_solution : root = None
             elif objective.value < 0 and root.lower_bound > best_solution : root = None
-        for node in root.sub_nodes :
-            if objective.value > 0 and node.lower_bound < best_solution : node = None
-            elif objective.value < 0 and node.lower_bound > best_solution : node = None
+        #for node in root.sub_nodes :
+        #    if objective.value > 0 and node.lower_bound < best_solution : node = None
+        #    elif objective.value < 0 and node.lower_bound > best_solution : node = None
 
     def objective(self, node : Node):
         """objective value evaluator, to be redefined
@@ -292,7 +292,11 @@ class Branch_Bound():
             for node in root.sub_nodes: self.bound(node)
             sorted_sub_nodes = root.sub_nodes
             sorted_sub_nodes.sort(reverse= self.instance.get_objective().value > 0, key = lambda node : node.lower_bound)
-            for node in sorted_sub_nodes : self.solve(node)
+            for node in sorted_sub_nodes :
+                if self.best_solution is not None : 
+                    if self.instance.get_objective().value > 0 and node.lower_bound < self.objective_value : node = None
+                    elif self.instance.get_objective().value < 0 and node.lower_bound > self.objective_value : node = None
+                if node is not None : self.solve(node)
         else :
             for node in root.sub_nodes: 
                 node.lower_bound = self.objective(node)
@@ -303,7 +307,6 @@ class Branch_Bound():
                 elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
                     self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
-                self.discard(self.root,self.objective_value,self.instance.get_objective())
                 
                     
 
