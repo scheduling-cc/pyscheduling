@@ -122,6 +122,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
             remaining_job_list_released.sort(key = lambda job_id : self.D[job_id])
             
             while(t < release_time[instant+1]):
+                if len(remaining_job_list_released) == 0 : break
                 job_id = remaining_job_list_released.pop(0)
                 exec_time = min(t+processing_time[job_id],release_time[instant+1]) - t
                 t += exec_time
