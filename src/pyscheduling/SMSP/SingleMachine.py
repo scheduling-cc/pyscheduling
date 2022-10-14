@@ -6,6 +6,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+import warnings
 
 import numpy as np
 import pyscheduling.Problem as RootProblem
@@ -928,6 +929,32 @@ class Machine:
 
         return ci
 
+    def maximum_lateness(self, instance : SingleInstance):
+        job_schedule_len = len(self.job_schedule)
+        if job_schedule_len > 0 :
+            ci = 0
+            maximum_lateness = 0
+            job_prev_i = self.job_schedule[0].id
+            for i in range(0,job_schedule_len):
+                job_i = self.job_schedule[i].id
+
+                if hasattr(instance, 'R'):
+                    startTime = max(ci, instance.R[job_i])
+                else:
+                    startTime = ci
+                if hasattr(instance, 'S'):
+                    setupTime = instance.S[job_prev_i][job_i]
+                else:
+                    setupTime = 0
+                proc_time = instance.P[job_i]
+                ci = startTime + setupTime + proc_time
+
+                self.job_schedule[i] = Job(job_i, startTime, ci)
+                maximum_lateness = max(maximum_lateness,ci - instance.D[job_i])
+                job_prev_i = job_i
+        self.objective = maximum_lateness
+        return maximum_lateness
+
 
 
 @dataclass
@@ -968,6 +995,7 @@ class SingleSolution(RootProblem.Solution):
         if self.instance != None:
                 self.machine.total_weighted_completion_time(self.instance)
         self.objective_value = self.machine.objective
+        return self.objective_value
 
     def wiTi(self):
         """Sets the job_schedule of the machine and affects the total weighted lateness to the objective_value attribute
@@ -975,6 +1003,7 @@ class SingleSolution(RootProblem.Solution):
         if self.instance != None:
                 self.machine.total_weighted_lateness(self.instance)
         self.objective_value = self.machine.objective
+        return self.objective_value
 
     def Cmax(self):
         """Sets the job_schedule of the machine and affects the makespan to the objective_value attribute
@@ -982,6 +1011,15 @@ class SingleSolution(RootProblem.Solution):
         if self.instance != None:
                 self.machine.completion_time(self.instance)
         self.objective_value = self.machine.objective
+        return self.objective_value
+
+    def Lmax(self):
+        """Sets the job_schedule of the machine and affects the maximum lateness to the objective_value attribute
+        """
+        if self.instance != None:
+                self.machine.maximum_lateness(self.instance)
+        self.objective_value = self.machine.objective
+        return self.objective_value
 
     def fix_objective(self):
         """Sets the objective_value attribute of the solution to the objective attribute of the machine
@@ -1079,7 +1117,7 @@ class SingleSolution(RootProblem.Solution):
             print("Matplotlib is not installed, you can't use gant_plot")
             return
 
-    def is_valid(self):
+    def is_valid(self, verbosity : bool = False):
         """
         Check if solution respects the constraints
         """
@@ -1105,13 +1143,27 @@ class SingleSolution(RootProblem.Solution):
             ci = expected_start_time + proc_time + setup_time
 
             if startTime != expected_start_time or endTime != ci:
-                print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
-                is_valid = False
+                if startTime > expected_start_time and endTime - startTime == proc_time + setup_time :
+                    if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
+                else :
+                    if verbosity : print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                    is_valid = False
             set_jobs.add(job)
-
             prev_job = job
 
         is_valid &= len(set_jobs) == self.instance.n
+        if is_valid :
+            solution_copy = self.copy()
+            if self.instance.get_objective() == RootProblem.Objective.wiCi:
+                is_valid = self.objective_value == solution_copy.wiCi()
+            elif self.instance.get_objective() == RootProblem.Objective.wiTi:
+                is_valid = self.objective_value == solution_copy.wiTi()
+            elif self.instance.get_objective() == RootProblem.Objective.Cmax:
+                is_valid = self.objective_value == solution_copy.Cmax()
+            elif self.instance.get_objective() == RootProblem.Objective.Lmax:
+                is_valid = self.objective_value == solution_copy.Lmax()
+        if not is_valid :
+            if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
         return is_valid
 
 class SM_LocalSearch(RootProblem.LocalSearch):
