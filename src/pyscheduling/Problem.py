@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from time import perf_counter
 
 class Objective(Enum):# Negative value are for minimization problems, Positive values are for maximization problems
     Cmax = -1
@@ -225,6 +226,8 @@ class Branch_Bound():
     objective_value = None
     best_solution : Solution = None
     all_solution : list[Solution] = field(default_factory=list)
+    start_time : float = 0
+    runtime : float = 0
 
     @dataclass
     class Node():
@@ -278,6 +281,9 @@ class Branch_Bound():
         """
         pass
 
+    def solution_format(self, partial_solution : object, objective_value) :
+        pass
+    
     def solve(self, root : Node = None):
         """recursive function to perform Branch&Bound on the instance attribute
 
@@ -287,6 +293,7 @@ class Branch_Bound():
         if root is None : 
             root = self.Node()
             self.root = root
+            self.start_time = perf_counter()
         self.branch(root) 
         if root.sub_nodes[0].if_solution is False :
             for node in root.sub_nodes: self.bound(node)
@@ -300,15 +307,18 @@ class Branch_Bound():
         else :
             for node in root.sub_nodes: 
                 node.lower_bound = self.objective(node)
-                self.all_solution.append(node.partial_solution)
+                solution = self.solution_format(node.partial_solution,node.lower_bound)
+                self.all_solution.append(solution)
                 if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound) :
-                    self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
+                    self.best_solution = solution
                 elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
-                    self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
+                    self.best_solution = solution
+        self.runtime = perf_counter() - self.start_time
                 
-                    
+    def get_solver(self):
+        return SolveResult(best_solution=self.best_solution,status=SolveStatus.OPTIMAL,runtime=self.runtime,solutions=self.all_solution)   
 
 @dataclass
 class Solver(ABC):

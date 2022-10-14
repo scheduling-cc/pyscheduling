@@ -241,3 +241,11 @@ class BB(RootProblem.Branch_Bound):
         for job in node.partial_solution:
             maximum_lateness = max(maximum_lateness,max(job.end_time-self.instance.D[job.id],0))
         return maximum_lateness
+
+    def solution_format(self, partial_solution: object, objective_value):
+        solution = SingleMachine.SingleSolution(self.instance)
+        solution.machine.job_schedule = partial_solution
+        solution.machine.objective = objective_value
+        solution.machine.last_job = partial_solution[len(partial_solution)-1].id
+        solution.objective_value = objective_value
+        return solution
