@@ -281,6 +281,7 @@ class Heuristics():
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
+        startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
         graph = JobShop.Graph(instance.P)
         Cmax = graph.critical_path()
@@ -316,7 +317,7 @@ class Heuristics():
             graph.add_disdjunctive_arcs(edges_to_add)
             solution.objective_value = graph.critical_path()
 
-        return solution
+        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):
