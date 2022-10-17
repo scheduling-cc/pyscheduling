@@ -3,6 +3,32 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
+class Constraints(Enum):
+    W = "weight"
+    R = "release"
+    S = "setup"
+    D = "due"
+
+    @classmethod
+    def to_string(cls):
+        """Print the available constraints for Single Machine
+
+        Returns:
+            str: name of every constraint in different lines
+        """
+        return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
+
+    def __lt__(self,other):
+        """redefine less than operator alphabetically
+
+        Args:
+            other (Constraints): Another constraint
+
+        Returns:
+            bool: returns the comparison result
+        """
+        return self.name < other.name
+
 class Objective(Enum):# Negative value are for minimization problems, Positive values are for maximization problems
     Cmax = -1
     wiTi = -2
@@ -17,6 +43,41 @@ class Objective(Enum):# Negative value are for minimization problems, Positive v
             str: name of every objective in different lines
         """
         return cls.Cmax.name + "\n" + cls.wiTi.name + "\n" + cls.wiCi.name
+
+def update_abstractmethods(cls):
+    """
+    Ref: https://github.com/python/cpython/blob/6da1a2e993c955aa69158871b8c8792cef3094c3/Lib/abc.py#L146
+    Recalculate the set of abstract methods of an abstract class.
+    If a class has had one of its abstract methods implemented after the
+    class was created, the method will not be considered implemented until
+    this function is called. Alternatively, if a new abstract method has been
+    added to the class, it will only be considered an abstract method of the
+    class after this function is called.
+    This function should be called before any use is made of the class,
+    usually in class decorators that add methods to the subject class.
+    Returns cls, to allow usage as a class decorator.
+    If cls is not an instance of ABCMeta, does nothing.
+    """
+    if not hasattr(cls, '__abstractmethods__'):
+        # We check for __abstractmethods__ here because cls might by a C
+        # implementation or a python implementation (especially during
+        # testing), and we want to handle both cases.
+        return cls
+
+    abstracts = set()
+    # Check the existing abstract methods of the parents, keep only the ones
+    # that are not implemented.
+    for scls in cls.__bases__:
+        for name in getattr(scls, '__abstractmethods__', ()):
+            value = getattr(cls, name, None)
+            if getattr(value, "__isabstractmethod__", False):
+                abstracts.add(name)
+    # Also add any other newly added abstract methods.
+    for name, value in cls.__dict__.items():
+        if getattr(value, "__isabstractmethod__", False):
+            abstracts.add(name)
+    cls.__abstractmethods__ = frozenset(abstracts)
+    return cls
 
 @dataclass
 class Instance(ABC):

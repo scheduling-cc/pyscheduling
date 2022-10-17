@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import pyscheduling.Problem as RootProblem
+from pyscheduling.Problem import Objective, Constraints, update_abstractmethods
 from matplotlib import pyplot as plt
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
@@ -21,6 +22,124 @@ class GenerationProtocol(Enum):
 class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
+
+
+def single_instance(constraints: list[Constraints], objective: Objective):
+    
+    def init_fn(self, n, instance_name = "", P = None, W = None, R = None, D = None, S = None):
+        self.n = n
+        self.instance_name = instance_name
+        self.P = list()
+        if Constraints.W in constraints:
+            self.W = W if W is not None else list()
+        if Constraints.R in constraints:
+            self.R = R if R is not None else list()
+        if Constraints.D in constraints:
+            self.D = D if D is not None else list()
+        if Constraints.S in constraints:
+            self.S = S if S is not None else list()
+
+    @staticmethod
+    def read_txt(cls, path: Path):
+        f = open(path, "r")
+        content = f.read().split('\n')
+        ligne0 = content[0].split(' ')
+        n = int(ligne0[0])  # number of jobs
+        i = 1
+        instance = cls("test", n)
+        instance.P, i = instance.read_P(content, i)
+        if Constraints.W in constraints:
+            instance.W, i = instance.read_W(content, i)
+        if Constraints.R in constraints:
+            instance.R, i = instance.read_R(content, i)
+        if Constraints.D in constraints:
+            instance.D, i = instance.read_D(content, i)
+        if Constraints.S in constraints:
+            instance.S, i = instance.read_S(content, i)
+        f.close()
+        return instance
+
+    @classmethod
+    def generate_random(cls, jobs_number: int, InstanceName: str = "", 
+                        protocol: GenerationProtocol = GenerationProtocol.BASE,law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Wmin : int = 1, Wmax : int = 1,
+                        Pmin: int = 1, Pmax: int = 100,
+                        alpha : float = 2.0,
+                        due_time_factor : float = 0.5,
+                        Gamma : float = 2.0, Smin : int = 10, Smax : int = 100):
+        instance = cls(jobs_number, instance_name = InstanceName)
+        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        if Constraints.W in constraints:
+            instance.W = instance.generate_W(protocol,law, Wmin, Wmax)
+        if Constraints.R in constraints:
+            instance.R = instance.generate_R(protocol,law,instance.P,Pmin,Pmax,alpha)
+        if Constraints.D in constraints:
+            instance.D = instance.generate_D(protocol,law,instance.P,Pmin,Pmax,due_time_factor,RJobs=instance.R)
+        if Constraints.S in constraints:
+            instance.S = instance.generate_S(protocol,law,instance.P,Gamma,Smin,Smax)
+
+        return instance
+
+    def to_txt(self, path: Path):
+        f = open(path, "w")
+        f.write(str(self.n))
+        f.write("\nProcessing time\n")
+        for i in range(self.n):
+            f.write(str(self.P[i])+"\t")
+
+        if Constraints.W in constraints:
+            f.write("\nWeights\n")
+            for i in range(self.n):
+                f.write(str(self.W[i])+"\t")
+        
+        if Constraints.R in constraints:
+            f.write("\nRelease time\n")
+            for i in range(self.n):
+                f.write(str(self.R[i])+"\t")
+
+        if Constraints.D in constraints:
+            f.write("\nDue time\n")
+            for i in range(self.n):
+                f.write(str(self.D[i])+"\t")
+
+        if Constraints.S in constraints:
+            f.write("\nSSD\n")
+            for i in range(self.n):
+                for j in range(self.n):
+                    f.write(str(self.S[i][j])+"\t")
+                f.write("\n")
+        f.close()
+
+    def get_objective(self):
+        return objective
+
+    def set_new_attr(cls, name, value):
+        if name in cls.__dict__:
+            return True
+        setattr(cls, name, value)
+        return False
+
+    def repr_fn(self):
+        return self.__class__.__qualname__ + \
+                     '\n'.join([f"({name}={value})" 
+                                for name, value in vars(self).items()])
+
+    def str_fn(self):
+        return self.__repr__()
+
+    def wrap(cls):
+        set_new_attr(cls, "__init__", init_fn)
+        set_new_attr(cls, "__repr__", repr_fn)
+        set_new_attr(cls, "__str__", str_fn)
+        set_new_attr(cls, "read_txt", read_txt)
+        set_new_attr(cls, "generate_random", generate_random)
+        set_new_attr(cls, "to_txt", to_txt)
+        set_new_attr(cls, "get_objective", get_objective)
+
+        update_abstractmethods(cls)
+        return cls
+
+    return wrap
 
 
 @dataclass

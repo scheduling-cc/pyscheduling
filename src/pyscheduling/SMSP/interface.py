@@ -3,34 +3,9 @@ from enum import Enum
 from pathlib import Path
 
 
-from pyscheduling.Problem import Objective
+from pyscheduling.Problem import Objective, Constraints
 from pyscheduling.SMSP import *
 
-class Constraints(Enum):
-    W = "weight"
-    R = "release"
-    S = "setup"
-    D = "due"
-
-    @classmethod
-    def to_string(cls):
-        """Print the available constraints for Single Machine
-
-        Returns:
-            str: name of every constraint in different lines
-        """
-        return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
-
-    def __lt__(self,other):
-        """redefine less than operator alphabetically
-
-        Args:
-            other (Constraints): Another constraint
-
-        Returns:
-            bool: returns the comparison result
-        """
-        return self.name < other.name
 
 problems = {
     ((Constraints.W,),Objective.wiCi) : (wiCi.wiCi_Instance,wiCi.Heuristics,wiCi.Metaheuristics),
