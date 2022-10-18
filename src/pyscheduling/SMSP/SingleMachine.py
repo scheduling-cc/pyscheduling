@@ -72,15 +72,15 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         n = int(ligne0[0])  # number of jobs
         i = 1
         instance = cls(n, "test")
-        instance.P, i = instance.read_P(content, i)
+        instance.P, i = instance.read_1D(content, i)
         if Constraints.W in constraints:
-            instance.W, i = instance.read_W(content, i)
+            instance.W, i = instance.read_1D(content, i)
         if Constraints.R in constraints:
-            instance.R, i = instance.read_R(content, i)
+            instance.R, i = instance.read_1D(content, i)
         if Constraints.D in constraints:
-            instance.D, i = instance.read_D(content, i)
+            instance.D, i = instance.read_1D(content, i)
         if Constraints.S in constraints:
-            instance.S, i = instance.read_S(content, i)
+            instance.S, i = instance.read_2D(n, content, i)
         f.close()
         return instance
 
@@ -250,94 +250,6 @@ class SingleInstance(RootProblem.Instance):
             path (Path): path to the resulting txt file
         """
         pass
-
-    def read_P(self, content: list[str], startIndex: int):
-        """Read the Processing time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the processing time table
-
-        Returns:
-           (list[int],int): (Table of processing time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        P = []  # Table : Processing time of job i
-        for j in line:
-            P.append(int(j))
-        return (P, i+1)
-
-    def read_W(self, content: list[str], startIndex: int):
-        """Read the Processing time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the jobs weights table
-
-        Returns:
-           (list[int],int): (Table of jobs weights, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        W = []  # Table : Processing time of job i
-        for j in line:
-            W.append(int(j))
-        return (W, i+1)
-
-    def read_R(self, content: list[str], startIndex: int):
-        """Read the release time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the release time table
-
-        Returns:
-           (list[int],int): (Table of release time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        ri = []  # Table : Release time of job i
-        for j in line:
-            ri.append(int(j))
-        return (ri, i+1)
-
-    def read_S(self, content: list[str], startIndex: int):
-        """Read the Setup time matrix from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the Setup time matrix
-
-        Returns:
-           (list[list[int]],int): (Matrix of setup time, index of the next section of the instance)
-        """
-        i = startIndex
-        Si = []  # Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1  # Skip SSD
-        for k in range(self.n):
-            line = content[i].strip().split('\t')
-            Sij = [int(line[j]) for j in range(self.n)]
-            Si.append(Sij)
-            i += 1
-        return (Si, startIndex+1+self.n)
-
-    def read_D(self, content: list[str], startIndex: int):
-        """Read the due time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the due time table
-
-        Returns:
-           (list[int],int): (Table of due time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        di = []  # Table : Due time of job i
-        for j in line:
-            di.append(int(j))
-        return (di, i+1)
 
     def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time table
