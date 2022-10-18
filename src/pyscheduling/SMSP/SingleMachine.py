@@ -53,7 +53,7 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         if Constraints.S in constraints:
             self.S = S if S is not None else list()
 
-    @staticmethod
+    @classmethod
     def read_txt(cls, path: Path):
         """Read an instance from a txt file according to the problem's format
 
@@ -71,7 +71,7 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         ligne0 = content[0].split(' ')
         n = int(ligne0[0])  # number of jobs
         i = 1
-        instance = cls("test", n)
+        instance = cls(n, "test")
         instance.P, i = instance.read_P(content, i)
         if Constraints.W in constraints:
             instance.W, i = instance.read_W(content, i)
@@ -84,7 +84,7 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         f.close()
         return instance
 
-    @staticmethod
+    @classmethod
     def generate_random(cls, jobs_number: int, InstanceName: str = "",
                         protocol: GenerationProtocol = GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
                         Wmin: int = 1, Wmax: int = 1,
@@ -121,7 +121,7 @@ def single_instance(constraints: list[Constraints], objective: Objective):
                 protocol, law, instance.P, Pmin, Pmax, alpha)
         if Constraints.D in constraints:
             instance.D = instance.generate_D(
-                protocol, law, instance.P, Pmin, Pmax, due_time_factor, RJobs=instance.R)
+                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
         if Constraints.S in constraints:
             instance.S = instance.generate_S(
                 protocol, law, instance.P, Gamma, Smin, Smax)
@@ -164,7 +164,7 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         f.close()
 
     @classmethod
-    def get_objective(self):
+    def get_objective(cls):
         """to get the objective defined by the problem
 
         Returns:
@@ -460,7 +460,7 @@ class SingleInstance(RootProblem.Instance):
 
         return Si
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float, RJobs: list[float] = None):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
@@ -478,7 +478,7 @@ class SingleInstance(RootProblem.Instance):
         sumP = sum(PJobs)
         for j in range(self.n):
             if hasattr(self, 'R'):
-                startTime = RJobs[j] + PJobs[j]
+                startTime = self.R[j] + PJobs[j]
             else:
                 startTime = PJobs[j]
             if law.name == "UNIFORM":  # Generate uniformly

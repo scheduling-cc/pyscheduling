@@ -1,18 +1,14 @@
 from math import exp
-from dataclasses import dataclass, field
-from random import randint, uniform
-from pathlib import Path
 from time import perf_counter
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Constraints, Objective, Solver
+from pyscheduling.Problem import Constraints, Objective
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 from pyscheduling.SMSP.SingleMachine import single_instance
 import pyscheduling.SMSP.SM_Methods as Methods
 from pyscheduling.SMSP.SM_Methods import ExactSolvers
 
 
-@dataclass
 @single_instance([Constraints.W, Constraints.R, Constraints.S, Constraints.D], Objective.wiTi)
 class risijwiTi_Instance(SingleMachine.SingleInstance):
 
