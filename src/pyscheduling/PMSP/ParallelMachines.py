@@ -2,7 +2,6 @@ import json
 import sys
 import random
 from abc import abstractmethod
-from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -11,17 +10,191 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import pyscheduling.Problem as RootProblem
-
-Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
+from pyscheduling.Problem import DecoratorsHelper, Job, GenerationLaw, Constraints, Objective
 
 
 class GenerationProtocol(Enum):
     VALLADA = 1
 
 
-class GenerationLaw(Enum):
-    UNIFORM = 1
-    NORMAL = 2
+def parallel_instance(constraints: list[Constraints], objective: Objective):
+    """Decorator to build an Instance class from the list of constraints and objective
+
+    Args:
+        constraints (list[Constraints]): list of constraints of the defined problem
+        objective (Objective): the objective of the defined problem
+    """
+
+    def init_fn(self, n, m, instance_name="", P=None, W=None, R=None, D=None, S=None):
+        """Constructor to build an instance of the class Instance
+
+        Args:
+            n (int): number of jobs
+            m (int): number of machines
+            instance_name (str, optional): name of the instance. Defaults to "".
+            P (list, optional): processing times vector of length n. Defaults to None.
+            W (list, optional): weights vector of length n. Defaults to None.
+            R (list, optional): release times vector of length n. Defaults to None.
+            D (list, optional): due dates vector of length n. Defaults to None.
+            S (list, optional): setup times matrix (between job i and job j) of dimension m x n x n. Defaults to None.
+        """
+        self.n = n
+        self.m = m
+        self.instance_name = instance_name
+        self.P = P if P is not None else list()
+        if Constraints.W in constraints:
+            self.W = W if W is not None else list()
+        if Constraints.R in constraints:
+            self.R = R if R is not None else list()
+        if Constraints.D in constraints:
+            self.D = D if D is not None else list()
+        if Constraints.S in constraints:
+            self.S = S if S is not None else list()
+
+    @classmethod
+    def read_txt(cls, path: Path):
+        """Read an instance from a txt file according to the problem's format
+
+        Args:
+            path (Path): path to the txt file of type Path from the pathlib module
+
+        Raises:
+            FileNotFoundError: when the file does not exist
+
+        Returns:
+            risijCmax_Instance:
+        """
+        f = open(path, "r")
+        content = f.read().split('\n')
+        ligne0 = content[0].split(' ')
+        n = int(ligne0[0])  # number of jobs
+        m = int(ligne0[2])  # number of machines
+        i = 1
+        instance = cls(n, m, "test")
+        instance.P, i = instance.read_2D(n, content, i)
+        if Constraints.W in constraints:
+            instance.W, i = instance.read_1D(content, i)
+        if Constraints.R in constraints:
+            instance.R, i = instance.read_1D(content, i)
+        if Constraints.D in constraints:
+            instance.D, i = instance.read_1D(content, i)
+        if Constraints.S in constraints:
+            instance.S, i = instance.read_3D(m, n, content, i)
+        f.close()
+        return instance
+
+    @classmethod
+    def generate_random(cls, jobs_number: int, machines_number: int, InstanceName: str = "",
+                        protocol: GenerationProtocol = GenerationProtocol.VALLADA, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Wmin: int = 1, Wmax: int = 1,
+                        Pmin: int = 1, Pmax: int = 100,
+                        alpha: float = 2.0,
+                        due_time_factor: float = 0.5,
+                        Gamma: float = 2.0, Smin: int = 10, Smax: int = 100):
+        """Random generation of risijCmax problem instance
+
+        Args:
+            jobs_number (int): number of jobs of the instance
+            InstanceName (str, optional): name to give to the instance. Defaults to "".
+            protocol (SingleMachine.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
+            law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+            Wmin (int, optional): Minimal weight. Defaults to 1.
+            Wmax (int, optional): Maximal weight. Defaults to 1.
+            Pmin (int, optional): Minimal processing time. Defaults to 1.
+            Pmax (int, optional): Maximal processing time. Defaults to 100.
+            alpha (float, optional): Release time factor. Defaults to 2.0.
+            due_time_factor (float, optional): Due time factor. Defaults to 0.5.
+            Gamma (float, optional): Setup time factor. Defaults to 2.0.
+            Smin (int, optional) : Minimal setup time. Defaults to 10.
+            Smax (int, optional) : Maximal setup time. Defaults to 100.
+
+        Returns:
+            risijCmax_Instance: the randomly generated instance
+        """
+        instance = cls(jobs_number, machines_number, instance_name=InstanceName)
+        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        if Constraints.W in constraints:
+            instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        if Constraints.R in constraints:
+            instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
+        if Constraints.D in constraints:
+            instance.D = instance.generate_D(
+                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
+        if Constraints.S in constraints:
+            instance.S = instance.generate_S(
+                protocol, law, instance.P, Gamma, Smin, Smax)
+
+        return instance
+
+    def to_txt(self, path: Path):
+        """Export an instance to a txt file
+
+        Args:
+            path (Path): path to the resulting txt file
+        """
+        f = open(path, "w")
+        f.write(str(self.n)+"  "+str(self.m)+"\n")
+        f.write(str(self.m)+"\n")
+        # Processing Times
+        for i in range(self.n):
+            for j in range(self.m):
+                f.write("\t"+str(j)+"\t"+str(self.P[i][j]))
+            if i != self.n - 1:
+                f.write("\n")
+        
+        if Constraints.W in constraints:
+            f.write("\nWeights\n")
+            for i in range(self.n):
+                f.write(str(self.W[i])+"\t")
+
+        if Constraints.R in constraints:
+            f.write("\nRelease time\n")
+            for i in range(self.n):
+                f.write(str(self.R[i])+"\t")
+
+        if Constraints.D in constraints:
+            f.write("\nDue time\n")
+            for i in range(self.n):
+                f.write(str(self.D[i])+"\t")
+
+        if Constraints.S in constraints:
+            f.write("\nSSD\n")
+            for i in range(self.m):
+                f.write("M"+str(i)+"\n")
+                for j in range(self.n):
+                    for k in range(self.n):
+                        f.write(str(self.S[i][j][k])+"\t")
+                    f.write("\n")
+        f.close()
+
+    @classmethod
+    def get_objective(cls):
+        """to get the objective defined by the problem
+
+        Returns:
+            RootProblem.Objective: the objective passed to the decorator
+        """
+        return objective
+
+    def wrap(cls):
+        """Wrapper function that adds the basic Instance functions to the wrapped class
+
+        Returns:
+            Instance: subclass of Instance according to the defined problem
+        """
+        DecoratorsHelper.set_new_attr(cls, "__init__", init_fn)
+        DecoratorsHelper.set_new_attr(cls, "__repr__", DecoratorsHelper.repr_fn)
+        DecoratorsHelper.set_new_attr(cls, "__str__", DecoratorsHelper.str_fn)
+        DecoratorsHelper.set_new_attr(cls, "read_txt", read_txt)
+        DecoratorsHelper.set_new_attr(cls, "generate_random", generate_random)
+        DecoratorsHelper.set_new_attr(cls, "to_txt", to_txt)
+        DecoratorsHelper.set_new_attr(cls, "get_objective", get_objective)
+
+        DecoratorsHelper.update_abstractmethods(cls)
+        return cls
+
+    return wrap
 
 @dataclass
 class ParallelInstance(RootProblem.Instance):
@@ -67,84 +240,6 @@ class ParallelInstance(RootProblem.Instance):
             path (Path): path to the resulting txt file
         """
         pass
-
-    def read_P(self, content: list[str], startIndex: int):
-        """Read the Processing time matrix from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the processing time matrix
-
-        Returns:
-           (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)
-        """
-        P = []  # Matrix P_jk : Execution time of job j on machine k
-        i = startIndex
-        for _ in range(self.n):
-            ligne = content[i].strip().split('\t')
-            P_k = [int(ligne[j]) for j in range(1, self.m*2, 2)]
-            P.append(P_k)
-            i += 1
-        return (P, i)
-
-    def read_R(self, content: list[str], startIndex: int):
-        """Read the release time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the release time table
-
-        Returns:
-           (list[int],int): (Table of release time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        ligne = content[i].strip().split('\t')
-        ri = []  # Table : Release time of job i
-        for j in range(1, len(ligne), 2):
-            ri.append(int(ligne[j]))
-        return (ri, i+1)
-
-    def read_S(self, content: list[str], startIndex: int):
-        """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the Setup time table of matrices
-
-        Returns:
-           (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
-        """
-        i = startIndex
-        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1  # Skip SSD
-        endIndex = startIndex+1+self.n*self.m+self.m
-        while i != endIndex:
-            i = i+1  # Skip Mk
-            Si = []
-            for k in range(self.n):
-                ligne = content[i].strip().split('\t')
-                Sij = [int(ligne[j]) for j in range(self.n)]
-                Si.append(Sij)
-                i += 1
-            S.append(Si)
-        return (S, i)
-
-    def read_D(self, content: list[str], startIndex: int):
-        """Read the due time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the due time table
-
-        Returns:
-           (list[int],int): (Table of due time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        ligne = content[i].strip().split('\t')
-        di = []  # Table : Due time of job i
-        for j in range(1, len(ligne), 2):
-            di.append(int(ligne[j]))
-        return (di, i+1)
 
     def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
@@ -248,19 +343,67 @@ class ParallelInstance(RootProblem.Instance):
 
         return S
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
             law (GenerationLaw): probablistic law of generation
+            PJobs (list[float]): Table of processing time
             Pmin (int): Minimal processing time
             Pmax (int): Maximal processing time
+            fraction (float): due time factor
 
         Returns:
             list[int]: due time table
         """
-        pass
+        di = []
+        sumP = sum(PJobs)
+        for j in range(self.n):
+            if hasattr(self, 'R'):
+                startTime = self.R[j] + PJobs[j]
+            else:
+                startTime = PJobs[j]
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(
+                    startTime, startTime + due_time_factor * sumP))
+
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            di.append(n)
+
+        return di
+
+    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+        """Random generation of jobs weights table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Wmin (int): Minimal weight
+            Wmax (int): Maximal weight
+
+        Returns:
+           list[int]: Table of jobs weights
+        """
+        W = []
+        for j in range(self.n):
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(Wmin, Wmax))
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Wmin+Wmax*value))
+                while n < Wmin or n > Wmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Wmin+Wmax*value))
+            W.append(n)
+
+        return W
 
 
 @dataclass

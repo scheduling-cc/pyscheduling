@@ -6,6 +6,9 @@ from pathlib import Path
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
+class GenerationLaw(Enum):
+    UNIFORM = 1
+    NORMAL = 2
 
 class Constraints(Enum):
     W = "weight"
@@ -50,7 +53,23 @@ class Objective(Enum):  # Negative value are for minimization problems, Positive
         return cls.Cmax.name + "\n" + cls.wiTi.name + "\n" + cls.wiCi.name
 
 
-class DecoratorsHelperFunctions():
+class DecoratorsHelper():
+
+    @staticmethod
+    def set_new_attr(cls, name, value):
+        """helper function to add a new function to the class if the user doesn't define it
+
+        Args:
+            name (str): name of the function
+            value (Callable): function definition
+
+        Returns:
+            bool: True if the function is already defined from the user
+        """
+        if name in cls.__dict__:  # To allow overriding the default functions' implementation
+            return True
+        setattr(cls, name, value)
+        return False
 
     @staticmethod
     def repr_fn(self):
@@ -188,7 +207,7 @@ class Instance(ABC):
         i += 1  # Skip SSD
         for k in range(dimension_i):
             line = content[i].strip().split('\t')
-            Matrix_i = [int(line[j]) for j in range(dimension_i)]
+            Matrix_i = [int(val_str) for val_str in line]
             Matrix.append(Matrix_i)
             i += 1
         return (Matrix, startIndex+1+dimension_i)
@@ -215,7 +234,7 @@ class Instance(ABC):
             Si = []
             for k in range(dimension_j):
                 ligne = content[i].strip().split('\t')
-                Sij = [int(ligne[j]) for j in range(dimension_j)]
+                Sij = [int(val_str) for val_str in ligne]
                 Si.append(Sij)
                 i += 1
             S.append(Si)

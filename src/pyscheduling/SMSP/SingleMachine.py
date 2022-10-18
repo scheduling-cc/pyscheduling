@@ -9,16 +9,11 @@ from pathlib import Path
 import numpy as np
 import pyscheduling.Problem as RootProblem
 from matplotlib import pyplot as plt
-from pyscheduling.Problem import Constraints, DecoratorsHelperFunctions, Job, Objective
+from pyscheduling.Problem import Constraints, DecoratorsHelper, Job, Objective, GenerationLaw
 
 
 class GenerationProtocol(Enum):
     BASE = 1
-
-
-class GenerationLaw(Enum):
-    UNIFORM = 1
-    NORMAL = 2
 
 
 def single_instance(constraints: list[Constraints], objective: Objective):
@@ -43,7 +38,7 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         """
         self.n = n
         self.instance_name = instance_name
-        self.P = list()
+        self.P = P if P is not None else list()
         if Constraints.W in constraints:
             self.W = W if W is not None else list()
         if Constraints.R in constraints:
@@ -172,36 +167,21 @@ def single_instance(constraints: list[Constraints], objective: Objective):
         """
         return objective
 
-    def set_new_attr(cls, name, value):
-        """helper function to add a new function to the class if the user doesn't define it
-
-        Args:
-            name (str): name of the function
-            value (Callable): function definition
-
-        Returns:
-            bool: True if the function is already defined from the user
-        """
-        if name in cls.__dict__:  # To allow overriding the default functions' implementation
-            return True
-        setattr(cls, name, value)
-        return False
-
     def wrap(cls):
         """Wrapper function that adds the basic Instance functions to the wrapped class
 
         Returns:
             Instance: subclass of Instance according to the defined problem
         """
-        set_new_attr(cls, "__init__", init_fn)
-        set_new_attr(cls, "__repr__", DecoratorsHelperFunctions.repr_fn)
-        set_new_attr(cls, "__str__", DecoratorsHelperFunctions.str_fn)
-        set_new_attr(cls, "read_txt", read_txt)
-        set_new_attr(cls, "generate_random", generate_random)
-        set_new_attr(cls, "to_txt", to_txt)
-        set_new_attr(cls, "get_objective", get_objective)
+        DecoratorsHelper.set_new_attr(cls, "__init__", init_fn)
+        DecoratorsHelper.set_new_attr(cls, "__repr__", DecoratorsHelper.repr_fn)
+        DecoratorsHelper.set_new_attr(cls, "__str__", DecoratorsHelper.str_fn)
+        DecoratorsHelper.set_new_attr(cls, "read_txt", read_txt)
+        DecoratorsHelper.set_new_attr(cls, "generate_random", generate_random)
+        DecoratorsHelper.set_new_attr(cls, "to_txt", to_txt)
+        DecoratorsHelper.set_new_attr(cls, "get_objective", get_objective)
 
-        DecoratorsHelperFunctions.update_abstractmethods(cls)
+        DecoratorsHelper.update_abstractmethods(cls)
         return cls
 
     return wrap
