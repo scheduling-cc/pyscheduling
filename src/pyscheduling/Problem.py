@@ -153,6 +153,74 @@ class Instance(ABC):
         """
         pass
 
+    @staticmethod
+    def read_1D(content: list[str], startIndex: int):
+        """Read a table from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the vector
+
+        Returns:
+           (list[int],int): (vector, index of the next section of the instance)
+        """
+        i = startIndex + 1
+        line = content[i].strip().split('\t')
+        vector = []  # Table : Processing time of job i
+        for j in line:
+            vector.append(int(j))
+        return (vector, i+1)
+
+    @staticmethod
+    def read_2D(dimension_i : int, content: list[str], startIndex: int):
+        """Read a matrix from a list of lines extracted from the file of the instance
+
+        Args:
+            dimension_i (int): number of lines of the matrix, usually number of jobs 'n'.
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the matrix
+
+        Returns:
+           (list[list[int]],int): (Matrix, index of the next section of the instance)
+        """
+        i = startIndex
+        Matrix = []  # Matrix S_ijk : Setup time between jobs j and k
+        i += 1  # Skip SSD
+        for k in range(dimension_i):
+            line = content[i].strip().split('\t')
+            Matrix_i = [int(line[j]) for j in range(dimension_i)]
+            Matrix.append(Matrix_i)
+            i += 1
+        return (Matrix, startIndex+1+dimension_i)
+
+    @staticmethod
+    def read_3D(dimension_i : int, dimension_j : int, content: list[str], startIndex: int):
+        """Read the table of matrices from a list of lines extracted from the file of the instance
+
+        Args:
+            dimension_i (int): Dimension of the table, usually number of machines 'm'.
+            dimension_j (int): Dimension of the matrix, usually number of jobs 'n'.
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the table of matrices
+
+        Returns:
+           (list[list[list[int]]],int): (Table of matrices, index of the next section of the instance)
+        """
+        i = startIndex
+        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        i += 1  # Skip SSD
+        endIndex = startIndex+1+dimension_j*dimension_i+dimension_i
+        while i != endIndex:
+            i = i+1  # Skip Mk
+            Si = []
+            for k in range(dimension_j):
+                ligne = content[i].strip().split('\t')
+                Sij = [int(ligne[j]) for j in range(dimension_j)]
+                Si.append(Sij)
+                i += 1
+            S.append(Si)
+        return (S, i)
+
 
 @dataclass
 class Solution(ABC):
