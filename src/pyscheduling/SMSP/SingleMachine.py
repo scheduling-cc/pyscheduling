@@ -2,7 +2,6 @@ import json
 import random
 import sys
 from abc import abstractmethod
-from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -10,17 +9,182 @@ from pathlib import Path
 import numpy as np
 import pyscheduling.Problem as RootProblem
 from matplotlib import pyplot as plt
-
-Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
+from pyscheduling.Problem import Constraints, DecoratorsHelper, Job, Objective, GenerationLaw
 
 
 class GenerationProtocol(Enum):
     BASE = 1
 
 
-class GenerationLaw(Enum):
-    UNIFORM = 1
-    NORMAL = 2
+def single_instance(constraints: list[Constraints], objective: Objective):
+    """Decorator to build an Instance class from the list of constraints and objective
+
+    Args:
+        constraints (list[Constraints]): list of constraints of the defined problem
+        objective (Objective): the objective of the defined problem
+    """
+
+    def init_fn(self, n, instance_name="", P=None, W=None, R=None, D=None, S=None):
+        """Constructor to build an instance of the class Instance
+
+        Args:
+            n (int): number of jobs
+            instance_name (str, optional): name of the instance. Defaults to "".
+            P (list, optional): processing times vector of length n. Defaults to None.
+            W (list, optional): weights vector of length n. Defaults to None.
+            R (list, optional): release times vector of length n. Defaults to None.
+            D (list, optional): due dates vector of length n. Defaults to None.
+            S (list, optional): setup times matrix (between job i and job j) of dimension n x n. Defaults to None.
+        """
+        self.n = n
+        self.instance_name = instance_name
+        self.P = P if P is not None else list()
+        if Constraints.W in constraints:
+            self.W = W if W is not None else list()
+        if Constraints.R in constraints:
+            self.R = R if R is not None else list()
+        if Constraints.D in constraints:
+            self.D = D if D is not None else list()
+        if Constraints.S in constraints:
+            self.S = S if S is not None else list()
+
+    @classmethod
+    def read_txt(cls, path: Path):
+        """Read an instance from a txt file according to the problem's format
+
+        Args:
+            path (Path): path to the txt file of type Path from the pathlib module
+
+        Raises:
+            FileNotFoundError: when the file does not exist
+
+        Returns:
+            risijCmax_Instance:
+        """
+        f = open(path, "r")
+        content = f.read().split('\n')
+        ligne0 = content[0].split(' ')
+        n = int(ligne0[0])  # number of jobs
+        i = 1
+        instance = cls(n, "test")
+        instance.P, i = instance.read_1D(content, i)
+        if Constraints.W in constraints:
+            instance.W, i = instance.read_1D(content, i)
+        if Constraints.R in constraints:
+            instance.R, i = instance.read_1D(content, i)
+        if Constraints.D in constraints:
+            instance.D, i = instance.read_1D(content, i)
+        if Constraints.S in constraints:
+            instance.S, i = instance.read_2D(n, content, i)
+        f.close()
+        return instance
+
+    @classmethod
+    def generate_random(cls, jobs_number: int, InstanceName: str = "",
+                        protocol: GenerationProtocol = GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Wmin: int = 1, Wmax: int = 1,
+                        Pmin: int = 1, Pmax: int = 100,
+                        alpha: float = 2.0,
+                        due_time_factor: float = 0.5,
+                        Gamma: float = 2.0, Smin: int = 10, Smax: int = 100):
+        """Random generation of risijCmax problem instance
+
+        Args:
+            jobs_number (int): number of jobs of the instance
+            InstanceName (str, optional): name to give to the instance. Defaults to "".
+            protocol (SingleMachine.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
+            law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+            Wmin (int, optional): Minimal weight. Defaults to 1.
+            Wmax (int, optional): Maximal weight. Defaults to 1.
+            Pmin (int, optional): Minimal processing time. Defaults to 1.
+            Pmax (int, optional): Maximal processing time. Defaults to 100.
+            alpha (float, optional): Release time factor. Defaults to 2.0.
+            due_time_factor (float, optional): Due time factor. Defaults to 0.5.
+            Gamma (float, optional): Setup time factor. Defaults to 2.0.
+            Smin (int, optional) : Minimal setup time. Defaults to 10.
+            Smax (int, optional) : Maximal setup time. Defaults to 100.
+
+        Returns:
+            risijCmax_Instance: the randomly generated instance
+        """
+        instance = cls(jobs_number, instance_name=InstanceName)
+        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        if Constraints.W in constraints:
+            instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        if Constraints.R in constraints:
+            instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
+        if Constraints.D in constraints:
+            instance.D = instance.generate_D(
+                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
+        if Constraints.S in constraints:
+            instance.S = instance.generate_S(
+                protocol, law, instance.P, Gamma, Smin, Smax)
+
+        return instance
+
+    def to_txt(self, path: Path):
+        """Export an instance to a txt file
+
+        Args:
+            path (Path): path to the resulting txt file
+        """
+        f = open(path, "w")
+        f.write(str(self.n))
+        f.write("\nProcessing time\n")
+        for i in range(self.n):
+            f.write(str(self.P[i])+"\t")
+
+        if Constraints.W in constraints:
+            f.write("\nWeights\n")
+            for i in range(self.n):
+                f.write(str(self.W[i])+"\t")
+
+        if Constraints.R in constraints:
+            f.write("\nRelease time\n")
+            for i in range(self.n):
+                f.write(str(self.R[i])+"\t")
+
+        if Constraints.D in constraints:
+            f.write("\nDue time\n")
+            for i in range(self.n):
+                f.write(str(self.D[i])+"\t")
+
+        if Constraints.S in constraints:
+            f.write("\nSSD\n")
+            for i in range(self.n):
+                for j in range(self.n):
+                    f.write(str(self.S[i][j])+"\t")
+                f.write("\n")
+        f.close()
+
+    @classmethod
+    def get_objective(cls):
+        """to get the objective defined by the problem
+
+        Returns:
+            RootProblem.Objective: the objective passed to the decorator
+        """
+        return objective
+
+    def wrap(cls):
+        """Wrapper function that adds the basic Instance functions to the wrapped class
+
+        Returns:
+            Instance: subclass of Instance according to the defined problem
+        """
+        DecoratorsHelper.set_new_attr(cls, "__init__", init_fn)
+        DecoratorsHelper.set_new_attr(cls, "__repr__", DecoratorsHelper.repr_fn)
+        DecoratorsHelper.set_new_attr(cls, "__str__", DecoratorsHelper.str_fn)
+        DecoratorsHelper.set_new_attr(cls, "read_txt", read_txt)
+        DecoratorsHelper.set_new_attr(cls, "generate_random", generate_random)
+        DecoratorsHelper.set_new_attr(cls, "to_txt", to_txt)
+        DecoratorsHelper.set_new_attr(cls, "get_objective", get_objective)
+
+        DecoratorsHelper.update_abstractmethods(cls)
+        return cls
+
+    return wrap
 
 
 @dataclass
@@ -66,94 +230,6 @@ class SingleInstance(RootProblem.Instance):
             path (Path): path to the resulting txt file
         """
         pass
-
-    def read_P(self, content: list[str], startIndex: int):
-        """Read the Processing time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the processing time table
-
-        Returns:
-           (list[int],int): (Table of processing time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        P = []  # Table : Processing time of job i
-        for j in line:
-            P.append(int(j))
-        return (P, i+1)
-
-    def read_W(self, content: list[str], startIndex: int):
-        """Read the Processing time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the jobs weights table
-
-        Returns:
-           (list[int],int): (Table of jobs weights, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        W = []  # Table : Processing time of job i
-        for j in line:
-            W.append(int(j))
-        return (W, i+1)
-
-    def read_R(self, content: list[str], startIndex: int):
-        """Read the release time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the release time table
-
-        Returns:
-           (list[int],int): (Table of release time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        ri = []  # Table : Release time of job i
-        for j in line:
-            ri.append(int(j))
-        return (ri, i+1)
-
-    def read_S(self, content: list[str], startIndex: int):
-        """Read the Setup time matrix from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the Setup time matrix
-
-        Returns:
-           (list[list[int]],int): (Matrix of setup time, index of the next section of the instance)
-        """
-        i = startIndex
-        Si = []  # Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1  # Skip SSD
-        for k in range(self.n):
-            line = content[i].strip().split('\t')
-            Sij = [int(line[j]) for j in range(self.n)]
-            Si.append(Sij)
-            i += 1
-        return (Si, startIndex+1+self.n)
-
-    def read_D(self, content: list[str], startIndex: int):
-        """Read the due time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the due time table
-
-        Returns:
-           (list[int],int): (Table of due time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        di = []  # Table : Due time of job i
-        for j in line:
-            di.append(int(j))
-        return (di, i+1)
 
     def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time table
@@ -206,7 +282,7 @@ class SingleInstance(RootProblem.Instance):
             W.append(n)
 
         return W
-    
+
     def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
@@ -276,7 +352,7 @@ class SingleInstance(RootProblem.Instance):
 
         return Si
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin : int, Pmax : int, due_time_factor : float, RJobs : list[float] = None):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
@@ -293,10 +369,13 @@ class SingleInstance(RootProblem.Instance):
         di = []
         sumP = sum(PJobs)
         for j in range(self.n):
-            if hasattr(self,'R'): startTime = RJobs[j] + PJobs[j]
-            else: startTime = PJobs[j]
-            if law.name == "UNIFORM":  # Generate uniformly    
-                n = int(random.uniform(startTime, startTime + due_time_factor * sumP))
+            if hasattr(self, 'R'):
+                startTime = self.R[j] + PJobs[j]
+            else:
+                startTime = PJobs[j]
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(
+                    startTime, startTime + due_time_factor * sumP))
 
             elif law.name == "NORMAL":  # Use normal law
                 value = np.random.normal(0, 1)
@@ -316,10 +395,12 @@ class Machine:
     objective: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-    wiCi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total weighted completion time reached after each job in job_schedule
-    wiTi_index: list[int] = field(default_factory=list) # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
-    
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index : list[int] = None, wiTi_index : list[int] = None) -> None:
+    # this table serves as a cache to save the total weighted completion time reached after each job in job_schedule
+    wiCi_index: list[int] = field(default_factory=list)
+    # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
+    wiTi_index: list[int] = field(default_factory=list)
+
+    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index: list[int] = None, wiTi_index: list[int] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -347,8 +428,9 @@ class Machine:
         if self.wiCi_index is None and self.wiTi_index is None:
             return Machine(self.objective, self.last_job, list(self.job_schedule))
         elif self.wiCi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule),wiTi_index=list(self.wiTi_index))
-        else: return Machine(self.objective, self.last_job, list(self.job_schedule),wiCi_index=list(self.wiCi_index))
+            return Machine(self.objective, self.last_job, list(self.job_schedule), wiTi_index=list(self.wiTi_index))
+        else:
+            return Machine(self.objective, self.last_job, list(self.job_schedule), wiCi_index=list(self.wiCi_index))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -370,23 +452,23 @@ class Machine:
         """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
-            if self.wiCi_index is None : # Iniates wiCi_index to the size of job_schedule
+            if self.wiCi_index is None:  # Iniates wiCi_index to the size of job_schedule
                 self.wiCi_index = [-1] * job_schedule_len
                 startIndex = 0
             if len(self.wiCi_index) != job_schedule_len:
-                if startIndex == 0: # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiCi_index needs to be reinitialized
+                if startIndex == 0:  # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiCi_index needs to be reinitialized
                     self.wiCi_index = [-1] * job_schedule_len
-                else: # Insert an element in wiCi_index corresponding to the position where a new job has been inserted
-                    self.wiCi_index.insert(startIndex,-1) 
-            if startIndex > 0: 
+                else:  # Insert an element in wiCi_index corresponding to the position where a new job has been inserted
+                    self.wiCi_index.insert(startIndex, -1)
+            if startIndex > 0:
                 ci = self.job_schedule[startIndex - 1].end_time
                 job_prev_i = self.job_schedule[startIndex - 1].id
                 wiCi = self.wiCi_index[startIndex - 1]
-            else: 
+            else:
                 ci = 0
                 job_prev_i = self.job_schedule[startIndex].id
                 wiCi = 0
-            for i in range(startIndex,job_schedule_len):
+            for i in range(startIndex, job_schedule_len):
                 job_i = self.job_schedule[i].id
 
                 if hasattr(instance, 'R'):
@@ -410,7 +492,7 @@ class Machine:
 
     def total_weighted_completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
         """Computes the machine's total wighted completion time if we insert "job" at "pos" in the machine's job_schedule
-        
+
         Args:
             job (int): id of the inserted job
             pos (int): position where the job is inserted in the machine
@@ -424,14 +506,14 @@ class Machine:
             if hasattr(instance, 'R'):
                 release_time = max(instance.R[job] - c_prev, 0)
             else:
-                release_time = 0 
+                release_time = 0
             if hasattr(instance, 'S'):
                 setupTime = instance.S[job_prev_i][job]
             else:
                 setupTime = 0
-            ci = c_prev + release_time + setupTime +instance.P[job]
-            wiCi = self.wiCi_index[pos -1]+instance.W[job]*ci
-        else: 
+            ci = c_prev + release_time + setupTime + instance.P[job]
+            wiCi = self.wiCi_index[pos - 1]+instance.W[job]*ci
+        else:
             ci = instance.S[job][job] + instance.P[job]
             wiCi = instance.W[job]*ci
         job_prev_i = job
@@ -447,7 +529,7 @@ class Machine:
             else:
                 setupTime = 0
             proc_time = instance.P[job_i]
-            ci = startTime + setupTime +proc_time
+            ci = startTime + setupTime + proc_time
             wiCi += instance.W[job_i]*ci
 
             job_prev_i = job_i
@@ -457,7 +539,7 @@ class Machine:
     def total_weighted_completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """Computes the machine's total weighted completion time if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
-        
+
         Args:
             pos_remove (int): position of the job to be removed
             job (int): id of the inserted job
@@ -470,7 +552,7 @@ class Machine:
 
         ci = 0
         wiCi = 0
-        job_prev_i=job
+        job_prev_i = job
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
             job_prev_i = self.job_schedule[first_pos - 1].id
@@ -523,8 +605,10 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
-        if pos_i == 0: job_prev_i = self.job_schedule[pos_j]
-        else: job_prev_i = self.job_schedule[pos_i]
+        if pos_i == 0:
+            job_prev_i = self.job_schedule[pos_j]
+        else:
+            job_prev_i = self.job_schedule[pos_i]
         wiCi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
@@ -568,23 +652,23 @@ class Machine:
         """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
-            if self.wiTi_index is None : # Iniates wiTi_index to the size of job_schedule
+            if self.wiTi_index is None:  # Iniates wiTi_index to the size of job_schedule
                 self.wiTi_index = [-1] * job_schedule_len
                 startIndex = 0
             if len(self.wiTi_index) != job_schedule_len:
-                if startIndex == 0: # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiTi_index needs to be reinitialized
+                if startIndex == 0:  # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiTi_index needs to be reinitialized
                     self.wiTi_index = [-1] * job_schedule_len
-                else: # Insert an element in wiTi_index corresponding to the position where a new job has been inserted
-                    self.wiTi_index.insert(startIndex,-1) 
-            if startIndex > 0: 
+                else:  # Insert an element in wiTi_index corresponding to the position where a new job has been inserted
+                    self.wiTi_index.insert(startIndex, -1)
+            if startIndex > 0:
                 ci = self.job_schedule[startIndex - 1].end_time
                 job_prev_i = self.job_schedule[startIndex - 1].id
                 wiTi = self.wiTi_index[startIndex - 1]
-            else: 
+            else:
                 ci = 0
                 job_prev_i = self.job_schedule[startIndex].id
                 wiTi = 0
-            for i in range(startIndex,job_schedule_len):
+            for i in range(startIndex, job_schedule_len):
                 job_i = self.job_schedule[i].id
 
                 if hasattr(instance, 'R'):
@@ -599,7 +683,7 @@ class Machine:
                 ci = startTime + setupTime + proc_time
 
                 self.job_schedule[i] = Job(job_i, startTime, ci)
-                wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
                 self.wiTi_index[i] = wiTi
                 job_prev_i = job_i
         self.objective = wiTi
@@ -620,14 +704,14 @@ class Machine:
             if hasattr(instance, 'R'):
                 release_time = max(instance.R[job] - c_prev, 0)
             else:
-                release_time = 0 
+                release_time = 0
             if hasattr(instance, 'S'):
                 setupTime = instance.S[job_prev_i][job]
             else:
                 setupTime = 0
-            ci = c_prev + release_time + setupTime +instance.P[job]
-            wiTi = self.wiTi_index[pos -1]+instance.W[job]*ci
-        else: 
+            ci = c_prev + release_time + setupTime + instance.P[job]
+            wiTi = self.wiTi_index[pos - 1]+instance.W[job]*ci
+        else:
             ci = instance.S[job][job] + instance.P[job]
             wiTi = instance.W[job]*ci
         job_prev_i = job
@@ -643,8 +727,8 @@ class Machine:
             else:
                 setupTime = 0
             proc_time = instance.P[job_i]
-            ci = startTime + setupTime +proc_time
-            wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+            ci = startTime + setupTime + proc_time
+            wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             job_prev_i = job_i
 
@@ -665,7 +749,7 @@ class Machine:
 
         ci = 0
         wiTi = 0
-        job_prev_i=job
+        job_prev_i = job
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
             job_prev_i = self.job_schedule[first_pos - 1].id
@@ -685,7 +769,7 @@ class Machine:
                     setupTime = 0
                 proc_time = instance.P[job]
                 ci = startTime + setupTime + proc_time
-                wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             # If the job_i is not the one to be removed
             if i != pos_remove:
@@ -699,7 +783,7 @@ class Machine:
                     setupTime = 0
                 proc_time = instance.P[job_i]
                 ci = startTime + setupTime + proc_time
-                wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             job_prev_i = job_i
 
@@ -718,8 +802,10 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
-        if pos_i == 0: job_prev_i = self.job_schedule[pos_j].id
-        else: job_prev_i = self.job_schedule[pos_i].id
+        if pos_i == 0:
+            job_prev_i = self.job_schedule[pos_j].id
+        else:
+            job_prev_i = self.job_schedule[pos_i].id
         wiTi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
@@ -745,13 +831,13 @@ class Machine:
                 setupTime = 0
             proc_time = instance.P[job_i]
             ci = startTime + setupTime + proc_time
-            wiTi += instance.W[job_i]*max(ci-instance.D[job_i],0)
+            wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             job_prev_i = job_i
 
         return wiTi
 
-    def completion_time(self, instance : SingleInstance, startIndex : int = 0):
+    def completion_time(self, instance: SingleInstance, startIndex: int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the maximal completion time
 
         Args:
@@ -763,13 +849,13 @@ class Machine:
         """
         if len(self.job_schedule) > 0:
             job_schedule_len = len(self.job_schedule)
-            if startIndex > 0: 
+            if startIndex > 0:
                 ci = self.job_schedule[startIndex - 1].end_time
                 job_prev_i = self.job_schedule[startIndex - 1].id
-            else: 
+            else:
                 ci = 0
                 job_prev_i = self.job_schedule[startIndex].id
-            for i in range(startIndex,job_schedule_len):
+            for i in range(startIndex, job_schedule_len):
                 job_i = self.job_schedule[i].id
 
                 if hasattr(instance, 'R'):
@@ -804,13 +890,13 @@ class Machine:
             if hasattr(instance, 'R'):
                 release_time = max(instance.R[job] - c_prev, 0)
             else:
-                release_time = 0 
+                release_time = 0
             if hasattr(instance, 'S'):
                 setupTime = instance.S[job_prev_i][job]
             else:
                 setupTime = 0
-            ci = c_prev + release_time + setupTime +instance.P[job]
-        else: 
+            ci = c_prev + release_time + setupTime + instance.P[job]
+        else:
             ci = instance.S[job][job] + instance.P[job]
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
@@ -825,7 +911,7 @@ class Machine:
             else:
                 setupTime = 0
             proc_time = instance.P[job_i]
-            ci = startTime + setupTime +proc_time
+            ci = startTime + setupTime + proc_time
 
             job_prev_i = job_i
 
@@ -834,7 +920,7 @@ class Machine:
     def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """Computes the machine's completion time if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
-        
+
         Args:
             pos_remove (int): position of the job to be removed
             job (int): id of the inserted job
@@ -847,7 +933,7 @@ class Machine:
 
         ci = 0
 
-        job_prev_i=job
+        job_prev_i = job
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
             job_prev_i = self.job_schedule[first_pos - 1].id
@@ -887,7 +973,7 @@ class Machine:
     def completion_time_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
         """Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
         in the machine's job_schedule
-        
+
         Args:
             pos_i (int): position of the first job to be swapped
             pos_j (int): position of the second job to be swapped
@@ -898,8 +984,10 @@ class Machine:
         first_pos = min(pos_i, pos_j)
 
         ci = 0
-        if pos_i == 0: job_prev_i = self.job_schedule[pos_j].id
-        else: job_prev_i = self.job_schedule[pos_i].id
+        if pos_i == 0:
+            job_prev_i = self.job_schedule[pos_j].id
+        else:
+            job_prev_i = self.job_schedule[pos_i].id
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
             job_prev_i = self.job_schedule[first_pos - 1].id
@@ -929,13 +1017,12 @@ class Machine:
         return ci
 
 
-
 @dataclass
 class SingleSolution(RootProblem.Solution):
 
     machine: Machine
 
-    def __init__(self, instance: SingleInstance, machine : Machine = None, objective_value: int = 0):
+    def __init__(self, instance: SingleInstance, machine: Machine = None, objective_value: int = 0):
         """Constructor of SingleSolution
 
         Args:
@@ -958,29 +1045,30 @@ class SingleSolution(RootProblem.Solution):
         return copy_solution
 
     def __lt__(self, other):
-        if self.instance.get_objective().value > 0 :
+        if self.instance.get_objective().value > 0:
             return self.objective_value < other.objective_value
-        else : return other.objective_value < self.objective_value
+        else:
+            return other.objective_value < self.objective_value
 
     def wiCi(self):
         """Sets the job_schedule of the machine and affects the total weighted completion time to the objective_value attribute
         """
         if self.instance != None:
-                self.machine.total_weighted_completion_time(self.instance)
+            self.machine.total_weighted_completion_time(self.instance)
         self.objective_value = self.machine.objective
 
     def wiTi(self):
         """Sets the job_schedule of the machine and affects the total weighted lateness to the objective_value attribute
         """
         if self.instance != None:
-                self.machine.total_weighted_lateness(self.instance)
+            self.machine.total_weighted_lateness(self.instance)
         self.objective_value = self.machine.objective
 
     def Cmax(self):
         """Sets the job_schedule of the machine and affects the makespan to the objective_value attribute
         """
         if self.instance != None:
-                self.machine.completion_time(self.instance)
+            self.machine.completion_time(self.instance)
         self.objective_value = self.machine.objective
 
     def fix_objective(self):
@@ -1003,7 +1091,7 @@ class SingleSolution(RootProblem.Solution):
         objective_value_ = int(content[0].split(':')[1])
         line_content = content[2].split('|')
         machine = Machine(int(line_content[1]), job_schedule=[Job(
-                int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[0].split(':')]])
+            int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[0].split(':')]])
         solution = cls(objective_value=objective_value_,
                        machine=machine)
         return solution
@@ -1090,22 +1178,24 @@ class SingleSolution(RootProblem.Solution):
         for i, element in enumerate(self.machine.job_schedule):
             job, startTime, endTime = element
             # Test End Time + start Time
-            if hasattr(self.instance,'R'):
-                expected_start_time = max(self.instance.R[job],ci)
+            if hasattr(self.instance, 'R'):
+                expected_start_time = max(self.instance.R[job], ci)
             else:
                 expected_start_time = ci
-            if hasattr(self.instance,'S'):
+            if hasattr(self.instance, 'S'):
                 if prev_job is None:
                     setup_time = self.instance.S[job][job]
                 else:
                     setup_time = self.instance.S[prev_job][job]
-            else: setup_time = 0
+            else:
+                setup_time = 0
 
             proc_time = self.instance.P[job]
             ci = expected_start_time + proc_time + setup_time
 
             if startTime != expected_start_time or endTime != ci:
-                print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                print(
+                    f'## Error:  found {element} expected {job,expected_start_time, ci}')
                 is_valid = False
             set_jobs.add(job)
 
@@ -1114,10 +1204,11 @@ class SingleSolution(RootProblem.Solution):
         is_valid &= len(set_jobs) == self.instance.n
         return is_valid
 
+
 class SM_LocalSearch(RootProblem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution : SingleSolution, objective : RootProblem.Objective):
+    def _intra_insertion(solution: SingleSolution, objective: RootProblem.Objective):
         """Iterates through the job schedule and try to reschedule every job at a better position to improve the solution
 
         Args:
@@ -1142,19 +1233,20 @@ class SM_LocalSearch(RootProblem.LocalSearch):
             taken_pos = pos
             for new_pos in range(len(solution.machine.job_schedule)):
                 if(pos != new_pos):
-                    new_objective = remove_insert(pos,job.id,new_pos,solution.instance)
-                    if new_objective < objective: 
+                    new_objective = remove_insert(
+                        pos, job.id, new_pos, solution.instance)
+                    if new_objective < objective:
                         taken_pos = new_pos
                         objective = new_objective
             if taken_pos != pos:
                 solution.machine.job_schedule.pop(pos)
-                solution.machine.job_schedule.insert(taken_pos,job)
-                fix_machine(solution.instance,min(taken_pos,pos))
+                solution.machine.job_schedule.insert(taken_pos, job)
+                fix_machine(solution.instance, min(taken_pos, pos))
         solution.fix_objective()
         return solution
 
     @staticmethod
-    def _swap(solution : SingleSolution, objective : RootProblem.Objective):
+    def _swap(solution: SingleSolution, objective: RootProblem.Objective):
         """Iterates through the job schedule and choose the best swap between 2 jobs to improve the solution
 
         Args:
@@ -1178,7 +1270,7 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         move = None
         for i in range(0, job_schedule_len):
             for j in range(i+1, job_schedule_len):
-                new_ci = swap(i,j,solution.instance)
+                new_ci = swap(i, j, solution.instance)
                 if new_ci < solution.machine.objective:
                     if not move:
                         move = (i, j, new_ci)
@@ -1187,12 +1279,12 @@ class SM_LocalSearch(RootProblem.LocalSearch):
 
         if move:
             solution.machine.job_schedule[move[0]], solution.machine.job_schedule[move[1]
-            ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
+                                                                                  ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
             solution.machine.objective = move[2]
             set_objective()
         return solution
 
-    def improve(self, solution: SingleSolution, objective : RootProblem.Objective) -> SingleSolution:
+    def improve(self, solution: SingleSolution, objective: RootProblem.Objective) -> SingleSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -1203,14 +1295,14 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         """
         curr_sol = solution.copy() if self.copy_solution else solution
         for method in self.methods:
-            curr_sol = method(curr_sol,objective)
+            curr_sol = method(curr_sol, objective)
 
         return curr_sol
 
 
 class NeighbourhoodGeneration():
     @staticmethod
-    def random_swap(solution: SingleSolution, objective : RootProblem.Objective, force_improve: bool = True):
+    def random_swap(solution: SingleSolution, objective: RootProblem.Objective, force_improve: bool = True):
         """Performs a random swap between 2 jobs
 
         Args:
@@ -1252,13 +1344,14 @@ class NeighbourhoodGeneration():
                 other_job_index] = machine_schedule[
                     other_job_index], machine_schedule[random_job_index]
 
-            fix_machine(solution.instance,min(random_job_index,other_job_index))
+            fix_machine(solution.instance, min(
+                random_job_index, other_job_index))
             solution.fix_objective()
 
         return solution
 
     @staticmethod
-    def passive_swap(solution : SingleSolution, force_improve: bool = True):
+    def passive_swap(solution: SingleSolution, force_improve: bool = True):
         """Performs a swap between the 2 less effective jobs in terms of WSPT rule
 
         Args:
@@ -1268,14 +1361,16 @@ class NeighbourhoodGeneration():
         Returns:
             SingleSolution: New solution
         """
-        if(len(solution.machine.job_schedule)>1):
+        if(len(solution.machine.job_schedule) > 1):
 
             jobs_list = list(range(solution.instance.n))
-            jobs_list.sort(key = lambda job_id : float(solution.instance.W[job_id])/float(solution.instance.P[job_id]))
+            jobs_list.sort(key=lambda job_id: float(
+                solution.instance.W[job_id])/float(solution.instance.P[job_id]))
             job_i_id, job_j_id = jobs_list[0], jobs_list[1]
             machine_schedule = solution.machine.job_schedule
             machine_schedule_jobs_id = [job.id for job in machine_schedule]
-            job_i_pos, job_j_pos = machine_schedule_jobs_id.index(job_i_id), machine_schedule_jobs_id.index(job_j_id)
+            job_i_pos, job_j_pos = machine_schedule_jobs_id.index(
+                job_i_id), machine_schedule_jobs_id.index(job_j_id)
 
             old_ci = solution.machine.objective
 
@@ -1287,13 +1382,14 @@ class NeighbourhoodGeneration():
                 machine_schedule[job_i_pos], machine_schedule[
                     job_j_pos] = machine_schedule[
                         job_j_pos], machine_schedule[job_i_pos]
-                solution.machine.total_weighted_completion_time(solution.instance,min(job_i_pos,job_j_pos))
+                solution.machine.total_weighted_completion_time(
+                    solution.instance, min(job_i_pos, job_j_pos))
                 solution.fix_objective()
 
         return solution
-    
+
     @staticmethod
-    def lahc_neighbour(solution : SingleSolution, objective : RootProblem.Objective):
+    def lahc_neighbour(solution: SingleSolution, objective: RootProblem.Objective):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:
@@ -1303,7 +1399,7 @@ class NeighbourhoodGeneration():
             SingleSolution: New solution
         """
         solution_copy = solution.copy()
-        #for _ in range(1,random.randint(1, 2)):
+        # for _ in range(1,random.randint(1, 2)):
         solution_copy = NeighbourhoodGeneration.random_swap(
             solution_copy, objective, force_improve=False)
 

@@ -1,9 +1,43 @@
 from abc import ABC, abstractmethod
+from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-class Objective(Enum):# Negative value are for minimization problems, Positive values are for maximization problems
+Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
+
+class GenerationLaw(Enum):
+    UNIFORM = 1
+    NORMAL = 2
+
+class Constraints(Enum):
+    W = "weight"
+    R = "release"
+    S = "setup"
+    D = "due"
+
+    @classmethod
+    def to_string(cls):
+        """Print the available constraints for Single Machine
+
+        Returns:
+            str: name of every constraint in different lines
+        """
+        return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
+
+    def __lt__(self, other):
+        """redefine less than operator alphabetically
+
+        Args:
+            other (Constraints): Another constraint
+
+        Returns:
+            bool: returns the comparison result
+        """
+        return self.name < other.name
+
+
+class Objective(Enum):  # Negative value are for minimization problems, Positive values are for maximization problems
     Cmax = -1
     wiTi = -2
     wiCi = -3
@@ -17,6 +51,82 @@ class Objective(Enum):# Negative value are for minimization problems, Positive v
             str: name of every objective in different lines
         """
         return cls.Cmax.name + "\n" + cls.wiTi.name + "\n" + cls.wiCi.name
+
+
+class DecoratorsHelper():
+
+    @staticmethod
+    def set_new_attr(cls, name, value):
+        """helper function to add a new function to the class if the user doesn't define it
+
+        Args:
+            name (str): name of the function
+            value (Callable): function definition
+
+        Returns:
+            bool: True if the function is already defined from the user
+        """
+        if name in cls.__dict__:  # To allow overriding the default functions' implementation
+            return True
+        setattr(cls, name, value)
+        return False
+
+    @staticmethod
+    def repr_fn(self):
+        """__repr__ default function, returns a string of the class name and the fields of the instance
+
+        Returns:
+            str: string representation
+        """
+        return self.__class__.__qualname__ + \
+            '\n'.join([f"({name}={value})"
+                       for name, value in vars(self).items()])
+
+    @staticmethod
+    def str_fn(self):
+        """__str__ default function, returns the object representation
+
+        Returns:
+            str: string representation
+        """
+        return self.__repr__()
+
+    @staticmethod
+    def update_abstractmethods(cls):
+        """
+        Ref: https://github.com/python/cpython/blob/6da1a2e993c955aa69158871b8c8792cef3094c3/Lib/abc.py#L146
+        Recalculate the set of abstract methods of an abstract class.
+        If a class has had one of its abstract methods implemented after the
+        class was created, the method will not be considered implemented until
+        this function is called. Alternatively, if a new abstract method has been
+        added to the class, it will only be considered an abstract method of the
+        class after this function is called.
+        This function should be called before any use is made of the class,
+        usually in class decorators that add methods to the subject class.
+        Returns cls, to allow usage as a class decorator.
+        If cls is not an instance of ABCMeta, does nothing.
+        """
+        if not hasattr(cls, '__abstractmethods__'):
+            # We check for __abstractmethods__ here because cls might by a C
+            # implementation or a python implementation (especially during
+            # testing), and we want to handle both cases.
+            return cls
+
+        abstracts = set()
+        # Check the existing abstract methods of the parents, keep only the ones
+        # that are not implemented.
+        for scls in cls.__bases__:
+            for name in getattr(scls, '__abstractmethods__', ()):
+                value = getattr(cls, name, None)
+                if getattr(value, "__isabstractmethod__", False):
+                    abstracts.add(name)
+        # Also add any other newly added abstract methods.
+        for name, value in cls.__dict__.items():
+            if getattr(value, "__isabstractmethod__", False):
+                abstracts.add(name)
+        cls.__abstractmethods__ = frozenset(abstracts)
+        return cls
+
 
 @dataclass
 class Instance(ABC):
@@ -61,6 +171,74 @@ class Instance(ABC):
             path (Path): path to the resulting txt file
         """
         pass
+
+    @staticmethod
+    def read_1D(content: list[str], startIndex: int):
+        """Read a table from a list of lines extracted from the file of the instance
+
+        Args:
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the vector
+
+        Returns:
+           (list[int],int): (vector, index of the next section of the instance)
+        """
+        i = startIndex + 1
+        line = content[i].strip().split('\t')
+        vector = []  # Table : Processing time of job i
+        for j in line:
+            vector.append(int(j))
+        return (vector, i+1)
+
+    @staticmethod
+    def read_2D(dimension_i : int, content: list[str], startIndex: int):
+        """Read a matrix from a list of lines extracted from the file of the instance
+
+        Args:
+            dimension_i (int): number of lines of the matrix, usually number of jobs 'n'.
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the matrix
+
+        Returns:
+           (list[list[int]],int): (Matrix, index of the next section of the instance)
+        """
+        i = startIndex
+        Matrix = []  # Matrix S_ijk : Setup time between jobs j and k
+        i += 1  # Skip SSD
+        for k in range(dimension_i):
+            line = content[i].strip().split('\t')
+            Matrix_i = [int(val_str) for val_str in line]
+            Matrix.append(Matrix_i)
+            i += 1
+        return (Matrix, startIndex+1+dimension_i)
+
+    @staticmethod
+    def read_3D(dimension_i : int, dimension_j : int, content: list[str], startIndex: int):
+        """Read the table of matrices from a list of lines extracted from the file of the instance
+
+        Args:
+            dimension_i (int): Dimension of the table, usually number of machines 'm'.
+            dimension_j (int): Dimension of the matrix, usually number of jobs 'n'.
+            content (list[str]): lines of the file of the instance
+            startIndex (int): Index from where starts the table of matrices
+
+        Returns:
+           (list[list[list[int]]],int): (Table of matrices, index of the next section of the instance)
+        """
+        i = startIndex
+        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        i += 1  # Skip SSD
+        endIndex = startIndex+1+dimension_j*dimension_i+dimension_i
+        while i != endIndex:
+            i = i+1  # Skip Mk
+            Si = []
+            for k in range(dimension_j):
+                ligne = content[i].strip().split('\t')
+                Sij = [int(val_str) for val_str in ligne]
+                Si.append(Sij)
+                i += 1
+            S.append(Si)
+        return (S, i)
 
 
 @dataclass
@@ -218,44 +396,46 @@ class LocalSearch():
 
         return curr_sol
 
+
 @dataclass
 class Branch_Bound():
-    instance : Instance
-    root : object = None
+    instance: Instance
+    root: object = None
     objective_value = None
-    best_solution : Solution = None
-    all_solution : list[Solution] = field(default_factory=list)
+    best_solution: Solution = None
+    all_solution: list[Solution] = field(default_factory=list)
 
     @dataclass
     class Node():
-        lower_bound : float = None
-        if_solution : bool = False
-        partial_solution : object = None
-        sub_nodes : list[object] = field(default_factory=list)
+        lower_bound: float = None
+        if_solution: bool = False
+        partial_solution: object = None
+        sub_nodes: list[object] = field(default_factory=list)
 
         def delete(self):
             """To delete the variable definitely
             """
-            for node in self.sub_nodes : node.delete()
+            for node in self.sub_nodes:
+                node.delete()
             del self
 
-    def branch(self, node : Node):
+    def branch(self, node: Node):
         """branching strategy, to be redefined
 
         Args:
             node (Node): node to branch from
         """
         pass
-    
-    def bound(self, node : Node):
+
+    def bound(self, node: Node):
         """bounding method, to be redefined
 
         Args:
             node (Node): node to bound
         """
         pass
-    
-    def discard(self, root : Node, best_solution : float, objective : Objective):
+
+    def discard(self, root: Node, best_solution: float, objective: Objective):
         """prunes the search tree sections where we are certain a better solution will not be find there
 
         Args:
@@ -264,13 +444,17 @@ class Branch_Bound():
             objective (Objective): objective to be considered, to know if it's a minimization or a maximization problem
         """
         if root.lower_bound is not None:
-            if objective.value > 0 and root.lower_bound < best_solution : root = None
-            elif objective.value < 0 and root.lower_bound > best_solution : root = None
-        for node in root.sub_nodes :
-            if objective.value > 0 and node.lower_bound < best_solution : node = None
-            elif objective.value < 0 and node.lower_bound > best_solution : node = None
+            if objective.value > 0 and root.lower_bound < best_solution:
+                root = None
+            elif objective.value < 0 and root.lower_bound > best_solution:
+                root = None
+        for node in root.sub_nodes:
+            if objective.value > 0 and node.lower_bound < best_solution:
+                node = None
+            elif objective.value < 0 and node.lower_bound > best_solution:
+                node = None
 
-    def objective(self, node : Node):
+    def objective(self, node: Node):
         """objective value evaluator, to be redefined
 
         Args:
@@ -278,34 +462,37 @@ class Branch_Bound():
         """
         pass
 
-    def solve(self, root : Node = None):
+    def solve(self, root: Node = None):
         """recursive function to perform Branch&Bound on the instance attribute
 
         Args:
             root (Node, optional): starting node. Defaults to None.
         """
-        if root is None : 
+        if root is None:
             root = self.Node()
             self.root = root
-        self.branch(root) 
-        if root.sub_nodes[0].if_solution is False :
-            for node in root.sub_nodes: self.bound(node)
+        self.branch(root)
+        if root.sub_nodes[0].if_solution is False:
+            for node in root.sub_nodes:
+                self.bound(node)
             sorted_sub_nodes = root.sub_nodes
-            sorted_sub_nodes.sort(reverse= self.instance.get_objective().value > 0, key = lambda node : node.lower_bound)
-            for node in sorted_sub_nodes : self.solve(node)
-        else :
-            for node in root.sub_nodes: 
+            sorted_sub_nodes.sort(reverse=self.instance.get_objective(
+            ).value > 0, key=lambda node: node.lower_bound)
+            for node in sorted_sub_nodes:
+                self.solve(node)
+        else:
+            for node in root.sub_nodes:
                 node.lower_bound = self.objective(node)
                 self.all_solution.append(node.partial_solution)
-                if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound) :
+                if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound):
                     self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
-                elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
+                elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value):
                     self.best_solution = node.partial_solution
                     self.objective_value = node.lower_bound
-                self.discard(self.root,self.objective_value,self.instance.get_objective())
-                
-                    
+                self.discard(self.root, self.objective_value,
+                             self.instance.get_objective())
+
 
 @dataclass
 class Solver(ABC):
