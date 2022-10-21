@@ -7,6 +7,7 @@ from pathlib import Path
 from abc import abstractmethod
 from collections import namedtuple
 from dataclasses import dataclass, field
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -509,6 +510,8 @@ class JobShopSolution(RootProblem.Solution):
 
         self.objective_value = max([machine.objective for machine in self.machines])
 
+        return self.objective_value
+
 
     def fix_cmax(self):
         pass
@@ -604,8 +607,59 @@ class JobShopSolution(RootProblem.Solution):
             print("Matplotlib is not installed, you can't use gant_plot")
             return
 
-    def is_valid(self):
+    def is_valid(self, verbosity : bool = False):
         """
         Check if solution respects the constraints
         """
-        pass
+        is_valid = True
+        precedence_in_jobs = [[op[0] for op in job] for job in self.instance.P]
+        for machine_id in range(len(self.machines)) :
+            ci = 0
+            for job_ind in range(len(self.machines[machine_id].job_schedule)) :
+
+                element = self.machines[machine_id].job_schedule[job_ind]
+                job_id, start_time, end_time = element
+
+                operation_of_job_id = precedence_in_jobs[job_id]
+                job = None
+                for precedence_machine_id in range(len(operation_of_job_id)) :
+                    if operation_of_job_id[precedence_machine_id] == machine_id : break
+                if precedence_machine_id != 0 :
+                    precedent_machine_id = operation_of_job_id[precedence_machine_id-1]
+
+                    for job in self.machines[precedent_machine_id].job_schedule :
+                        if job.id == job_id : break
+
+                    previous_op_end_time = job.end_time
+                else : previous_op_end_time = 0
+
+                
+                expected_start_time = max(previous_op_end_time,ci)
+
+                proc_time = self.instance.P[job_id][precedence_machine_id][1]
+                ci = expected_start_time + proc_time
+
+                if start_time != expected_start_time or end_time != ci:
+                    if start_time > expected_start_time and end_time - start_time == proc_time:
+                        if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
+                    else :
+                        if verbosity : 
+                            print(f'## Error:  found {element} expected {job_id,expected_start_time, ci}')
+                            if job is not None :
+                                print(f'## {element} needs to be sheduled after {job}')
+                        is_valid = False
+        
+        if is_valid :
+            solution_copy = self.copy()
+            if self.instance.get_objective() == RootProblem.Objective.wiCi:
+                is_valid = self.objective_value == solution_copy.wiCi()
+            elif self.instance.get_objective() == RootProblem.Objective.wiTi:
+                is_valid = self.objective_value == solution_copy.wiTi()
+            elif self.instance.get_objective() == RootProblem.Objective.Cmax:
+                is_valid = self.objective_value == solution_copy.cmax()
+            elif self.instance.get_objective() == RootProblem.Objective.Lmax:
+                is_valid = self.objective_value == solution_copy.Lmax()
+            if not is_valid :
+                if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
+
+        return is_valid
