@@ -287,6 +287,7 @@ class Heuristics():
         Cmax = graph.critical_path()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
+        precedence_constraints = []
 
         while len(remaining_machines)>0:
             Cmax = graph.critical_path()
@@ -297,17 +298,24 @@ class Heuristics():
             edges_to_add = None
             for machine in remaining_machines:
                 
-                Lmax_instance = graph.generate_riPrecLmax(machine,Cmax)
                 vertices = [op[1] for op in graph.get_operations_on_machine(machine)]
                 job_id_mapping = {i:vertices[i] for i in range(len(vertices))}
+                mapped_constraints =[]
+                for precedence in precedence_constraints :
+                    if precedence[0] in vertices and precedence[1] in vertices :
+                        mapped_constraints.append((list(job_id_mapping.keys())
+                            [list(job_id_mapping.values()).index(precedence[0])],list(job_id_mapping.keys())
+                            [list(job_id_mapping.values()).index(precedence[1])]))
+                Lmax_instance = graph.generate_riPrecLmax(machine,Cmax,mapped_constraints)
+                
                 BB = JobShop.riPrecLmax.BB(Lmax_instance)
                 BB.solve()
-                mapped_IDs_solution = [JobShop.Job(job_id_mapping[job.id],job.start_time,job.end_time) for job in BB.best_solution]
+                mapped_IDs_solution = [JobShop.Job(job_id_mapping[job.id],job.start_time,job.end_time) for job in BB.best_solution.machine.job_schedule]
                 if objective_value is None or objective_value < BB.objective_value:
                     objective_value = BB.objective_value
                     taken_solution = mapped_IDs_solution
                     taken_machine = machine
-                    edges_to_add = [((machine,mapped_IDs_solution[ind].id),(machine,mapped_IDs_solution[ind+1].id)) for ind in range(len(BB.best_solution)-1)]
+                    edges_to_add = [((machine,mapped_IDs_solution[ind].id),(machine,mapped_IDs_solution[ind+1].id)) for ind in range(len(BB.best_solution.machine.job_schedule)-1)]
 
 
             remaining_machines.remove(taken_machine)
@@ -315,9 +323,10 @@ class Heuristics():
             solution.machines[taken_machine].job_schedule = taken_solution
             solution.machines[taken_machine].objective = taken_solution[len(taken_solution)-1].end_time
             graph.add_disdjunctive_arcs(edges_to_add)
+            precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
             solution.objective_value = graph.critical_path()
 
-        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
+        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

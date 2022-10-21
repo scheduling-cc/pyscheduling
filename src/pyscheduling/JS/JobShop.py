@@ -154,7 +154,26 @@ class Graph:
         """
         return self.longest_path(self.source,self.sink)
 
-    def generate_riPrecLmax(self, machine_id : int, Cmax : int):
+    def if_path(self, u, v):
+        if self.get_edge(u,v) != -1 : return True
+        else :
+            vertices_going_to_v = [vertice[0] for vertice in self.edges.keys() if vertice[1]==v]
+            for vertice in vertices_going_to_v :
+                if self.if_path(u,vertice) is True : return True
+            return False
+        pass
+
+    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
+        precedence_constraints = []
+        for machine_id in unscheduled_machines :
+            vertices = self.get_operations_on_machine(machine_id);
+            for u in vertices :
+                for v in vertices :
+                    if u is not v and self.if_path(u,v) : precedence_constraints.append((u[1],v[1]))
+            
+        return precedence_constraints
+
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
         """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
 
         Args:
@@ -171,7 +190,7 @@ class Graph:
             if vertice[0] in vertices : P.append(vertice[1])
         R = [self.longest_path(self.source,vertice) for vertice in vertices]
         D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
-        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D)
+        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
 
 
 @dataclass
