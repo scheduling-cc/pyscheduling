@@ -15,6 +15,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
     P: list[int] = field(default_factory=list)  # Processing time
     R: list[int] = field(default_factory=list) # release time
     D: list[int] = field(default_factory=list) # due time
+    Precedence : list[tuple] = field(default_factory=list) # precedence constraint
 
     def copy(self):
         return riPrecLmax_Instance(str(self.name),self.n,list(self.P),list(self.R),list(self.D))
@@ -89,7 +90,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         f.write("\nDue time\n")
         for i in range(self.n):
             f.write(str(self.D[i])+"\t")
-        f.close()
+        f.close()        
 
     def LB_preemptive_EDD(self, start_time : int = 0, jobs_list : list[int] = None):
         """returns the objective value returned by applying the preemptive EDD rule on the instance
@@ -192,12 +193,18 @@ class BB(RootProblem.Branch_Bound):
         """
         if node.partial_solution is None : 
             remaining_job_list = [job for job in list(range(self.instance.n))]
+            for precedence in self.instance.Precedence :
+                remaining_job_list.remove(precedence[1])
             partial_solution_len = 0
             t = 0
             node.partial_solution = []
         else : 
             partial_solution_job_id = [job.id for job in node.partial_solution]
-            remaining_job_list = [job for job in list(range(self.instance.n)) if job not in partial_solution_job_id]
+            remaining_job_list_tmp = [job for job in list(range(self.instance.n)) if job not in partial_solution_job_id]
+            jobs_blocked_by_precedence = []
+            for precedence in self.instance.Precedence :
+                if precedence[0] not in partial_solution_job_id : jobs_blocked_by_precedence.append(precedence[1])
+            remaining_job_list = [job for job in remaining_job_list_tmp if job not in jobs_blocked_by_precedence]
             partial_solution_len = len(node.partial_solution)
             t = node.partial_solution[partial_solution_len-1].end_time
         factor = None
