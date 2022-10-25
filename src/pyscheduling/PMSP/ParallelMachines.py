@@ -5,6 +5,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -718,6 +719,7 @@ class ParallelSolution(RootProblem.Solution):
                 self.machines[k].compute_completion_time(self.instance)
         self.objective_value = max(
             [machine.completion_time for machine in self.machines])
+        return self.objective_value
 
     def tmp_cmax(self, temp_ci={}):
         """
@@ -829,7 +831,7 @@ class ParallelSolution(RootProblem.Solution):
             print("Matplotlib is not installed, you can't use gant_plot")
             return
 
-    def is_valid(self):
+    def is_valid(self, verbosity : bool = False):
         """
         Check if solution respects the constraints
         """
@@ -856,13 +858,21 @@ class ParallelSolution(RootProblem.Solution):
                 ci = expected_start_time + proc_time + setup_time
 
                 if startTime != expected_start_time or endTime != ci:
-                    print(f'## Error: in machine {machine.machine_num}' +
-                          f' found {element} expected {job,expected_start_time, ci}')
+                    if startTime > expected_start_time and endTime - startTime == proc_time + setup_time :
+                        if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
+                    else :
+                        if verbosity : print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
                     is_valid = False
                 set_jobs.add(job)
                 prev_job = job
 
         is_valid &= len(set_jobs) == self.instance.n
+        if is_valid :
+            solution_copy = self.copy()
+            if self.instance.get_objective() == RootProblem.Objective.Cmax:
+                is_valid = self.objective_value == solution_copy.Cmax()
+        if not is_valid :
+            if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
         return is_valid
 
 

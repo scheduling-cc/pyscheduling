@@ -3,6 +3,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from time import perf_counter
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
@@ -402,8 +403,10 @@ class Branch_Bound():
     instance: Instance
     root: object = None
     objective_value = None
-    best_solution: Solution = None
-    all_solution: list[Solution] = field(default_factory=list)
+    best_solution : Solution = None
+    all_solution : list[Solution] = field(default_factory=list)
+    start_time : float = 0
+    runtime : float = 0
 
     @dataclass
     class Node():
@@ -444,17 +447,13 @@ class Branch_Bound():
             objective (Objective): objective to be considered, to know if it's a minimization or a maximization problem
         """
         if root.lower_bound is not None:
-            if objective.value > 0 and root.lower_bound < best_solution:
-                root = None
-            elif objective.value < 0 and root.lower_bound > best_solution:
-                root = None
-        for node in root.sub_nodes:
-            if objective.value > 0 and node.lower_bound < best_solution:
-                node = None
-            elif objective.value < 0 and node.lower_bound > best_solution:
-                node = None
+            if objective.value > 0 and root.lower_bound < best_solution : root = None
+            elif objective.value < 0 and root.lower_bound > best_solution : root = None
+        #for node in root.sub_nodes :
+        #    if objective.value > 0 and node.lower_bound < best_solution : node = None
+        #    elif objective.value < 0 and node.lower_bound > best_solution : node = None
 
-    def objective(self, node: Node):
+    def objective(self, node : Node):
         """objective value evaluator, to be redefined
 
         Args:
@@ -462,7 +461,10 @@ class Branch_Bound():
         """
         pass
 
-    def solve(self, root: Node = None):
+    def solution_format(self, partial_solution : object, objective_value) :
+        pass
+    
+    def solve(self, root : Node = None):
         """recursive function to perform Branch&Bound on the instance attribute
 
         Args:
@@ -471,28 +473,32 @@ class Branch_Bound():
         if root is None:
             root = self.Node()
             self.root = root
-        self.branch(root)
-        if root.sub_nodes[0].if_solution is False:
-            for node in root.sub_nodes:
-                self.bound(node)
+            self.start_time = perf_counter()
+        self.branch(root) 
+        if root.sub_nodes[0].if_solution is False :
+            for node in root.sub_nodes: self.bound(node)
             sorted_sub_nodes = root.sub_nodes
-            sorted_sub_nodes.sort(reverse=self.instance.get_objective(
-            ).value > 0, key=lambda node: node.lower_bound)
-            for node in sorted_sub_nodes:
-                self.solve(node)
-        else:
-            for node in root.sub_nodes:
+            sorted_sub_nodes.sort(reverse= self.instance.get_objective().value > 0, key = lambda node : node.lower_bound)
+            for node in sorted_sub_nodes :
+                if self.best_solution is not None : 
+                    if self.instance.get_objective().value > 0 and node.lower_bound < self.objective_value : node = None
+                    elif self.instance.get_objective().value < 0 and node.lower_bound > self.objective_value : node = None
+                if node is not None : self.solve(node)
+        else :
+            for node in root.sub_nodes: 
                 node.lower_bound = self.objective(node)
-                self.all_solution.append(node.partial_solution)
-                if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound):
-                    self.best_solution = node.partial_solution
+                solution = self.solution_format(node.partial_solution,node.lower_bound)
+                self.all_solution.append(solution)
+                if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound) :
                     self.objective_value = node.lower_bound
-                elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value):
-                    self.best_solution = node.partial_solution
+                    self.best_solution = solution
+                elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
                     self.objective_value = node.lower_bound
-                self.discard(self.root, self.objective_value,
-                             self.instance.get_objective())
-
+                    self.best_solution = solution
+        self.runtime = perf_counter() - self.start_time
+                
+    def get_solve_result(self):
+        return SolveResult(best_solution=self.best_solution,status=SolveStatus.OPTIMAL,runtime=self.runtime,solutions=self.all_solution)   
 
 @dataclass
 class Solver(ABC):
