@@ -287,7 +287,7 @@ class Heuristics():
         Cmax = graph.critical_path()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
-        precedence_constraints = []
+        precedence_constraints = [] # Tuple of (job_i_id, job_j_id) with job_i preceding job_j
 
         while len(remaining_machines)>0:
             Cmax = graph.critical_path()

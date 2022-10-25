@@ -67,7 +67,7 @@ class Problem():
             try:
                 problems[self.key]
             except:
-                raise TypeError("The combination of constraints and objective you have entered is not yet handled by pyscheduling, check the documentation for more.\n")
+                raise KeyError("The combination of constraints and objective you have entered is not yet handled by pyscheduling, check the documentation for more.\n")
         else : self.key = None
 
     def generate_random(self, **data):

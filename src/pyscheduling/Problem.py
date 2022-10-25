@@ -317,7 +317,7 @@ class Branch_Bound():
                     self.best_solution = solution
         self.runtime = perf_counter() - self.start_time
                 
-    def get_solver(self):
+    def get_solve_result(self):
         return SolveResult(best_solution=self.best_solution,status=SolveStatus.OPTIMAL,runtime=self.runtime,solutions=self.all_solution)   
 
 @dataclass
