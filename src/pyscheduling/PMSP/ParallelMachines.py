@@ -870,7 +870,7 @@ class ParallelSolution(RootProblem.Solution):
         if is_valid :
             solution_copy = self.copy()
             if self.instance.get_objective() == RootProblem.Objective.Cmax:
-                is_valid = self.objective_value == solution_copy.Cmax()
+                is_valid = self.objective_value == solution_copy.cmax()
         if not is_valid :
             if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
         return is_valid
