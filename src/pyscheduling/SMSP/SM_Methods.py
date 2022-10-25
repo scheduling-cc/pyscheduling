@@ -1,6 +1,8 @@
+from functools import partial
 import random
 import sys
 from time import perf_counter
+from typing import Callable
 
 import pyscheduling.Problem as RootProblem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
@@ -16,6 +18,67 @@ except ImportError:
     pass
 
 DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
+
+class Heuristics():
+
+    @staticmethod
+    def dispatch_heuristic(instance : SingleMachine.SingleInstance, rule : Callable, reverse: bool = False):
+        """Orders the jobs according to the rule (lambda function) and returns the schedule accordignly
+
+        Args:
+            instance (SingleInstance): Instance to be solved
+            rule (Callable): a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+            reverse (bool, optional): flag to sort in decreasing order. Defaults to False.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        startTime = perf_counter()
+        solution = SingleMachine.SingleSolution(instance)
+        
+        remaining_jobs_list = list(range(instance.n))
+        sort_rule = partial(rule, instance)
+
+        remaining_jobs_list.sort(key=sort_rule, reverse=reverse)
+        solution.machine.job_schedule = [SingleMachine.Job(job_id, -1, -1) for job_id in remaining_jobs_list]
+        solution.compute_objective()
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+    def dynamic_dispatch_rule(instance : SingleMachine.SingleInstance, rule : Callable, filter_fun: Callable, reverse: bool = False):
+        """Orders the jobs respecting the filter according to the rule. 
+        The order is dynamic since it is determined each time a new job is inserted
+
+        Args:
+            instance (SingleInstance): Instance to be solved
+            rule (Callable): a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+            filter (Callable): a lambda function that defines a filter condition taking the instance, job_id and current time as the parameters
+            reverse (bool, optional): flag to sort in decreasing order. Defaults to False.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        startTime = perf_counter()
+        solution = SingleMachine.SingleSolution(instance)
+
+        remaining_jobs_list = list(range(instance.n))
+        ci = min(instance.R)
+        sort_rule = partial(rule, instance)
+        
+        insert_idx = 0
+        while(len(remaining_jobs_list)>0):
+            ci = max( ci, min(instance.R[job_id] for job_id in remaining_jobs_list) ) # Advance the current ci to at least a time t > min_Ri
+            filtered_remaining_jobs_list = list(filter(partial(filter_fun, instance, ci),remaining_jobs_list))
+            filtered_remaining_jobs_list.sort(key= sort_rule, reverse=reverse)
+
+            taken_job = filtered_remaining_jobs_list[0]
+            #ci = solution.machine.objective_insert(taken_job, insert_idx, instance)
+            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,-1,-1))
+            solution.compute_objective()
+            ci = solution.objective_value
+            remaining_jobs_list.remove(taken_job)
+            insert_idx += 1
+        
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
 class Metaheuristics():
 

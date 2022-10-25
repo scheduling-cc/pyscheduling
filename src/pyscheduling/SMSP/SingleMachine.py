@@ -514,7 +514,7 @@ class Machine:
             ci = c_prev + release_time + setupTime + instance.P[job]
             wiCi = self.wiCi_index[pos - 1]+instance.W[job]*ci
         else:
-            ci = instance.S[job][job] + instance.P[job]
+            ci = instance.S[job][job] + instance.P[job] if hasattr(instance, 'S') else instance.P[job]
             wiCi = instance.W[job]*ci
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
@@ -1016,6 +1016,14 @@ class Machine:
 
         return ci
 
+    def objective_insert(self, job: int, pos: int, instance: SingleInstance):
+        if instance.get_objective() == Objective.wiCi:
+            return self.total_weighted_completion_time_insert(job, pos, instance)
+        elif instance.get_objective() == Objective.wiTi:
+            return self.total_weighted_lateness_insert(job, pos, instance)
+        elif instance.get_objective() == Objective.Cmax:
+            return self.completion_time_insert(job, pos, instance)
+
 
 @dataclass
 class SingleSolution(RootProblem.Solution):
@@ -1029,6 +1037,7 @@ class SingleSolution(RootProblem.Solution):
             instance (SingleInstance, optional): Instance to be solved by the solution.
         """
         self.instance = instance
+        self.objective = instance.get_objective()
         if machine is None:
             self.machine = Machine(0, -1, [])
         else:
@@ -1070,6 +1079,14 @@ class SingleSolution(RootProblem.Solution):
         if self.instance != None:
             self.machine.completion_time(self.instance)
         self.objective_value = self.machine.objective
+
+    def compute_objective(self):
+        if self.objective == Objective.wiCi:
+            self.wiCi()
+        elif self.objective == Objective.wiTi:
+            self.wiTi()
+        elif self.objective == Objective.Cmax:
+            self.Cmax()
 
     def fix_objective(self):
         """Sets the objective_value attribute of the solution to the objective attribute of the machine
