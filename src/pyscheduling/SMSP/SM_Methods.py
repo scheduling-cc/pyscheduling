@@ -80,6 +80,92 @@ class Heuristics():
         
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
+    @staticmethod
+    def BIBA(instance: SingleMachine.SingleInstance):
+        """Returns the solution according to the best insertion based approach algorithm (GECCO Article)
+
+        Args:
+            instance (SingleMachine.SingleInstance): SMSP instance to be solved
+
+        Returns:
+            SolveResult: the solve result of the execution of the heuristic
+        """
+        startTime = perf_counter()
+        solveResult = RootProblem.SolveResult()
+        solveResult.all_solutions = []
+        solution = SingleMachine.SingleSolution(instance)
+        remaining_jobs_list = [i for i in range(instance.n)]
+        while len(remaining_jobs_list) != 0:
+            insertions_list = []
+            for i in remaining_jobs_list:
+                for k in range(0, len(solution.machine.job_schedule) + 1):
+                    insertions_list.append(
+                        (i, k, solution.machine.objective_insert(i, k, instance)))
+
+            insertions_list.sort(key=lambda insertion: insertion[2])
+            best_insertion = insertions_list[0]
+            taken_job, taken_pos, ci = best_insertion
+            solution.machine.job_schedule.insert(taken_pos, Job(taken_job, 0, 0))
+            solution.compute_objective()
+            if taken_pos == len(solution.machine.job_schedule)-1:
+                solution.machine.last_job = taken_job
+            remaining_jobs_list.remove(taken_job)
+
+        solveResult.all_solutions.append(solution)
+        solveResult.best_solution = solution
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        return solveResult
+
+    @staticmethod
+    def grasp(instance: SingleMachine.SingleInstance, p: float, r: int, n_iterations: int):
+        """Returns the solution using the Greedy randomized adaptive search procedure algorithm
+
+        Args:
+            instance (SingleInstance): The instance to be solved by the heuristic
+            p (float): probability of taking the greedy best solution
+            r (int): percentage of moves to consider to select the best move
+            nb_exec (int): Number of execution of the heuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        startTime = perf_counter()
+        solveResult = RootProblem.SolveResult()
+        best_solution = None
+        for _ in range(n_iterations):
+            solution = SingleMachine.SingleSolution(instance)
+            remaining_jobs_list = [i for i in range(instance.n)]
+            while len(remaining_jobs_list) != 0:
+                insertions_list = []
+                for i in remaining_jobs_list:
+                    for k in range(0, len(solution.machine.job_schedule) + 1):
+                        insertions_list.append(
+                            (i, k, solution.machine.objective_insert(i, k, instance)))
+
+                insertions_list.sort(key=lambda insertion: insertion[2])
+                proba = random.random()
+                if proba < p:
+                    rand_insertion = insertions_list[0]
+                else:
+                    rand_insertion = random.choice(
+                        insertions_list[0:int(instance.n * r)])
+                taken_job, taken_pos, ci = rand_insertion
+                solution.machine.job_schedule.insert(taken_pos, Job(taken_job, 0, 0))
+                solution.compute_objective()
+                if taken_pos == len(solution.machine.job_schedule)-1:
+                    solution.machine.last_job = taken_job
+                remaining_jobs_list.remove(taken_job)
+
+            solveResult.all_solutions.append(solution)
+            if not best_solution or best_solution.objective_value > solution.objective_value:
+                best_solution = solution
+
+        solveResult.best_solution = best_solution
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        return solveResult
+
 class Metaheuristics():
 
     @staticmethod
@@ -366,34 +452,6 @@ class Heuristics_HelperFunctions():
         if reverse: return taken_job_max
         else: return taken_job_min
 
-class Heuristics_Cmax():
-    @staticmethod
-    def meta_raps(instance: SingleMachine.SingleInstance, p: float, r: int, nb_exec: int):
-        """Returns the solution using the meta-raps algorithm
 
-        Args:
-            instance (SingleInstance): The instance to be solved by the heuristic
-            p (float): probability of taking the greedy best solution
-            r (int): percentage of moves to consider to select the best move
-            nb_exec (int): Number of execution of the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        pass
-
-    @staticmethod
-    def grasp(instance: SingleMachine.SingleInstance, x, nb_exec: int):
-        """Returns the solution using the grasp algorithm
-
-        Args:
-            instance (SingleInstance): Instance to be solved by the heuristic
-            x (_type_): percentage of moves to consider to select the best move
-            nb_exec (int): Number of execution of the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        pass
 
  

@@ -330,7 +330,7 @@ class SolveResult:
             self.solve_status = SolveStatus.INFEASIBLE
         self.time_to_best = time_to_best
         self.kpis = kpis
-        self.all_solutions = solutions
+        self.all_solutions = solutions if solutions is not None else []
 
     @property
     def nb_solutions(self) -> int:
