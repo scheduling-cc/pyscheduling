@@ -20,7 +20,7 @@ class risijCmax_Instance(SingleMachine.SingleInstance):
         return Heuristics.constructive
 
 
-class Heuristics(Methods.Heuristics_Cmax):
+class Heuristics(Methods.Heuristics):
     
     
     @staticmethod

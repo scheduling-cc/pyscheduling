@@ -1016,13 +1016,37 @@ class Machine:
 
         return ci
 
-    def objective_insert(self, job: int, pos: int, instance: SingleInstance):
+    def compute_objective(self, instance: SingleInstance, startIndex: int = 0):
+        if instance.get_objective() == Objective.wiCi:
+            return self.total_weighted_completion_time(instance, startIndex)
+        elif instance.get_objective() == Objective.wiTi:
+            return self.total_weighted_lateness(instance, startIndex)
+        elif instance.get_objective() == Objective.Cmax:
+            return self.completion_time(instance, startIndex)
+
+    def compute_objective_insert(self, job: int, pos: int, instance: SingleInstance):
         if instance.get_objective() == Objective.wiCi:
             return self.total_weighted_completion_time_insert(job, pos, instance)
         elif instance.get_objective() == Objective.wiTi:
             return self.total_weighted_lateness_insert(job, pos, instance)
         elif instance.get_objective() == Objective.Cmax:
             return self.completion_time_insert(job, pos, instance)
+
+    def compute_objective_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
+        if instance.get_objective() == Objective.wiCi:
+            return self.total_weighted_completion_time_swap(pos_i, pos_j, instance)
+        elif instance.get_objective() == Objective.wiTi:
+            return self.total_weighted_lateness_swap(pos_i, pos_j, instance)
+        elif instance.get_objective() == Objective.Cmax:
+            return self.completion_time_swap(pos_i, pos_j, instance)
+    
+    def compute_objective_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
+        if instance.get_objective() == Objective.wiCi:
+            return self.total_weighted_completion_time_remove_insert(pos_remove, job, pos_insert, instance)
+        elif instance.get_objective() == Objective.wiTi:
+            return self.total_weighted_lateness_remove_insert(pos_remove, job, pos_insert, instance)
+        elif instance.get_objective() == Objective.Cmax:
+            return self.completion_time_remove_insert(pos_remove, job, pos_insert, instance)
 
 
 @dataclass
@@ -1235,22 +1259,13 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         Returns:
             SingleSolution: improved solution
         """
-        if objective == RootProblem.Objective.wiCi:
-            fix_machine = solution.machine.total_weighted_completion_time
-            remove_insert = solution.machine.total_weighted_completion_time_remove_insert
-        elif objective == RootProblem.Objective.wiTi:
-            fix_machine = solution.machine.total_weighted_lateness
-            remove_insert = solution.machine.total_weighted_lateness_remove_insert
-        elif objective == RootProblem.Objective.Cmax:
-            fix_machine = solution.machine.completion_time
-            remove_insert = solution.machine.completion_time_remove_insert
         for pos in range(len(solution.machine.job_schedule)):
             job = solution.machine.job_schedule[pos]
             objective = solution.machine.objective
             taken_pos = pos
             for new_pos in range(len(solution.machine.job_schedule)):
                 if(pos != new_pos):
-                    new_objective = remove_insert(
+                    new_objective = solution.machine.compute_objective_remove_insert(
                         pos, job.id, new_pos, solution.instance)
                     if new_objective < objective:
                         taken_pos = new_pos
@@ -1258,7 +1273,7 @@ class SM_LocalSearch(RootProblem.LocalSearch):
             if taken_pos != pos:
                 solution.machine.job_schedule.pop(pos)
                 solution.machine.job_schedule.insert(taken_pos, job)
-                fix_machine(solution.instance, min(taken_pos, pos))
+                solution.machine.compute_objective(solution.instance, min(taken_pos, pos))
         solution.fix_objective()
         return solution
 
@@ -1273,21 +1288,11 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         Returns:
             SingleSolution: improved solution
         """
-        if objective == RootProblem.Objective.wiCi:
-            set_objective = solution.wiCi
-            swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == RootProblem.Objective.wiTi:
-            set_objective = solution.wiTi
-            swap = solution.machine.total_weighted_lateness_swap
-        elif objective == RootProblem.Objective.Cmax:
-            set_objective = solution.Cmax
-            swap = solution.machine.completion_time_swap
-
         job_schedule_len = len(solution.machine.job_schedule)
         move = None
         for i in range(0, job_schedule_len):
             for j in range(i+1, job_schedule_len):
-                new_ci = swap(i, j, solution.instance)
+                new_ci = solution.machine.compute_objective_swap(i, j, solution.instance)
                 if new_ci < solution.machine.objective:
                     if not move:
                         move = (i, j, new_ci)
@@ -1298,7 +1303,7 @@ class SM_LocalSearch(RootProblem.LocalSearch):
             solution.machine.job_schedule[move[0]], solution.machine.job_schedule[move[1]
                                                                                   ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
             solution.machine.objective = move[2]
-            set_objective()
+            solution.compute_objective()
         return solution
 
     def improve(self, solution: SingleSolution, objective: RootProblem.Objective) -> SingleSolution:

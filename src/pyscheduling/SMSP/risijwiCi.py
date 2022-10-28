@@ -21,7 +21,7 @@ class risijwiCi_Instance(SingleMachine.SingleInstance):
         return Heuristics.constructive
 
 
-class Heuristics(Methods.Heuristics_Cmax):
+class Heuristics(Methods.Heuristics):
     
     @staticmethod
     def list_heuristic(instance: risijwiCi_Instance, rule_number: int = 0) -> RootProblem.SolveResult:
@@ -45,18 +45,6 @@ class Heuristics(Methods.Heuristics_Cmax):
             reverse = True
 
         return Methods.Heuristics.dispatch_heuristic(instance, sorting_func, reverse)
-    
-    @staticmethod
-    def constructive(instance: risijwiCi_Instance):
-        """the greedy constructive heuristic to find an initial solution of risijCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
-
-        Args:
-            instance (risijCmax_Instance): Instance to be solved by the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        pass
 
 
     @classmethod

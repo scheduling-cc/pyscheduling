@@ -21,7 +21,7 @@ class sijCmax_Instance(SingleMachine.SingleInstance):
 
 
 
-class Heuristics(Methods.Heuristics_Cmax):
+class Heuristics(Methods.Heuristics):
     
     
     @staticmethod

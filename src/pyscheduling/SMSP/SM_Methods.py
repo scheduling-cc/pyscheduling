@@ -100,7 +100,7 @@ class Heuristics():
             for i in remaining_jobs_list:
                 for k in range(0, len(solution.machine.job_schedule) + 1):
                     insertions_list.append(
-                        (i, k, solution.machine.objective_insert(i, k, instance)))
+                        (i, k, solution.machine.compute_objective_insert(i, k, instance)))
 
             insertions_list.sort(key=lambda insertion: insertion[2])
             best_insertion = insertions_list[0]
@@ -141,7 +141,7 @@ class Heuristics():
                 for i in remaining_jobs_list:
                     for k in range(0, len(solution.machine.job_schedule) + 1):
                         insertions_list.append(
-                            (i, k, solution.machine.objective_insert(i, k, instance)))
+                            (i, k, solution.machine.compute_objective_insert(i, k, instance)))
 
                 insertions_list.sort(key=lambda insertion: insertion[2])
                 proba = random.random()
