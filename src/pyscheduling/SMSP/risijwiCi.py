@@ -1,4 +1,5 @@
 from crypt import methods
+from math import exp
 from time import perf_counter
 
 import pyscheduling.Problem as RootProblem
@@ -18,13 +19,13 @@ class risijwiCi_Instance(SingleMachine.SingleInstance):
         Returns:
             object: default solving method
         """
-        return Heuristics.constructive
+        return Heuristics.BIBA
 
 
 class Heuristics(Methods.Heuristics):
     
     @staticmethod
-    def list_heuristic(instance: risijwiCi_Instance, rule_number: int = 0) -> RootProblem.SolveResult:
+    def list_heuristic(instance: risijwiCi_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
         """contains a list of static dispatching rules to be chosen from
 
         Args:
@@ -34,15 +35,16 @@ class Heuristics(Methods.Heuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        if rule_number==1: # Increasing order of the release time
-            sorting_func = lambda instance, job_id : instance.R[job_id]
-            reverse = False
-        elif rule_number==2: # WSPT
-            sorting_func = lambda instance, job_id : float(instance.W[job_id])/float(instance.P[job_id])
-            reverse = True
-        elif rule_number==3: #WSPT including release time in the processing time
-            sorting_func = lambda instance, job_id : float(instance.W[job_id])/float(instance.R[job_id]+instance.P[job_id])
-            reverse = True
+        s_bar = sum(sum(instance.S[l]) for l in range(instance.n) ) / (instance.n * instance.n)
+        default_rule = lambda instance, job_id : instance.R[job_id]
+        rules_dict = {
+            0: default_rule,
+            1: lambda instance, job_id : instance.W[job_id] / instance.P[job_id],
+            2: lambda instance, job_id : instance.W[job_id] / (instance.R[job_id]+instance.P[job_id]),
+            3: lambda instance, job_id : exp(-(sum(instance.S[l][job_id] for l in range(instance.n))) / ( 0.2 * s_bar) ) * instance.W[job_id] / (instance.R[job_id]+instance.P[job_id])
+        }
+        
+        sorting_func = rules_dict.get(rule_number, default_rule)
 
         return Methods.Heuristics.dispatch_heuristic(instance, sorting_func, reverse)
 

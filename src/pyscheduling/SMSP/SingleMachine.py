@@ -83,10 +83,10 @@ def single_instance(constraints: list[Constraints], objective: Objective):
     def generate_random(cls, jobs_number: int, InstanceName: str = "",
                         protocol: GenerationProtocol = GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
                         Wmin: int = 1, Wmax: int = 1,
-                        Pmin: int = 1, Pmax: int = 100,
+                        Pmin: int = 10, Pmax: int = 50,
                         alpha: float = 2.0,
                         due_time_factor: float = 0.5,
-                        Gamma: float = 2.0, Smin: int = 10, Smax: int = 100):
+                        Gamma: float = 2.0, Smin: int = 1, Smax: int = 25):
         """Random generation of risijCmax problem instance
 
         Args:
@@ -272,7 +272,7 @@ class SingleInstance(RootProblem.Instance):
         W = []
         for j in range(self.n):
             if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(Wmin, Wmax))
+                n = int(random.randint(Wmin, Wmax+1))
             elif law.name == "NORMAL":  # Use normal law
                 value = np.random.normal(0, 1)
                 n = int(abs(Wmin+Wmax*value))
@@ -606,9 +606,9 @@ class Machine:
 
         ci = 0
         if pos_i == 0:
-            job_prev_i = self.job_schedule[pos_j]
+            job_prev_i = self.job_schedule[pos_j].id
         else:
-            job_prev_i = self.job_schedule[pos_i]
+            job_prev_i = self.job_schedule[pos_i].id
         wiCi = 0
         if first_pos > 0:  # There's at least one job in the schedule
             ci = self.job_schedule[first_pos - 1].end_time
@@ -1335,17 +1335,6 @@ class NeighbourhoodGeneration():
         Returns:
             SingleSolution: New solution
         """
-
-        if objective == RootProblem.Objective.wiCi:
-            fix_machine = solution.machine.total_weighted_completion_time
-            swap = solution.machine.total_weighted_completion_time_swap
-        elif objective == RootProblem.Objective.wiTi:
-            fix_machine = solution.machine.total_weighted_lateness
-            swap = solution.machine.total_weighted_lateness_swap
-        elif objective == RootProblem.Objective.Cmax:
-            fix_machine = solution.machine.completion_time
-            swap = solution.machine.completion_time_swap
-
         machine_schedule = solution.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
 
@@ -1357,7 +1346,7 @@ class NeighbourhoodGeneration():
         while other_job_index == random_job_index:
             other_job_index = random.randrange(machine_schedule_len)
 
-        new_ci = swap(
+        new_ci = solution.machine.compute_objective_swap(
             random_job_index, other_job_index, solution.instance)
 
         # Apply the move
@@ -1366,7 +1355,7 @@ class NeighbourhoodGeneration():
                 other_job_index] = machine_schedule[
                     other_job_index], machine_schedule[random_job_index]
 
-            fix_machine(solution.instance, min(
+            solution.machine.compute_objective(solution.instance, min(
                 random_job_index, other_job_index))
             solution.fix_objective()
 
@@ -1396,7 +1385,7 @@ class NeighbourhoodGeneration():
 
             old_ci = solution.machine.objective
 
-            new_ci = solution.machine.completion_time_swap(
+            new_ci = solution.machine.compute_objective_swap(
                 job_i_pos, job_j_pos, solution.instance)
 
             # Apply the move
@@ -1404,7 +1393,7 @@ class NeighbourhoodGeneration():
                 machine_schedule[job_i_pos], machine_schedule[
                     job_j_pos] = machine_schedule[
                         job_j_pos], machine_schedule[job_i_pos]
-                solution.machine.total_weighted_completion_time(
+                solution.machine.compute_objective(
                     solution.instance, min(job_i_pos, job_j_pos))
                 solution.fix_objective()
 
