@@ -359,7 +359,9 @@ class ParallelInstance(RootProblem.Instance):
             list[int]: due time table
         """
         di = []
+        PJobs = [min(PJobs[j]) for j in range(self.n)]
         sumP = sum(PJobs)
+        
         for j in range(self.n):
             if hasattr(self, 'R'):
                 startTime = self.R[j] + PJobs[j]
@@ -377,7 +379,7 @@ class ParallelInstance(RootProblem.Instance):
                     n = int(abs(Pmin+Pmax*value))
 
             di.append(n)
-
+        
         return di
 
     def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
@@ -406,15 +408,15 @@ class ParallelInstance(RootProblem.Instance):
 
         return W
 
-
 @dataclass
 class Machine:
-
     machine_num: int
+    objective: int = 0
     completion_time: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-
+    wiTi_index: list[int] = field(default_factory=list)
+    
     def __init__(self, machine_num: int, completion_time: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
         """Constructor of Machine
 
@@ -431,6 +433,8 @@ class Machine:
             self.job_schedule = []
         else:
             self.job_schedule = job_schedule
+        
+        self.wiTi_index = []
 
     def __str__(self):
         return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
@@ -505,7 +509,8 @@ class Machine:
         return ci
 
     def completion_time_insert(self, job: int, pos: int, instance: ParallelInstance):
-        """
+        
+        """_summary_
         Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
         Args:
             job (int): id of the inserted job
@@ -533,7 +538,7 @@ class Machine:
             ci = release_time + \
                 instance.P[job][self.machine_num] + \
                 instance.S[self.machine_num][job][job]
-
+            
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
             job_i = self.job_schedule[i][0]
@@ -547,11 +552,59 @@ class Machine:
             ci = startTime + proc_time + setup_time
 
             job_prev_i = job_i
-
+        
         return ci
+    
+    def wrighted_insert(self, job: int, pos: int, instance: ParallelInstance):
+        
+        """_summary_
+        Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
+        Args:
+            job (int): id of the inserted job
+            pos (int): position where the job is inserted in the machine
+            instance (ParallelInstance): the current problem instance
+        Returns:
+            ci (int) : completion time
+        """
+        if pos > 0:  # There's at least one job in the schedule
+            prev_job, startTime, c_prev = self.job_schedule[pos - 1]
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job] - c_prev, 0)
+            else:
+                release_time = 0
+            ci = c_prev + release_time + \
+                instance.S[self.machine_num][prev_job][job] + \
+                instance.P[job][self.machine_num]
+        else:
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job], 0)
+            else:
+                release_time = 0
+            # First job to be inserted
+            # Added Sk_ii for rabadi benchmark
+            ci = release_time + \
+                instance.P[job][self.machine_num] + \
+                instance.S[self.machine_num][job][job]
+            
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
+
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            setup_time = instance.S[self.machine_num][job_prev_i][job_i]
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + proc_time + setup_time
+
+            job_prev_i = job_i
+        
+        return ci,release_time
 
     def completion_time_remove(self, pos: int, instance: ParallelInstance):
-        """
+        
+        """_summary_
         Computes the machine's completion time if we remove the job at "pos" in the machine's job_schedule
         Args:
             pos (int): position of the job to be removed
@@ -559,6 +612,7 @@ class Machine:
         Returns:
             ci (int) : completion time
         """
+        
         job_prev_i, ci = -1, 0
         if pos > 0:  # There's at least one job in the schedule
             job_prev_i, startTime, ci = self.job_schedule[pos - 1]
@@ -666,8 +720,53 @@ class Machine:
             job_prev_i = job_i
 
         return ci
+    
+    def weighted_lateness_insert(self,job:int, pos:int,instance:ParallelInstance):
+        """Computes the machine's total wighted tardiness if we insert "job" at "pos" in the machine's job_schedule
+        Args:
+            job (int): id of the inserted job
+            pos (int): position where the job is inserted in the machine
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int : total weighted lateness
+        """
+        if pos > 0:
+            c_prev = self.job_schedule[pos - 1].end_time
+            job_prev_i = self.job_schedule[pos - 1].id
+            if hasattr(instance, 'R'):
+                release_time = max(instance.R[job] - c_prev, 0)
+            else:
+                release_time = 0
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[self.machine_num][job_prev_i][job]
+            else:
+                setupTime = 0
+            ci = c_prev + release_time + setupTime + instance.P[job][self.machine_num]
+            wiTi = self.wiTi_index[pos - 1]+instance.W[job]*max(ci-instance.D[job],0)
+        else:
+            ci = instance.S[self.machine_num][job][job] + instance.P[job][self.machine_num]
+            wiTi = instance.W[job]*max(ci - instance.D[job],0)
+        job_prev_i = job
+        for i in range(pos, len(self.job_schedule)):
+            job_i = self.job_schedule[i][0]
 
+            if hasattr(instance, 'R'):
+                startTime = max(ci, instance.R[job_i])
+            else:
+                startTime = ci
+            if hasattr(instance, 'S'):
+                setupTime = instance.S[self.machine_num][job_prev_i][job_i]
+            else:
+                setupTime = 0
+            proc_time = instance.P[job_i][self.machine_num]
+            ci = startTime + setupTime + proc_time
+            wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
+            job_prev_i = job_i
+        
+        return wiTi
+        
+        
 @dataclass
 class ParallelSolution(RootProblem.Solution):
 
@@ -719,7 +818,6 @@ class ParallelSolution(RootProblem.Solution):
                 self.machines[k].compute_completion_time(self.instance)
         self.objective_value = max(
             [machine.completion_time for machine in self.machines])
-        return self.objective_value
 
     def tmp_cmax(self, temp_ci={}):
         """
@@ -739,6 +837,10 @@ class ParallelSolution(RootProblem.Solution):
         """
         self.objective_value = max(
             [machine.completion_time for machine in self.machines])
+    
+    def compute_objective(self,objective):
+        if objective == Objective.wiTi:
+            self.objective = sum([machine.objective for machine in self.machines])
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -831,7 +933,7 @@ class ParallelSolution(RootProblem.Solution):
             print("Matplotlib is not installed, you can't use gant_plot")
             return
 
-    def is_valid(self, verbosity : bool = False):
+    def is_valid(self):
         """
         Check if solution respects the constraints
         """
@@ -858,21 +960,13 @@ class ParallelSolution(RootProblem.Solution):
                 ci = expected_start_time + proc_time + setup_time
 
                 if startTime != expected_start_time or endTime != ci:
-                    if startTime > expected_start_time and endTime - startTime == proc_time + setup_time :
-                        if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
-                    else :
-                        if verbosity : print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                    print(f'## Error: in machine {machine.machine_num}' +
+                          f' found {element} expected {job,expected_start_time, ci}')
                     is_valid = False
                 set_jobs.add(job)
                 prev_job = job
 
         is_valid &= len(set_jobs) == self.instance.n
-        if is_valid :
-            solution_copy = self.copy()
-            if self.instance.get_objective() == RootProblem.Objective.Cmax:
-                is_valid = self.objective_value == solution_copy.cmax()
-        if not is_valid :
-            if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
         return is_valid
 
 
