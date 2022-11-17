@@ -229,8 +229,7 @@ class Metaheuristics():
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
 
-            solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(
-                current_solution,instance.get_objective())
+            solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(current_solution)
 
             if LS:
                 solution_i = local_search.improve(solution_i,instance.get_objective())
@@ -440,7 +439,7 @@ if DOCPLEX_IMPORTED:
             """
             if "docplex" in sys.modules:
                 # Extracting parameters
-                objective = kwargs.get("objective", "wiCi")
+                objective = instance.get_objective()
                 log_path = kwargs.get("log_path", None)
                 time_limit = kwargs.get("time_limit", 300)
                 nb_threads = kwargs.get("threads", 1)

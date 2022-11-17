@@ -1323,8 +1323,42 @@ class SM_LocalSearch(RootProblem.LocalSearch):
 
 
 class NeighbourhoodGeneration():
+    
     @staticmethod
-    def random_swap(solution: SingleSolution, objective: RootProblem.Objective, force_improve: bool = True):
+    def random_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True):
+
+        if not inplace:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        machine_schedule = solution_copy.machine.job_schedule
+        machine_schedule_len = len(machine_schedule)
+
+        old_objective = solution_copy.machine.objective
+
+        # Get the job and the position
+        random_job_index = random.randrange(machine_schedule_len)
+        random_job_id = machine_schedule[random_job_index].id
+
+        random_pos = random_job_index
+        while random_pos == random_job_index:
+            random_pos = random.randrange(machine_schedule_len)
+        
+        new_objective = solution_copy.machine.completion_time_remove_insert(random_job_index, random_job_id, random_pos, solution_copy.instance)
+
+        if not force_improve or (new_objective <= old_objective):
+            job_i = machine_schedule.pop(random_job_index)
+            machine_schedule.insert(random_pos, job_i)
+
+            solution_copy.machine.compute_objective(solution_copy.instance, min(
+                random_job_index, random_pos))
+            solution.fix_objective()
+        
+        return solution_copy
+
+    @staticmethod
+    def random_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = False):
         """Performs a random swap between 2 jobs
 
         Args:
@@ -1335,10 +1369,15 @@ class NeighbourhoodGeneration():
         Returns:
             SingleSolution: New solution
         """
-        machine_schedule = solution.machine.job_schedule
+        if not inplace:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        machine_schedule = solution_copy.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
 
-        old_ci = solution.machine.objective
+        old_ci = solution_copy.machine.objective
 
         random_job_index = random.randrange(machine_schedule_len)
         other_job_index = random.randrange(machine_schedule_len)
@@ -1346,8 +1385,8 @@ class NeighbourhoodGeneration():
         while other_job_index == random_job_index:
             other_job_index = random.randrange(machine_schedule_len)
 
-        new_ci = solution.machine.compute_objective_swap(
-            random_job_index, other_job_index, solution.instance)
+        new_ci = solution_copy.machine.compute_objective_swap(
+            random_job_index, other_job_index, solution_copy.instance)
 
         # Apply the move
         if not force_improve or (new_ci <= old_ci):
@@ -1355,11 +1394,11 @@ class NeighbourhoodGeneration():
                 other_job_index] = machine_schedule[
                     other_job_index], machine_schedule[random_job_index]
 
-            solution.machine.compute_objective(solution.instance, min(
+            solution_copy.machine.compute_objective(solution_copy.instance, min(
                 random_job_index, other_job_index))
-            solution.fix_objective()
+            solution_copy.fix_objective()
 
-        return solution
+        return solution_copy
 
     @staticmethod
     def passive_swap(solution: SingleSolution, force_improve: bool = True):
@@ -1400,7 +1439,7 @@ class NeighbourhoodGeneration():
         return solution
 
     @staticmethod
-    def lahc_neighbour(solution: SingleSolution, objective: RootProblem.Objective):
+    def lahc_neighbour(solution: SingleSolution):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:
@@ -1409,9 +1448,12 @@ class NeighbourhoodGeneration():
         Returns:
             SingleSolution: New solution
         """
-        solution_copy = solution.copy()
-        # for _ in range(1,random.randint(1, 2)):
-        solution_copy = NeighbourhoodGeneration.random_swap(
-            solution_copy, objective, force_improve=False)
+        r = random.random()
+        if r < 0.5:
+            solution = NeighbourhoodGeneration.random_swap(
+                solution, force_improve=False, inplace=False)
+        else:
+            solution = NeighbourhoodGeneration.random_insert(
+                solution, force_improve=False, internal=True)
 
-        return solution_copy
+        return solution
