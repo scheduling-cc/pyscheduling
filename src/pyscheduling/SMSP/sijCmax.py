@@ -43,10 +43,10 @@ class Heuristics(Methods.Heuristics):
 
                 current_machine_schedule = solution.machine
                 if (current_machine_schedule.last_job == -1):
-                    factor = current_machine_schedule.objective + \
+                    factor = current_machine_schedule.objective_value + \
                         instance.P[i]
                 else:
-                    factor = current_machine_schedule.objective + \
+                    factor = current_machine_schedule.objective_value + \
                         instance.P[i] + \
                         instance.S[current_machine_schedule.last_job][i]
 
@@ -54,15 +54,15 @@ class Heuristics(Methods.Heuristics):
                     min_factor = factor
                     taken_job = i
             if (solution.machine.last_job == -1):
-                ci = solution.machine.objective + \
+                ci = solution.machine.objective_value + \
                     instance.P[taken_job]
             else:
-                ci = solution.machine.objective + instance.P[taken_job]+ \
+                ci = solution.machine.objective_value + instance.P[taken_job]+ \
                     instance.S[solution.machine.last_job][taken_job]
 
             solution.machine.job_schedule.append(SingleMachine.Job(
-                taken_job, solution.machine.objective, ci))
-            solution.machine.objective = ci
+                taken_job, solution.machine.objective_value, ci))
+            solution.machine.objective_value = ci
             solution.machine.last_job = taken_job
 
             remaining_jobs_list.remove(taken_job)

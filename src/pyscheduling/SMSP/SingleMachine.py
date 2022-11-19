@@ -392,15 +392,15 @@ class SingleInstance(RootProblem.Instance):
 @dataclass
 class Machine:
 
-    objective: int = 0
+    objective_value: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
     # this table serves as a cache to save the total weighted completion time reached after each job in job_schedule
-    wiCi_index: list[int] = field(default_factory=list)
+    wiCi_cache: list[int] = field(default_factory=list)
     # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
-    wiTi_index: list[int] = field(default_factory=list)
+    wiTi_cache: list[int] = field(default_factory=list)
 
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index: list[int] = None, wiTi_index: list[int] = None) -> None:
+    def __init__(self, objective_value: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_cache: list[int] = None, wiTi_cache: list[int] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -408,29 +408,29 @@ class Machine:
             last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
             job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
         """
-        self.objective = objective
+        self.objective_value = objective_value
         self.last_job = last_job
         if job_schedule is None:
             self.job_schedule = []
         else:
             self.job_schedule = job_schedule
-        self.wiCi_index = wiCi_index
-        self.wiTi_index = wiTi_index
+        self.wiCi_cache = wiCi_cache
+        self.wiTi_cache = wiTi_cache
 
     def __str__(self):
-        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
+        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective_value)
 
     def __eq__(self, other):
         same_schedule = other.job_schedule == self.job_schedule
         return (same_schedule)
 
     def copy(self):
-        if self.wiCi_index is None and self.wiTi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule))
-        elif self.wiCi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule), wiTi_index=list(self.wiTi_index))
+        if self.wiCi_cache is None and self.wiTi_cache is None:
+            return Machine(self.objective_value, self.last_job, list(self.job_schedule))
+        elif self.wiCi_cache is None:
+            return Machine(self.objective_value, self.last_job, list(self.job_schedule), wiTi_cache=list(self.wiTi_cache))
         else:
-            return Machine(self.objective, self.last_job, list(self.job_schedule), wiCi_index=list(self.wiCi_index))
+            return Machine(self.objective_value, self.last_job, list(self.job_schedule), wiCi_cache=list(self.wiCi_cache))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -439,6 +439,52 @@ class Machine:
     @staticmethod
     def fromDict(machine_dict):
         return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
+
+    def compute_current_ci(self, instance, prev_ci, job_prev_i, job_i):
+        
+        startTime = max(prev_ci, instance.R[job_i]) if hasattr(instance, 'R') else prev_ci
+        setupTime = instance.S[job_prev_i][job_i] if hasattr(instance, 'S') else 0
+        proc_time = instance.P[job_i]
+
+        ci = startTime + setupTime + proc_time
+        return ci, startTime
+
+    def init_cache(self, startIndex: int = 0, obj_cache: list[int] = None):
+        """Initialize the cache if it's not defined yet
+
+        Args:
+            startIndex (int, optional): The index from which we start fixing the schedule. Defaults to 0.
+            obj_cache (list[int]): The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        if obj_cache is None:  # Iniates wiCi_index to the size of job_schedule
+            obj_cache = [-1] * len(self.job_schedule)
+            startIndex = 0
+        elif len(obj_cache) != len(self.job_schedule):
+            obj_cache.insert(startIndex, -1) # Insert an element in wiCi_index corresponding to the position where a new job has been inserted
+        
+        return startIndex, obj_cache
+    
+    def init_obj(self, startIndex: int = 0, obj_cache: list[int] = None):
+        """This is a helper method to initialize the values of ci, prev_job and objective from the current schedule and the objective cache if needed.
+
+        Args:
+            startIndex (int, optional): The index from which we start fixing the schedule. Defaults to 0.
+            obj_cache (list[int], optional): The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
+
+        Returns:
+            tuple: ci, job_prev_i, obj
+        """
+        if startIndex > 0:
+            ci = self.job_schedule[startIndex - 1].end_time
+            obj = obj_cache[startIndex - 1] if obj_cache is not None else 0 # When the cache is not specified, the objective does not depend on it (like Cmax)
+            job_prev_i = self.job_schedule[startIndex - 1].id
+        else:
+            ci, obj, job_prev_i,  = 0, 0, self.job_schedule[startIndex].id
+        
+        return ci, job_prev_i, obj
 
     def total_weighted_completion_time(self, instance: SingleInstance, startIndex: int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the total weighted completion time
@@ -449,45 +495,20 @@ class Machine:
 
         Returns:
             int: Total weighted lateness
-        """
-        if len(self.job_schedule) > 0:
-            job_schedule_len = len(self.job_schedule)
-            if self.wiCi_index is None:  # Iniates wiCi_index to the size of job_schedule
-                self.wiCi_index = [-1] * job_schedule_len
-                startIndex = 0
-            if len(self.wiCi_index) != job_schedule_len:
-                if startIndex == 0:  # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiCi_index needs to be reinitialized
-                    self.wiCi_index = [-1] * job_schedule_len
-                else:  # Insert an element in wiCi_index corresponding to the position where a new job has been inserted
-                    self.wiCi_index.insert(startIndex, -1)
-            if startIndex > 0:
-                ci = self.job_schedule[startIndex - 1].end_time
-                job_prev_i = self.job_schedule[startIndex - 1].id
-                wiCi = self.wiCi_index[startIndex - 1]
-            else:
-                ci = 0
-                job_prev_i = self.job_schedule[startIndex].id
-                wiCi = 0
-            for i in range(startIndex, job_schedule_len):
-                job_i = self.job_schedule[i].id
+        """    
+        startIndex, self.wiCi_cache = self.init_cache(startIndex, self.wiCi_cache)
+        ci, job_prev_i, wiCi = self.init_obj(startIndex, self.wiCi_cache)
+        
+        for i in range(startIndex, len(self.job_schedule)):
+            job_i = self.job_schedule[i].id
+            ci, start_time = self.compute_current_ci(instance, ci, job_prev_i, job_i)
+            self.job_schedule[i] = Job(job_i, start_time, ci)
 
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
+            wiCi += instance.W[job_i]*ci # This is cumulative objective, it takes into account the previous sum of wiCi
+            self.wiCi_cache[i] = wiCi
+            job_prev_i = job_i
 
-                self.job_schedule[i] = Job(job_i, startTime + setupTime, ci)
-                wiCi += instance.W[job_i]*ci
-                self.wiCi_index[i] = wiCi
-
-                job_prev_i = job_i
-        self.objective = wiCi
+        self.objective_value = wiCi
         return wiCi
 
     def total_weighted_completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
@@ -500,38 +521,16 @@ class Machine:
         Returns:
             int : total weighted completion time
         """
-        if pos > 0:
-            c_prev = self.job_schedule[pos - 1].end_time
-            job_prev_i = self.job_schedule[pos - 1].id
-            if hasattr(instance, 'R'):
-                release_time = max(instance.R[job] - c_prev, 0)
-            else:
-                release_time = 0
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job]
-            else:
-                setupTime = 0
-            ci = c_prev + release_time + setupTime + instance.P[job]
-            wiCi = self.wiCi_index[pos - 1]+instance.W[job]*ci
-        else:
-            ci = instance.S[job][job] + instance.P[job] if hasattr(instance, 'S') else instance.P[job]
-            wiCi = instance.W[job]*ci
+        job_prev_i, _, c_prev = self.job_schedule[pos - 1] if pos > 0 else (job, 0, 0)
+        prev_wiCi = self.wiCi_cache[pos - 1] if pos > 0 else 0
+        ci, _ = self.compute_current_ci(instance, c_prev, job_prev_i, job )
+        wiCi = prev_wiCi +instance.W[job]*ci
+        
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
-
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
-            else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i]
-            ci = startTime + setupTime + proc_time
+            job_i = self.job_schedule[i].id
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             wiCi += instance.W[job_i]*ci
-
             job_prev_i = job_i
 
         return wiCi
@@ -549,46 +548,23 @@ class Machine:
             int: total weighted completion time
         """
         first_pos = min(pos_remove, pos_insert)
-
-        ci = 0
-        wiCi = 0
-        job_prev_i = job
-        if first_pos > 0:  # There's at least one job in the schedule
-            ci = self.job_schedule[first_pos - 1].end_time
-            job_prev_i = self.job_schedule[first_pos - 1].id
-            wiCi = self.wiCi_index[first_pos - 1]
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
+        wiCi = self.wiCi_cache[first_pos - 1] if first_pos > 0 else 0
+       
         for i in range(first_pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
+            job_i = self.job_schedule[i].id
 
             # If job needs to be inserted to position i
             if i == pos_insert:
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job]
-                ci = startTime + setupTime + proc_time
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
                 wiCi += instance.W[job]*ci
 
             # If the job_i is not the one to be removed
             if i != pos_remove:
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
                 wiCi += instance.W[job_i]*ci
 
-            job_prev_i = job_i
+                job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
 
         return wiCi
 
@@ -603,37 +579,20 @@ class Machine:
             int : total weighted completion time
         """
         first_pos = min(pos_i, pos_j)
-
-        ci = 0
-        if pos_i == 0:
-            job_prev_i = self.job_schedule[pos_j].id
-        else:
-            job_prev_i = self.job_schedule[pos_i].id
-        wiCi = 0
-        if first_pos > 0:  # There's at least one job in the schedule
-            ci = self.job_schedule[first_pos - 1].end_time
-            job_prev_i = self.job_schedule[first_pos - 1].id
-            wiCi = self.wiCi_index[first_pos - 1]
+        first_job = self.job_schedule[first_pos].id
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (first_job, 0, 0)
+        wiCi = self.wiCi_cache[first_pos - 1] if first_pos > 0 else 0
 
         for i in range(first_pos, len(self.job_schedule)):
 
             if i == pos_i:  # We take pos_j
-                job_i = self.job_schedule[pos_j][0]  # (Id, startTime, endTime)
+                job_i = self.job_schedule[pos_j].id  # (Id, startTime, endTime)
             elif i == pos_j:  # We take pos_i
-                job_i = self.job_schedule[pos_i][0]
+                job_i = self.job_schedule[pos_i].id
             else:
-                job_i = self.job_schedule[i][0]  # Id of job in position i
+                job_i = self.job_schedule[i].id  # Id of job in position i
 
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
-            else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i]
-            ci = startTime + setupTime + proc_time
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             wiCi += instance.W[job_i]*ci
 
             job_prev_i = job_i
@@ -650,43 +609,19 @@ class Machine:
         Returns:
             int: Total weighted lateness
         """
-        if len(self.job_schedule) > 0:
-            job_schedule_len = len(self.job_schedule)
-            if self.wiTi_index is None:  # Iniates wiTi_index to the size of job_schedule
-                self.wiTi_index = [-1] * job_schedule_len
-                startIndex = 0
-            if len(self.wiTi_index) != job_schedule_len:
-                if startIndex == 0:  # If the size is different and no startIndex has been passed, it means a lot of changes has occured as wiTi_index needs to be reinitialized
-                    self.wiTi_index = [-1] * job_schedule_len
-                else:  # Insert an element in wiTi_index corresponding to the position where a new job has been inserted
-                    self.wiTi_index.insert(startIndex, -1)
-            if startIndex > 0:
-                ci = self.job_schedule[startIndex - 1].end_time
-                job_prev_i = self.job_schedule[startIndex - 1].id
-                wiTi = self.wiTi_index[startIndex - 1]
-            else:
-                ci = 0
-                job_prev_i = self.job_schedule[startIndex].id
-                wiTi = 0
-            for i in range(startIndex, job_schedule_len):
-                job_i = self.job_schedule[i].id
+        startIndex, self.wiTi_cache = self.init_cache(startIndex, self.wiTi_cache)
+        ci, job_prev_i, wiTi = self.init_obj(startIndex, self.wiTi_cache)
+        
+        for i in range(startIndex, len(self.job_schedule)):
+            job_i = self.job_schedule[i].id
+            ci, start_time = self.compute_current_ci(instance, ci, job_prev_i, job_i)
+            self.job_schedule[i] = Job(job_i, start_time, ci)
 
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
+            wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0) # TODO: Added wiCi instead of wiTi
+            self.wiTi_cache[i] = wiTi
+            job_prev_i = job_i
 
-                self.job_schedule[i] = Job(job_i, startTime, ci)
-                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
-                self.wiTi_index[i] = wiTi
-                job_prev_i = job_i
-        self.objective = wiTi
+        self.objective_value = wiTi
         return wiTi
 
     def total_weighted_lateness_insert(self, job: int, pos: int, instance: SingleInstance):
@@ -698,38 +633,16 @@ class Machine:
         Returns:
             int : total weighted lateness
         """
-        if pos > 0:
-            c_prev = self.job_schedule[pos - 1].end_time
-            job_prev_i = self.job_schedule[pos - 1].id
-            if hasattr(instance, 'R'):
-                release_time = max(instance.R[job] - c_prev, 0)
-            else:
-                release_time = 0
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job]
-            else:
-                setupTime = 0
-            ci = c_prev + release_time + setupTime + instance.P[job]
-            wiTi = self.wiTi_index[pos - 1]+instance.W[job]*ci
-        else:
-            ci = instance.S[job][job] + instance.P[job]
-            wiTi = instance.W[job]*ci
+        job_prev_i, _, c_prev = self.job_schedule[pos - 1] if pos > 0 else (job, 0, 0)
+        prev_wiTi = self.wiTi_cache[pos - 1] if pos > 0 else 0
+        ci, _ = self.compute_current_ci(instance, c_prev, job_prev_i, job )
+        wiTi = prev_wiTi + instance.W[job]*max(ci-instance.D[job], 0) 
+
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
-
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
-            else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i]
-            ci = startTime + setupTime + proc_time
+            job_i = self.job_schedule[i].id
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
-
             job_prev_i = job_i
 
         return wiTi
@@ -746,46 +659,23 @@ class Machine:
             int: total weighted lateness
         """
         first_pos = min(pos_remove, pos_insert)
-
-        ci = 0
-        wiTi = 0
-        job_prev_i = job
-        if first_pos > 0:  # There's at least one job in the schedule
-            ci = self.job_schedule[first_pos - 1].end_time
-            job_prev_i = self.job_schedule[first_pos - 1].id
-            wiTi = self.wiTi_index[first_pos - 1]
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
+        wiTi = self.wiTi_cache[first_pos - 1] if first_pos > 0 else 0
+       
         for i in range(first_pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
+            job_i = self.job_schedule[i].id
 
             # If job needs to be inserted to position i
             if i == pos_insert:
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job]
-                ci = startTime + setupTime + proc_time
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             # If the job_i is not the one to be removed
             if i != pos_remove:
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
-            job_prev_i = job_i
+                job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
 
         return wiTi
 
@@ -800,37 +690,20 @@ class Machine:
             int : total weighted lateness
         """
         first_pos = min(pos_i, pos_j)
-
-        ci = 0
-        if pos_i == 0:
-            job_prev_i = self.job_schedule[pos_j].id
-        else:
-            job_prev_i = self.job_schedule[pos_i].id
-        wiTi = 0
-        if first_pos > 0:  # There's at least one job in the schedule
-            ci = self.job_schedule[first_pos - 1].end_time
-            job_prev_i = self.job_schedule[first_pos - 1].id
-            wiTi = self.wiTi_index[first_pos - 1]
+        first_job = self.job_schedule[first_pos].id
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (first_job, 0, 0)
+        wiTi = self.wiTi_cache[first_pos - 1] if first_pos > 0 else 0
 
         for i in range(first_pos, len(self.job_schedule)):
 
             if i == pos_i:  # We take pos_j
-                job_i = self.job_schedule[pos_j][0]  # (Id, startTime, endTime)
+                job_i = self.job_schedule[pos_j].id  # (Id, startTime, endTime)
             elif i == pos_j:  # We take pos_i
-                job_i = self.job_schedule[pos_i][0]
+                job_i = self.job_schedule[pos_i].id
             else:
-                job_i = self.job_schedule[i][0]  # Id of job in position i
+                job_i = self.job_schedule[i].id  # Id of job in position i
 
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
-            else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i]
-            ci = startTime + setupTime + proc_time
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             job_prev_i = job_i
@@ -847,31 +720,14 @@ class Machine:
         Returns:
             int: Makespan
         """
-        if len(self.job_schedule) > 0:
-            job_schedule_len = len(self.job_schedule)
-            if startIndex > 0:
-                ci = self.job_schedule[startIndex - 1].end_time
-                job_prev_i = self.job_schedule[startIndex - 1].id
-            else:
-                ci = 0
-                job_prev_i = self.job_schedule[startIndex].id
-            for i in range(startIndex, job_schedule_len):
-                job_i = self.job_schedule[i].id
+        ci, job_prev_i, _ = self.init_obj(startIndex)
+        for i in range(startIndex, len(self.job_schedule)):
+            job_i = self.job_schedule[i].id
+            ci, start_time = self.compute_current_ci(instance, ci, job_prev_i, job_i)
+            self.job_schedule[i] = Job(job_i, start_time, ci)
+            job_prev_i = job_i
 
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
-
-                self.job_schedule[i] = Job(job_i, startTime, ci)
-                job_prev_i = job_i
-        self.objective = ci
+        self.objective_value = ci
         return ci
 
     def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
@@ -884,35 +740,13 @@ class Machine:
         Returns:
             int : completion time
         """
-        if pos > 0:
-            c_prev = self.job_schedule[pos - 1].end_time
-            job_prev_i = self.job_schedule[pos - 1].id
-            if hasattr(instance, 'R'):
-                release_time = max(instance.R[job] - c_prev, 0)
-            else:
-                release_time = 0
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job]
-            else:
-                setupTime = 0
-            ci = c_prev + release_time + setupTime + instance.P[job]
-        else:
-            ci = instance.S[job][job] + instance.P[job]
+        job_prev_i, _, c_prev = self.job_schedule[pos - 1] if pos > 0 else (job, 0, 0)
+        ci, _ = self.compute_current_ci(instance, c_prev, job_prev_i, job )
+        
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
-
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
-            else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i]
-            ci = startTime + setupTime + proc_time
-
+            job_i = self.job_schedule[i].id
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             job_prev_i = job_i
 
         return ci
@@ -930,43 +764,18 @@ class Machine:
             int: Completion time
         """
         first_pos = min(pos_remove, pos_insert)
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
 
-        ci = 0
-
-        job_prev_i = job
-        if first_pos > 0:  # There's at least one job in the schedule
-            ci = self.job_schedule[first_pos - 1].end_time
-            job_prev_i = self.job_schedule[first_pos - 1].id
         for i in range(first_pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
-
+            job_i = self.job_schedule[i].id
             # If job needs to be inserted to position i
             if i == pos_insert:
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job]
-                ci = startTime + setupTime + proc_time
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
 
             # If the job_i is not the one to be removed
             if i != pos_remove:
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
-
-            job_prev_i = job_i
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
+                job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
 
         return ci
 
@@ -982,36 +791,19 @@ class Machine:
             int : completion time
         """
         first_pos = min(pos_i, pos_j)
-
-        ci = 0
-        if pos_i == 0:
-            job_prev_i = self.job_schedule[pos_j].id
-        else:
-            job_prev_i = self.job_schedule[pos_i].id
-        if first_pos > 0:  # There's at least one job in the schedule
-            ci = self.job_schedule[first_pos - 1].end_time
-            job_prev_i = self.job_schedule[first_pos - 1].id
-
+        first_job = self.job_schedule[first_pos].id
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (first_job, 0, 0)
+        
         for i in range(first_pos, len(self.job_schedule)):
 
             if i == pos_i:  # We take pos_j
-                job_i = self.job_schedule[pos_j][0]  # (Id, startTime, endTime)
+                job_i = self.job_schedule[pos_j].id  # (Id, startTime, endTime)
             elif i == pos_j:  # We take pos_i
-                job_i = self.job_schedule[pos_i][0]
+                job_i = self.job_schedule[pos_i].id
             else:
-                job_i = self.job_schedule[i][0]  # Id of job in position i
+                job_i = self.job_schedule[i].id  # Id of job in position i
 
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
-            else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i]
-            ci = startTime + setupTime + proc_time
-
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             job_prev_i = job_i
 
         return ci
@@ -1088,21 +880,21 @@ class SingleSolution(RootProblem.Solution):
         """
         if self.instance != None:
             self.machine.total_weighted_completion_time(self.instance)
-        self.objective_value = self.machine.objective
+        self.objective_value = self.machine.objective_value
 
     def wiTi(self):
         """Sets the job_schedule of the machine and affects the total weighted lateness to the objective_value attribute
         """
         if self.instance != None:
             self.machine.total_weighted_lateness(self.instance)
-        self.objective_value = self.machine.objective
+        self.objective_value = self.machine.objective_value
 
     def Cmax(self):
         """Sets the job_schedule of the machine and affects the makespan to the objective_value attribute
         """
         if self.instance != None:
             self.machine.completion_time(self.instance)
-        self.objective_value = self.machine.objective
+        self.objective_value = self.machine.objective_value
 
     def compute_objective(self):
         if self.objective == Objective.wiCi:
@@ -1115,7 +907,7 @@ class SingleSolution(RootProblem.Solution):
     def fix_objective(self):
         """Sets the objective_value attribute of the solution to the objective attribute of the machine
         """
-        self.objective_value = self.machine.objective
+        self.objective_value = self.machine.objective_value
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -1148,7 +940,11 @@ class SingleSolution(RootProblem.Solution):
         f.close()
 
     def plot(self, path: Path = None) -> None:
-        """Plot the solution in a gantt diagram"""
+        """Plot the gantt diagram for the solution
+
+        Args:
+            path (Path, optional): path to export the diagram to a file, if not specified it does not save it to file. Defaults to None.
+        """
         if "matplotlib" in sys.modules:
             if self.instance is not None:
                 # Add Tasks ID
@@ -1249,7 +1045,7 @@ class SingleSolution(RootProblem.Solution):
 class SM_LocalSearch(RootProblem.LocalSearch):
 
     @staticmethod
-    def _intra_insertion(solution: SingleSolution, objective: RootProblem.Objective):
+    def _intra_insertion(solution: SingleSolution):
         """Iterates through the job schedule and try to reschedule every job at a better position to improve the solution
 
         Args:
@@ -1261,15 +1057,15 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         """
         for pos in range(len(solution.machine.job_schedule)):
             job = solution.machine.job_schedule[pos]
-            objective = solution.machine.objective
+            old_objective = solution.machine.objective_value
             taken_pos = pos
             for new_pos in range(len(solution.machine.job_schedule)):
                 if(pos != new_pos):
                     new_objective = solution.machine.compute_objective_remove_insert(
                         pos, job.id, new_pos, solution.instance)
-                    if new_objective < objective:
+                    if new_objective < old_objective:
                         taken_pos = new_pos
-                        objective = new_objective
+                        old_objective = new_objective
             if taken_pos != pos:
                 solution.machine.job_schedule.pop(pos)
                 solution.machine.job_schedule.insert(taken_pos, job)
@@ -1278,7 +1074,7 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         return solution
 
     @staticmethod
-    def _swap(solution: SingleSolution, objective: RootProblem.Objective):
+    def _swap(solution: SingleSolution):
         """Iterates through the job schedule and choose the best swap between 2 jobs to improve the solution
 
         Args:
@@ -1293,7 +1089,7 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         for i in range(0, job_schedule_len):
             for j in range(i+1, job_schedule_len):
                 new_ci = solution.machine.compute_objective_swap(i, j, solution.instance)
-                if new_ci < solution.machine.objective:
+                if new_ci < solution.machine.objective_value:
                     if not move:
                         move = (i, j, new_ci)
                     elif new_ci < move[2]:
@@ -1302,11 +1098,11 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         if move:
             solution.machine.job_schedule[move[0]], solution.machine.job_schedule[move[1]
                                                                                   ] = solution.machine.job_schedule[move[1]], solution.machine.job_schedule[move[0]]
-            solution.machine.objective = move[2]
+            solution.machine.objective_value = move[2]
             solution.compute_objective()
         return solution
 
-    def improve(self, solution: SingleSolution, objective: RootProblem.Objective) -> SingleSolution:
+    def improve(self, solution: SingleSolution) -> SingleSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -1317,7 +1113,7 @@ class SM_LocalSearch(RootProblem.LocalSearch):
         """
         curr_sol = solution.copy() if self.copy_solution else solution
         for method in self.methods:
-            curr_sol = method(curr_sol, objective)
+            curr_sol = method(curr_sol)
 
         return curr_sol
 
@@ -1335,7 +1131,7 @@ class NeighbourhoodGeneration():
         machine_schedule = solution_copy.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
 
-        old_objective = solution_copy.machine.objective
+        old_objective = solution_copy.machine.objective_value
 
         # Get the job and the position
         random_job_index = random.randrange(machine_schedule_len)
@@ -1345,8 +1141,10 @@ class NeighbourhoodGeneration():
         while random_pos == random_job_index:
             random_pos = random.randrange(machine_schedule_len)
         
-        new_objective = solution_copy.machine.completion_time_remove_insert(random_job_index, random_job_id, random_pos, solution_copy.instance)
+        # Simulate the insertion
+        new_objective = solution_copy.machine.compute_objective_remove_insert(random_job_index, random_job_id, random_pos, solution_copy.instance)
 
+        # Apply the insertion move
         if not force_improve or (new_objective <= old_objective):
             job_i = machine_schedule.pop(random_job_index)
             machine_schedule.insert(random_pos, job_i)
@@ -1358,7 +1156,7 @@ class NeighbourhoodGeneration():
         return solution_copy
 
     @staticmethod
-    def random_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = False):
+    def random_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = True):
         """Performs a random swap between 2 jobs
 
         Args:
@@ -1374,10 +1172,11 @@ class NeighbourhoodGeneration():
         else:
             solution_copy = solution
 
+        # Select the two different random jobs to be swapped 
         machine_schedule = solution_copy.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
 
-        old_ci = solution_copy.machine.objective
+        old_objective = solution_copy.machine.objective_value
 
         random_job_index = random.randrange(machine_schedule_len)
         other_job_index = random.randrange(machine_schedule_len)
@@ -1385,11 +1184,12 @@ class NeighbourhoodGeneration():
         while other_job_index == random_job_index:
             other_job_index = random.randrange(machine_schedule_len)
 
-        new_ci = solution_copy.machine.compute_objective_swap(
+        # Simulate applying the swap move
+        new_objective = solution_copy.machine.compute_objective_swap(
             random_job_index, other_job_index, solution_copy.instance)
 
         # Apply the move
-        if not force_improve or (new_ci <= old_ci):
+        if not force_improve or (new_objective <= old_objective):
             machine_schedule[random_job_index], machine_schedule[
                 other_job_index] = machine_schedule[
                     other_job_index], machine_schedule[random_job_index]
@@ -1422,7 +1222,7 @@ class NeighbourhoodGeneration():
             job_i_pos, job_j_pos = machine_schedule_jobs_id.index(
                 job_i_id), machine_schedule_jobs_id.index(job_j_id)
 
-            old_ci = solution.machine.objective
+            old_ci = solution.machine.objective_value
 
             new_ci = solution.machine.compute_objective_swap(
                 job_i_pos, job_j_pos, solution.instance)
@@ -1451,9 +1251,9 @@ class NeighbourhoodGeneration():
         r = random.random()
         if r < 0.5:
             solution = NeighbourhoodGeneration.random_swap(
-                solution, force_improve=False, inplace=False)
+                solution, force_improve=False)
         else:
             solution = NeighbourhoodGeneration.random_insert(
-                solution, force_improve=False, internal=True)
+                solution, force_improve=False)
 
         return solution
