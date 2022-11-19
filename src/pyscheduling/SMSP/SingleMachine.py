@@ -547,23 +547,24 @@ class Machine:
         Returns:
             int: total weighted completion time
         """
-        first_pos = min(pos_remove, pos_insert)
+        first_pos = min(pos_remove, pos_insert) if pos_remove != -1 and pos_insert != -1 else max(pos_remove, pos_insert)
         job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
+        job_prev_i = self.job_schedule[1].id if pos_remove == 0 and pos_insert != 0 and len(self.job_schedule) > 1 else job_prev_i # The case when we remove the first job
         wiCi = self.wiCi_cache[first_pos - 1] if first_pos > 0 else 0
        
-        for i in range(first_pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
+        for i in range(first_pos, len(self.job_schedule) + 1): # +1 for edge cases when inserting in empty schedule or at the very end of a non empty schedule
 
             # If job needs to be inserted to position i
             if i == pos_insert:
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
                 wiCi += instance.W[job]*ci
+                job_prev_i = job # Since the inserted job now preceeds the next job
 
             # If the job_i is not the one to be removed
-            if i != pos_remove:
+            if i != pos_remove and i < len(self.job_schedule):
+                job_i = self.job_schedule[i].id
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
                 wiCi += instance.W[job_i]*ci
-
                 job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
 
         return wiCi
@@ -660,21 +661,22 @@ class Machine:
         """
         first_pos = min(pos_remove, pos_insert)
         job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
+        job_prev_i = self.job_schedule[1].id if pos_remove == 0 and pos_insert != 0 and len(self.job_schedule) > 1 else job_prev_i # The case when we remove the first job
         wiTi = self.wiTi_cache[first_pos - 1] if first_pos > 0 else 0
        
-        for i in range(first_pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
+        for i in range(first_pos, len(self.job_schedule) + 1):
 
             # If job needs to be inserted to position i
             if i == pos_insert:
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
+                job_prev_i = job
 
             # If the job_i is not the one to be removed
-            if i != pos_remove:
+            if i != pos_remove and i < len(self.job_schedule):
+                job_i = self.job_schedule[i].id
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
                 wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
-
                 job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
 
         return wiTi
@@ -763,17 +765,20 @@ class Machine:
         Returns:
             int: Completion time
         """
-        first_pos = min(pos_remove, pos_insert)
+        first_pos = min(pos_remove, pos_insert) if pos_remove != -1 and pos_insert != -1 else max(pos_remove, pos_insert)
         job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
+        job_prev_i = self.job_schedule[1].id if pos_remove == 0 and pos_insert != 0 and len(self.job_schedule) > 1 else job_prev_i # The case when we remove the first job
 
-        for i in range(first_pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
+        for i in range(first_pos, len(self.job_schedule) + 1):
+            
             # If job needs to be inserted to position i
             if i == pos_insert:
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
+                job_prev_i = job
 
             # If the job_i is not the one to be removed
-            if i != pos_remove:
+            if i != pos_remove and i < len(self.job_schedule):
+                job_i = self.job_schedule[i].id
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
                 job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
 

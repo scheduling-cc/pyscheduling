@@ -212,8 +212,7 @@ class Metaheuristics():
         local_search = SingleMachine.SM_LocalSearch()
 
         if LS:
-            solution_init = local_search.improve(
-                solution_init,instance.get_objective())  # Improve it with LS
+            solution_init = local_search.improve(solution_init)  # Improve it with LS
 
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
@@ -232,7 +231,7 @@ class Metaheuristics():
             solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(current_solution)
 
             if LS:
-                solution_i = local_search.improve(solution_i,instance.get_objective())
+                solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
                 current_solution = solution_i
                 if solution_i.objective_value < solution_best.objective_value:
@@ -304,7 +303,7 @@ class Metaheuristics():
         local_search = SingleMachine.SM_LocalSearch()
 
         if LS:
-            solution_init = local_search.improve(solution_init, instance.get_objective())
+            solution_init = local_search.improve(solution_init)
 
         all_solutions = []
         # Initialisation
@@ -327,7 +326,7 @@ class Metaheuristics():
                 solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(solution_best, instance.get_objective())
                 if LS:
                     # Improve generated solution using LS
-                    solution_i = local_search.improve(solution_i, instance.get_objective())
+                    solution_i = local_search.improve(solution_i)
 
                 delta_objective = solution_init.objective_value - solution_i.objective_value
                 if delta_objective >= 0:
