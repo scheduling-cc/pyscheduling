@@ -42,6 +42,7 @@ class Objective(Enum):  # Negative value are for minimization problems, Positive
     wiTi = -2
     wiCi = -3
     Lmax = -4
+    wiFi = -5
 
     @classmethod
     def to_string(cls):
@@ -50,7 +51,7 @@ class Objective(Enum):  # Negative value are for minimization problems, Positive
         Returns:
             str: name of every objective in different lines
         """
-        return cls.Cmax.name + "\n" + cls.wiTi.name + "\n" + cls.wiCi.name
+        return "\n".join([e.name for e in cls]) 
 
 
 class DecoratorsHelper():

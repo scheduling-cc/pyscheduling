@@ -217,6 +217,7 @@ class Metaheuristics():
 
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
+        print(solution_best)
         all_solutions.append(solution_best)
         lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
 
