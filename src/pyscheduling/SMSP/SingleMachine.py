@@ -1062,8 +1062,112 @@ class SM_LocalSearch(RootProblem.LocalSearch):
 class NeighbourhoodGeneration():
     
     @staticmethod
-    def random_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True):
+    def select_least_effective(solution: SingleSolution):
+        """Select the least effective job according to the objective
 
+        Args:
+            solution (SingleSolution): solution to be inspected
+
+        Returns:
+            tuple: (lej_pos, lej_id): the position and id of the least effective job
+        """
+        machine_schedule = solution.machine.job_schedule
+        old_objective = solution.machine.objective_value
+
+        # Select the least effective job
+        least_effective_pos, least_effective_job, impact = (-1, -1, None) 
+        for pos_remove in range(len(machine_schedule)):
+            new_objective = solution.machine.completion_time_remove_insert(pos_remove, -1, -1, solution.instance)
+            if impact is None or old_objective - new_objective < impact:
+                least_effective_pos, least_effective_job = (pos_remove, machine_schedule[pos_remove].id)
+        
+        return least_effective_pos, least_effective_job
+
+    @staticmethod
+    def LEJ_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True):
+        """Applies the best insertion operator on the least effective job on the objective
+
+        Args:
+            solution (SingleSolution): solution to be improved
+            force_improve (bool, optional): if true, it applies the move only if it improved the solution. Defaults to True.
+            inplace (bool, optional): Whether to modify the solution rather than creating a new one. Defaults to True.
+        """
+        if not inplace:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        machine_schedule = solution_copy.machine.job_schedule
+        old_objective = solution_copy.machine.objective_value
+
+        # Select the least effective job
+        least_effective_pos, least_effective_job = NeighbourhoodGeneration.select_least_effective(solution)
+
+        # Search the best insertion move
+        best_insertion = None
+        for pos_insert in range(len(machine_schedule)):
+            new_objective = solution_copy.machine.compute_objective_remove_insert(least_effective_pos, least_effective_job, pos_insert, solution_copy.instance)
+            if best_insertion is None or old_objective - new_objective > best_insertion[1]:
+                best_insertion = ( pos_insert, old_objective - new_objective) 
+        
+        # Apply the best insertion 
+        pos_insert, new_objective = best_insertion
+        if not force_improve or (new_objective <= old_objective):
+            job_i = machine_schedule.pop(least_effective_pos)
+            machine_schedule.insert(pos_insert, job_i)
+
+            solution_copy.machine.compute_objective(solution_copy.instance, min(
+                least_effective_pos, pos_insert))
+            solution_copy.fix_objective()
+        
+        return solution_copy
+    
+    @staticmethod
+    def LEJ_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = True):
+        """Applies the best insertion operator on the least effective job on the objective
+
+        Args:
+            solution (SingleSolution): solution to be improved
+            force_improve (bool, optional): if true, it applies the move only if it improved the solution. Defaults to True.
+            inplace (bool, optional): Whether to modify the solution rather than creating a new one. Defaults to True.
+        """
+        if not inplace:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        machine_schedule = solution_copy.machine.job_schedule
+        old_objective = solution_copy.machine.objective_value
+
+        # Select the least effective job
+        least_effective_pos, least_effective_job = NeighbourhoodGeneration.select_least_effective(solution)
+
+        # Search the best swap move
+        best_swap = None
+        for pos_j in range(len(machine_schedule)):
+            new_objective = solution_copy.machine.compute_objective_swap(least_effective_pos, pos_j, solution_copy.instance)
+            if best_swap is None or old_objective - new_objective > best_swap[1]:
+                best_swap = ( pos_j, old_objective - new_objective) 
+        
+        # Apply the best insertion 
+        pos_j, new_objective = best_swap
+        if not force_improve or (new_objective <= old_objective):
+
+            machine_schedule[least_effective_pos], machine_schedule[pos_j] = machine_schedule[pos_j], machine_schedule[least_effective_pos]
+            solution_copy.machine.compute_objective(solution_copy.instance, min(least_effective_pos, pos_j))
+            solution_copy.fix_objective()
+        
+        return solution_copy
+
+    @staticmethod
+    def random_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True):
+        """Applies the best insertion operator on the least effective job
+
+        Args:
+            solution (SingleSolution): solution to be improved
+            force_improve (bool, optional): if true, it applies the move only if it improved the solution. Defaults to True.
+            inplace (bool, optional): Whether to modify the solution rather than creating a new one. Defaults to True.
+        """
         if not inplace:
             solution_copy = solution.copy()
         else:
@@ -1071,7 +1175,6 @@ class NeighbourhoodGeneration():
 
         machine_schedule = solution_copy.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
-
         old_objective = solution_copy.machine.objective_value
 
         # Get the job and the position
@@ -1092,7 +1195,7 @@ class NeighbourhoodGeneration():
 
             solution_copy.machine.compute_objective(solution_copy.instance, min(
                 random_job_index, random_pos))
-            solution.fix_objective()
+            solution_copy.fix_objective()
         
         return solution_copy
 
@@ -1116,7 +1219,6 @@ class NeighbourhoodGeneration():
         # Select the two different random jobs to be swapped 
         machine_schedule = solution_copy.machine.job_schedule
         machine_schedule_len = len(machine_schedule)
-
         old_objective = solution_copy.machine.objective_value
 
         random_job_index = random.randrange(machine_schedule_len)
@@ -1176,6 +1278,26 @@ class NeighbourhoodGeneration():
                 solution.machine.compute_objective(
                     solution.instance, min(job_i_pos, job_j_pos))
                 solution.fix_objective()
+
+        return solution
+
+    @staticmethod
+    def LEJ_neighbour(solution: SingleSolution):
+        """Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+        Args:
+            solution_i (SingleSolution): Solution to be improved
+
+        Returns:
+            SingleSolution: New solution
+        """
+        r = random.random()
+        if r < 0.5:
+            solution = NeighbourhoodGeneration.LEJ_insert(
+                solution, force_improve=False)
+        else:
+            solution = NeighbourhoodGeneration.LEJ_swap(
+                solution, force_improve=False)
 
         return solution
 
