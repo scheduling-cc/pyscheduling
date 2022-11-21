@@ -441,6 +441,18 @@ class Machine:
         return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
     def compute_current_ci(self, instance, prev_ci, job_prev_i, job_i):
+        """Computes the current ci when job_i comes after job_prev_i.
+        This takes into account if we have setup times and release dates.
+
+        Args:
+            instance (SingelInstance): the instance to be solved.
+            prev_ci (int): the previous value of ci
+            job_prev_i (int): id of the job that precedes the inserted job 
+            job_i (int): id of the job to be inserted at the end
+
+        Returns:
+            tuple: (ci, start_time), the new completion time and start_time of the inserted job.
+        """
         
         startTime = max(prev_ci, instance.R[job_i]) if hasattr(instance, 'R') else prev_ci
         setupTime = instance.S[job_prev_i][job_i] if hasattr(instance, 'S') else 0
@@ -509,30 +521,6 @@ class Machine:
             job_prev_i = job_i
 
         self.objective_value = wiCi
-        return wiCi
-
-    def total_weighted_completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
-        """Computes the machine's total wighted completion time if we insert "job" at "pos" in the machine's job_schedule
-
-        Args:
-            job (int): id of the inserted job
-            pos (int): position where the job is inserted in the machine
-            instance (SingleInstance): the current problem instance
-        Returns:
-            int : total weighted completion time
-        """
-        job_prev_i, _, c_prev = self.job_schedule[pos - 1] if pos > 0 else (job, 0, 0)
-        prev_wiCi = self.wiCi_cache[pos - 1] if pos > 0 else 0
-        ci, _ = self.compute_current_ci(instance, c_prev, job_prev_i, job )
-        wiCi = prev_wiCi +instance.W[job]*ci
-        
-        job_prev_i = job
-        for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
-            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
-            wiCi += instance.W[job_i]*ci
-            job_prev_i = job_i
-
         return wiCi
 
     def total_weighted_completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
@@ -625,29 +613,6 @@ class Machine:
         self.objective_value = wiTi
         return wiTi
 
-    def total_weighted_lateness_insert(self, job: int, pos: int, instance: SingleInstance):
-        """Computes the machine's total wighted lateness if we insert "job" at "pos" in the machine's job_schedule
-        Args:
-            job (int): id of the inserted job
-            pos (int): position where the job is inserted in the machine
-            instance (SingleInstance): the current problem instance
-        Returns:
-            int : total weighted lateness
-        """
-        job_prev_i, _, c_prev = self.job_schedule[pos - 1] if pos > 0 else (job, 0, 0)
-        prev_wiTi = self.wiTi_cache[pos - 1] if pos > 0 else 0
-        ci, _ = self.compute_current_ci(instance, c_prev, job_prev_i, job )
-        wiTi = prev_wiTi + instance.W[job]*max(ci-instance.D[job], 0) 
-
-        job_prev_i = job
-        for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
-            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
-            wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
-            job_prev_i = job_i
-
-        return wiTi
-
     def total_weighted_lateness_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
         """Computes the machine's total weighted lateness if we remove job at position "pos_remove" 
         and insert "job" at "pos" in the machine's job_schedule
@@ -669,7 +634,7 @@ class Machine:
             # If job needs to be inserted to position i
             if i == pos_insert:
                 ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
-                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
+                wiTi += instance.W[job]*max(ci-instance.D[job], 0)
                 job_prev_i = job
 
             # If the job_i is not the one to be removed
@@ -730,27 +695,6 @@ class Machine:
             job_prev_i = job_i
 
         self.objective_value = ci
-        return ci
-
-    def completion_time_insert(self, job: int, pos: int, instance: SingleInstance):
-        """Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
-
-        Args:
-            job (int): id of the inserted job
-            pos (int): position where the job is inserted in the machine
-            instance (SingleInstance): the current problem instance
-        Returns:
-            int : completion time
-        """
-        job_prev_i, _, c_prev = self.job_schedule[pos - 1] if pos > 0 else (job, 0, 0)
-        ci, _ = self.compute_current_ci(instance, c_prev, job_prev_i, job )
-        
-        job_prev_i = job
-        for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
-            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
-            job_prev_i = job_i
-
         return ci
 
     def completion_time_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
@@ -820,14 +764,6 @@ class Machine:
             return self.total_weighted_lateness(instance, startIndex)
         elif instance.get_objective() == Objective.Cmax:
             return self.completion_time(instance, startIndex)
-
-    def compute_objective_insert(self, job: int, pos: int, instance: SingleInstance):
-        if instance.get_objective() == Objective.wiCi:
-            return self.total_weighted_completion_time_insert(job, pos, instance)
-        elif instance.get_objective() == Objective.wiTi:
-            return self.total_weighted_lateness_insert(job, pos, instance)
-        elif instance.get_objective() == Objective.Cmax:
-            return self.completion_time_insert(job, pos, instance)
 
     def compute_objective_swap(self, pos_i: int, pos_j: int, instance: SingleInstance):
         if instance.get_objective() == Objective.wiCi:
