@@ -33,8 +33,7 @@ class Heuristics():
         solution = SingleMachine.SingleSolution(instance)
         for job in jobs:
             solution.machine.job_schedule.append(SingleMachine.Job(job,0,0)) 
-        solution.machine.total_weighted_completion_time(instance)
-        solution.fix_objective()
+        solution.compute_objective()
         return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod

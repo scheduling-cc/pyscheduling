@@ -101,7 +101,7 @@ class Heuristics():
             for i in remaining_jobs_list:
                 for k in range(0, len(solution.machine.job_schedule) + 1):
                     insertions_list.append(
-                        (i, k, solution.machine.compute_objective_remove_insert(-1, i, k, instance)))
+                        (i, k, solution.machine.simulate_remove_insert(-1, i, k, instance)))
 
             best_insertion = min(insertions_list, key= lambda insertion: insertion[2]) 
             taken_job, taken_pos, ci = best_insertion
@@ -142,7 +142,7 @@ class Heuristics():
                 for i in remaining_jobs_list:
                     for k in range(0, len(solution.machine.job_schedule) + 1):
                         insertions_list.append(
-                            (i, k, solution.machine.compute_objective_remove_insert(-1, i, k, instance)))
+                            (i, k, solution.machine.simulate_remove_insert(-1, i, k, instance)))
 
                 insertions_list.sort(key=lambda insertion: insertion[2])
                 proba = random.random()
@@ -414,12 +414,7 @@ if DOCPLEX_IMPORTED:
                 k_tasks = sorted(k_tasks, key= lambda x: x[1])
                 sol.machine.job_schedule = k_tasks
             
-            if objective == Objective.wiCi:
-                sol.wiCi()
-            elif objective == Objective.wiTi:
-                sol.wiTi()
-            elif objective == Objective.Cmax:
-                sol.cmax()
+            sol.compute_objective()
 
             return sol
         
