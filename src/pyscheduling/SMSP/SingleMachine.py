@@ -904,7 +904,7 @@ class NeighbourhoodGeneration():
         # Select the least effective job
         least_effective_pos, least_effective_job, impact = (-1, -1, None) 
         for pos_remove in range(len(machine_schedule)):
-            new_objective = solution.machine.completion_time_remove_insert(pos_remove, -1, -1, solution.instance)
+            new_objective = solution.machine.simulate_remove_insert(pos_remove, -1, -1, solution.instance)
             if impact is None or old_objective - new_objective < impact:
                 least_effective_pos, least_effective_job = (pos_remove, machine_schedule[pos_remove].id)
         

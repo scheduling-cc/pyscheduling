@@ -324,7 +324,7 @@ class Metaheuristics():
                     break
 
                 # solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
-                solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(solution_best, instance.get_objective())
+                solution_i = SingleMachine.NeighbourhoodGeneration.LEJ_neighbour(solution_best)
                 if LS:
                     # Improve generated solution using LS
                     solution_i = local_search.improve(solution_i)

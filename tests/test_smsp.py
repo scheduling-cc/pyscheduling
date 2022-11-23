@@ -18,6 +18,145 @@ def check_solve_result(solve_result, expected_nb_sol=None):
             solve_result.all_solutions) == expected_nb_sol, f"This method should return {expected_nb_sol} solution instead of {len(solve_result.all_solutions)}"
     assert is_valid == True, f"The returned solution is not valid"
 
+class TestrisijwiCi:
+
+    instance_zero_file_path = "tests/tmp/instance_zero.txt"
+    n = 20
+
+    @pytest.fixture
+    def instance_zero(self):
+        instance = risijwiCi.risijwiCi_Instance.generate_random(self.n)
+        return instance
+
+    @pytest.fixture
+    def instance_zero_file(self, instance_zero):
+        instance_zero.to_txt(self.instance_zero_file_path)
+        yield self.instance_zero_file_path
+        try:
+            os.unlink(self.instance_zero_file_path)
+        except:
+            pass
+
+    # Testing Instance
+    def test_generator(self):
+        instance = risijwiCi.risijwiCi_Instance.generate_random(self.n)
+        assert isinstance(
+            instance, risijwiCi.risijwiCi_Instance), f'Instance is not of the right type'
+        assert instance.n == self.n, f'Jobs number is not correct, expected {self.n} got {instance.n} instead'
+
+    def test_read_existing_file(self, instance_zero_file):
+        instance = risijwiCi.risijwiCi_Instance.read_txt(instance_zero_file)
+        assert isinstance(instance, risijwiCi.risijwiCi_Instance)
+        assert instance.n == self.n, f'Jobs number is not correct, expected {self.n} got {instance.n} instead'
+
+    def test_read_unexisting_file(self):
+        unexisting_path = "tests/tmp/unexisting_file.txt"
+        with pytest.raises(Exception) as e:
+            instance = risijwiCi.risijwiCi_Instance.read_txt(unexisting_path)
+        assert e.type == FileNotFoundError
+
+    def test_write_instance_to_file(self, instance_zero):
+        file_path = "tests/tmp/instance_zero_test.txt"
+        instance_zero.to_txt(file_path)
+        assert os.path.exists(file_path)
+        try:
+            os.unlink(file_path)
+        except:
+            pass
+
+    # Testing methods
+    def test_list_heuristics(self, instance_zero):
+        for rule_number in range(0, 4):
+            solve_result = risijwiCi.Heuristics.list_heuristic(
+                instance_zero, rule_number)
+            check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
+    def test_lahc(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        check_solve_result(solve_result)
+
+class TestrisijwiFi:
+
+    instance_zero_file_path = "tests/tmp/instance_zero.txt"
+    n = 20
+
+    @pytest.fixture
+    def instance_zero(self):
+        instance = risijwiFi.risijwiFi_Instance.generate_random(self.n)
+        return instance
+
+    @pytest.fixture
+    def instance_zero_file(self, instance_zero):
+        instance_zero.to_txt(self.instance_zero_file_path)
+        yield self.instance_zero_file_path
+        try:
+            os.unlink(self.instance_zero_file_path)
+        except:
+            pass
+
+    # Testing Instance
+    def test_generator(self):
+        instance = risijwiFi.risijwiFi_Instance.generate_random(
+            self.n)
+        assert isinstance(
+            instance, risijwiFi.risijwiFi_Instance), f'Instance is not of the right type'
+        assert instance.n == self.n, f'Jobs number is not correct, expected {self.n} got {instance.n} instead'
+
+    def test_read_existing_file(self, instance_zero_file):
+        instance = risijwiFi.risijwiFi_Instance.read_txt(instance_zero_file)
+        assert isinstance(instance, risijwiFi.risijwiFi_Instance)
+        assert instance.n == self.n, f'Jobs number is not correct, expected {self.n} got {instance.n} instead'
+
+    def test_read_unexisting_file(self):
+        unexisting_path = "tests/tmp/unexisting_file.txt"
+        with pytest.raises(Exception) as e:
+            instance = risijwiFi.risijwiFi_Instance.read_txt(unexisting_path)
+        assert e.type == FileNotFoundError
+
+    def test_write_instance_to_file(self, instance_zero):
+        file_path = "tests/tmp/instance_zero_test.txt"
+        instance_zero.to_txt(file_path)
+        assert os.path.exists(file_path)
+        try:
+            os.unlink(file_path)
+        except:
+            pass
+
+    # Testing methods
+    def test_list_heuristics(self, instance_zero):
+        for rule_number in range(0, 4):
+            solve_result = risijwiFi.Heuristics.list_heuristic(
+                instance_zero, rule_number)
+            check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
+    def test_lahc(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        check_solve_result(solve_result)
+
 class TestwiCi:
 
     instance_zero_file_path = "tests/tmp/instance_zero.txt"
@@ -134,8 +273,20 @@ class TestriwiCi:
                 instance_zero, rule_number)
             check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestwiTi:
@@ -199,8 +350,20 @@ class TestwiTi:
         solve_result = wiTi.Heuristics.ACT(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestriwiTi:
@@ -260,8 +423,20 @@ class TestriwiTi:
         solve_result = riwiTi.Heuristics.ACT_WSECi(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
  
 class TestsijwiTi:
@@ -317,8 +492,20 @@ class TestsijwiTi:
         solve_result = sijwiTi.Heuristics.ACTS(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestrisijwiTi:
@@ -374,8 +561,20 @@ class TestrisijwiTi:
         solve_result = risijwiTi.Heuristics.ACTS_WSECi(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestsijCmax:
@@ -431,8 +630,20 @@ class TestsijCmax:
         solve_result = sijCmax.Heuristics.constructive(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestrisijCmax:
@@ -488,6 +699,18 @@ class TestrisijCmax:
         solve_result = risijCmax.Heuristics.constructive(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
+    def test_biba(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        check_solve_result(solve_result, expected_nb_sol=1)
+
+    def test_grasp(self, instance_zero):
+        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        check_solve_result(solve_result, expected_nb_sol=5)
+
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=10)
+        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        check_solve_result(solve_result)
+
+    def test_sa(self, instance_zero):
+        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
