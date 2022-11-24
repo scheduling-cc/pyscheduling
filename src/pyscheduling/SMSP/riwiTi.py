@@ -35,7 +35,7 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = SingleMachine.SingleSolution(instance)
-        solution.machine.wiTi_index = []
+        solution.machine.wiTi_cache = []
         ci = 0
         wiTi = 0
         remaining_jobs_list = list(range(instance.n))
@@ -49,9 +49,9 @@ class Heuristics():
             ci = start_time + instance.P[taken_job]
             solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,ci))
             wiTi += instance.W[taken_job]*max(ci-instance.D[taken_job],0)
-            solution.machine.wiTi_index.append(wiTi)
+            solution.machine.wiTi_cache.append(wiTi)
             remaining_jobs_list.pop(0)
-        solution.machine.objective=solution.machine.wiTi_index[instance.n-1]
+        solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
     
@@ -67,7 +67,7 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = SingleMachine.SingleSolution(instance)
-        solution.machine.wiTi_index = []
+        solution.machine.wiTi_cache = []
         ci = min(instance.R)
         wiTi = 0
         remaining_jobs_list = list(range(instance.n))
@@ -86,9 +86,9 @@ class Heuristics():
             ci = start_time + instance.P[taken_job]
             solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,ci))
             wiTi += instance.W[taken_job]*max(ci-instance.D[taken_job],0)
-            solution.machine.wiTi_index.append(wiTi)
+            solution.machine.wiTi_cache.append(wiTi)
             remaining_jobs_list.pop(0)
-        solution.machine.objective=solution.machine.wiTi_index[instance.n-1]
+        solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
     

@@ -1,6 +1,9 @@
+from functools import partial
+from math import exp
 import random
 import sys
 from time import perf_counter
+from typing import Callable
 
 import pyscheduling.Problem as RootProblem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
@@ -16,6 +19,154 @@ except ImportError:
     pass
 
 DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
+
+class Heuristics():
+
+    @staticmethod
+    def dispatch_heuristic(instance : SingleMachine.SingleInstance, rule : Callable, reverse: bool = False):
+        """Orders the jobs according to the rule (lambda function) and returns the schedule accordignly
+
+        Args:
+            instance (SingleInstance): Instance to be solved
+            rule (Callable): a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+            reverse (bool, optional): flag to sort in decreasing order. Defaults to False.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        startTime = perf_counter()
+        solution = SingleMachine.SingleSolution(instance)
+        
+        remaining_jobs_list = list(range(instance.n))
+        sort_rule = partial(rule, instance)
+
+        remaining_jobs_list.sort(key=sort_rule, reverse=reverse)
+        solution.machine.job_schedule = [SingleMachine.Job(job_id, -1, -1) for job_id in remaining_jobs_list]
+        solution.compute_objective()
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+    def dynamic_dispatch_rule(instance : SingleMachine.SingleInstance, rule : Callable, filter_fun: Callable, reverse: bool = False):
+        """Orders the jobs respecting the filter according to the rule. 
+        The order is dynamic since it is determined each time a new job is inserted
+
+        Args:
+            instance (SingleInstance): Instance to be solved
+            rule (Callable): a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+            filter (Callable): a lambda function that defines a filter condition taking the instance, job_id and current time as the parameters
+            reverse (bool, optional): flag to sort in decreasing order. Defaults to False.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        startTime = perf_counter()
+        solution = SingleMachine.SingleSolution(instance)
+
+        remaining_jobs_list = list(range(instance.n))
+        ci = min(instance.R)
+        sort_rule = partial(rule, instance)
+        
+        insert_idx = 0
+        while(len(remaining_jobs_list)>0):
+            ci = max( ci, min(instance.R[job_id] for job_id in remaining_jobs_list) ) # Advance the current ci to at least a time t > min_Ri
+            filtered_remaining_jobs_list = list(filter(partial(filter_fun, instance, ci),remaining_jobs_list))
+            filtered_remaining_jobs_list.sort(key= sort_rule, reverse=reverse)
+
+            taken_job = filtered_remaining_jobs_list[0]
+            #ci = solution.machine.objective_insert(taken_job, insert_idx, instance)
+            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,-1,-1))
+            solution.compute_objective()
+            ci = solution.objective_value
+            remaining_jobs_list.remove(taken_job)
+            insert_idx += 1
+        
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+    @staticmethod
+    def BIBA(instance: SingleMachine.SingleInstance):
+        """Returns the solution according to the best insertion based approach algorithm (GECCO Article)
+
+        Args:
+            instance (SingleMachine.SingleInstance): SMSP instance to be solved
+
+        Returns:
+            SolveResult: the solve result of the execution of the heuristic
+        """
+        startTime = perf_counter()
+        solveResult = RootProblem.SolveResult()
+        solveResult.all_solutions = []
+        solution = SingleMachine.SingleSolution(instance)
+        remaining_jobs_list = [i for i in range(instance.n)]
+        while len(remaining_jobs_list) != 0:
+            insertions_list = []
+            for i in remaining_jobs_list:
+                for k in range(0, len(solution.machine.job_schedule) + 1):
+                    insertions_list.append(
+                        (i, k, solution.machine.simulate_remove_insert(-1, i, k, instance)))
+
+            best_insertion = min(insertions_list, key= lambda insertion: insertion[2]) 
+            taken_job, taken_pos, ci = best_insertion
+            solution.machine.job_schedule.insert(taken_pos, Job(taken_job, 0, 0))
+            solution.machine.compute_objective(instance, startIndex=taken_pos)
+            solution.fix_objective()
+            if taken_pos == len(solution.machine.job_schedule)-1:
+                solution.machine.last_job = taken_job
+            remaining_jobs_list.remove(taken_job)
+
+        solveResult.all_solutions.append(solution)
+        solveResult.best_solution = solution
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        return solveResult
+
+    @staticmethod
+    def grasp(instance: SingleMachine.SingleInstance, p: float, r: int, n_iterations: int):
+        """Returns the solution using the Greedy randomized adaptive search procedure algorithm
+
+        Args:
+            instance (SingleInstance): The instance to be solved by the heuristic
+            p (float): probability of taking the greedy best solution
+            r (int): percentage of moves to consider to select the best move
+            nb_exec (int): Number of execution of the heuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        startTime = perf_counter()
+        solveResult = RootProblem.SolveResult()
+        best_solution = None
+        for _ in range(n_iterations):
+            solution = SingleMachine.SingleSolution(instance)
+            remaining_jobs_list = [i for i in range(instance.n)]
+            while len(remaining_jobs_list) != 0:
+                insertions_list = []
+                for i in remaining_jobs_list:
+                    for k in range(0, len(solution.machine.job_schedule) + 1):
+                        insertions_list.append(
+                            (i, k, solution.machine.simulate_remove_insert(-1, i, k, instance)))
+
+                insertions_list.sort(key=lambda insertion: insertion[2])
+                proba = random.random()
+                if proba < p:
+                    rand_insertion = insertions_list[0]
+                else:
+                    rand_insertion = random.choice(
+                        insertions_list[0:int(instance.n * r)])
+                taken_job, taken_pos, ci = rand_insertion
+                solution.machine.job_schedule.insert(taken_pos, Job(taken_job, 0, 0))
+                solution.machine.compute_objective(instance, startIndex=taken_pos)
+                solution.fix_objective()
+                if taken_pos == len(solution.machine.job_schedule)-1:
+                    solution.machine.last_job = taken_job
+                remaining_jobs_list.remove(taken_job)
+
+            solveResult.all_solutions.append(solution)
+            if not best_solution or best_solution.objective_value > solution.objective_value:
+                best_solution = solution
+
+        solveResult.best_solution = best_solution
+        solveResult.runtime = perf_counter() - startTime
+        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        return solveResult
 
 class Metaheuristics():
 
@@ -51,7 +202,7 @@ class Metaheuristics():
 
         first_time = perf_counter()
         if time_limit_factor:
-            time_limit = instance.m * instance.n * time_limit_factor
+            time_limit = instance.n * time_limit_factor
 
         # Generate init solutoin using the initial solution method
         solution_init = init_sol_method(instance).best_solution
@@ -62,8 +213,7 @@ class Metaheuristics():
         local_search = SingleMachine.SM_LocalSearch()
 
         if LS:
-            solution_init = local_search.improve(
-                solution_init,instance.get_objective())  # Improve it with LS
+            solution_init = local_search.improve(solution_init)  # Improve it with LS
 
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
@@ -79,11 +229,10 @@ class Metaheuristics():
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
 
-            solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(
-                current_solution,instance.get_objective())
+            solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(current_solution)
 
             if LS:
-                solution_i = local_search.improve(solution_i,instance.get_objective())
+                solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
                 current_solution = solution_i
                 if solution_i.objective_value < solution_best.objective_value:
@@ -105,6 +254,111 @@ class Metaheuristics():
 
         return solve_result
     
+    @staticmethod
+    def SA(instance: SingleMachine.SingleInstance, **kwargs):
+        """ Returns the solution using the simulated annealing algorithm
+        
+        Args:
+            instance (ParallelInstance): Instance object to solve
+            T0 (float, optional): Initial temperature. Defaults to 1.1.
+            Tf (float, optional): Final temperature. Defaults to 0.01.
+            k (float, optional): Acceptance facture. Defaults to 0.1.
+            b (float, optional): Cooling factor. Defaults to 0.97.
+            q0 (int, optional): Probability to apply restricted swap compared to restricted insertion. Defaults to 0.5.
+            n_iterations (int, optional): Number of iterations for each temperature. Defaults to 20.
+            Non_improv (int, optional): SA stops when the number of iterations without improvement is achieved. Defaults to 500.
+            LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. Defaults to BIBA
+            seed (int, optional): Seed for the random operators to make the algo deterministic if fixed. Defaults to None.
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+
+        # Extracting the parameters
+        restriced = kwargs.get("restricted", False)
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
+        T0 = kwargs.get("T0", 1.4)
+        Tf = kwargs.get("Tf", 0.01)
+        k = kwargs.get("k", 0.1)
+        b = kwargs.get("b", 0.99)
+        n_iterations = kwargs.get("n_iterations", 20)
+        Non_improv = kwargs.get("Non_improv", 5000)
+        LS = kwargs.get("LS", True)
+        seed = kwargs.get("seed", None)
+
+        if seed:
+            random.seed(seed)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.n * time_limit_factor
+
+        solution_init = init_sol_method(instance).best_solution
+
+        if not solution_init:
+            return RootProblem.SolveResult()
+
+        local_search = SingleMachine.SM_LocalSearch()
+
+        if LS:
+            solution_init = local_search.improve(solution_init)
+
+        all_solutions = []
+        # Initialisation
+        T = T0
+        N = 0
+        time_to_best = 0
+        solution_i = None
+        all_solutions.append(solution_init)
+        solution_best = solution_init
+        while T > Tf and (N != Non_improv):
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+            for i in range(0, n_iterations):
+                # check time limit if exists
+                if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                    break
+
+                # solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
+                solution_i = SingleMachine.NeighbourhoodGeneration.LEJ_neighbour(solution_best)
+                if LS:
+                    # Improve generated solution using LS
+                    solution_i = local_search.improve(solution_i)
+
+                delta_objective = solution_init.objective_value - solution_i.objective_value
+                if delta_objective >= 0:
+                    solution_init = solution_i
+                else:
+                    r = random.random()
+                    factor = delta_objective / (k * T)
+                    exponent = exp(factor)
+                    if (r < exponent):
+                        solution_init = solution_i
+
+                if solution_best.objective_value > solution_init.objective_value:
+                    all_solutions.append(solution_init)
+                    solution_best = solution_init
+                    time_to_best = (perf_counter() - first_time)
+                    N = 0
+
+            T = T * b
+            N += 1
+
+        # Construct the solve result
+        solve_result = RootProblem.SolveResult(
+            best_solution=solution_best,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
+            solutions=all_solutions
+        )
+
+        return solve_result
+
+
     @classmethod
     def all_methods(cls):
         """returns all the methods of the given Heuristics class
@@ -160,12 +414,7 @@ if DOCPLEX_IMPORTED:
                 k_tasks = sorted(k_tasks, key= lambda x: x[1])
                 sol.machine.job_schedule = k_tasks
             
-            if objective == Objective.wiCi:
-                sol.wiCi()
-            elif objective == Objective.wiTi:
-                sol.wiTi()
-            elif objective == Objective.Cmax:
-                sol.cmax()
+            sol.compute_objective()
 
             return sol
         
@@ -185,7 +434,7 @@ if DOCPLEX_IMPORTED:
             """
             if "docplex" in sys.modules:
                 # Extracting parameters
-                objective = kwargs.get("objective", "wiCi")
+                objective = instance.get_objective()
                 log_path = kwargs.get("log_path", None)
                 time_limit = kwargs.get("time_limit", 300)
                 nb_threads = kwargs.get("threads", 1)
@@ -303,34 +552,6 @@ class Heuristics_HelperFunctions():
         if reverse: return taken_job_max
         else: return taken_job_min
 
-class Heuristics_Cmax():
-    @staticmethod
-    def meta_raps(instance: SingleMachine.SingleInstance, p: float, r: int, nb_exec: int):
-        """Returns the solution using the meta-raps algorithm
 
-        Args:
-            instance (SingleInstance): The instance to be solved by the heuristic
-            p (float): probability of taking the greedy best solution
-            r (int): percentage of moves to consider to select the best move
-            nb_exec (int): Number of execution of the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        pass
-
-    @staticmethod
-    def grasp(instance: SingleMachine.SingleInstance, x, nb_exec: int):
-        """Returns the solution using the grasp algorithm
-
-        Args:
-            instance (SingleInstance): Instance to be solved by the heuristic
-            x (_type_): percentage of moves to consider to select the best move
-            nb_exec (int): Number of execution of the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        pass
 
  

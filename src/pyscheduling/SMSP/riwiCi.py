@@ -35,7 +35,7 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = SingleMachine.SingleSolution(instance)
-        solution.machine.wiCi_index = []
+        solution.machine.wiCi_cache = []
         ci = 0
         wiCi = 0
         remaining_jobs_list = list(range(instance.n))
@@ -47,9 +47,9 @@ class Heuristics():
             solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,start_time+instance.P[taken_job]))
             ci = start_time+instance.P[taken_job]
             wiCi += instance.W[taken_job]*ci
-            solution.machine.wiCi_index.append(wiCi)
+            solution.machine.wiCi_cache.append(wiCi)
             remaining_jobs_list.pop(0)
-        solution.machine.objective=solution.machine.wiCi_index[instance.n-1]
+        solution.machine.objective_value=solution.machine.wiCi_cache[instance.n-1]
         solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
@@ -66,7 +66,7 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = SingleMachine.SingleSolution(instance)
-        solution.machine.wiCi_index = []
+        solution.machine.wiCi_cache = []
         ci = min(instance.R)
         wiCi = 0
         remaining_jobs_list = list(range(instance.n))
@@ -85,10 +85,10 @@ class Heuristics():
             ci = start_time+instance.P[taken_job]
             solution.machine.job_schedule.append(SingleMachine.Job(taken_job,start_time,ci))
             wiCi += instance.W[taken_job]*ci
-            solution.machine.wiCi_index.append(wiCi)
+            solution.machine.wiCi_cache.append(wiCi)
             remaining_jobs_list.remove(taken_job)
 
-        solution.machine.objective=solution.machine.wiCi_index[instance.n-1]
+        solution.machine.objective_value=solution.machine.wiCi_cache[instance.n-1]
         solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
@@ -105,7 +105,7 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = SingleMachine.SingleSolution(instance)
-        solution.machine.wiCi_index = []
+        solution.machine.wiCi_cache = []
         if rule==1: # Increasing order of the release time
             sorting_func = lambda job_id : instance.R[job_id]
             reverse = False
@@ -126,8 +126,8 @@ class Heuristics():
             ci = start_time + instance.P[job]
             wiCi += instance.W[job]*ci
             solution.machine.job_schedule.append(SingleMachine.Job(job,start_time,ci))
-            solution.machine.wiCi_index.append(wiCi)
-        solution.machine.objective = solution.machine.wiCi_index[instance.n - 1]
+            solution.machine.wiCi_cache.append(wiCi)
+        solution.machine.objective_value = solution.machine.wiCi_cache[instance.n - 1]
         solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
