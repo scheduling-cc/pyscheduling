@@ -400,7 +400,7 @@ class Machine:
     # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
     wiTi_cache: list[int] = field(default_factory=list)
 
-    def __init__(self, objective_value: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_cache: list[int] = None, wiTi_cache: list[int] = None, wiFi_cache: list[int] = None) -> None:
+    def __init__(self, objective_value: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_cache: list[int] = None, wiTi_cache: list[int] = None, wiFi_cache: list[int] = None):
         """Constructor of Machine
 
         Args:
@@ -445,10 +445,10 @@ class Machine:
                           sort_keys=True, indent=4)
 
     @staticmethod
-    def fromDict(machine_dict):
+    def fromDict(machine_dict: dict):
         return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def compute_current_ci(self, instance, prev_ci, job_prev_i, job_i):
+    def compute_current_ci(self, instance: SingleInstance, prev_ci: int, job_prev_i: int, job_i: int):
         """Computes the current ci when job_i comes after job_prev_i.
         This takes into account if we have setup times and release dates.
 
@@ -469,7 +469,7 @@ class Machine:
         ci = startTime + setupTime + proc_time
         return ci, startTime
 
-    def init_cache(self, instance, startIndex: int = 0):
+    def init_cache(self, instance: SingleInstance, startIndex: int = 0):
         """Initialize the cache if it's not defined yet
 
         Args:
@@ -483,11 +483,11 @@ class Machine:
         obj_cache = self.objectives_map.get(objective, -1)
         if obj_cache == -1: # No cache is used
             return startIndex, None
-        if obj_cache is None:  # Iniates wiCi_index to the size of job_schedule
+        if obj_cache is None:  # Initialize obj_cache to the size of job_schedule
             obj_cache = [-1] * len(self.job_schedule)
             startIndex = 0
         elif len(obj_cache) != len(self.job_schedule):
-            obj_cache.insert(startIndex, -1) # Insert an element in wiCi_index corresponding to the position where a new job has been inserted
+            obj_cache.insert(startIndex, -1) # Insert an element in obj_cache corresponding to the position where a new job has been inserted
         
         return startIndex, obj_cache
     
@@ -510,7 +510,7 @@ class Machine:
         
         return ci, job_prev_i, obj
     
-    def compute_obj_from_ci(self, instance, ci, job_i, curr_obj):
+    def compute_obj_from_ci(self, instance: SingleInstance, ci: int, job_i: int, curr_obj: int):
         """Helper method to compute the objective value from the current ci.
         According to the objective set on the instance, the expression of the objective in function of ci changes 
 
@@ -533,7 +533,7 @@ class Machine:
         elif objective == Objective.wiFi:
             return curr_obj + instance.W[job_i] * (ci-instance.R[job_i])
 
-    def compute_objective(self, instance, startIndex = 0):
+    def compute_objective(self, instance: SingleInstance, startIndex: int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the objective
 
         Args:
