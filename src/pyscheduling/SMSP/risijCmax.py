@@ -20,7 +20,7 @@ class risijCmax_Instance(SingleMachine.SingleInstance):
         return Heuristics.constructive
 
 
-class Heuristics(Methods.Heuristics_Cmax):
+class Heuristics(Methods.Heuristics):
     
     
     @staticmethod
@@ -41,12 +41,12 @@ class Heuristics(Methods.Heuristics_Cmax):
             for i in remaining_jobs_list:
                 current_machine_schedule = solution.machine
                 if (current_machine_schedule.last_job == -1):
-                    startTime = max(current_machine_schedule.objective,
+                    startTime = max(current_machine_schedule.objective_value,
                                     instance.R[i])
                     factor = startTime + instance.P[i] + \
                         instance.S[i][i]  # Added Sj_ii for rabadi
                 else:
-                    startTime = max(current_machine_schedule.objective,
+                    startTime = max(current_machine_schedule.objective_value,
                                     instance.R[i])
                     factor = startTime + instance.P[i] + instance.S[
                         current_machine_schedule.last_job][i]
@@ -61,7 +61,7 @@ class Heuristics(Methods.Heuristics_Cmax):
             else:
                 ci = taken_startTime + instance.P[taken_job]+ instance.S[
                         solution.machine.last_job][taken_job]
-            solution.machine.objective = ci
+            solution.machine.objective_value = ci
             solution.machine.last_job = taken_job
             solution.machine.job_schedule.append(
                 SingleMachine.Job(taken_job, taken_startTime, min_factor))
