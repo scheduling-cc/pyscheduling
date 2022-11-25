@@ -111,7 +111,7 @@ class Heuristics:
             start_time = None
             for j in range(instance.m):
                 current_machine_schedule = solution.machines[j]
-                wiTi = current_machine_schedule.weighted_lateness_insert(i,len(current_machine_schedule.job_schedule),instance) 
+                wiTi = current_machine_schedule.weighted_tardiness_insert(i,len(current_machine_schedule.job_schedule),instance) 
                 if (min_wiTi == None) or (wiTi < min_wiTi):
                     taken_machine = j
                     min_wiTi = wiTi
@@ -129,11 +129,13 @@ class Heuristics:
             solution.machines[taken_machine].job_schedule.append(ParallelMachines.Job(
                 i, start_time, ci))
             solution.machines[taken_machine].completion_time = ci  # type: ignore
+            solution.machines[taken_machine].wiCi_cache.append(ci)
             solution.machines[taken_machine].last_job = i
             solution.machines[taken_machine].objective = min_wiTi  # type: ignore
-            solution.machines[taken_machine].wiTi_index.append(min_wiTi)
+            solution.machines[taken_machine].wiTi_cache.append(min_wiTi)
         
         solution.compute_objective(Objective.wiTi)
         #Add fix objective method according to the obj
         
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        #return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return solution

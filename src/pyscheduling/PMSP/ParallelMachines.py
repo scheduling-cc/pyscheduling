@@ -415,7 +415,8 @@ class Machine:
     completion_time: int = 0
     last_job: int = -1
     job_schedule: list[Job] = field(default_factory=list)
-    wiTi_index: list[int] = field(default_factory=list)
+    wiTi_cache: list[int] = field(default_factory=list)
+    wiCi_cache: list[int] = field(default_factory=list)
     
     def __init__(self, machine_num: int, completion_time: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
         """Constructor of Machine
@@ -434,7 +435,8 @@ class Machine:
         else:
             self.job_schedule = job_schedule
         
-        self.wiTi_index = []
+        self.wiTi_cache = []
+        self.wiCi_cache = []
 
     def __str__(self):
         return str(self.machine_num + 1) + " | " + " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.completion_time)
@@ -721,7 +723,16 @@ class Machine:
 
         return ci
     
-    def weighted_lateness_insert(self,job:int, pos:int,instance:ParallelInstance):
+    def compute_current_ci(self, instance, prev_ci, job_prev_i, job_i):
+        
+        startTime = max(prev_ci, instance.R[job_i]) if hasattr(instance, 'R') else prev_ci
+        setupTime = instance.S[self.machine_num][job_prev_i][job_i] if hasattr(instance, 'S') else 0
+        proc_time = instance.P[job_i][self.machine_num]
+
+        ci = startTime + setupTime + proc_time
+        return ci, startTime
+
+    def weighted_tardiness_insert(self,job:int, pos:int,instance:ParallelInstance):
         """Computes the machine's total wighted tardiness if we insert "job" at "pos" in the machine's job_schedule
         Args:
             job (int): id of the inserted job
@@ -731,42 +742,87 @@ class Machine:
             int : total weighted lateness
         """
         if pos > 0:
-            c_prev = self.job_schedule[pos - 1].end_time
-            job_prev_i = self.job_schedule[pos - 1].id
-            if hasattr(instance, 'R'):
-                release_time = max(instance.R[job] - c_prev, 0)
-            else:
-                release_time = 0
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[self.machine_num][job_prev_i][job]
-            else:
-                setupTime = 0
-            ci = c_prev + release_time + setupTime + instance.P[job][self.machine_num]
-            wiTi = self.wiTi_index[pos - 1]+instance.W[job]*max(ci-instance.D[job],0)
+            job_prev_i, _, c_prev = self.job_schedule[pos - 1]
         else:
-            ci = instance.S[self.machine_num][job][job] + instance.P[job][self.machine_num]
-            wiTi = instance.W[job]*max(ci - instance.D[job],0)
+            job_prev_i, _, c_prev = job,0,0
+            
+        prev_wiTi = self.wiTi_cache[pos - 1] if pos > 0 else 0
+        ci,_ = self.compute_current_ci(instance, c_prev, job_prev_i, job) 
+        wiTi = prev_wiTi +instance.W[job]*max(ci - instance.D[job],0)
+        
         job_prev_i = job
         for i in range(pos, len(self.job_schedule)):
-            job_i = self.job_schedule[i][0]
+            job_i = self.job_schedule[i].id
+            ci,_ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
+            wiTi += instance.W[job_i]*max(ci - instance.D[job_i],0)
+            job_prev_i = job_i
 
-            if hasattr(instance, 'R'):
-                startTime = max(ci, instance.R[job_i])
+        return wiTi
+    
+    def total_weighted_lateness_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance: ParallelInstance):
+        """Computes the machine's total weighted tardiness if we remove job at position "pos_remove" 
+        and insert "job" at "pos" in the machine's job_schedule
+        Args:
+            pos_remove (int): position of the job to be removed
+            job (int): id of the inserted job
+            pos_insert (int): position where the job is inserted in the machine
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int: total weighted lateness
+        """
+        first_pos = min(pos_remove, pos_insert)
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (job, 0, 0)
+        job_prev_i = self.job_schedule[1].id if pos_remove == 0 and pos_insert != 0 and len(self.job_schedule) > 1 else job_prev_i # The case when we remove the first job
+        wiTi = self.wiTi_cache[first_pos - 1] if first_pos > 0 else 0
+       
+        for i in range(first_pos, len(self.job_schedule) + 1):
+
+            # If job needs to be inserted to position i
+            if i == pos_insert:
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job)
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
+                job_prev_i = job
+
+            # If the job_i is not the one to be removed
+            if i != pos_remove and i < len(self.job_schedule):
+                job_i = self.job_schedule[i].id
+                ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
+                wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
+                job_prev_i = job_i # TODO: job_prev_i should be updated only when it is not removed
+
+        return wiTi
+    
+    def total_weighted_lateness_swap(self, pos_i: int, pos_j: int, instance: ParallelInstance):
+        """Computes the machine's total weighted lateness if we insert swap jobs at position "pos_i" and "pos_j"
+        in the machine's job_schedule
+        Args:
+            pos_i (int): position of the first job to be swapped
+            pos_j (int): position of the second job to be swapped
+            instance (SingleInstance): the current problem instance
+        Returns:
+            int : total weighted lateness
+        """
+        first_pos = min(pos_i, pos_j)
+        first_job = self.job_schedule[first_pos].id
+        job_prev_i, _, ci = self.job_schedule[first_pos - 1] if first_pos > 0 else (first_job, 0, 0)
+        wiTi = self.wiTi_cache[first_pos - 1] if first_pos > 0 else 0
+
+        for i in range(first_pos, len(self.job_schedule)):
+
+            if i == pos_i:  # We take pos_j
+                job_i = self.job_schedule[pos_j].id  # (Id, startTime, endTime)
+            elif i == pos_j:  # We take pos_i
+                job_i = self.job_schedule[pos_i].id
             else:
-                startTime = ci
-            if hasattr(instance, 'S'):
-                setupTime = instance.S[self.machine_num][job_prev_i][job_i]
-            else:
-                setupTime = 0
-            proc_time = instance.P[job_i][self.machine_num]
-            ci = startTime + setupTime + proc_time
+                job_i = self.job_schedule[i].id  # Id of job in position i
+
+            ci, _ = self.compute_current_ci(instance, ci, job_prev_i, job_i)
             wiTi += instance.W[job_i]*max(ci-instance.D[job_i], 0)
 
             job_prev_i = job_i
-        
+
         return wiTi
-        
-        
+
 @dataclass
 class ParallelSolution(RootProblem.Solution):
 
