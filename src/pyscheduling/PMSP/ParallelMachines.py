@@ -672,51 +672,38 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         """
         for i in range(solution.instance.m):  # For every machine in the system
             for l in range(solution.instance.m):  # For all the other machines
+                if (l == i) or len(solution.machines[i].job_schedule) < 2:
+                    continue
+                
                 move = None
-                if (l != i) and len(solution.machines[i].job_schedule) > 1:
-                    # Machine i
-                    machine_i = solution.machines[i]
-                    machine_i_schedule = machine_i.job_schedule
-                    old_ci = machine_i.completion_time
-                    # Machine L
-                    machine_l = solution.machines[l]
-                    machine_l_schedule = machine_l.job_schedule
-                    old_cl = machine_l.completion_time
-                    # for every job in the machine
-                    for k in range(len(machine_i_schedule)):
-                        job_k = machine_i_schedule[k]
-                        ci = machine_i.completion_time_remove(k,solution.instance)
-                        for j in range(len(machine_l_schedule)):
-                            cl = machine_l.completion_time_insert(job_k.id,j,solution.instance)
+                # Machine i
+                machine_i = solution.machines[i]
+                machine_i_schedule = machine_i.job_schedule
+                old_obj_i = machine_i.objective_value
+                # Machine L
+                machine_l = solution.machines[l]
+                machine_l_schedule = machine_l.job_schedule
+                old_obj_l = machine_l.objective_value
+                # for every job in the machine
+                for k in range(len(machine_i_schedule)):
+                    job_k = machine_i_schedule[k]
+                    obj_i = machine_i.simulate_remove_insert(k, -1, -1, solution.instance)
+                    for j in range(len(machine_l_schedule)):
+                        obj_l = machine_l.simulate_remove_insert(-1, job_k.id,j,solution.instance)
 
-                            cnd1 = (ci < old_ci and cl < old_cl)
-                            cnd2 = (ci < old_ci and cl > old_cl and old_ci - ci >= cl - old_cl and cl !=
-                                    solution.objective_value and cl <= solution.objective_value)
-                            if cnd1:
-                                if not move:
-                                    move = (l, k, j, ci, cl)
-                                elif ci-old_ci+cl-old_cl >= ci-move[3]+cl-move[4]:
-                                    move = (l, k, j, ci, cl)
-                            elif cnd2:
-                                if not move:
-                                    move = (l, k, j, ci, cl)
-                                elif ci-old_ci+cl-old_cl >= ci-move[3]+cl-move[4]:
-                                    move = (l, k, j, ci, cl)
+                        if old_obj_i - obj_i >= obj_l - old_obj_l and obj_l <= solution.objective_value:
+                            move = (l, k, j, obj_i, obj_l) if not move or obj_i-old_obj_i+obj_l-old_obj_l >= obj_i-move[3]+obj_l-move[4] else move
+
                 if move:
+                    l, k, j, obj_i, obj_l = move
                     # Remove job k from machine i
-                    job_k = machine_i_schedule.pop(move[1])
+                    job_k = machine_i_schedule.pop(k)
                     # Insert job k in machine l in pos j
-                    machine_l_schedule.insert(move[2], job_k)
-                    if machine_i.completion_time == solution.objective_value:
-                        solution.objective_value = move[3]
-                    # New completion time for machine i
-                    machine_i.completion_time = move[3]
-                    # New completion time for machine j
-                    machine_l.completion_time = move[4]
-
-                    # print(solution.cmax)
-                    solution.cmax()
-        solution.cmax()
+                    machine_l_schedule.insert(j, job_k)
+                    machine_i.compute_objective(solution.instance, startIndex=k)
+                    machine_l.compute_objective(solution, startIndex=j)
+                    solution.fix_objective()
+        
         return solution
 
     @staticmethod
@@ -729,31 +716,28 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         Returns:
             ParallelSolution: Improved solution
         """
-        cmax_machines_list = []
+        objective = solution.instance.get_objective()
+        taken_machines_list = []
         for m, machine in enumerate(solution.machines):
-            # if machine.completion_time == solution.cmax:
-            cmax_machines_list.append(m)
-        #print("Machines Cmax : " + str(len(cmax_machines_list)))
-        for nb_machine in cmax_machines_list:
-            cmax_machine = solution.machines[nb_machine]
-            cmax_machine_schedule = cmax_machine.job_schedule
-            move = None
-            for i in range(0, len(cmax_machine_schedule)):
-                for j in range(i+1, len(cmax_machine_schedule)):
-                    new_ci = cmax_machine.completion_time_swap(i,j,solution.instance)
-                    if new_ci < cmax_machine.completion_time:
-                        if not move:
-                            move = (i, j, new_ci)
-                        elif new_ci < move[2]:
-                            move = (i, j, new_ci)
+            if machine.objective_value == solution.objective_value or objective not in solution.max_objectives:
+                taken_machines_list.append(m)
 
+        for nb_machine in taken_machines_list:
+            bottleneck_machine = solution.machines[nb_machine]
+            bottleneck_machine_schedule = bottleneck_machine.job_schedule
+            move = None
+            for i in range(0, len(bottleneck_machine_schedule)):
+                for j in range(i+1, len(bottleneck_machine_schedule)):
+                    new_obj = bottleneck_machine.simulate_swap(i, j, solution.instance)
+                    if new_obj < bottleneck_machine.objective_value:
+                        move = (i, j, new_obj) if not move or new_obj < move[2] else move
+ 
             if move:
-                # print(nb_machine,move)
-                cmax_machine_schedule[move[0]], cmax_machine_schedule[move[1]
-                                                                      ] = cmax_machine_schedule[move[1]], cmax_machine_schedule[move[0]]
-                cmax_machine.completion_time = move[2]
-                solution.cmax()
-        solution.cmax()
+                i, j, new_obj = move
+                bottleneck_machine_schedule[i], bottleneck_machine_schedule[j] = bottleneck_machine_schedule[j], bottleneck_machine_schedule[i]
+                bottleneck_machine.compute_objective(solution.instance, startIndex=min(i, j))
+                solution.fix_objective()
+
         return solution
 
     @staticmethod
@@ -766,69 +750,55 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         Returns:
             ParallelSolution: Improved solution
         """
-        cmax_machines_list = []
-        other_machines = []
-        for m, machine in enumerate(solution.machines):
-            if machine.completion_time == solution.objective_value:
-                cmax_machines_list.append(m)
-            else:
-                other_machines.append(m)
-        for nb_machine in cmax_machines_list:
-            cmax_machine = solution.machines[nb_machine]
-            cmax_machine_schedule = cmax_machine.job_schedule
-            old_ci = cmax_machine.completion_time
+        bottleneck_machines_list, other_machines_list = \
+            PM_LocalSearch.get_bottleneck_machines(solution)
+
+        for nb_machine in bottleneck_machines_list:
+            bottleneck_machine = solution.machines[nb_machine]
+            bottleneck_machine_schedule = bottleneck_machine.job_schedule
+            old_obj_i = bottleneck_machine.objective_value
 
             move = None
-            other_machines_copy = list(other_machines)
-
+            other_machines_copy = list(other_machines_list)
             while not move and len(other_machines_copy) != 0:
-
                 random_index = random.randrange(len(other_machines_copy))
                 other_machine_index = other_machines_copy.pop(random_index)
                 other_machine = solution.machines[other_machine_index]
                 other_nb_machine = other_machine.machine_num
                 other_machine_schedule = other_machine.job_schedule
 
-                old_cl = other_machine.completion_time
-                old_cmax = solution.objective_value
-                best_cmax = old_cmax
+                old_obj_l = other_machine.completion_time
+                old_obj = solution.objective_value
+                best_obj = old_obj
                 best_diff = None
-
-                for j in range(len(cmax_machine_schedule)):
+                for j in range(len(bottleneck_machine_schedule)):
                     for k in range(len(other_machine_schedule)):
-                        job_cmax, _, _ = cmax_machine_schedule[j]
-                        job_other_machine, _, _ = other_machine_schedule[k]
+                        job_j, _, _ = bottleneck_machine_schedule[j]
+                        job_k, _, _ = other_machine_schedule[k]
 
-                        ci = cmax_machine.completion_time_remove_insert(j, job_other_machine, j, solution.instance)
-                        cl = other_machine.completion_time_remove_insert(k, job_cmax, k, solution.instance)
+                        obj_i = bottleneck_machine.simulate_remove_insert(j, job_k, j, solution.instance)
+                        obj_l = other_machine.simulate_remove_insert(k, job_j, k, solution.instance)
                         
-                        new_cmax = solution.tmp_cmax(temp_ci = {nb_machine: ci, other_nb_machine: cl})
-                        #print(nb_machine, other_mahcine.machine_num, j, k, ci, cl, new_cmax, job_cmax, job_other_machine)
-                        if new_cmax < old_cmax:
-                            if not move:
-                                move = (other_machine_index, j, k, ci, cl)
-                                best_cmax = new_cmax
-                            elif new_cmax < best_cmax:
-                                move = (other_machine_index, j, k, ci, cl)
-                                best_cmax = new_cmax
-                        elif new_cmax == best_cmax and (ci < old_ci
-                                                            or cl < old_cl):
-                            if not move:
-                                move = (other_machine_index, j, k, ci, cl)
-                                best_diff = old_ci - ci + old_cl - cl
-                            elif (not best_diff or old_ci - ci + old_cl - cl <
-                                best_diff) and best_cmax == old_cmax:
-                                move = (other_machine_index, j, k, ci, cl)
-                                best_diff = old_ci - ci + old_cl - cl
+                        new_obj = solution.tmp_objective(tmp_obj = {nb_machine: obj_i, other_nb_machine: obj_l})
+                        potential_move = (other_machine_index, j, k, obj_i, obj_l)
+                        if new_obj < old_obj:
+                            move = potential_move if not move or new_obj < best_obj else move 
+                            best_obj = new_obj if new_obj < best_obj else best_obj
+                        elif new_obj == best_obj and (obj_i < old_obj_i or obj_l < old_obj_l):
+                            cond = (not best_diff or old_obj_i - obj_i + old_obj_l - obj_l < best_diff) and best_obj == old_obj
+                            move = potential_move if not move or cond else move
+                            best_diff = old_obj_i - obj_i + old_obj_l - obj_l if not best_diff or cond else best_diff
+
             if move:  # Apply the best move
-                cmax_machine_schedule[move[1]], other_machine_schedule[move[2]
-                                                                       ] = other_machine_schedule[move[2]], cmax_machine_schedule[move[1]]
-                cmax_machine.completion_time = move[3]
-                other_machine.completion_time = move[4]
-                solution.cmax()
-                cmax_machine.compute_completion_time(solution.instance)
-                other_machine.compute_completion_time(solution.instance)
-                solution.fix_cmax()
+                other_machine_index, j, k, obj_i, obj_l = move
+                other_machine = solution.machines[other_machine_index]
+                other_machine_schedule = other_machine.job_schedule
+                bottleneck_machine_schedule[j],  other_machine_schedule[k] = other_machine_schedule[k], bottleneck_machine_schedule[j]
+                
+                bottleneck_machine.compute_objective(solution.instance, startIndex=j)
+                other_machine.compute_objective(solution.instance, k)
+                solution.fix_objective()
+                
         return solution
 
     @staticmethod
@@ -841,69 +811,55 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         Returns:
             ParallelSolution: Improved solution
         """
-        cmax_machines_list = []
-        other_machines = []
-        for m, machine in enumerate(solution.machines):
-            if machine.completion_time == solution.objective_value:
-                cmax_machines_list.append(m)
-            else:
-                other_machines.append(m)
-        for nb_machine in cmax_machines_list:
-            cmax_machine = solution.machines[nb_machine]
-            cmax_machine_schedule = cmax_machine.job_schedule
-            old_ci = cmax_machine.completion_time
-            if len(cmax_machine_schedule) > 1:
-                move = None
-                other_machines_copy = list(other_machines)
+        bottleneck_machines_list, other_machines_list = \
+            PM_LocalSearch.get_bottleneck_machines(solution)
+        
+        for nb_machine in bottleneck_machines_list:
+            bottleneck_machine = solution.machines[nb_machine]
+            bottleneck_machine_schedule = bottleneck_machine.job_schedule
+            old_obj_i = bottleneck_machine.objective_value
+            if len(bottleneck_machine_schedule) < 2: # If it only has one job, don't remove it
+                continue
 
-                while not move and len(other_machines_copy) != 0:
+            move = None
+            other_machines_copy = list(other_machines_list)
+            while not move and len(other_machines_copy) != 0:
 
-                    random_index = random.randrange(len(other_machines_copy))
-                    other_machine_index = other_machines_copy.pop(random_index)
-                    other_machine = solution.machines[other_machine_index]
-                    other_nb_machine = other_machine.machine_num
-                    other_machine_schedule = other_machine.job_schedule
+                random_index = random.randrange(len(other_machines_copy))
+                other_machine_index = other_machines_copy.pop(random_index)
+                other_machine = solution.machines[other_machine_index]
+                other_nb_machine = other_machine.machine_num
+                other_machine_schedule = other_machine.job_schedule
 
-                    old_cl = other_machine.completion_time
-                    old_cmax = solution.objective_value
-                    best_cmax = old_cmax
-                    best_diff = None
+                old_obj_l = other_machine.objective_value
+                old_obj = solution.objective_value
+                best_obj = old_obj
+                best_diff = None
+                for j in range(len(bottleneck_machine_schedule)):
+                    job_j, _, _ = bottleneck_machine_schedule[j]
+                    obj_i = bottleneck_machine.simulate_remove_insert(j, -1, -1, solution.instance)
+                    for k in range(len(other_machine_schedule)):
+                        obj_l = other_machine.simulate_remove_insert(-1, job_j,k,solution.instance)
+                        new_obj = solution.tmp_objective(tmp_obj= {nb_machine: obj_i, other_nb_machine: obj_l})
+                        potential_move = (other_machine_index, j, k, obj_i, obj_l)
+                        if new_obj < old_obj:
+                            move = potential_move if not move or new_obj < best_obj else move 
+                            best_obj = new_obj if new_obj < best_obj else best_obj
+                        elif new_obj == best_obj and (obj_i < old_obj_i or obj_l < old_obj_l):
+                            cond = (not best_diff or old_obj_i - obj_i + old_obj_l - obj_l < best_diff) and best_obj == old_obj
+                            move = potential_move if not move or cond else move
+                            best_diff = old_obj_i - obj_i + old_obj_l - obj_l if not best_diff or cond else best_diff
 
-                    for j in range(len(cmax_machine_schedule)):
-                        job_cmax, _, _ = cmax_machine_schedule[j]
-                        ci = cmax_machine.completion_time_remove(j, solution.instance)
-                        for k in range(len(other_machine_schedule)):
-                            
-                            cl = other_machine.completion_time_insert(job_cmax,k,solution.instance)
+            if move:  # Apply the best move
+                other_machine_index, j, k, obj_i, obj_l = move
+                other_machine = solution.machines[other_machine_index]
+                taken_job = bottleneck_machine_schedule.pop(j)
+                other_machine.job_schedule.insert(k, taken_job)
 
-                            new_cmax = solution.tmp_cmax(temp_ci = {nb_machine: ci, other_nb_machine: cl})
-                            if new_cmax < old_cmax:
-                                if not move:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = new_cmax
-                                    #print(1,old_cmax,old_ci,old_cl,move)
-                                elif new_cmax < best_cmax:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = new_cmax
-                                    #print(2,old_cmax,old_ci,old_cl,move)
-                            elif new_cmax == best_cmax and (ci < old_ci
-                                                                or cl < old_cl):
-                                if not move:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_diff = old_ci - ci + old_cl - cl
-                                    #print(3,old_cmax,old_ci,old_cl,move)
-                                elif (not best_diff or old_ci - ci + old_cl - cl <
-                                    best_diff) and best_cmax == old_cmax:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_diff = old_ci - ci + old_cl - cl
-                                    #print(4,old_cmax,old_ci,old_cl,move)
-
-                if move:  # Apply the best move
-                    cmax_job = cmax_machine_schedule.pop(move[1])
-                    other_machine_schedule.insert(move[2], cmax_job)
-                    cmax_machine.compute_completion_time(solution.instance)
-                    other_machine.compute_completion_time(solution.instance)
-                    solution.fix_cmax()
+                bottleneck_machine.compute_objective(solution.instance, startIndex=j)
+                other_machine.compute_objective(solution.instance, startIndex=k)
+                solution.fix_objective()
+        
         return solution
 
     @staticmethod
@@ -919,72 +875,85 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         change = True
         while change:
             change = False
-            cmax_machines_list = []
-            other_machines = []
-            for m, machine in enumerate(solution.machines):
-                if machine.completion_time == solution.objective_value:
-                    cmax_machines_list.append(machine)
-                else:
-                    other_machines.append(machine)
+            bottleneck_machines_list, other_machines_list = \
+                PM_LocalSearch.get_bottleneck_machines(solution)
 
-            for cmax_machine in cmax_machines_list:
-                nb_machine = cmax_machine.machine_num
-                cmax_machine_schedule = cmax_machine.job_schedule
-                old_ci = cmax_machine.completion_time
-                if len(cmax_machine_schedule) > 1:
-                    other_machines = sorted(
-                        other_machines,
-                        key=lambda machine: machine.completion_time)
+            for nb_machine in bottleneck_machines_list:
+                bottleneck_machine = solution.machines[nb_machine]
+                bottleneck_machine_schedule = bottleneck_machine.job_schedule
+                old_obj_i = bottleneck_machine.objective_value
+                if len(bottleneck_machine_schedule) < 2:
+                    continue
 
-                    move = None
-                    l = 0
-                    while not move and l < len(other_machines):
-                        other_machine_index = other_machines[l].machine_num
-                        other_machine = solution.machines[other_machine_index]
-                        other_nb_machine = other_machine.machine_num
-                        other_mahcine_schedule = other_machine.job_schedule
+                other_machines_list.sort(key=lambda m: solution.machines[m].objective_value)
+                move = None
+                l = 0
+                while not move and l < len(other_machines_list): 
+                    other_machine_index = other_machines_list[l]
+                    other_machine = solution.machines[other_machine_index]
+                    other_nb_machine = other_machine.machine_num
+                    other_machine_schedule = other_machine.job_schedule
 
-                        old_cl = other_machine.completion_time
-                        old_cmax = solution.objective_value
-                        best_cmax = old_cmax
-                        best_diff = None
+                    old_obj_l = other_machine.objective_value
+                    old_obj = solution.objective_value
+                    best_obj = old_obj
+                    best_diff = None
 
-                        j = len(cmax_machine_schedule) - 1
-                        job_cmax, _, _ = cmax_machine_schedule[j]
-                        ci = cmax_machine.completion_time_remove(j,solution.instance)
-                        for k in range(len(other_mahcine_schedule)):
-                            cl = other_machine.completion_time_insert(job_cmax, k, solution.instance)
-                            
-                            new_cmax = solution.tmp_cmax(temp_ci = {nb_machine: ci, other_nb_machine: cl})
-                            if new_cmax < old_cmax:
-                                if not move:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = new_cmax
-                                    #print(1,old_cmax,old_ci,old_cl,move)
-                                elif new_cmax < best_cmax:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_cmax = new_cmax
-                                    #print(2,old_cmax,old_ci,old_cl,move)
-                            elif new_cmax == best_cmax and (ci < old_ci
-                                                                or cl < old_cl):
-                                if not move:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_diff = old_ci - ci + old_cl - cl
-                                    #print(3,old_cmax,old_ci,old_cl,move)
-                                elif (not best_diff or old_ci - ci + old_cl - cl <
-                                    best_diff) and best_cmax == old_cmax:
-                                    move = (other_machine_index, j, k, ci, cl)
-                                    best_diff = old_ci - ci + old_cl - cl
-                                    #print(4,old_cmax,old_ci,old_cl,move)
-                        l += 1
-                    if move:  # Apply the best move
-                        change = True
-                        cmax_job = cmax_machine_schedule.pop(move[1])
-                        other_mahcine_schedule.insert(move[2], cmax_job)
-                        cmax_machine.compute_completion_time(solution.instance)
-                        other_machine.compute_completion_time(solution.instance)
-                        solution.fix_cmax()
+                    j = len(bottleneck_machine_schedule) - 1
+                    job_j, _, _ = bottleneck_machine_schedule[j]
+                    obj_i = bottleneck_machine.simulate_remove_insert(j, -1, -1, solution.instance)
+                    for k in range(len(other_machine_schedule)):
+                        obj_l = other_machine.simulate_remove_insert(-1, job_j, k, solution.instance)
+                        new_obj = solution.tmp_objective(tmp_obj= {nb_machine: obj_i, other_nb_machine: obj_l})
+                        potential_move = (other_machine_index, j, k, obj_i, obj_l)
+                        
+                        if new_obj < old_obj:
+                            move = potential_move if not move or new_obj < best_obj else move 
+                            best_obj = new_obj if new_obj < best_obj else best_obj
+                        elif new_obj == best_obj and (obj_i < old_obj_i or obj_l < old_obj_l):
+                            cond = (not best_diff or old_obj_i - obj_i + old_obj_l - obj_l < best_diff) and best_obj == old_obj
+                            move = potential_move if not move or cond else move
+                            best_diff = old_obj_i - obj_i + old_obj_l - obj_l if not best_diff or cond else best_diff
+                    l += 1
+                if move:  # Apply the best move
+                    change = True
+                    other_machine_index, j, k, obj_i, obj_l = move
+                    other_machine = solution.machines[other_machine_index]
+                    job_j = bottleneck_machine_schedule.pop(j)
+                    other_machine.job_schedule.insert(k, job_j)
+
+                    bottleneck_machine.compute_objective(solution.instance, startIndex=j)
+                    other_machine.compute_objective(solution.instance, startIndex=k)
+                    solution.fix_objective()
+        
         return solution
+
+    @staticmethod
+    def get_bottleneck_machines(solution: ParallelSolution):
+        """Gets the list of machines that are bottlneck and a list of the remaining machines.
+            For the case where the bottlneck is not defined (no max aggregation): 
+            half of the machines with the largest objective values is returned as bottlneck.
+
+        Args:
+            solution (ParallelSolution): problem solution
+        """ 
+        objective = solution.instance.get_objective()
+        bottleneck_machines_list = []
+        other_machines_list = []
+        for m, machine in enumerate(solution.machines):
+            if machine.objective_value == solution.objective_value or objective not in solution.max_objectives:
+                bottleneck_machines_list.append(m)
+            else:
+                other_machines_list.append(m)
+        
+        if len(other_machines_list) == 0: # Case where the objective is not aggregated by max (no bottleneck machines)
+            bottleneck_machines_list.sort(key=lambda m: -1 * solution.machines[m].objective_value)
+            half_index=  len(bottleneck_machines_list) // 2
+            # The second half with machines that have the largest objective values goes into bottleneck 
+            other_machines_list = bottleneck_machines_list[0:half_index]
+            bottleneck_machines_list = bottleneck_machines_list[half_index:]
+
+        return bottleneck_machines_list, other_machines_list
 
     @staticmethod
     def best_insertion_machine(solution : ParallelSolution,machine_id : int, job_id : int):
@@ -1000,17 +969,17 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         """
         machine = solution.machines[machine_id]
         machine_schedule = machine.job_schedule
-        best_cl = None
+        best_obj_l = None
         taken_move = 0
-        for j in range(len(machine_schedule)):  # for every position in other machine
-            cl = machine.completion_time_insert(job_id, j, solution.instance)
+        for j in range(len(machine_schedule) + 1):  # for every position in other machine
+            obj_l = machine.simulate_remove_insert(-1, job_id, j, solution.instance)
 
-            if not best_cl or cl < best_cl:
-                best_cl = cl
+            if not best_obj_l or obj_l < best_obj_l:
+                best_obj_l = obj_l
                 taken_move = j
 
         machine_schedule.insert(taken_move, Job(job_id, 0, 0))
-        machine.completion_time = machine.compute_completion_time(solution.instance)
+        machine.compute_objective(solution.instance, startIndex=taken_move)
 
         return solution
 
