@@ -412,15 +412,18 @@ class ParallelInstance(RootProblem.Instance):
 class Machine(SMachine):
     
     machine_num:int = 0 
-    completion_time:int = 0
     
-    def __init__(self,machine_num:int,completion_time:int = 0):
-        super().__init__()
+    def __init__(self, machine_num:int, **kwargs):
+        super().__init__(**kwargs)
         self.machine_num = machine_num
-        self.completion_time = completion_time
-        return 
-    
-    #used in simulation of moves and compute objective
+
+    def copy(self):
+        wiCi_copy = self.wiCi_cache if self.wiCi_cache is None else list(self.wiCi_cache)
+        wiTi_copy = self.wiTi_cache if self.wiTi_cache is None else list(self.wiTi_cache)
+        wiFi_copy = self.wiFi_cache if self.wiFi_cache is None else list(self.wiFi_cache)
+        return Machine(self.machine_num, self.objective_value, self.last_job, list(self.job_schedule),
+                        wiCi_cache=wiCi_copy, wiTi_cache=wiTi_copy, wiFi_cache=wiFi_copy)
+
     def compute_current_ci(self, instance: ParallelInstance, prev_ci: int, job_prev_i: int, job_i: int):
         """Computes the current ci when job_i comes after job_prev_i.
         This takes into account if we have setup times and release dates.
@@ -441,87 +444,14 @@ class Machine(SMachine):
 
         ci = startTime + setupTime + proc_time
         return ci, startTime
-        
-    #Update this method for parallel machine
-    def init_cache(self, instance: ParallelInstance, startIndex: int = 0):
-        """Initialize the cache if it's not defined yet
 
-        Args:
-            startIndex (int, optional): The index from which we start fixing the schedule. Defaults to 0.
-            obj_cache (list[int]): The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
-
-        Returns:
-            tuple: (startIndex, obj_cache) 
-        """
-        objective = instance.get_objective()
-        obj_cache = self.objectives_map.get(objective, -1)
-        if obj_cache == -1: # No cache is used
-            return startIndex, None
-        if obj_cache is None:  # Initialize obj_cache to the size of job_schedule
-            obj_cache = [-1] * len(self.job_schedule)
-            startIndex = 0
-        elif len(obj_cache) != len(self.job_schedule):
-            obj_cache.insert(startIndex, -1) # Insert an element in obj_cache corresponding to the position where a new job has been inserted
-    
-        return startIndex, obj_cache
-
-    #used in simulation of moves and compute objective
-    def compute_obj_from_ci(self, instance: ParallelInstance, ci: int, job_i: int, curr_obj: int):
-        """Helper method to compute the objective value from the current ci.
-        According to the objective set on the instance, the expression of the objective in function of ci changes 
-
-        Args:
-            instance (SingleInstance): the current problem instance
-            ci (int): the current completion time
-            job_i (int): the job that was inserted
-            curr_obj (int): current objective before inserting the job (cumulative)
-
-        Returns:
-            int: obj, the new objective
-        """
-        objective = instance.get_objective()
-        if objective == Objective.Cmax:
-            return ci
-        elif objective == Objective.wiCi:
-            return curr_obj + instance.W[job_i] * ci
-        elif objective == Objective.wiTi:
-            return curr_obj + instance.W[job_i] * max(ci-instance.D[job_i], 0)
-        elif objective == Objective.wiFi:
-            return curr_obj + instance.W[job_i] * (ci-instance.R[job_i])
-        elif objective == Objective.Lmax:
-            return max(curr_obj, ci - instance.D[job_i])    
-    
-    #Update this method for the parallel machines
-    def compute_objective(self, instance: ParallelInstance, startIndex: int = 0):
-        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the objective
-
-        Args:
-            instance (SingleInstance): The instance associated to the machine
-            startIndex (int) : The job index the function starts operating from
-
-        Returns:
-            int: objective
-        """
-        startIndex, obj_cache = self.init_cache(instance, startIndex)
-        ci, job_prev_i, obj = self.init_obj(startIndex, obj_cache)
-        
-        for i in range(startIndex, len(self.job_schedule)):
-            job_i = self.job_schedule[i].id
-            ci, start_time = self.compute_current_ci(instance, ci, job_prev_i, job_i)
-            self.job_schedule[i] = Job(job_i, start_time, ci)
-
-            obj = self.compute_obj_from_ci(instance, ci, job_i, obj) # This is cumulative objective
-            if obj_cache is not None:
-                obj_cache[i] = obj
-            job_prev_i = job_i
-
-        self.objective_value = obj
-        
-        return obj
 @dataclass
 class ParallelSolution(RootProblem.Solution):
 
     machines: list[Machine]
+    # Class variables
+    max_objectives = {Objective.Cmax, Objective.Lmax}
+    sum_objectives = {Objective.wiCi, Objective.wiTi, Objective.wiFi}
 
     def __init__(self, instance: ParallelInstance = None, machines: list[Machine] = None, objective_value: int = 0):
         """Constructor of RmSijkCmax_Solution
@@ -535,14 +465,17 @@ class ParallelSolution(RootProblem.Solution):
         if machines is None:
             self.machines = []
             for i in range(instance.m):
-                machine = Machine(i,0)
+                machine = Machine(i)
                 self.machines.append(machine)
         else:
             self.machines = machines
         self.objective_value = 0
 
-    def __str__(self):
+    def __repr__(self):
         return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
+
+    def __str__(self):
+        return self.__repr__()
 
     def copy(self):
         copy_machines = []
@@ -560,38 +493,43 @@ class ParallelSolution(RootProblem.Solution):
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
 
-    def cmax(self):
-        """Sets the job_schedule of every machine associated to the solution and sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
-        """
-        if self.instance != None:
-            for k in range(self.instance.m):
-                self.machines[k].compute_completion_time(self.instance)
-        self.objective_value = max(
-            [machine.completion_time for machine in self.machines])
+    def tmp_objective(self, tmp_obj=None):
+        """returns the temporary objective_value of a solution according to the the machines objectives from the dict temp_obj if present, 
+        if not it takes the objective_value of the machine, this doesn't modify the "cmax" of the machine.
+        
+        Args:
+            temp_obj (dict, optional): temporary objectives for each machine, machine_num: tmp_obj. Defaults to None.
 
-    def tmp_cmax(self, temp_ci={}):
+        Returns:
+            int: tmp_obj
         """
-        returns the cmax of a solution according to the the ci in the dict temp_ci if present, 
-        if not it takes the ci of the machine, this doesn't modify the "cmax" of the machine.
-        """
-        this_cmax = 0
-        for i in range(self.instance.m):
-            ci = temp_ci.get(i, self.machines[i].completion_time)
-            if ci > this_cmax:
-                this_cmax = ci
-        return this_cmax
+        tmp_obj = tmp_obj if tmp_obj is not None else dict()
+        objectives_list = [tmp_obj.get(machine.machine_num, machine.objective_value) for machine in self.machines ]
+        objective = self.instance.get_objective()
+        if objective in self.max_objectives:
+            return max(objectives_list)
+        elif objective in self.sum_objectives:
+            return sum(objectives_list)
 
-    def fix_cmax(self):
-        """Sets the objective_value of the solution to Cmax
-            which equals to the maximal completion time of every machine
+    def fix_objective(self):
+        """Sets the objective_value of the solution to the correct value
+            according to the objective_values of the machines (without computing them)
         """
-        self.objective_value = max(
-            [machine.completion_time for machine in self.machines])
+        objective = self.instance.get_objective()
+        if objective in self.max_objectives:
+            self.objective_value = max(machine.completion_time for machine in self.machines)
+        elif objective in self.sum_objectives:
+            self.objective_value = sum(machine.completion_time for machine in self.machines)
+
+        return self.objective_value
     
-    def compute_objective(self,objective):    
-        if objective == Objective.wiTi:
-            self.objective = sum([machine.objective for machine in self.machines])
+    def compute_objective(self):
+        """Computes the current solution's objective.
+            By calling the compute objective on each machine.
+        """ 
+        for machine in self.machines:
+            machine.compute_objective()
+        return self.fix_objective()
 
     @classmethod
     def read_txt(cls, path: Path):

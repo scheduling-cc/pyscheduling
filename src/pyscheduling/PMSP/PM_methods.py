@@ -31,12 +31,10 @@ class Metaheuristics_Cmax():
                 insertions_list = []
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
-                        current_machine_schedule = solution.machines[j]
-                        insertions_list.append(
-                            (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
-                        for k in range(1, len(current_machine_schedule.job_schedule)):
+                        current_machine = solution.machines[j]
+                        for k in range(0, len(current_machine.job_schedule) + 1):
                             insertions_list.append(
-                                (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
+                                (i, j, k, current_machine.simulate_remove_insert(-1, i, k, instance)))
 
                 insertions_list = sorted(
                     insertions_list, key=lambda insertion: insertion[3])
@@ -92,8 +90,11 @@ class Metaheuristics_Cmax():
                 for i in remaining_jobs_list:
                     for j in range(instance.m):
                         current_machine_schedule = solution.machines[j]
+                        obj_1 = current_machine_schedule.completion_time_insert(i, 0, instance)
+                        obj_2 = current_machine_schedule.simulate_remove_insert(-1, i, 0, instance)
+                        print(f'inserting job {i} to machine {j}: expected {obj_1} got {obj_2}')
                         insertions_list.append(
-                            (i, j, 0, current_machine_schedule.completion_time_insert(i, 0, instance)))
+                            (i, j, 0, obj_1))
                         for k in range(1, len(current_machine_schedule.job_schedule)):
                             insertions_list.append(
                                 (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
@@ -111,7 +112,7 @@ class Metaheuristics_Cmax():
                     solution.machines[taken_machine].last_job = taken_job
                 remaining_jobs_list.remove(taken_job)
 
-            solution.fix_cmax()
+            solution.fix_objective()
             solveResult.all_solutions.append(solution)
             if not best_solution or best_solution.objective_value > solution.objective_value:
                 best_solution = solution
