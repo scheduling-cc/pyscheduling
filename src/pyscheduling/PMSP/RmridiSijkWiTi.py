@@ -33,40 +33,22 @@ class RmridiSijkWiTi_Instance(ParallelMachines.ParallelInstance):
         Returns:
             int: Lower Bound of maximal completion time
         """
-        # Preparing ranges
-        M = range(self.m)
-        E = range(self.n)
-        # Compute lower bound
-        sum_j = 0
-        all_max_r_j = 0
-        for j in E:
-            min_j = None
-            min_r_j = None
-            for k in M:
-                for i in E:  # (t for t in E if t != j ):
-                    if min_j is None or self.P[j][k] + self.S[k][i][j] < min_j:
-                        min_j = self.P[j][k] + self.S[k][i][j]
-                    if min_r_j is None or self.P[j][k] + self.S[k][i][j] < min_r_j:
-                        min_r_j = self.P[j][k] + self.S[k][i][j]
-            sum_j += min_j
-            all_max_r_j = max(all_max_r_j, min_r_j)
-
-        lb1 = sum_j / self.m
-        LB = max(lb1, all_max_r_j)
-
-        return LB
+        return 
 
 class Heuristics:
     @staticmethod
     def list_heuristic(instance: RmridiSijkWiTi_Instance, rule=1, decreasing=False):
         start_time = perf_counter()
-        solution = ParallelMachines.ParallelSolution(instance=instance)
+        solution = ParallelMachines.ParallelSolution(instance)
         
+        for machine in solution.machines:
+            machine.wiTi_cache = []
+            
         if rule == 1: #Earliest due dates 
             remaining_jobs_list = [(i, instance.D[i])
                                    for i in range(instance.n)]
         elif rule == 2: #Earliest release dates
-            remaining_jobs_list = [(i,instance.R[i]) for i in range(instance.n)]  
+            remaining_jobs_list = [(i,instance.R[i]) for i in range(instance.n)]    # type: ignore
         elif rule == 3: #Earlist due date + mean processing time
             remaining_jobs_list = [(i,instance.D[i] + mean(instance.P[i])) for i in range(instance.n)]
         elif rule == 4:#Earlist release date + mean processing time
@@ -105,13 +87,15 @@ class Heuristics:
             remaining_jobs_list = [(i,instance.D[i] - instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in range(instance.n)]
               
         remaining_jobs_list = sorted(remaining_jobs_list,key=lambda x:x[1],reverse=decreasing)
+        print(remaining_jobs_list)
+        
         for element in remaining_jobs_list:
             i = element[0]
             min_wiTi = None
             start_time = None
             for j in range(instance.m):
                 current_machine_schedule = solution.machines[j]
-                wiTi = current_machine_schedule.weighted_tardiness_insert(i,len(current_machine_schedule.job_schedule),instance) 
+                wiTi = current_machine_schedule.simulate_remove_insert(-1,i,len(current_machine_schedule.job_schedule),instance) 
                 if (min_wiTi == None) or (wiTi < min_wiTi):
                     taken_machine = j
                     min_wiTi = wiTi
@@ -129,7 +113,6 @@ class Heuristics:
             solution.machines[taken_machine].job_schedule.append(ParallelMachines.Job(
                 i, start_time, ci))
             solution.machines[taken_machine].completion_time = ci  # type: ignore
-            solution.machines[taken_machine].wiCi_cache.append(ci)
             solution.machines[taken_machine].last_job = i
             solution.machines[taken_machine].objective = min_wiTi  # type: ignore
             solution.machines[taken_machine].wiTi_cache.append(min_wiTi)
@@ -137,5 +120,6 @@ class Heuristics:
         solution.compute_objective(Objective.wiTi)
         #Add fix objective method according to the obj
         
-        #return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
-        return solution
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        
+        #return solution

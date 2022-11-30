@@ -507,7 +507,8 @@ class Machine:
             obj = obj_cache[startIndex - 1] if obj_cache is not None else 0 # When the cache is not specified, the objective does not depend on it (like Cmax)
             job_prev_i = self.job_schedule[startIndex - 1].id
         else:
-            ci, obj, job_prev_i,  = 0, 0, self.job_schedule[startIndex].id
+            #ci, obj, job_prev_i,  = 0, 0, self.job_schedule[startIndex].id
+            ci, obj, job_prev_i,  = 0, 0, 0
         
         return ci, job_prev_i, obj
     
@@ -560,6 +561,7 @@ class Machine:
             job_prev_i = job_i
 
         self.objective_value = obj
+        
         return obj
 
     def simulate_remove_insert(self, pos_remove: int, job: int, pos_insert: int, instance:  SingleInstance):
