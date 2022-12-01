@@ -1021,7 +1021,7 @@ class NeighbourhoodGeneration():
             random_machine_schedule = random_machine.job_schedule
             other_machine_schedule = other_machine.job_schedule
 
-            old_ci, old_cl = random_machine.completion_time, other_machine.completion_time
+            old_obj_i, old_obj_l = random_machine.objective_value, other_machine.objective_value
 
             random_job_index = random.randrange(len(random_machine_schedule))
             other_job_index = random.randrange(len(other_machine_schedule))
@@ -1031,29 +1031,25 @@ class NeighbourhoodGeneration():
                     other_job_index = random.randrange(
                         len(other_machine_schedule))
 
-                new_ci = random_machine.completion_time_swap(
-                    random_job_index, other_job_index, solution.instance)
-                new_cl = new_ci
+                new_obj_i = random_machine.simulate_swap(random_job_index, other_job_index, solution.instance)
+                new_obj_l = new_obj_i
             else:  # External swap
-
                 job_random, _, _ = random_machine_schedule[random_job_index]
                 other_job, _, _ = other_machine_schedule[other_job_index]
 
-                new_ci = random_machine.completion_time_remove_insert(
+                new_obj_i = random_machine.simulate_remove_insert(
                     random_job_index, other_job, random_job_index, solution.instance)
-                new_cl = other_machine.completion_time_remove_insert(
+                new_obj_l = other_machine.simulate_remove_insert(
                     other_job_index, job_random, other_job_index, solution.instance)
 
             # Apply the move
-            if not force_improve or (new_ci + new_cl <= old_ci + old_cl):
+            if not force_improve or (new_obj_i + new_obj_l <= old_obj_i + old_obj_l):
                 random_machine_schedule[random_job_index], other_machine_schedule[
                     other_job_index] = other_machine_schedule[
                         other_job_index], random_machine_schedule[random_job_index]
-                random_machine.completion_time = random_machine.compute_completion_time(
-                    solution.instance)
-                other_machine.completion_time = other_machine.compute_completion_time(
-                    solution.instance)
-                solution.fix_cmax()
+                random_machine.compute_objective(solution.instance, startIndex=random_job_index)
+                other_machine.compute_objective(solution.instance, startIndex=other_job_index)
+                solution.fix_objective()
 
         return solution
 
@@ -1091,25 +1087,20 @@ class NeighbourhoodGeneration():
             other_job_index = random.randrange(len(other_machine_schedule)) if len(
                 other_machine_schedule) > 0 else 0
 
-            old_ci, old_cl = random_machine.completion_time, other_machine.completion_time
+            old_obj_i, old_obj_l = random_machine.completion_time, other_machine.completion_time
             job_i, _, _ = random_machine_schedule[random_job_index]
 
-            new_ci = random_machine.completion_time_remove(
-                random_job_index, solution.instance)
-            new_cl = other_machine.completion_time_insert(
-                job_i, other_job_index, solution.instance)
+            new_ci = random_machine.simulate_remove_insert(random_job_index, -1, -1, solution.instance)
+            new_cl = other_machine.simulate_remove_insert(-1, job_i, other_job_index, solution.instance)
 
             # Apply the move
-            if not force_improve or (new_ci + new_cl <= old_ci + old_cl):
+            if not force_improve or (new_ci + new_cl <= old_obj_i + old_obj_l):
                 job_i = random_machine_schedule.pop(random_job_index)
                 other_machine_schedule.insert(other_job_index, job_i)
 
-                random_machine.completion_time = random_machine.compute_completion_time(
-                    solution.instance)
-                other_machine.completion_time = other_machine.compute_completion_time(
-                    solution.instance)
-
-                solution.fix_cmax()
+                random_machine.compute_objective(solution.instance, startIndex=random_job_index)
+                other_machine.compute_objective(solution.instance, startIndex=other_job_index)
+                solution.fix_objective()
 
         return solution
 
@@ -1126,24 +1117,19 @@ class NeighbourhoodGeneration():
         Returns:
             ParallelSolution: New solution
         """
-        cmax_machines_list = []
-        other_machines = []
-        for m, machine in enumerate(solution.machines):
-            if machine.completion_time == solution.objective_value:
-                cmax_machines_list.append(m)
-            elif len(machine.job_schedule
-                     ) >= 1:  # Compatible machines have len > 1:
-                other_machines.append(m)
+        bottleneck_machines_list, other_machines_list = \
+                PM_LocalSearch.get_bottleneck_machines(solution)
+        other_machines_list = filter(lambda m: len(solution.machines[m].job_schedule) >= 1 ,other_machines_list)
 
-        if len(cmax_machines_list) > 2:
-            choices = random.sample(cmax_machines_list, 2)
+        if len(bottleneck_machines_list) > 2:
+            choices = random.sample(bottleneck_machines_list, 2)
             m1, m2 = choices[0], choices[1]
-        elif len(cmax_machines_list) == 2:
-            m1, m2 = cmax_machines_list[0], cmax_machines_list[1]
+        elif len(bottleneck_machines_list) == 2:
+            m1, m2 = bottleneck_machines_list[0], bottleneck_machines_list[1]
         else:
-            m1 = cmax_machines_list[0]
-            if len(other_machines) > 0:
-                m2 = random.choice(other_machines)
+            m1 = bottleneck_machines_list[0]
+            if len(other_machines_list) > 0:
+                m2 = random.choice(other_machines_list)
             else:
                 return solution
 
@@ -1156,12 +1142,9 @@ class NeighbourhoodGeneration():
         machine_1_schedule[t1], machine_2_schedule[t2] = machine_2_schedule[
             t2], machine_1_schedule[t1]
 
-        solution.machines[m1].completion_time = solution.machines[m1].compute_completion_time(
-            solution.instance)
-        solution.machines[m2].completion_time = solution.machines[m2].compute_completion_time(
-            solution.instance)
-
-        solution.fix_cmax()
+        solution.machines[m1].compute_objective(solution.instance, startIndex=t1)
+        solution.machines[m2].compute_objective(solution.instance, startIndex=t2)
+        solution.fix_objective()
         return solution
 
     @staticmethod
@@ -1177,22 +1160,17 @@ class NeighbourhoodGeneration():
         Returns:
             ParallelSolution: New solution
         """
-        cmax_machines_list = []
-        other_machines = []
-        for m, machine in enumerate(solution.machines):
-            if machine.completion_time == solution.objective_value:
-                cmax_machines_list.append(m)
-            else:
-                other_machines.append(m)
-
-        if len(cmax_machines_list) > 2:
-            choices = random.sample(cmax_machines_list, 2)
+        bottleneck_machines_list, other_machines_list = \
+                PM_LocalSearch.get_bottleneck_machines(solution)
+        
+        if len(bottleneck_machines_list) > 2:
+            choices = random.sample(bottleneck_machines_list, 2)
             m1, m2 = choices[0], choices[1]
-        elif len(cmax_machines_list) == 2:
-            m1, m2 = cmax_machines_list[0], cmax_machines_list[1]
+        elif len(bottleneck_machines_list) == 2:
+            m1, m2 = bottleneck_machines_list[0], bottleneck_machines_list[1]
         else:
-            m1 = cmax_machines_list[0]
-            m2 = random.choice(other_machines)
+            m1 = bottleneck_machines_list[0]
+            m2 = random.choice(other_machines_list)
 
         t1 = random.randrange(len(solution.machines[m1].job_schedule))
         t2 = random.randrange(len(solution.machines[m2].job_schedule)) if len(
@@ -1204,12 +1182,10 @@ class NeighbourhoodGeneration():
         job_i = machine_1_schedule.pop(t1)
         machine_2_schedule.insert(t2, job_i)
 
-        solution.machines[m1].completion_time = solution.machines[m1].compute_completion_time(
-            solution.instance)
-        solution.machines[m2].completion_time = solution.machines[m2].compute_completion_time(
-            solution.instance)
+        solution.machines[m1].compute_objective(solution.instance, startIndex=t1)
+        solution.machines[m2].compute_objective(solution.instance, startIndex=t2)
+        solution.fix_objective()
 
-        solution.fix_cmax()
         return solution
 
     @staticmethod
@@ -1223,7 +1199,6 @@ class NeighbourhoodGeneration():
             ParallelSolution: New solution
         """
         solution = solution_i.copy()
-
         r = random.random()
         if r < 0.5:
             solution = NeighbourhoodGeneration.random_swap(
@@ -1271,10 +1246,7 @@ class NeighbourhoodGeneration():
         solution_copy = solution.copy()
         r = random.random()
         if r < q0:
-            solution_copy = NeighbourhoodGeneration.restricted_swap(
-                solution_copy)
-        r = random.random()
-        if r < q0:
-            solution_copy = NeighbourhoodGeneration.restricted_insert(
-                solution_copy)
+            solution_copy = NeighbourhoodGeneration.restricted_swap(solution_copy)
+        else:
+            solution_copy = NeighbourhoodGeneration.restricted_insert(solution_copy)
         return solution_copy
