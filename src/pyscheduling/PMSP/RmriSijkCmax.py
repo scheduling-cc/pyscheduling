@@ -14,6 +14,7 @@ from pyscheduling.Problem import Constraints, Objective, Solver
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 from pyscheduling.PMSP.ParallelMachines import parallel_instance
 import pyscheduling.PMSP.PM_methods as pm_methods
+from pyscheduling.Problem import Job
 
 try:
     import gurobipy as gp
@@ -112,7 +113,7 @@ if DOCPLEX_IMPORTED:
                 k_tasks = sorted(k_tasks, key=lambda x: x[1])
                 sol.machines[i].job_schedule = k_tasks
 
-            sol.cmax()
+            sol.compute_objective()
             return sol
 
         @staticmethod
@@ -363,7 +364,7 @@ if GUROBI_IMPORTED:
             for i in range(instance.m):
                 sol.machines[i].job_schedule.sort(key=lambda x: x[2])
 
-            sol.cmax()
+            sol.compute_objective()
             return sol
 
         @staticmethod
@@ -501,61 +502,7 @@ class ExactSolvers():
             print("Gurobi import error: you can not use this solver")
             return None
 
-class Heuristics():
-
-    @staticmethod
-    def constructive(instance: RmriSijkCmax_Instance):
-        """the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
-
-        Args:
-            instance (RmriSijkCmax_Instance): Instance to be solved by the heuristic
-
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        start_time = perf_counter()
-        solution = ParallelMachines.ParallelSolution(instance=instance)
-
-        remaining_jobs_list = [j for j in range(instance.n)]
-
-        while len(remaining_jobs_list) != 0:
-            min_factor = None
-            for i in remaining_jobs_list:
-                for j in range(instance.m):
-                    current_machine_schedule = solution.machines[j]
-                    if (current_machine_schedule.last_job == -1):
-                        startTime = max(current_machine_schedule.completion_time,
-                                        instance.R[i])
-                        factor = startTime + instance.P[i][j] + \
-                            instance.S[j][i][i]  # Added Sj_ii for rabadi
-                    else:
-                        startTime = max(current_machine_schedule.completion_time,
-                                        instance.R[i])
-                        factor = startTime + instance.P[i][j] + instance.S[j][
-                            current_machine_schedule.last_job][i]
-
-                    if not min_factor or (min_factor > factor):
-                        min_factor = factor
-                        taken_job = i
-                        taken_machine = j
-                        taken_startTime = startTime
-            if (solution.machines[taken_machine].last_job == -1):
-                ci = taken_startTime + instance.P[taken_job][taken_machine] + \
-                    instance.S[taken_machine][taken_job][taken_job]  # Added Sj_ii for rabadi
-            else:
-                ci = taken_startTime + instance.P[taken_job][
-                    taken_machine] + instance.S[taken_machine][
-                        solution.machines[taken_machine].last_job][taken_job]
-            solution.machines[taken_machine].completion_time = ci
-            solution.machines[taken_machine].last_job = taken_job
-            solution.machines[taken_machine].job_schedule.append(
-                ParallelMachines.Job(taken_job, taken_startTime, min_factor))
-            remaining_jobs_list.remove(taken_job)
-            if (ci > solution.objective_value):
-                solution.objective_value = ci
-
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+class Heuristics(pm_methods.Heuristics):
 
     @staticmethod
     def ordered_constructive(instance: RmriSijkCmax_Instance, remaining_jobs_list=None, is_random: bool = False):
@@ -580,39 +527,22 @@ class Heuristics():
         for i in remaining_jobs_list:
             min_factor = None
             for j in range(instance.m):
-                current_machine_schedule = solution.machines[j]
-                if (current_machine_schedule.last_job == -1):
-                    startTime = max(current_machine_schedule.completion_time,
-                                    instance.R[i])
-                    factor = startTime + instance.P[i][j] + \
-                        instance.S[j][i][i]  # Added Sj_ii for rabadi
-                else:
-                    startTime = max(current_machine_schedule.completion_time,
-                                    instance.R[i])
-                    factor = startTime + instance.P[i][j] + instance.S[j][
-                        current_machine_schedule.last_job][i]
+                current_machine = solution.machines[j]
+                last_pos = len(current_machine.job_schedule)
+                factor = current_machine.simulate_remove_insert(-1, i, last_pos, instance)
 
                 if not min_factor or (min_factor > factor):
                     min_factor = factor
                     taken_job = i
                     taken_machine = j
-                    taken_startTime = startTime
+            
+            curr_machine = solution.machines[taken_machine]
+            last_pos = len(curr_machine.job_schedule)
+            curr_machine.job_schedule.append( Job(taken_job, -1, -1) )
+            curr_machine.last_job = taken_job
+            curr_machine.compute_objective(instance, startIndex=last_pos)
 
-            # Apply the move
-            if (solution.machines[taken_machine].last_job == -1):
-                ci = taken_startTime + instance.P[taken_job][taken_machine] +\
-                    instance.S[taken_machine][taken_job][taken_job]  # Added Sj_ii for rabadi
-            else:
-                ci = taken_startTime + instance.P[taken_job][
-                    taken_machine] + instance.S[taken_machine][
-                        solution.machines[taken_machine].last_job][taken_job]
-            solution.machines[taken_machine].completion_time = ci
-            solution.machines[taken_machine].last_job = taken_job
-            solution.machines[taken_machine].job_schedule.append(
-                ParallelMachines.Job(taken_job, taken_startTime, min_factor))
-            if (ci > solution.objective_value):
-                solution.objective_value = ci
-
+        solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
@@ -894,7 +824,7 @@ class Heuristics():
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 
-class Metaheuristics(pm_methods.Metaheuristics_Cmax):
+class Metaheuristics(pm_methods.Metaheuristics):
     
     @staticmethod
     def GA(instance: RmriSijkCmax_Instance, **kwargs):
@@ -930,16 +860,12 @@ class GeneticAlgorithm():
         solutions = []
         while i < n_iterations and N < 20:  # ( instance.n*instance.m*50/2000 ):
             # Select the parents
-            # print("Selection")
-            parent_1, parent_2 = GeneticAlgorithm.selection(
-                population, pressure)
+            parent_1, parent_2 = GeneticAlgorithm.selection(population, pressure)
 
             # Cross parents
             pc = random.uniform(0, 1)
             if pc < p_cross:
-                # print("Crossover")
-                child1, child2 = GeneticAlgorithm.crossover(
-                    instance, parent_1, parent_2)
+                child1, child2 = GeneticAlgorithm.crossover(instance, parent_1, parent_2)
             else:
                 child1, child2 = parent_1, parent_2
 
@@ -947,24 +873,20 @@ class GeneticAlgorithm():
             # Child 1
             pm = random.uniform(0, 1)
             if pm < p_mut:
-                #print("mutation 1 ")
                 child1 = GeneticAlgorithm.mutation(instance, child1)
             # Child 2
             pm = random.uniform(0, 1)
             if pm < p_mut:
-                #print("Mutation 2")
                 child2 = GeneticAlgorithm.mutation(instance, child2)
 
             # Local Search
             # Child 1
             pls = random.uniform(0, 1)
             if pls < p_ls:
-                #print("LS 1")
                 child1 = local_search.improve(child1)
             # Child 2
             pls = random.uniform(0, 1)
             if pls < p_ls:
-                #print("LS 2")
                 child2 = local_search.improve(child2)
 
             best_child = child1 if child1.objective_value <= child2.objective_value else child2
@@ -974,7 +896,6 @@ class GeneticAlgorithm():
                 best_solution = best_child
                 N = 0
             # Replacement
-            # print("Remplacement")
             GeneticAlgorithm.replacement(population, child1)
             GeneticAlgorithm.replacement(population, child2)
             i += 1
@@ -993,7 +914,7 @@ class GeneticAlgorithm():
         while nb_solution < pop_size:
             # Generate a solution using a heuristic
             if i == 0:
-                solution_i = Heuristics.constructive(instance).best_solution
+                solution_i = Heuristics.BIBA(instance).best_solution
             elif i <= nb_rules:
                 solution_i = Heuristics.list_heuristic(
                     instance, **{"rule": i}).best_solution
@@ -1008,8 +929,6 @@ class GeneticAlgorithm():
                 solution_i = local_search.improve(solution_i)
 
             if solution_i not in population:
-                #print(i, solution_i.cmax)
-                # population.append(solution_i)
                 heapq.heappush(population, solution_i)
                 nb_solution += 1
             i += 1
@@ -1018,14 +937,9 @@ class GeneticAlgorithm():
 
     @staticmethod
     def selection(population, pressure):
-        #parents_list = random.sample(population,pressure)
-        #best_index = min(enumerate(parents_list),key=lambda x: x[1].cmax)[0]
         parent1 = population[0]
-
         parent2 = random.choice(population)
-        #best_index = min(enumerate(parents_list),key=lambda x: x[1].cmax)[0]
-        #parent2 = parents_list[best_index]
-
+        
         return parent1, parent2
 
     @staticmethod
@@ -1044,10 +958,8 @@ class GeneticAlgorithm():
             child2.machines[i].job_schedule.extend(
                 machine2.job_schedule[0:cross_point_2])
 
-            child1.machines[i].completion_time = child1.machines[i].compute_completion_time(
-                instance)
-            child2.machines[i].completion_time = child2.machines[i].compute_completion_time(
-                instance)
+            child1.machines[i].compute_objective(instance)
+            child2.machines[i].compute_objective(instance)
 
             GeneticAlgorithm.complete_solution(instance, parent_1, child2)
             GeneticAlgorithm.complete_solution(instance, parent_2, child1)
@@ -1072,7 +984,7 @@ class GeneticAlgorithm():
                     child = ParallelMachines.PM_LocalSearch.best_insertion_machine(
                         child, i, job[0])
 
-        child.fix_cmax()
+        child.fix_objective()
 
     @staticmethod
     def replacement(population, child):
@@ -1081,7 +993,6 @@ class GeneticAlgorithm():
                               key=lambda x: x[1].objective_value)[0]
             if child.objective_value <= population[worst_index].objective_value:
                 heapq.heappushpop(population, child)
-                #population[worst_index] = child
                 return True
 
         return False

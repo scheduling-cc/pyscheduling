@@ -4,11 +4,51 @@ from time import perf_counter
 
 import pyscheduling.Problem as RootProblem
 import pyscheduling.PMSP.ParallelMachines as pm
+from pyscheduling.Problem import Job
 
-class Metaheuristics_Cmax():
+class Heuristics():
+
     @staticmethod
-    def meta_raps(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 100):
-        """Returns the solution using the meta-raps algorithm
+    def BIBA(instance: pm.ParallelInstance):
+        """the greedy constructive heuristic (Best insertion based approach) to find an initial solution of a PMSP.
+
+        Args:
+            instance (ParallelInstance): Instance to be solved by the heuristic
+
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the heuristic
+        """
+        start_time = perf_counter()
+        solution = pm.ParallelSolution(instance)
+        remaining_jobs_list = [i for i in range(instance.n)]
+        while len(remaining_jobs_list) != 0:
+            min_factor = None
+            for i in remaining_jobs_list:
+                for j in range(instance.m):
+                    current_machine = solution.machines[j]
+                    last_pos = len(current_machine.job_schedule)
+                    factor = current_machine.simulate_remove_insert(-1, i, last_pos, instance)
+
+                    if not min_factor or (min_factor > factor):
+                        min_factor = factor
+                        taken_job = i
+                        taken_machine = j
+
+            curr_machine = solution.machines[taken_machine]
+            last_pos = len(curr_machine.job_schedule)
+            curr_machine.job_schedule.append( Job(taken_job, -1, -1) )
+            curr_machine.last_job = taken_job
+            curr_machine.compute_objective(instance, startIndex=last_pos)
+
+            remaining_jobs_list.remove(taken_job)
+        
+        solution.fix_objective()
+
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+
+    @staticmethod
+    def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 5):
+        """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
             instance (ParallelInstance): The instance to be solved by the metaheuristic
@@ -24,7 +64,6 @@ class Metaheuristics_Cmax():
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(n_iterations):
-            #solution = instance.create_solution()
             solution = pm.ParallelSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
@@ -36,78 +75,16 @@ class Metaheuristics_Cmax():
                             insertions_list.append(
                                 (i, j, k, current_machine.simulate_remove_insert(-1, i, k, instance)))
 
-                insertions_list = sorted(
-                    insertions_list, key=lambda insertion: insertion[3])
+                insertions_list = sorted(insertions_list, key=lambda insertion: insertion[3])
                 proba = random.random()
                 if proba < p:
                     rand_insertion = insertions_list[0]
                 else:
-                    rand_insertion = random.choice(
-                        insertions_list[0:int(instance.n * r)])
+                    rand_insertion = random.choice(insertions_list[0:int(instance.n * r)])
                 taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.machines[taken_machine].job_schedule.insert(
-                    taken_pos, pm.Job(taken_job, 0, 0))
-                solution.machines[taken_machine].compute_completion_time(
-                    instance, taken_pos)
-                if taken_pos == len(solution.machines[taken_machine].job_schedule)-1:
-                    solution.machines[taken_machine].last_job = taken_job
-                if ci > solution.objective_value:
-                    solution.objective_value = ci
-                remaining_jobs_list.remove(taken_job)
 
-            solution.fix_cmax()
-            solveResult.all_solutions.append(solution)
-            if not best_solution or best_solution.objective_value > solution.objective_value:
-                best_solution = solution
-
-        solveResult.best_solution = best_solution
-        solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
-        return solveResult
-
-    @staticmethod
-    def grasp(instance: pm.ParallelInstance, x : float = 0.5, n_iterations: int = 100):
-        """Returns the solution using the grasp algorithm
-
-        Args:
-            instance (ParallelInstance): Instance to be solved by the metaheuristic
-            x (float): percentage of moves to consider to select the best move
-            n_iterations (int): Number of execution of the metaheuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the metaheuristic
-        """
-        startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
-        solveResult.all_solutions = []
-        best_solution = None
-        for _ in range(n_iterations):
-            #solution = instance.create_solution()
-            solution = pm.ParallelSolution(instance)
-            remaining_jobs_list = [i for i in range(instance.n)]
-            while len(remaining_jobs_list) != 0:
-                insertions_list = []
-                for i in remaining_jobs_list:
-                    for j in range(instance.m):
-                        current_machine_schedule = solution.machines[j]
-                        obj_1 = current_machine_schedule.completion_time_insert(i, 0, instance)
-                        obj_2 = current_machine_schedule.simulate_remove_insert(-1, i, 0, instance)
-                        print(f'inserting job {i} to machine {j}: expected {obj_1} got {obj_2}')
-                        insertions_list.append(
-                            (i, j, 0, obj_1))
-                        for k in range(1, len(current_machine_schedule.job_schedule)):
-                            insertions_list.append(
-                                (i, j, k, current_machine_schedule.completion_time_insert(i, k, instance)))
-
-                insertions_list = sorted(
-                    insertions_list, key=lambda insertion: insertion[3])
-                rand_insertion = random.choice(
-                    insertions_list[0:int(instance.n * x)])
-                taken_job, taken_machine, taken_pos, ci = rand_insertion
-                solution.machines[taken_machine].job_schedule.insert(
-                    taken_pos, pm.Job(taken_job, 0, 0))
-                solution.machines[taken_machine].compute_completion_time(
-                    instance, taken_pos)
+                solution.machines[taken_machine].job_schedule.insert(taken_pos, pm.Job(taken_job, 0, 0))
+                solution.machines[taken_machine].compute_objective(instance, startIndex=taken_pos)
                 if taken_pos == len(solution.machines[taken_machine].job_schedule)-1:
                     solution.machines[taken_machine].last_job = taken_job
                 remaining_jobs_list.remove(taken_job)
@@ -121,6 +98,8 @@ class Metaheuristics_Cmax():
         solveResult.runtime = perf_counter() - startTime
         solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         return solveResult
+
+class Metaheuristics():
 
     @staticmethod
     def lahc(instance: pm.ParallelInstance, **kwargs):
@@ -165,8 +144,7 @@ class Metaheuristics_Cmax():
         local_search = pm.PM_LocalSearch()
 
         if LS:
-            solution_init = local_search.improve(
-                solution_init)  # Improve it with LS
+            solution_init = local_search.improve(solution_init)  # Improve it with LS
 
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
@@ -182,8 +160,7 @@ class Metaheuristics_Cmax():
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
 
-            solution_i = pm.NeighbourhoodGeneration.lahc_neighbour(
-                current_solution)
+            solution_i = pm.NeighbourhoodGeneration.lahc_neighbour(current_solution)
 
             if LS:
                 solution_i = local_search.improve(solution_i)

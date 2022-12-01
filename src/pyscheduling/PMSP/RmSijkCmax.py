@@ -15,6 +15,7 @@ from pyscheduling.Problem import Constraints, Objective, Solver
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 from pyscheduling.PMSP.ParallelMachines import parallel_instance
 import pyscheduling.PMSP.PM_methods as pm_methods
+from pyscheduling.Problem import Job
 
 try:
     import docplex
@@ -29,7 +30,7 @@ DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
 
     def init_sol_method(self):
-        return Heuristics.constructive
+        return Heuristics.BIBA
     
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
@@ -123,7 +124,7 @@ if DOCPLEX_IMPORTED:
                 k_tasks = sorted(k_tasks, key= lambda x: x[1])
                 sol.machines[k].job_schedule = k_tasks
             
-            sol.cmax()
+            sol.compute_objective()
             return sol
 
         @staticmethod
@@ -254,55 +255,7 @@ class ExactSolvers():
             print("Docplex import error: you can not use this solver")
             return None
 
-class Heuristics():
-
-    @staticmethod
-    def constructive(instance: RmSijkCmax_Instance):
-        """the greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of the job to schedule at a given time
-
-        Args:
-            instance (RmSijkCmax_Instance): Instance to be solved by the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        start_time = perf_counter()
-        solution = ParallelMachines.ParallelSolution(instance=instance)
-        remaining_jobs_list = [i for i in range(instance.n)]
-        while len(remaining_jobs_list) != 0:
-            min_factor = None
-            for i in remaining_jobs_list:
-                for j in range(instance.m):
-                    current_machine_schedule = solution.machines[j]
-                    if (current_machine_schedule.last_job == -1):
-                        factor = current_machine_schedule.completion_time + \
-                            instance.P[i][j]
-                    else:
-                        factor = current_machine_schedule.completion_time + \
-                            instance.P[i][j] + \
-                            instance.S[j][current_machine_schedule.last_job][i]
-
-                    if not min_factor or (min_factor > factor):
-                        min_factor = factor
-                        taken_job = i
-                        taken_machine = j
-            if (solution.machines[taken_machine].last_job == -1):
-                ci = solution.machines[taken_machine].completion_time + \
-                    instance.P[taken_job][taken_machine]
-            else:
-                ci = solution.machines[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
-                    instance.S[taken_machine][solution.machines[taken_machine].last_job][taken_job]
-
-            solution.machines[taken_machine].job_schedule.append(ParallelMachines.Job(
-                taken_job, solution.machines[taken_machine].completion_time, ci))
-            solution.machines[taken_machine].completion_time = ci
-            solution.machines[taken_machine].last_job = taken_job
-
-            remaining_jobs_list.remove(taken_job)
-            if (ci > solution.objective_value):
-                solution.objective_value = ci
-
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+class Heuristics(pm_methods.Heuristics):
 
     @staticmethod
     def list_heuristic(instance: RmSijkCmax_Instance, rule=1, decreasing=False):
@@ -464,32 +417,22 @@ class Heuristics():
             i = element[0]
             min_factor = None
             for j in range(instance.m):
-                current_machine_schedule = solution.machines[j]
-                if (current_machine_schedule.last_job == -1):  # First Job
-                    factor = current_machine_schedule.completion_time + \
-                        instance.P[i][j]
-                else:
-                    factor = current_machine_schedule.completion_time + \
-                        instance.P[i][j] + \
-                        instance.S[j][current_machine_schedule.last_job][i]
+                current_machine = solution.machines[j]
+                last_pos = len(current_machine.job_schedule)
+                factor = current_machine.simulate_remove_insert(-1, i, last_pos, instance)
 
                 if not min_factor or (min_factor > factor):
                     min_factor = factor
                     taken_job = i
                     taken_machine = j
 
-            if (solution.machines[taken_machine].last_job == -1):
-                ci = solution.machines[taken_machine].completion_time + \
-                    instance.P[taken_job][taken_machine]
-            else:
-                ci = solution.machines[taken_machine].completion_time + instance.P[taken_job][taken_machine] + \
-                    instance.S[taken_machine][solution.machines[taken_machine].last_job][taken_job]
-            solution.machines[taken_machine].job_schedule.append(ParallelMachines.Job(
-                taken_job, solution.machines[taken_machine].completion_time, ci))
-            solution.machines[taken_machine].completion_time = ci
-            solution.machines[taken_machine].last_job = taken_job
-            if (ci > solution.objective_value):
-                solution.objective_value = ci
+            curr_machine = solution.machines[taken_machine]
+            last_pos = len(curr_machine.job_schedule)
+            curr_machine.job_schedule.append( Job(taken_job, -1, -1) )
+            curr_machine.last_job = taken_job
+            curr_machine.compute_objective(instance, startIndex=last_pos)
+
+        solution.fix_objective()
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @classmethod
@@ -502,7 +445,7 @@ class Heuristics():
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 
-class Metaheuristics(pm_methods.Metaheuristics_Cmax):
+class Metaheuristics(pm_methods.Metaheuristics):
     @staticmethod
     def antColony(instance: RmSijkCmax_Instance, **data):
         """Returns the solution using the ant colony algorithm
@@ -733,10 +676,9 @@ class AntColony(object):
 
             current_machine = solution_path.machines[m]
             current_machine.job_schedule = machine_schedule
-            current_machine.compute_completion_time(self.instance)
+            current_machine.compute_objective(self.instance)
 
-        solution_path.cmax()
-
+        solution_path.compute_objective()
         return solution_path
 
     def pick_task(self, prev, m, pheromone, affected_tasks, visited):
