@@ -79,25 +79,6 @@ class Heuristics(pm_methods.Heuristics):
             remaining_jobs_list = [(i,instance.D[i] - instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in range(instance.n)]
               
         remaining_jobs_list = sorted(remaining_jobs_list,key=lambda x:x[1],reverse=decreasing)
-        
-        for element in remaining_jobs_list:
-            i = element[0]
-            min_wiTi = None
-            start_time = None
-            for j in range(instance.m):
-                current_machine = solution.machines[j]
-                last_pos = len(current_machine.job_schedule)
-                wiTi = current_machine.simulate_remove_insert(-1,i, last_pos,instance) 
-                if (min_wiTi == None) or (wiTi < min_wiTi):
-                    taken_machine = j
-                    min_wiTi = wiTi
-            
-            curr_machine = solution.machines[taken_machine]
-            last_pos = len(curr_machine.job_schedule)
-            curr_machine.job_schedule.append( Job(i, -1, -1) )
-            curr_machine.last_job = i
-            curr_machine.compute_objective(instance, startIndex=last_pos)
+        jobs_list = [element[0] for element in remaining_jobs_list]
 
-        solution.fix_objective()        
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
-        
+        return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)

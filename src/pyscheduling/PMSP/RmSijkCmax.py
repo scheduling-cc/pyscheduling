@@ -413,27 +413,9 @@ class Heuristics(pm_methods.Heuristics):
 
         remaining_jobs_list = sorted(
             remaining_jobs_list, key=lambda job: job[1], reverse=decreasing)
-        for element in remaining_jobs_list:
-            i = element[0]
-            min_factor = None
-            for j in range(instance.m):
-                current_machine = solution.machines[j]
-                last_pos = len(current_machine.job_schedule)
-                factor = current_machine.simulate_remove_insert(-1, i, last_pos, instance)
+        jobs_list = [element[0] for element in remaining_jobs_list]
 
-                if not min_factor or (min_factor > factor):
-                    min_factor = factor
-                    taken_job = i
-                    taken_machine = j
-
-            curr_machine = solution.machines[taken_machine]
-            last_pos = len(curr_machine.job_schedule)
-            curr_machine.job_schedule.append( Job(taken_job, -1, -1) )
-            curr_machine.last_job = taken_job
-            curr_machine.compute_objective(instance, startIndex=last_pos)
-
-        solution.fix_objective()
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)
 
     @classmethod
     def all_methods(cls):
