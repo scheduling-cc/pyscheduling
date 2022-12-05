@@ -6,6 +6,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import Self
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -248,30 +249,77 @@ class FlowShopInstance(RootProblem.Instance):
 
         return S
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
+    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+        """Random generation of jobs weights table
+
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Wmin (int): Minimal weight
+            Wmax (int): Maximal weight
+
+        Returns:
+           list[int]: Table of jobs weights
+        """
+        W = []
+        for j in range(self.n):
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(Wmin, Wmax))
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Wmin+Wmax*value))
+                while n < Wmin or n > Wmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Wmin+Wmax*value))
+            W.append(n)
+
+        return W
+
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
             law (GenerationLaw): probablistic law of generation
+            PJobs (list[float]): Table of processing time
             Pmin (int): Minimal processing time
             Pmax (int): Maximal processing time
+            fraction (float): due time factor
 
         Returns:
             list[int]: due time table
         """
-        pass
+        di = []
+        sumP = sum(PJobs)
+        for j in range(self.n):
+            if hasattr(self, 'R'):
+                startTime = self.R[j] + PJobs[j]
+            else:
+                startTime = PJobs[j]
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(
+                    startTime, startTime + due_time_factor * sumP))
+
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            di.append(n)
+
+        return di
 
 
 @dataclass
 class Machine:
     
-    objective: int = 0
+    objective_value: int = 0
     last_job: int = -1
-    job_schedule: list[Job] = field(default_factory=list)
+    oper_schedule: list[Job] = field(default_factory=list)
     
-    
-    def __init__(self, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+    def __init__(self, machine_num:int, oper_schedule: list[Job] = None, last_job: int = -1, objective_value: int = 0) -> None:
         """Constructor of Machine
 
         Args:
@@ -279,26 +327,23 @@ class Machine:
             last_job (int, optional): ID of the last job set on the machine. Defaults to -1.
             job_schedule (list[Job], optional): list of Jobs scheduled on the machine in the exact given sequence. Defaults to None.
         """
-        self.objective = objective
+        self.machine_num = machine_num
+        self.objective_value = objective_value
         self.last_job = last_job
-        if job_schedule is None:
-            self.job_schedule = []
+        if oper_schedule is None:
+            self.oper_schedule = []
         else:
-            self.job_schedule = job_schedule
+            self.oper_schedule = oper_schedule
 
     def __str__(self):
-        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective)
+        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.oper_schedule])) + " | " + str(self.objective_value)
 
     def __eq__(self, other):
-        same_schedule = other.job_schedule == self.job_schedule
+        same_schedule = other.oper_schedule == self.oper_schedule
         return (same_schedule)
 
     def copy(self):
-        if self.wiCi_index is None and self.wiTi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule))
-        elif self.wiCi_index is None:
-            return Machine(self.objective, self.last_job, list(self.job_schedule),wiTi_index=list(self.wiTi_index))
-        else: return Machine(self.objective, self.last_job, list(self.job_schedule),wiCi_index=list(self.wiCi_index))
+        return Machine(self.machine_num, self.objective_value, self.last_job, list(self.job_schedule))
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -308,43 +353,64 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def completion_time(self, instance : FlowShopInstance, startIndex : int = 0):
-        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the maximal completion time
+    def compute_current_ci(self, instance: FlowShopInstance, prev_machine_ci: int ,prev_job_ci: int, job_prev_i: int, job_i: int):
+        """Computes the current ci when job_i comes after job_prev_i.
+        This takes into account if we have setup times and release dates.
+
+        Args:
+            instance (SingelInstance): the instance to be solved.
+            prev_machine_ci (int): the ci of the same job on the previous machine
+            prev_ci (int): the completion time of the previous job on the same machine
+            job_prev_i (int): id of the job that precedes the inserted job 
+            job_i (int): id of the job to be inserted at the end
+
+        Returns:
+            tuple: (ci, start_time), the new completion time and start_time of the inserted job.
+        """
+        startTime = max(prev_machine_ci, prev_job_ci, instance.R[job_i]) if hasattr(instance, 'R') else max(prev_machine_ci, prev_job_ci)
+        setupTime = instance.S[self.machine_num][job_prev_i][job_i] if hasattr(instance, 'S') else 0
+        remaining_setupTime = max(setupTime-(startTime-prev_job_ci),0)
+        proc_time = instance.P[job_i][self.machine_num]
+
+        ci = startTime + remaining_setupTime + proc_time
+        return startTime, ci
+    
+    def fix_schedule(self, instance: FlowShopInstance, prev_machine: Self, startIndex: int = 0):
+        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job
 
         Args:
             instance (SingleInstance): The instance associated to the machine
             startIndex (int) : The job index the function starts operating from
 
         Returns:
-            int: Makespan
+            int: objective
         """
-        if len(self.job_schedule) > 0:
-            job_schedule_len = len(self.job_schedule)
-            if startIndex > 0: 
-                ci = self.job_schedule[startIndex - 1].end_time
-                job_prev_i = self.job_schedule[startIndex - 1].id
-            else: 
-                ci = 0
-                job_prev_i = self.job_schedule[startIndex].id
-            for i in range(startIndex,job_schedule_len):
-                job_i = self.job_schedule[i].id
+        if startIndex > 0:
+            job_prev_i, _, ci = self.oper_schedule[startIndex - 1]
+        else:
+            job_prev_i, ci = self.oper_schedule[startIndex].id, 0
+        
+        for i in range(startIndex, len(self.oper_schedule)):
+            job_i = self.oper_schedule[i].id
+            prev_machine_ci = prev_machine.oper_schedule[i].end_time if prev_machine is not None else 0
+            ci, start_time = self.compute_current_ci(instance, prev_machine_ci, ci, job_prev_i, job_i)
+            self.oper_schedule[i] = Job(job_i, start_time, ci)
+            job_prev_i = job_i
 
-                if hasattr(instance, 'R'):
-                    startTime = max(ci, instance.R[job_i])
-                else:
-                    startTime = ci
-                if hasattr(instance, 'S'):
-                    setupTime = instance.S[job_prev_i][job_i]
-                else:
-                    setupTime = 0
-                proc_time = instance.P[job_i]
-                ci = startTime + setupTime + proc_time
-
-                self.job_schedule[i] = Job(job_i, startTime, ci)
-                job_prev_i = job_i
-        self.objective = ci
+        self.last_job = job_i
+        self.objective_value = ci
         return ci
 
+    def idle_time(self):
+        """returns the idle time on the machine
+
+        Returns:
+            int: idle time of the machine
+        """
+        idleTime = self.oper_schedule[0].start_time
+        for job_index in range(len(self.oper_schedule)-1):
+            idleTime += self.oper_schedule[job_index+1].start_time - self.oper_schedule[job_index].end_time
+        return idleTime
 
 @dataclass
 class FlowShopSolution(RootProblem.Solution):
@@ -365,7 +431,7 @@ class FlowShopSolution(RootProblem.Solution):
         if machines is None:
             self.machines = []
             for i in range(instance.m):
-                machine = Machine(0, -1, [])
+                machine = Machine(i, [], -1, 0)
                 self.machines.append(machine)
         else:
             self.machines = machines
@@ -381,11 +447,8 @@ class FlowShopSolution(RootProblem.Solution):
         for m in self.machines:
             copy_machines.append(m.copy())
 
-        copy_solution = FlowShopSolution(self.instance)
-        for i in range(self.instance.m):
-            copy_solution.machines[i] = copy_machines[i]
-        copy_solution.job_schedule = list(self.job_schedule)
-        copy_solution.objective_value = self.objective_value
+        copy_solution = FlowShopSolution(self.instance, copy_machines,
+                                        list(self.job_schedule), self.objective_value)
         return copy_solution
 
     def __lt__(self, other):
@@ -393,73 +456,49 @@ class FlowShopSolution(RootProblem.Solution):
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
     
-    def init_machines_schedule(self):
+    def propagate_schedule(self, startIndex: int=0):
         """Fills the job_schedule of every machine from job_schedule of Solution
         """
-        for machine in self.machines :
-            machine.job_schedule = [Job(job_id,0,0) for job_id in self.job_schedule]
-    
-    def cmax(self, start_job_index : int = 0):
-        """Fills the job_schedule with the correct sequence of start_time and completion_time of each job
-         at every machine and returns the maximal completion time which is the completion time of the last machine
-
-        Args:
-            start_job_index (int, optional): starting index to update the job_schedule from for every stage (machine). Defaults to 0.
-        """
-        if start_job_index == 0 : self.init_machines_schedule()
-        elif len(self.job_schedule) != len(self.machines[0].job_schedule):
+        if startIndex == 0: 
             for machine in self.machines :
-                machine.job_schedule.insert(start_job_index,Job(0,0,0))
-        ci = 0
-        prev_job = -1
-        if start_job_index > 0:
-            ci = self.machines[0].job_schedule[start_job_index - 1].end_time
-            prev_job = self.machines[0].job_schedule[start_job_index - 1].id
-        job_index = start_job_index
-        for job_id in self.job_schedule[start_job_index:]:
-            if hasattr(self.instance,'S'):
-                if prev_job == -1:
-                    setupTime = self.instance.S[0][job_id][job_id]
-                else:
-                    setupTime = self.instance.S[0][prev_job][job_id]
-            else: setupTime = 0
-            startTime = ci
-            ci = startTime + setupTime + self.instance.P[job_id][0]
-            self.machines[0].job_schedule[job_index] = (Job(job_id,startTime,ci))
-            job_index += 1
-            prev_job = job_id
-        self.machines[0].objective = ci
-        self.machines[0].last_job = job_id
+                machine.oper_schedule = [Job(job_id,0,0) for job_id in self.job_schedule]
 
-        prev_machine = 0
-        for machine_id in range(1,self.instance.m):
-            ci = self.machines[prev_machine].job_schedule[0].end_time
-            prev_job = -1
-            if start_job_index > 0:
-                ci = self.machines[machine_id].job_schedule[start_job_index - 1].end_time
-                prev_job = self.machines[machine_id].job_schedule[start_job_index - 1].id
-            job_index = start_job_index
-            for job_id in self.job_schedule[start_job_index:]:
-                if hasattr(self.instance,'S'):
-                    if prev_job == -1:
-                        setupTime = self.instance.S[machine_id][job_id][job_id]
-                    else:
-                        setupTime = self.instance.S[machine_id][prev_job][job_id]
-                else: setupTime = 0
-                startTime = max(ci,self.machines[prev_machine].job_schedule[job_index].end_time)
-                remaining_setupTime = max(setupTime-(startTime-ci),0)
-                ci = startTime + remaining_setupTime + self.instance.P[job_id][machine_id]
-                self.machines[machine_id].job_schedule[job_index] = Job(job_id,startTime,ci)
-                job_index += 1
-                prev_job = job_id
-            self.machines[machine_id].objective = ci
-            self.machines[machine_id].last_job = job_id
-
-            prev_machine = machine_id
-
-        self.objective_value = self.machines[self.instance.m - 1].objective
+        elif len(self.job_schedule) != len(self.machines[0].oper_schedule):
+            inserted_job_id = self.job_schedule[startIndex]
+            for machine in self.machines :
+                machine.oper_schedule.insert(startIndex,Job(inserted_job_id,0,0))
     
-    def idle_time_cmax_insert_last_pos(self, job_id : int):
+    def fix_objective(self):
+        objective = self.instance.get_objective()
+        if objective == RootProblem.Objective.Cmax:
+            self.objective_value = self.machines[-1].objective_value
+        elif objective == RootProblem.Objective.wiCi:
+            self.objective_value = sum( self.instance.W[job.id] * job.end_time for job in self.machines[-1].oper_schedule )
+        elif objective == RootProblem.Objective.wiFi:
+            self.objective_value = sum( self.instance.W[job.id] * (job.end_time - self.instance.R[job.id]) for job in self.machines[-1].oper_schedule )
+        elif objective == RootProblem.Objective.wiTi:
+            self.objective_value = sum( self.instance.W[job.id] * max(job.end_time-self.instance.D[job.id],0) for job in self.machines[-1].oper_schedule )
+        elif objective == RootProblem.Objective.Lmax:
+            self.objective_value = max( 0, max( job.end_time-self.instance.D[job.id] for job in self.machines[-1].oper_schedule ) )
+
+        return self.objective_value
+
+    def compute_objective(self, startIndex: int = 0):
+        self.propagate_schedule(startIndex)
+        prev_machine = None
+        for i, machine in enumerate(self.machines):
+            machine.fix_schedule(self.instance, prev_machine, startIndex)
+            prev_machine = machine
+        
+        for j in range(len(self.job_schedule)):
+            job_id = self.job_schedule[j].id
+            start_time = self.machines[0].oper_schedule[j].start_time
+            end_time = self.machines[-1].oper_schedule[j].end_time
+            self.job_schedule[j] = Job( job_id, start_time, end_time )
+
+        return self.fix_objective()
+
+    def simulate_insert_last(self, job_id : int):
         """returns start_time and completion_time of job_id if scheduled at the end of job_schedule
         at every stage (machine)
 
@@ -468,41 +507,14 @@ class FlowShopSolution(RootProblem.Solution):
 
         Returns:
             int, int: start_time of job_id, completion_time of job_id
-        """
-        ci = 0
-        prev_job = -1
-        job_schedule_len = len(self.job_schedule)
-        if job_schedule_len > 0:
-            ci = self.machines[0].job_schedule[job_schedule_len - 1].end_time
-            prev_job = self.machines[0].job_schedule[job_schedule_len - 1].id
- 
+        """ 
+        prev_machine_ci = 0
+        for i, machine in enumerate(self.machines):
+            prev_job, _, prev_ci = machine.oper_schedule[-1] if len(machine.oper_schedule) > 0 else (job_id, 0, 0)
+            start_time, end_time = machine.compute_current_ci(self.instance, prev_machine_ci, prev_ci, prev_job, job_id)
+            prev_machine_ci = end_time
 
-        if hasattr(self.instance,'S'):
-            if prev_job == -1:
-                setupTime = self.instance.S[0][job_id][job_id]
-            else:
-                setupTime = self.instance.S[0][prev_job][job_id]
-        else: setupTime = 0
-        startTime = ci
-        new_ci = startTime + setupTime + self.instance.P[job_id][0]
-
-        for machine_id in range(1,self.instance.m):
-            ci = new_ci
-            prev_job = -1
-            if job_schedule_len > 0:
-                ci = self.machines[machine_id].job_schedule[job_schedule_len - 1].end_time
-                prev_job = self.machines[machine_id].job_schedule[job_schedule_len - 1].id
-                if hasattr(self.instance,'S'):
-                    if prev_job == -1:
-                        setupTime = self.instance.S[machine_id][job_id][job_id]
-                    else:
-                        setupTime = self.instance.S[machine_id][prev_job][job_id]
-                else: setupTime = 0
-                startTime = max(ci,new_ci)
-                remaining_setupTime = max(setupTime-(startTime-ci),0)
-                new_ci = startTime + remaining_setupTime + self.instance.P[job_id][machine_id]
-
-        return startTime,new_ci
+        return start_time, end_time
     
     def idle_time(self):
         """returns the idle time of the last machine
@@ -510,11 +522,7 @@ class FlowShopSolution(RootProblem.Solution):
         Returns:
             int: idle time of the last machine
         """
-        last_machine = self.machines[self.instance.m-1]
-        idleTime = last_machine.job_schedule[0].start_time
-        for job_index in range(len(last_machine.job_schedule)-1):
-            idleTime += last_machine.job_schedule[job_index+1].start_time - last_machine.job_schedule[job_index].end_time
-        return idleTime
+        return self.machines[-1].idle_time()
     
     @classmethod
     def read_txt(cls, path: Path):
@@ -532,7 +540,7 @@ class FlowShopSolution(RootProblem.Solution):
         configuration_ = []
         for i in range(2, len(content)):
             line_content = content[i].split('|')
-            configuration_.append(Machine(int(line_content[0]), int(line_content[2]), job_schedule=[Job(
+            configuration_.append(Machine(int(line_content[0]), int(line_content[2]), oper_schedule=[Job(
                 int(j[0]), int(j[1]), int(j[2])) for j in [job.strip()[1:len(job.strip())-1].split(',') for job in line_content[1].split(':')]]))
         solution = cls(objective_value=objective_value_,
                        machines=configuration_)
@@ -575,7 +583,7 @@ class FlowShopSolution(RootProblem.Solution):
                 gnt.grid(True)
 
                 for j in range(len(self.machines)):
-                    schedule = self.machines[j].job_schedule
+                    schedule = self.machines[j].oper_schedule
                     prev = -1
                     prevEndTime = 0
                     for element in schedule:

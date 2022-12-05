@@ -4,6 +4,7 @@ from time import perf_counter
 
 import pyscheduling.Problem as RootProblem
 import pyscheduling.FS.FlowShop as FlowShop
+from pyscheduling.Problem import Job
 
 try:
     import docplex
@@ -39,7 +40,7 @@ class Heuristics_Cmax():
                 if job_i != job_j :
                     pair = (job_i,job_j)
                     solution.job_schedule = [job_i,job_j] 
-                    solution.cmax()
+                    solution.compute_objective()
                     idleTime_ij = solution.idle_time()
                     idleTime_ij_list.append((pair,idleTime_ij))
                     if min_idleTime is None or idleTime_ij<min_idleTime : min_idleTime = idleTime_ij
@@ -48,28 +49,27 @@ class Heuristics_Cmax():
         #step 2 : Break the tie by choosing the pair based on performance at increasingly earlier machines (m-2,m-3,..)
         # For simplicity purposes, a random choice is performed
         min_IT = random.choice(min_IT_list)
-                
-        taken_pair = min_IT[0]
-        job_schedule = [taken_pair[0],taken_pair[1]]
+        
+        i, j = min_IT[0] # Taken pair
+        job_schedule = [Job(i, 0, 0), Job(j, 0, 0)]
         solution.job_schedule = job_schedule
-        solution.cmax()
+        solution.compute_objective()
         #step 3 :
-        remaining_jobs_list = [job_id for job_id in list(range(instance.n)) if job_id not in job_schedule]
+        remaining_jobs_list = [job_id for job_id in list(range(instance.n)) if job_id not in {i, j}]
 
         while len(remaining_jobs_list) > 0 :
             min_IT_factor = None
             old_idleTime = solution.idle_time()
             for job_id in remaining_jobs_list:
-                last_job_startTime, new_cmax = solution.idle_time_cmax_insert_last_pos(job_id)
-                factor = old_idleTime + (last_job_startTime - solution.machines[instance.m-1].objective)
+                last_job_startTime, new_cmax = solution.simulate_insert_last(job_id)
+                factor = old_idleTime + (last_job_startTime - solution.machines[instance.m-1].objective_value)
                 if min_IT_factor is None or factor < min_IT_factor:
                     min_IT_factor = factor
                     taken_job = job_id
-            job_schedule.append(taken_job)
-            remaining_jobs_list.remove(taken_job)
-            solution.job_schedule = job_schedule
-            solution.cmax(len(job_schedule)-1)
 
+            solution.job_schedule.append(Job(taken_job, 0, 0))
+            remaining_jobs_list.remove(taken_job)
+            solution.compute_objective(startIndex=len(job_schedule)-1)
 
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
@@ -118,9 +118,9 @@ if DOCPLEX_IMPORTED:
                     k_tasks.append(FlowShop.Job(i,start,end))
 
                     k_tasks = sorted(k_tasks, key= lambda x: x[1])
-                    sol.machines[k].job_schedule = [job[0] for job in k_tasks]
+                    sol.machines[k].oper_schedule = [job[0] for job in k_tasks]
             
-            sol.job_schedule = sol.machines[0].job_schedule
+            sol.job_schedule = sol.machines[0].oper_schedule
             
             return sol
         
