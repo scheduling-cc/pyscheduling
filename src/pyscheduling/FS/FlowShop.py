@@ -516,6 +516,29 @@ class FlowShopSolution(RootProblem.Solution):
 
         return start_time, end_time
     
+    def simulate_insert_objective(self, job_id, start_time, end_time):
+        """Returns the new objective if job_id is inserted at the end with start_time and end_time
+
+        Args:
+            job_id (int): id of the inserted job
+            start_time (int): start time of the job
+            end_time (int): end time of the job
+        
+        Returns:
+            int: the new objective
+        """
+        objective = self.instance.get_objective()
+        if objective == RootProblem.Objective.Cmax:
+            return end_time
+        elif objective == RootProblem.Objective.wiCi:
+            return self.objective_value + self.instance.W[job_id] * end_time
+        elif objective == RootProblem.Objective.wiFi:
+            return self.objective_value + self.instance.W[job_id] * (end_time - self.instance.R[job_id])
+        elif objective == RootProblem.Objective.wiTi:
+            return self.objective_value + self.instance.W[job_id] * max(end_time-self.instance.D[job_id],0)
+        elif objective == RootProblem.Objective.Lmax:
+            return max( self.objective_value, end_time-self.instance.D[job_id]) 
+
     def idle_time(self):
         """returns the idle time of the last machine
 
