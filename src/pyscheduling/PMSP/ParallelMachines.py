@@ -437,12 +437,12 @@ class Machine(SMachine):
         Returns:
             tuple: (ci, start_time), the new completion time and start_time of the inserted job.
         """
-        
         startTime = max(prev_ci, instance.R[job_i]) if hasattr(instance, 'R') else prev_ci
         setupTime = instance.S[self.machine_num][job_prev_i][job_i] if hasattr(instance, 'S') else 0
         proc_time = instance.P[job_i][self.machine_num]
 
         ci = startTime + setupTime + proc_time
+        
         return ci, startTime
 
 @dataclass
@@ -519,7 +519,7 @@ class ParallelSolution(RootProblem.Solution):
         if objective in self.max_objectives:
             self.objective_value = max(machine.completion_time for machine in self.machines)
         elif objective in self.sum_objectives:
-            self.objective_value = sum(machine.completion_time for machine in self.machines)
+            self.objective_value = sum(machine.objective_value for machine in self.machines)
 
         return self.objective_value
     

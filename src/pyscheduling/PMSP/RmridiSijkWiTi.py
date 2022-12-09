@@ -80,5 +80,5 @@ class Heuristics(pm_methods.Heuristics):
               
         remaining_jobs_list = sorted(remaining_jobs_list,key=lambda x:x[1],reverse=decreasing)
         jobs_list = [element[0] for element in remaining_jobs_list]
-
+        
         return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)
