@@ -6,7 +6,6 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Self
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -343,7 +342,7 @@ class Machine:
         return (same_schedule)
 
     def copy(self):
-        return Machine(self.machine_num, self.objective_value, self.last_job, list(self.job_schedule))
+        return Machine(self.machine_num, list(self.oper_schedule), self.last_job, self.objective_value)
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -375,7 +374,7 @@ class Machine:
         ci = startTime + remaining_setupTime + proc_time
         return startTime, ci
     
-    def fix_schedule(self, instance: FlowShopInstance, prev_machine: Self, startIndex: int = 0):
+    def fix_schedule(self, instance: FlowShopInstance, prev_machine, startIndex: int = 0):
         """Fills the job_schedule with the correct sequence of start_time and completion_time of each job
 
         Args:
@@ -386,14 +385,14 @@ class Machine:
             int: objective
         """
         if startIndex > 0:
-            job_prev_i, _, ci = self.oper_schedule[startIndex - 1]
+            job_prev_i, ci = self.oper_schedule[startIndex - 1].id, self.oper_schedule[startIndex - 1].end_time
         else:
-            job_prev_i, ci = self.oper_schedule[startIndex].id, 0
+            job_prev_i, ci = (self.oper_schedule[startIndex].id, 0)
         
         for i in range(startIndex, len(self.oper_schedule)):
             job_i = self.oper_schedule[i].id
             prev_machine_ci = prev_machine.oper_schedule[i].end_time if prev_machine is not None else 0
-            ci, start_time = self.compute_current_ci(instance, prev_machine_ci, ci, job_prev_i, job_i)
+            start_time, ci = self.compute_current_ci(instance, prev_machine_ci, ci, job_prev_i, job_i)
             self.oper_schedule[i] = Job(job_i, start_time, ci)
             job_prev_i = job_i
 
@@ -435,8 +434,10 @@ class FlowShopSolution(RootProblem.Solution):
                 self.machines.append(machine)
         else:
             self.machines = machines
-        if job_schedule is None: job_schedule = []
-        else: self.job_schedule = job_schedule
+        if job_schedule is None: 
+            self.job_schedule = []
+        else: 
+            self.job_schedule = job_schedule
         self.objective_value = 0
 
     def __str__(self):
@@ -461,13 +462,19 @@ class FlowShopSolution(RootProblem.Solution):
         """
         if startIndex == 0: 
             for machine in self.machines :
-                machine.oper_schedule = [Job(job_id,0,0) for job_id in self.job_schedule]
+                machine.oper_schedule = [Job(job.id,0,0) for job in self.job_schedule]
 
-        elif len(self.job_schedule) != len(self.machines[0].oper_schedule):
-            inserted_job_id = self.job_schedule[startIndex]
+        elif len(self.job_schedule) != len(self.machines[0].oper_schedule): # Inserting one job only
+            inserted_job_id = self.job_schedule[startIndex].id
             for machine in self.machines :
                 machine.oper_schedule.insert(startIndex,Job(inserted_job_id,0,0))
-    
+
+        else: # Change starting from startIndex
+            for machine in self.machines:
+                for i in range(startIndex, len(self.job_schedule)):
+                    job_id, start, end = self.job_schedule[i]
+                    machine.oper_schedule[i] = Job(job_id, start, end)
+
     def fix_objective(self):
         objective = self.instance.get_objective()
         if objective == RootProblem.Objective.Cmax:
@@ -651,4 +658,83 @@ class FS_LocalSearch(RootProblem.LocalSearch):
 
 
 class NeighbourhoodGeneration():
-    pass
+
+    @staticmethod
+    def random_insert(solution: FlowShopSolution, force_improve: bool = True, inplace: bool = True):
+        """Performs an insert of a random job in a random position
+
+        Args:
+            solution (FlowShopSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+
+        Returns:
+            FlowShopSolution: New solution
+        """
+        if not inplace or force_improve:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        # Select the two different random jobs to be swapped 
+        job_schedule = solution_copy.job_schedule
+        job_schedule_len = len(job_schedule)
+        old_objective = solution_copy.objective_value
+
+        # Get the job and the position
+        random_job_index = random.randrange(job_schedule_len)
+        random_pos = random_job_index
+        while random_pos == random_job_index:
+            random_pos = random.randrange(job_schedule_len)
+
+        print(random_job_index, random_pos)
+
+        # Simulate applying the swap move
+        random_job = job_schedule.pop(random_job_index)
+        job_schedule.insert(random_pos, random_job)
+        new_objective = solution_copy.compute_objective(startIndex= min(random_job_index, random_pos))
+
+        # Update the solution
+        if force_improve and (new_objective > old_objective):
+            return solution
+
+        return solution_copy
+
+    @staticmethod
+    def random_swap(solution: FlowShopSolution, force_improve: bool = True, inplace: bool = True):
+        """Performs a random swap between 2 jobs
+
+        Args:
+            solution (FlowShopSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+
+        Returns:
+            FlowShopSolution: New solution
+        """
+        if not inplace or force_improve:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        # Select the two different random jobs to be swapped 
+        job_schedule = solution_copy.job_schedule
+        job_schedule_len = len(job_schedule)
+        old_objective = solution_copy.objective_value
+
+        random_job_index = random.randrange(job_schedule_len)
+        other_job_index = random.randrange(job_schedule_len)
+        while other_job_index == random_job_index:
+            other_job_index = random.randrange(job_schedule_len)
+
+        # Simulate applying the swap move
+        job_schedule[random_job_index], job_schedule[other_job_index] = job_schedule[
+                    other_job_index], job_schedule[random_job_index]
+        
+        new_objective = solution_copy.compute_objective(startIndex= min(random_job_index, other_job_index))
+
+        # Update the solution
+        if force_improve and (new_objective > old_objective):
+            return solution
+
+        return solution_copy

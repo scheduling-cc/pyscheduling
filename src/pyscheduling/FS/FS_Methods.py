@@ -71,7 +71,7 @@ class Heuristics():
             for job_j in range(instance.n):
                 if job_i != job_j :
                     pair = (job_i,job_j)
-                    solution.job_schedule = [job_i,job_j] 
+                    solution.job_schedule = [Job(job_i, 0, 0),Job(job_j, 0, 0)] 
                     solution.compute_objective()
                     idleTime_ij = solution.idle_time()
                     idleTime_ij_list.append((pair,idleTime_ij))

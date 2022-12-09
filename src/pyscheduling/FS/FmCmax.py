@@ -41,12 +41,12 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.VALLADA, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.VALLADA, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
         """Random generation of FmCmax problem instance
 
         Args:
-            jobs_number (int): number of jobs of the instance
-            configuration_number (int): number of machines of the instance
+            n (int): number of jobs of the instance
+            m (int): number of machines of the instance
             protocol (FlowShop.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to FlowShop.GenerationProtocol.VALLADA.
             law (FlowShop.GenerationLaw, optional): probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
@@ -60,7 +60,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
             Pmin = randint(1, 100)
         if(Pmax == -1):
             Pmax = randint(Pmin, 100)
-        instance = cls(InstanceName, jobs_number, configuration_number)
+        instance = cls(InstanceName, n, m)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
         return instance
 
@@ -96,7 +96,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         return RootProblem.Objective.Cmax
 
 
-class Heuristics(FS_Methods.Heuristics_Cmax):
+class Heuristics(FS_Methods.Heuristics):
 
     @staticmethod
     def slope(instance: FmCmax_Instance):
