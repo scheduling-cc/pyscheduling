@@ -1,9 +1,11 @@
 import random
 import sys
 from time import perf_counter
+from typing import Callable
+from functools import partial
 
 import pyscheduling.Problem as RootProblem
-import pyscheduling.FS.FlowShop as FlowShop
+from pyscheduling.FS.FlowShop import *
 from pyscheduling.Problem import Job
 
 try:
@@ -18,8 +20,31 @@ DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
 
 class Heuristics():
+    
+    @staticmethod
+    def dispatch_heuristic(instance : FlowShopInstance, rule : Callable, reverse: bool = False):
+        """Orders the jobs according to the rule (lambda function) and returns the schedule accordignly
 
-    def BIBA(instance: FlowShop.FlowShopInstance):
+        Args:
+            instance (SingleInstance): Instance to be solved
+            rule (Callable): a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+            reverse (bool, optional): flag to sort in decreasing order. Defaults to False.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        startTime = perf_counter()
+        solution = FlowShopSolution(instance)
+        
+        remaining_jobs_list = list(range(instance.n))
+        sort_rule = partial(rule, instance)
+
+        remaining_jobs_list.sort(key=sort_rule, reverse=reverse)
+        solution.job_schedule = [Job(job_id, -1, -1) for job_id in remaining_jobs_list]
+        solution.compute_objective()
+        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+    def BIBA(instance: FlowShopInstance):
         """the greedy constructive heuristic (Best Insertion Based approach) to find an initial solution of flowshop instances 
 
         Args:
@@ -30,7 +55,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
-        solution = FlowShop.FlowShopSolution(instance=instance)
+        solution = FlowShopSolution(instance=instance)
 
         remaining_jobs_list = [j for j in range(instance.n)]
 
@@ -51,7 +76,7 @@ class Heuristics():
         
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
-    def MINIT(instance : FlowShop.FlowShopInstance):
+    def MINIT(instance : FlowShopInstance):
         """Gupta's MINIT heuristic which is based on iteratively scheduling a new job at the end
         so that it minimizes the idle time at the last machine
 
@@ -62,7 +87,7 @@ class Heuristics():
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
         start_time = perf_counter()
-        solution = FlowShop.FlowShopSolution(instance=instance)
+        solution = FlowShopSolution(instance=instance)
 
         #step 1 : Find pairs of jobs (job_i,job_j) which minimizes the idle time
         min_idleTime = None
@@ -139,15 +164,15 @@ if DOCPLEX_IMPORTED:
                         self.best_values[self.stop_times[self.stop_idx]] = obj_val
 
         @staticmethod
-        def _csp_transform_solution(msol, E_i, instance: FlowShop.FlowShopInstance):
+        def _csp_transform_solution(msol, E_i, instance: FlowShopInstance):
 
-            sol = FlowShop.FlowShopSolution(instance)
+            sol = FlowShopSolution(instance)
             for k in range(instance.m):
                 k_tasks = []
                 for i in range(instance.n):
                     start = msol[E_i[i][k]][0]
                     end = msol[E_i[i][k]][1]
-                    k_tasks.append(FlowShop.Job(i,start,end))
+                    k_tasks.append(Job(i,start,end))
 
                     k_tasks = sorted(k_tasks, key= lambda x: x[1])
                     sol.machines[k].oper_schedule = [job[0] for job in k_tasks]
