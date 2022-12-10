@@ -33,34 +33,120 @@ class Heuristics(pm_methods.Heuristics):
         solution = ParallelMachines.ParallelSolution(instance)
         for machine in solution.machines:
             machine.wiTi_cache = []
-            
-        if rule == 1: #Earliest release date
+  
+        if rule == 1: #R
             remaining_jobs_list = [(i, instance.R[i]) for i in range(instance.n)]
-        elif rule == 2: #Min processing time
+        elif rule == 2: #Min P
             remaining_jobs_list = [(i, min(instance.P[i])) for i in range(instance.n)] 
-        elif rule == 3: #Mean Processing 
+        elif rule == 3: #Mean P
             remaining_jobs_list = [(i, mean(instance.P[i])) for i in range(instance.n)]
-        elif rule == 4: #Max processing time
+        elif rule == 4: #Max P
             remaining_jobs_list = [(i, max(instance.P[i])) for i in range(instance.n)]      
         elif rule == 5: #Min Sij*
-            min_setup = [min([min(instance.S[k][i])]
-                             for k in range(instance.m)) for i in range(instance.n)]
-            remaining_jobs_list = [
-                (i, min_setup[i][0]) for i in range(instance.n)]    
-        #Suite dispatching rules based on setup     
-        elif rule == 6: #Earlist release date + mean processing time
+            setup_mins = [
+                min(min_list) for min_list in [[min(s[i]) for s in instance.S]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_mins[i])
+                                   for i in range(instance.n)]
+        elif rule == 6: # Mean Sij*
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[i]) for s in instance.S]
+                                   for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_means[i])
+                                   for i in range(instance.n)]
+        elif rule == 7: # Max Sij*
+            setup_max = [
+                max(max_list) for max_list in [[max(s[i]) for s in instance.S]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_max[i])
+                                   for i in range(instance.n)]
+        elif rule == 8: #Min Si*k
+            setup_mins = [
+                min(min_list) for min_list in [[min(s[:,i]) for s in np.array(instance.S)]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_mins[i])
+                                   for i in range(instance.n)]    
+        elif rule == 9: # Mean Si*k
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[:,i]) for s in np.array(instance.S)]
+                                   for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_means[i])
+                                   for i in range(instance.n)]
+        elif rule == 10: # Max Si*k
+            setup_max = [
+                max(max_list) for max_list in [[max(s[:,i]) for s in np.array(instance.S)]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, setup_max[i])
+                                   for i in range(instance.n)]
+        elif rule == 11: #R + Min P
+            remaining_jobs_list = [(i,instance.R[i] + min(instance.P[i])) for i in range(instance.n)]
+        elif rule == 12:
             remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i])) for i in range(instance.n)]
-        elif rule == 7: #Earliest release date + mean(Pi) + mean(Sij*)
+        elif rule == 13:
+            remaining_jobs_list = [(i,instance.R[i] + max(instance.P[i])) for i in range(instance.n)]
+        elif rule == 14: #R + Min Sij*
+            setup_mins = [
+                min(min_list) for min_list in [[min(s[i]) for s in instance.S]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + setup_mins[i])
+                                   for i in range(instance.n)]
+        elif rule == 15: # R + Mean Sij*
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[i]) for s in instance.S]
+                                   for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + setup_means[i])
+                                   for i in range(instance.n)]
+        elif rule == 16: # R +Max Sij*
+            setup_max = [
+                max(max_list) for max_list in [[max(s[i]) for s in instance.S]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i,instance.R[i] + setup_max[i])
+                                   for i in range(instance.n)]
+        elif rule == 17: #Min Si*k
+            setup_mins = [
+                min(min_list) for min_list in [[min(s[:,i]) for s in np.array(instance.S)]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i, instance.R[i] + setup_mins[i])
+                                   for i in range(instance.n)]    
+        elif rule == 18: # Mean Si*k
+            setup_means = [
+                mean(means_list)
+                for means_list in [[mean(s[:,i]) for s in np.array(instance.S)]
+                                   for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i,instance.R[i] + setup_means[i])
+                                   for i in range(instance.n)]
+        elif rule == 19: # Max Si*k
+            setup_max = [
+                max(max_list) for max_list in [[max(s[:,i]) for s in np.array(instance.S)]
+                                               for i in range(instance.n)]
+            ]
+            remaining_jobs_list = [(i,instance.R[i] + setup_max[i])
+                                   for i in range(instance.n)]
+        elif rule == 20: #R + mean P + mean Sij*
             setup_means = [mean(means_list) for means_list in [
                 [mean(s[i]) for s in instance.S] for i in range(instance.n)]]
             remaining_jobs_list = [
                 (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
-        elif rule == 8: #Earliest release date + mean(Pi) + mean(Si*j)
+        elif rule == 21: #R + mean P + mean Si*j
             setup_means = [mean(means_list) for means_list in [
                 [mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
             remaining_jobs_list = [
                 (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
-        elif rule == 9: #Earliest release date + mean(Pi) + mean(Sij*) + mean(Si*j)
+        elif rule == 22: #R + mean P + mean Sij* + mean Si*j
             setup_means = [mean(means_list) for means_list in 
                         [[mean(s[i]) + mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
             remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in range(instance.n)]
@@ -69,3 +155,6 @@ class Heuristics(pm_methods.Heuristics):
         jobs_list = [element[0] for element in remaining_jobs_list]
         
         return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)
+
+class Metaheuristics(pm_methods.Metaheuristics):
+    pass

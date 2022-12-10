@@ -27,7 +27,7 @@ class Heuristics():
             remaining_jobs_list = [i for i in range(instance.n)]
             if is_random:
                 random.shuffle(remaining_jobs_list)
-        
+                
         for i in remaining_jobs_list:
             min_factor = None
             for j in range(instance.m):
@@ -47,6 +47,7 @@ class Heuristics():
             curr_machine.compute_objective(instance, startIndex=last_pos)
         
         solution.fix_objective()
+      
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
