@@ -421,9 +421,9 @@ class Machine(SMachine):
         wiCi_copy = self.wiCi_cache if self.wiCi_cache is None else list(self.wiCi_cache)
         wiTi_copy = self.wiTi_cache if self.wiTi_cache is None else list(self.wiTi_cache)
         wiFi_copy = self.wiFi_cache if self.wiFi_cache is None else list(self.wiFi_cache)
-        return Machine(self.machine_num, self.objective_value, self.last_job, list(self.job_schedule),
+        return Machine(self.machine_num, objective_value = self.objective_value, last_job = self.last_job, job_schedule = list(self.job_schedule),
                         wiCi_cache=wiCi_copy, wiTi_cache=wiTi_copy, wiFi_cache=wiFi_copy)
-
+    
     def compute_current_ci(self, instance: ParallelInstance, prev_ci: int, job_prev_i: int, job_i: int):
         """Computes the current ci when job_i comes after job_prev_i.
         This takes into account if we have setup times and release dates.
@@ -517,7 +517,7 @@ class ParallelSolution(RootProblem.Solution):
         """
         objective = self.instance.get_objective()
         if objective in self.max_objectives:
-            self.objective_value = max(machine.completion_time for machine in self.machines)
+            self.objective_value = max(machine.objective_value for machine in self.machines)
         elif objective in self.sum_objectives:
             self.objective_value = sum(machine.objective_value for machine in self.machines)
 
@@ -528,7 +528,8 @@ class ParallelSolution(RootProblem.Solution):
             By calling the compute objective on each machine.
         """ 
         for machine in self.machines:
-            machine.compute_objective()
+            machine.compute_objective()          
+
         return self.fix_objective()
 
     @classmethod
@@ -701,7 +702,7 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                     # Insert job k in machine l in pos j
                     machine_l_schedule.insert(j, job_k)
                     machine_i.compute_objective(solution.instance, startIndex=k)
-                    machine_l.compute_objective(solution, startIndex=j)
+                    machine_l.compute_objective(solution.instance, startIndex=j)
                     solution.fix_objective()
         
         return solution
@@ -767,7 +768,7 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                 other_nb_machine = other_machine.machine_num
                 other_machine_schedule = other_machine.job_schedule
 
-                old_obj_l = other_machine.completion_time
+                old_obj_l = other_machine.objective_value
                 old_obj = solution.objective_value
                 best_obj = old_obj
                 best_diff = None
@@ -1199,6 +1200,7 @@ class NeighbourhoodGeneration():
             ParallelSolution: New solution
         """
         solution = solution_i.copy()
+       
         r = random.random()
         if r < 0.5:
             solution = NeighbourhoodGeneration.random_swap(

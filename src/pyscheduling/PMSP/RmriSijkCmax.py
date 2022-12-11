@@ -33,7 +33,7 @@ DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
     
     def init_sol_method(self):
-        return Heuristics.constructive
+        return Heuristics.BIBA
     
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
