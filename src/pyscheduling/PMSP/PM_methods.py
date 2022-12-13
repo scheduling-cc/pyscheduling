@@ -179,7 +179,7 @@ class Metaheuristics():
 
         # Generate init solutoin using the initial solution method
         solution_init = init_sol_method(instance).best_solution
-
+        
         if not solution_init:
             return RootProblem.SolveResult()
 
@@ -187,6 +187,7 @@ class Metaheuristics():
 
         if LS:
             solution_init = local_search.improve(solution_init)  # Improve it with LS
+            solution_init.fix_solution()
 
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
@@ -196,28 +197,31 @@ class Metaheuristics():
         N = 0
         i = 0
         time_to_best = perf_counter() - first_time
-        current_solution = solution_init
+        current_solution = solution_init.copy()
         while i < n_iterations and N < Non_improv:
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
 
             solution_i = pm.NeighbourhoodGeneration.lahc_neighbour(current_solution)
-
+            solution_i.fix_solution()
+               
             if LS:
                 solution_i = local_search.improve(solution_i)
+                solution_i.fix_solution()
+            
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
 
-                current_solution = solution_i
+                current_solution = solution_i.copy()
                 if solution_i.objective_value < solution_best.objective_value:
                     all_solutions.append(solution_i)
-                    solution_best = solution_i
+                    solution_best = solution_i.copy()
                     time_to_best = (perf_counter() - first_time)
                     N = 0
             lahc_list[i % Lfa] = solution_i.objective_value
             i += 1
             N += 1
-
+           
         # Construct the solve result
         solve_result = RootProblem.SolveResult(
             best_solution=solution_best,
@@ -286,6 +290,7 @@ class Metaheuristics():
 
         if LS:
             solution_init = local_search.improve(solution_init)
+            solution_init.fix_solution()
 
         all_solutions = []
         # Initialisation
@@ -294,7 +299,7 @@ class Metaheuristics():
         time_to_best = 0
         solution_i = None
         all_solutions.append(solution_init)
-        solution_best = solution_init
+        solution_best = solution_init.copy()
         while T > Tf and (N != Non_improv):
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
@@ -306,29 +311,31 @@ class Metaheuristics():
 
                 # solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
                 solution_i = generationMethod(solution_best, **data)
+                solution_i.fix_solution()
                 if LS:
                     # Improve generated solution using LS
                     solution_i = local_search.improve(solution_i)
+                    solution_i.fix_solution()
 
                 delta_cmax = solution_init.objective_value - solution_i.objective_value
                 if delta_cmax >= 0:
-                    solution_init = solution_i
+                    solution_init = solution_i.copy()
                 else:
                     r = random.random()
                     factor = delta_cmax / (k * T)
                     exponent = exp(factor)
                     if (r < exponent):
-                        solution_init = solution_i
+                        solution_init = solution_i.copy()
 
                 if solution_best.objective_value > solution_init.objective_value:
                     all_solutions.append(solution_init)
-                    solution_best = solution_init
+                    solution_best = solution_init.copy()
                     time_to_best = (perf_counter() - first_time)
                     N = 0
 
             T = T * b
             N += 1
-
+            
         # Construct the solve result
         solve_result = RootProblem.SolveResult(
             best_solution=solution_best,

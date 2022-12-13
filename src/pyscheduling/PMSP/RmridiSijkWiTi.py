@@ -82,3 +82,6 @@ class Heuristics(pm_methods.Heuristics):
         jobs_list = [element[0] for element in remaining_jobs_list]
         
         return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)
+
+class Metaheuristics(pm_methods.Metaheuristics):
+    pass

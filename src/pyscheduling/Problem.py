@@ -395,7 +395,7 @@ class LocalSearch():
         curr_sol = solution.copy() if self.copy_solution else solution
         for method in self.methods:
             curr_sol = method(curr_sol)
-
+        
         return curr_sol
 
 

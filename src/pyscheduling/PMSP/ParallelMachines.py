@@ -531,7 +531,14 @@ class ParallelSolution(RootProblem.Solution):
             machine.compute_objective()          
 
         return self.fix_objective()
-
+    
+    def fix_solution(self):
+        for machine in self.machines:
+            if len(machine.job_schedule) > 0:
+                machine.last_job = machine.job_schedule[len(machine.job_schedule)-1][0]
+        
+        return 
+                
     @classmethod
     def read_txt(cls, path: Path):
         """Read a solution from a txt file
@@ -625,7 +632,7 @@ class ParallelSolution(RootProblem.Solution):
 
     def is_valid(self):
         """
-        Check if solution respects the constraints
+        # Check if solution respects the constraints
         """
         set_jobs = set()
         is_valid = True
@@ -701,8 +708,8 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                     job_k = machine_i_schedule.pop(k)
                     # Insert job k in machine l in pos j
                     machine_l_schedule.insert(j, job_k)
-                    machine_i.compute_objective(solution.instance, startIndex=k)
-                    machine_l.compute_objective(solution.instance, startIndex=j)
+                    machine_i.compute_objective(solution.instance, startIndex=0)
+                    machine_l.compute_objective(solution.instance, startIndex=0)
                     solution.fix_objective()
         
         return solution
@@ -736,7 +743,7 @@ class PM_LocalSearch(RootProblem.LocalSearch):
             if move:
                 i, j, new_obj = move
                 bottleneck_machine_schedule[i], bottleneck_machine_schedule[j] = bottleneck_machine_schedule[j], bottleneck_machine_schedule[i]
-                bottleneck_machine.compute_objective(solution.instance, startIndex=min(i, j))
+                bottleneck_machine.compute_objective(solution.instance, startIndex=0)
                 solution.fix_objective()
 
         return solution
@@ -796,8 +803,8 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                 other_machine_schedule = other_machine.job_schedule
                 bottleneck_machine_schedule[j],  other_machine_schedule[k] = other_machine_schedule[k], bottleneck_machine_schedule[j]
                 
-                bottleneck_machine.compute_objective(solution.instance, startIndex=j)
-                other_machine.compute_objective(solution.instance, k)
+                bottleneck_machine.compute_objective(solution.instance,startIndex=0)
+                other_machine.compute_objective(solution.instance,0)
                 solution.fix_objective()
                 
         return solution
@@ -857,8 +864,8 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                 taken_job = bottleneck_machine_schedule.pop(j)
                 other_machine.job_schedule.insert(k, taken_job)
 
-                bottleneck_machine.compute_objective(solution.instance, startIndex=j)
-                other_machine.compute_objective(solution.instance, startIndex=k)
+                bottleneck_machine.compute_objective(solution.instance, startIndex=0)
+                other_machine.compute_objective(solution.instance, startIndex=0)
                 solution.fix_objective()
         
         return solution
@@ -923,8 +930,8 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                     job_j = bottleneck_machine_schedule.pop(j)
                     other_machine.job_schedule.insert(k, job_j)
 
-                    bottleneck_machine.compute_objective(solution.instance, startIndex=j)
-                    other_machine.compute_objective(solution.instance, startIndex=k)
+                    bottleneck_machine.compute_objective(solution.instance, startIndex=0)
+                    other_machine.compute_objective(solution.instance, startIndex=0)
                     solution.fix_objective()
         
         return solution
@@ -980,7 +987,7 @@ class PM_LocalSearch(RootProblem.LocalSearch):
                 taken_move = j
 
         machine_schedule.insert(taken_move, Job(job_id, 0, 0))
-        machine.compute_objective(solution.instance, startIndex=taken_move)
+        machine.compute_objective(solution.instance, startIndex=0)
 
         return solution
 
@@ -1021,7 +1028,7 @@ class NeighbourhoodGeneration():
 
             random_machine_schedule = random_machine.job_schedule
             other_machine_schedule = other_machine.job_schedule
-
+            
             old_obj_i, old_obj_l = random_machine.objective_value, other_machine.objective_value
 
             random_job_index = random.randrange(len(random_machine_schedule))
@@ -1048,8 +1055,9 @@ class NeighbourhoodGeneration():
                 random_machine_schedule[random_job_index], other_machine_schedule[
                     other_job_index] = other_machine_schedule[
                         other_job_index], random_machine_schedule[random_job_index]
-                random_machine.compute_objective(solution.instance, startIndex=random_job_index)
-                other_machine.compute_objective(solution.instance, startIndex=other_job_index)
+                random_machine.compute_objective(solution.instance, startIndex=0)
+                other_machine.compute_objective(solution.instance, startIndex=0)
+                
                 solution.fix_objective()
 
         return solution
@@ -1088,7 +1096,7 @@ class NeighbourhoodGeneration():
             other_job_index = random.randrange(len(other_machine_schedule)) if len(
                 other_machine_schedule) > 0 else 0
 
-            old_obj_i, old_obj_l = random_machine.completion_time, other_machine.completion_time
+            old_obj_i, old_obj_l = random_machine.objective_value, other_machine.objective_value
             job_i, _, _ = random_machine_schedule[random_job_index]
 
             new_ci = random_machine.simulate_remove_insert(random_job_index, -1, -1, solution.instance)
@@ -1099,8 +1107,8 @@ class NeighbourhoodGeneration():
                 job_i = random_machine_schedule.pop(random_job_index)
                 other_machine_schedule.insert(other_job_index, job_i)
 
-                random_machine.compute_objective(solution.instance, startIndex=random_job_index)
-                other_machine.compute_objective(solution.instance, startIndex=other_job_index)
+                random_machine.compute_objective(solution.instance, startIndex=0)
+                other_machine.compute_objective(solution.instance, startIndex=0)
                 solution.fix_objective()
 
         return solution
@@ -1143,8 +1151,8 @@ class NeighbourhoodGeneration():
         machine_1_schedule[t1], machine_2_schedule[t2] = machine_2_schedule[
             t2], machine_1_schedule[t1]
 
-        solution.machines[m1].compute_objective(solution.instance, startIndex=t1)
-        solution.machines[m2].compute_objective(solution.instance, startIndex=t2)
+        solution.machines[m1].compute_objective(solution.instance, startIndex=0)
+        solution.machines[m2].compute_objective(solution.instance, startIndex=0)
         solution.fix_objective()
         return solution
 
@@ -1183,8 +1191,8 @@ class NeighbourhoodGeneration():
         job_i = machine_1_schedule.pop(t1)
         machine_2_schedule.insert(t2, job_i)
 
-        solution.machines[m1].compute_objective(solution.instance, startIndex=t1)
-        solution.machines[m2].compute_objective(solution.instance, startIndex=t2)
+        solution.machines[m1].compute_objective(solution.instance, startIndex=0)
+        solution.machines[m2].compute_objective(solution.instance, startIndex=0)
         solution.fix_objective()
 
         return solution
@@ -1208,6 +1216,7 @@ class NeighbourhoodGeneration():
         else:
             solution = NeighbourhoodGeneration.random_swap(
                 solution, force_improve=False, internal=True)
+       
         return solution
 
     @staticmethod
