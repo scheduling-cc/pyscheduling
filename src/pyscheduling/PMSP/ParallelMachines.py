@@ -523,12 +523,12 @@ class ParallelSolution(RootProblem.Solution):
 
         return self.objective_value
     
-    def compute_objective(self):
+    def compute_objective(self,instance):
         """Computes the current solution's objective.
             By calling the compute objective on each machine.
         """ 
         for machine in self.machines:
-            machine.compute_objective()          
+            machine.compute_objective(instance)          
 
         return self.fix_objective()
     
@@ -1128,8 +1128,8 @@ class NeighbourhoodGeneration():
         """
         bottleneck_machines_list, other_machines_list = \
                 PM_LocalSearch.get_bottleneck_machines(solution)
-        other_machines_list = filter(lambda m: len(solution.machines[m].job_schedule) >= 1 ,other_machines_list)
-
+        other_machines_list = list(filter(lambda m: len(solution.machines[m].job_schedule) >= 1 ,other_machines_list))
+    
         if len(bottleneck_machines_list) > 2:
             choices = random.sample(bottleneck_machines_list, 2)
             m1, m2 = choices[0], choices[1]

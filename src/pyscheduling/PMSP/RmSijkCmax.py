@@ -660,7 +660,7 @@ class AntColony(object):
             current_machine.job_schedule = machine_schedule
             current_machine.compute_objective(self.instance)
 
-        solution_path.compute_objective()
+        solution_path.compute_objective(self.instance)
         return solution_path
 
     def pick_task(self, prev, m, pheromone, affected_tasks, visited):

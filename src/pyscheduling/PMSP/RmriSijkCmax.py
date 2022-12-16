@@ -916,7 +916,9 @@ class GeneticAlgorithm():
                 machine1.job_schedule[0:cross_point_1])
             child2.machines[i].job_schedule.extend(
                 machine2.job_schedule[0:cross_point_2])
-
+            
+            print(len(child1.machines[i].job_schedule))
+            print(len(child2.machines[i].job_schedule))
             child1.machines[i].compute_objective(instance)
             child2.machines[i].compute_objective(instance)
 

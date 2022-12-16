@@ -32,7 +32,7 @@ class Heuristics(pm_methods.Heuristics):
     def list_heuristic(instance: RmriSijkWiFi_Instance, rule=1, decreasing=False):
         solution = ParallelMachines.ParallelSolution(instance)
         for machine in solution.machines:
-            machine.wiTi_cache = []
+            machine.wiFi_cache = []
   
         if rule == 1: #R
             remaining_jobs_list = [(i, instance.R[i]) for i in range(instance.n)]

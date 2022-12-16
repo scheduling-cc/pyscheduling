@@ -507,7 +507,10 @@ class Machine:
             obj = obj_cache[startIndex - 1] if obj_cache is not None else 0 # When the cache is not specified, the objective does not depend on it (like Cmax)
             job_prev_i = self.job_schedule[startIndex - 1].id
         else:
-            ci, obj, job_prev_i,  = 0, 0, self.job_schedule[startIndex].id
+            if len(self.job_schedule) >0:
+                ci, obj, job_prev_i,  = 0, 0, self.job_schedule[startIndex].id
+            else:
+                ci, obj, job_prev_i = 0,0,-1
             
         return ci, job_prev_i, obj
     

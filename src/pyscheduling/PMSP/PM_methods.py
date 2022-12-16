@@ -89,7 +89,7 @@ class Heuristics():
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
-    def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 5):
+    def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 100):
         """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
