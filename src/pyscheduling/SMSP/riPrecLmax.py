@@ -40,9 +40,9 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         n = int(ligne0[0])  # number of jobs
         i = 1
         instance = cls("test", n)
-        instance.P, i = instance.read_P(content, i)
-        instance.R, i = instance.read_R(content, i)
-        instance.D, i = instance.read_D(content, i)
+        instance.P, i = instance.read_1D(content, i)
+        instance.R, i = instance.read_1D(content, i)
+        instance.D, i = instance.read_1D(content, i)
         f.close()
         return instance
 
