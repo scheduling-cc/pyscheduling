@@ -283,7 +283,7 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
-        graph = JobShop.Graph(instance.P)
+        graph = JobShop.Graph(instance)
         Cmax = graph.critical_path()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []

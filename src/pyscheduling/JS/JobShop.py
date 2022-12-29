@@ -35,7 +35,7 @@ class Graph:
     vertices : list[tuple]
     edges : dict
 
-    def __init__(self, operations):
+    def __init__(self, instance):
         """Creates the dijunctives graph from a JmCmax processing times table
 
         Args:
@@ -45,8 +45,10 @@ class Graph:
         self.edges = {}
         
         job_index = 0
+        operations = instance.P
         for job in operations:
-            self.edges[(self.source,(job[0][0],job_index))] = 0
+            release_date = instance.R[job_index] if hasattr(instance, 'R') else 0 
+            self.edges[(self.source,(job[0][0],job_index))] = release_date
             nb_operation = len(job)
             for operation_ind in range(nb_operation - 1):
                 self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
@@ -194,19 +196,21 @@ class Graph:
         return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
 
 @dataclass
-class wiTi_Graph:
+class riwiTi_Graph:
     source = (-1,0)
     sink = list[tuple]
 
     vertices : list[tuple]
     edges : dict
 
-    def __init__(self, operations,release_dates):
+    def __init__(self,instance):
         """Creates the dijunctives graph from a JmCmax processing times table
 
         Args:
             operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
         """
+        operations = instance.P
+        release_dates = instance.R
         self.vertices = [((-1,0),0)]
         for job_id in range(len(operations)): 
             self.sink.append((0,-job_id-1))
@@ -274,6 +278,9 @@ class wiTi_Graph:
         for edge_ind in range(len(edges_to_add)):
             self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
 
+    def remove_edges(self,edges_to_remove : list):
+        for edge in edges_to_remove : del self.edges[edge]
+    
     def dijkstra(self, start_vertex):
         """Evaluate the longest distance from the start_vertex to every other vertex
 
@@ -323,6 +330,14 @@ class wiTi_Graph:
             int: critical path distance
         """
         return self.longest_path(self.source,self.sink[job_id])
+
+    def temporary_job_completion(self,temporary_edges : list):
+        jobs_completion = []
+        self.add_disdjunctive_arcs(temporary_edges)
+        for job_id in range(len(self.sink)):
+            jobs_completion.append(jobs_completion(job_id))
+        self.remove_edges(temporary_edges)
+        return jobs_completion
 
     def if_path(self, u, v):
         if self.get_edge(u,v) != -1 : return True
