@@ -273,7 +273,7 @@ class Heuristics():
 
     @staticmethod
     def shifting_bottleneck(instance : JmCmax_Instance):
-        """Shifting bottlenech heuristic, Pinedo page 193
+        """Shifting bottleneck heuristic, Pinedo page 193
 
         Args:
             instance (JmCmax_Instance): Instance to be solved
