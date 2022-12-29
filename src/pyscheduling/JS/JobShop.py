@@ -193,6 +193,175 @@ class Graph:
         D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
         return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
 
+@dataclass
+class wiTi_Graph:
+    source = (-1,0)
+    sink = list[tuple]
+
+    vertices : list[tuple]
+    edges : dict
+
+    def __init__(self, operations,release_dates):
+        """Creates the dijunctives graph from a JmCmax processing times table
+
+        Args:
+            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
+        """
+        self.vertices = [((-1,0),0)]
+        for job_id in range(len(operations)): 
+            self.sink.append((0,-job_id-1))
+            self.vertices.append(((0,-job_id-1),0))
+        self.edges = {}
+        
+        job_index = 0
+        for job in operations:
+            self.edges[(self.source,(job[0][0],job_index))] = release_dates[job_index]
+            nb_operation = len(job)
+            for operation_ind in range(nb_operation - 1):
+                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
+                self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
+            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
+            self.edges[((job[nb_operation - 1][0],job_index),(0,-job_id-1))] = job[nb_operation - 1][1]
+            job_index += 1
+
+    def add_edge(self, u, v, weight : int):
+        """Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
+
+        Args:
+            u (tuple(int,int)): operation
+            v (tuple(int,int)): operation
+            weight (int): processing time of operation u
+        """
+        self.edges[(u,v)] = weight
+
+    def get_edge(self, u, v):
+        """returns the weight of the edge from u to v
+
+        Args:
+            u (tuple(int,int)): operation
+            v (tuple(int,int)): operation
+            
+
+        Returns:
+            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
+        """
+        try:
+            return self.edges[(u,v)]
+        except:
+            return -1
+
+    def get_operations_on_machine(self, machine_id : int):
+        """returns the vertices corresponding to operations to be executed on machine_id
+
+        Args:
+            machine_id (int): id of a machine
+
+        Returns:
+            list[tuple(int,int)]: list of operations to be executed on machine_id
+        """
+        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
+        if machine_id==0: vertices.remove((0,-1))
+        return vertices
+    
+    def add_disdjunctive_arcs(self, edges_to_add : list):
+        """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
+
+        Args:
+            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
+        """
+        emanating_vertices = [edge[0] for edge in edges_to_add]
+        weights = [vertice[1] for vertice in self.vertices if vertice[0] in emanating_vertices]
+        for edge_ind in range(len(edges_to_add)):
+            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
+
+    def dijkstra(self, start_vertex):
+        """Evaluate the longest distance from the start_vertex to every other vertex
+
+        Args:
+            start_vertex (tuple(int,int)): starting vertex
+
+        Returns:
+            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
+        """
+        vertices_list = [vertice[0] for vertice in self.vertices]
+        D = {v:-float('inf') for v in vertices_list}
+        D[start_vertex] = 0
+
+        pq = PriorityQueue()
+        pq.put((0, start_vertex))
+
+        while not pq.empty():
+            (dist, current_vertex) = pq.get()
+
+            for neighbor in vertices_list:
+                if self.get_edge(current_vertex,neighbor) != -1:
+                    distance = self.get_edge(current_vertex,neighbor)
+                    old_cost = D[neighbor]
+                    new_cost = D[current_vertex] + distance
+                    if new_cost > old_cost:
+                        pq.put((new_cost, neighbor))
+                        D[neighbor] = new_cost
+
+        return D
+
+    def longest_path(self,u, v):
+        """returns the longest distance from vertex u to vertex v
+
+        Args:
+            u (tuple(int,int)): operation
+            v (tuple(int,int)): operation
+
+        Returns:
+            int: longest distance, is -inf if v is unreachable from u
+        """
+        return self.dijkstra(u)[v]
+
+    def job_completion(self,job_id):
+        """returns the distance of the critical path which corresponds to the Makespan
+
+        Returns:
+            int: critical path distance
+        """
+        return self.longest_path(self.source,self.sink[job_id])
+
+    def if_path(self, u, v):
+        if self.get_edge(u,v) != -1 : return True
+        else :
+            vertices_going_to_v = [vertice[0] for vertice in self.edges.keys() if vertice[1]==v]
+            for vertice in vertices_going_to_v :
+                if self.if_path(u,vertice) is True : return True
+            return False
+        pass
+
+    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
+        precedence_constraints = []
+        for machine_id in unscheduled_machines :
+            vertices = self.get_operations_on_machine(machine_id);
+            for u in vertices :
+                for v in vertices :
+                    if u is not v and self.if_path(u,v) : precedence_constraints.append((u[1],v[1]))
+            
+        return precedence_constraints
+
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
+        """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+        Args:
+            machine_id (int): id of the machine
+            Cmax (int): current makespan
+
+        Returns:
+            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance
+        """
+        vertices = self.get_operations_on_machine(machine_id)
+        jobs_number = len(vertices)
+        P = []
+        for vertice in self.vertices :
+            if vertice[0] in vertices : P.append(vertice[1])
+        R = [self.longest_path(self.source,vertice) for vertice in vertices]
+        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
+        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
+
 
 @dataclass
 class JobShopInstance(RootProblem.Instance):
