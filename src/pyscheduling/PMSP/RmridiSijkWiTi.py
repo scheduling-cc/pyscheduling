@@ -26,6 +26,30 @@ class RmridiSijkWiTi_Instance(ParallelMachines.ParallelInstance):
     
     def init_sol_method(self):
         return Heuristics.BIBA
+    
+    def lower_bound(self):
+        """Computes the lower bound of sum(WiTi) of the instance 
+        from the minimal completion time between job pairs on the number of machines
+
+        Returns:
+            int: Lower Bound of sum(WiTi)
+        """
+        # Preparing ranges
+        M = range(self.m)
+        E = range(self.n)
+        # Compute lower bound
+        LB = 0
+        for j in E:
+            min_witi_j = None
+            for k in M:
+                for i in E:  # (i for i in E if i != j ):
+                    cj = self.R[j] + self.P[j][k] + self.S[k][i][j]
+                    witi_j = self.W[j]*max(0,cj - self.D[j])
+                    if min_witi_j is None or witi_j < min_witi_j:
+                        min_witi_j = witi_j
+            LB += min_witi_j
+    
+        return LB
 
 class Heuristics(pm_methods.Heuristics):
     @staticmethod

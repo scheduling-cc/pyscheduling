@@ -423,7 +423,7 @@ class Machine:
             Objective.wiTi: self.wiTi_cache,
             Objective.wiFi: self.wiFi_cache
         }
-
+      
     def __repr__(self):
         return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective_value)
 
@@ -486,7 +486,9 @@ class Machine:
             return startIndex, None
         if obj_cache is None:  # Initialize obj_cache to the size of job_schedule
             obj_cache = [-1] * len(self.job_schedule)
+            self.objectives_map[objective] = obj_cache
             startIndex = 0
+            
         elif len(obj_cache) != len(self.job_schedule):
             obj_cache.insert(startIndex, -1) # Insert an element in obj_cache corresponding to the position where a new job has been inserted
         
@@ -551,7 +553,6 @@ class Machine:
         """
         startIndex, obj_cache = self.init_cache(instance, startIndex)
         ci, job_prev_i, obj = self.init_obj(startIndex, obj_cache)
-        
         for i in range(startIndex, len(self.job_schedule)):
             job_i = self.job_schedule[i].id
             ci, start_time = self.compute_current_ci(instance, ci, job_prev_i, job_i)
@@ -585,7 +586,6 @@ class Machine:
         objective = instance.get_objective()
         obj_cache = self.objectives_map.get(objective, None)
         obj = obj_cache[first_pos - 1] if first_pos > 0 and obj_cache is not None else 0
-       
         for i in range(first_pos, len(self.job_schedule) + 1): # +1 for edge cases when inserting in empty schedule or at the very end of a non empty schedule
 
             # If job needs to be inserted to position i

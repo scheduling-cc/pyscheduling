@@ -26,6 +26,30 @@ class RmriSijkWiFi_Instance(ParallelMachines.ParallelInstance):
     
     def init_sol_method(self):
         return Heuristics.BIBA
+    
+    def lower_bound(self):
+        """Computes the lower bound of sum(WiTi) of the instance 
+        from the minimal completion time between job pairs on the number of machines
+
+        Returns:
+            int: Lower Bound of sum(WiTi)
+        """
+        # Preparing ranges
+        M = range(self.m)
+        E = range(self.n)
+        # Compute lower bound
+        LB = 0
+        for j in E:
+            min_wifi_j = None
+            for k in M:
+                for i in E:  # (i for i in E if i != j ):
+                    cj = self.R[j] + self.P[j][k] + self.S[k][i][j]
+                    wifi_j = self.W[j]*(cj - self.R[j])
+                    if min_wifi_j is None or wifi_j < min_wifi_j:
+                        min_wifi_j = wifi_j
+            LB += min_wifi_j
+    
+        return LB
 
 class Heuristics(pm_methods.Heuristics):
     @staticmethod
