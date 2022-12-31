@@ -54,6 +54,15 @@ class RmriSijkWiFi_Instance(ParallelMachines.ParallelInstance):
 class Heuristics(pm_methods.Heuristics):
     @staticmethod
     def list_heuristic(instance: RmriSijkWiFi_Instance, rule=1, decreasing=False):
+        """contains a list of static dispatching rules to be chosen from
+
+        Args:
+            instance (RmriSijkWiFi_Instance): Instance to be solved
+            rule_number (int, optional) : Index of the rule to use. Defaults to 1.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
         solution = ParallelMachines.ParallelSolution(instance)
         for machine in solution.machines:
             machine.wiFi_cache = []
