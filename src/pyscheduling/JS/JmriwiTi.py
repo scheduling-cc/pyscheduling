@@ -103,7 +103,7 @@ class JmriwiTi_Instance(JobShop.JobShopInstance):
         Returns:
             object: default solving method
         """
-        return None
+        return Heuristics.shifting_bottleneck
 
     def get_objective(self):
         """to get the objective tackled by the instance
