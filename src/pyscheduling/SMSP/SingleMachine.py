@@ -188,6 +188,93 @@ def single_instance(constraints: list[Constraints], objective: Objective):
     return wrap
 
 
+def new_single_instance(constraints : list[RootProblem.new_Constraints], objective : Objective):
+
+    constraints = sorted(constraints, key=Constraints.sorting_func)
+
+    def init_fn(self, n, instance_name="", W=None, R=None, D=None, S=None):
+        self.n = n
+        self.instance_name = instance_name
+        for constraint in constraints:
+            exec("constraint.create_attribute(self,"+constraint.__name__+")")
+
+    @classmethod
+    def generate_random(cls, jobs_number: int, InstanceName: str = "",
+                        protocol: GenerationProtocol = GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Wmin: int = 1, Wmax: int = 1,
+                        Pmin: int = 10, Pmax: int = 50,
+                        alpha: float = 2.0,
+                        due_time_factor: float = 0.5,
+                        Gamma: float = 2.0, Smin: int = 1, Smax: int = 25):
+
+        instance = cls(jobs_number, instance_name=InstanceName)
+        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        if Constraints.W in constraints:
+            instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        if Constraints.R in constraints:
+            instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
+        if Constraints.D in constraints:
+            instance.D = instance.generate_D(
+                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
+        if Constraints.S in constraints:
+            instance.S = instance.generate_S(
+                protocol, law, instance.P, Gamma, Smin, Smax)
+
+        return instance    
+
+    @classmethod
+    def read_txt(cls, path: Path):
+        f = open(path, "r")
+        content = f.read().split('\n')
+        ligne0 = content[0].split(' ')
+        n = int(ligne0[0])  # number of jobs
+        i = 1
+        instance = cls(n, "test")
+        instance.P, i = instance.read_1D(content, i)
+        for constraint in constraints:
+            constraint.read_attribute(instance,content,i)
+        f.close()
+        return instance
+
+    def to_txt(self, path : Path):
+        f = open(path, "w")
+        f.write(str(self.n))
+        f.write("\nProcessing time\n")
+        for i in range(self.n):
+            f.write(str(self.P[i])+"\t")
+        for constraint in constraints:
+            constraint.print_attribute(self,f)
+        f.close()
+
+    @classmethod
+    def get_objective(cls):
+        """to get the objective defined by the problem
+
+        Returns:
+            RootProblem.Objective: the objective passed to the decorator
+        """
+        return objective
+
+    def wrap(cls):
+        """Wrapper function that adds the basic Instance functions to the wrapped class
+
+        Returns:
+            Instance: subclass of Instance according to the defined problem
+        """
+        DecoratorsHelper.set_new_attr(cls, "__init__", init_fn)
+        DecoratorsHelper.set_new_attr(cls, "__repr__", DecoratorsHelper.repr_fn)
+        DecoratorsHelper.set_new_attr(cls, "__str__", DecoratorsHelper.str_fn)
+        DecoratorsHelper.set_new_attr(cls, "read_txt", read_txt)
+        DecoratorsHelper.set_new_attr(cls, "generate_random", generate_random)
+        DecoratorsHelper.set_new_attr(cls, "to_txt", to_txt)
+        DecoratorsHelper.set_new_attr(cls, "get_objective", get_objective)
+
+        DecoratorsHelper.update_abstractmethods(cls)
+        return cls
+
+    return wrap
+
 @dataclass
 class SingleInstance(RootProblem.Instance):
 
