@@ -17,6 +17,26 @@ class Constraints_Enum(Enum):
     S = "setup"
     D = "due"
 
+    @classmethod
+    def to_string(cls):
+        """Print the available constraints for Single Machine
+
+        Returns:
+            str: name of every constraint in different lines
+        """
+        return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
+
+    def __lt__(self, other):
+        """redefine less than operator alphabetically
+
+        Args:
+            other (Constraints): Another constraint
+
+        Returns:
+            bool: returns the comparison result
+        """
+        return self.name < other.name
+
 class Constraints():
 
     @staticmethod
@@ -97,26 +117,6 @@ class Constraints():
             file.write("\nDue time\n")
             for i in range(cls.n):
                 file.write(str(D[i])+"\t")
-
-    @classmethod
-    def to_string(cls):
-        """Print the available constraints for Single Machine
-
-        Returns:
-            str: name of every constraint in different lines
-        """
-        return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
-
-    def __lt__(self, other):
-        """redefine less than operator alphabetically
-
-        Args:
-            other (Constraints): Another constraint
-
-        Returns:
-            bool: returns the comparison result
-        """
-        return self.name < other.name
 
 
 class Objective(Enum):  # Negative value are for minimization problems, Positive values are for maximization problems
