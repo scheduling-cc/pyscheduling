@@ -17,6 +17,79 @@ class Constraints(Enum):
     S = "setup"
     D = "due"
 
+class new_Constraints():
+
+    @staticmethod
+    def sorting_func(constraint):
+        if constraint is Constraints.W : return 0
+        elif constraint is Constraints.R : return 1
+        elif constraint is Constraints.S : return 2
+        elif constraint is Constraints.D : return 3
+
+    class W():
+        @staticmethod
+        def create_attribute(cls,var):
+            setattr(cls,"W",var) if var is not None else setattr(cls,"W",list())
+
+        @staticmethod
+        def read_attribute(cls, text_content : list[str], starting_index : int):
+            setattr(cls,"W",Instance.read_1D(text_content,starting_index))
+            
+
+        @staticmethod
+        def print_attribute(cls, file):
+            W = getattr(cls,"W")
+            file.write("\nWeights\n")
+            for i in range(cls.n):
+                file.write(str(W[i])+"\t")
+    class R():
+        @staticmethod
+        def create_attribute(cls,var):
+            setattr(cls,"R",var) if var is not None else setattr(cls,"R",list())
+
+        @staticmethod
+        def read_attribute(cls, text_content : list[str], starting_index : int):
+            setattr(cls,"R",Instance.read_1D(text_content,starting_index))
+
+        @staticmethod
+        def print_attribute(cls, file):
+            R = getattr(cls,"R")
+            file.write("\nRelease time\n")
+            for i in range(cls.n):
+                file.write(str(R[i])+"\t")
+    class S():
+        @staticmethod
+        def create_attribute(cls,var):
+            setattr(cls,"S",var) if var is not None else setattr(cls,"S",list())
+
+        @staticmethod
+        def read_attribute(cls, text_content : list[str], starting_index : int):
+            setattr(cls,"S",Instance.read_2D(cls.n, text_content,starting_index))
+
+        @staticmethod
+        def print_attribute(cls, file):
+            S = getattr(cls,"S")
+            file.write("\nSSD\n")
+            for i in range(cls.n):
+                for j in range(cls.n):
+                    file.write(str(S[i][j])+"\t")
+                file.write("\n")
+    class D():
+        @staticmethod
+        def create_attribute(cls,var):
+            setattr(cls,"D",var) if var is not None else setattr(cls,"D",list())
+
+        @staticmethod
+        def read_attribute(cls, text_content : list[str], starting_index : int):
+            setattr(cls,"D",Instance.read_1D(text_content,starting_index))
+
+        @staticmethod
+        def print_attribute(cls, file):
+            D = getattr(cls,"D")
+            file.write("\nDue time\n")
+            for i in range(cls.n):
+                file.write(str(D[i])+"\t")
+
     @classmethod
     def to_string(cls):
         """Print the available constraints for Single Machine
