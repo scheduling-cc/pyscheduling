@@ -233,7 +233,7 @@ def single_instance(constraints : list[Constraints], objective : Objective):
         instance = cls(n, "test")
         instance.P, i = instance.read_1D(content, i)
         for constraint in constraints:
-            constraint.read_attribute(instance,content,i)
+            i = constraint.read_attribute(instance,content,i)
         f.close()
         return instance
 

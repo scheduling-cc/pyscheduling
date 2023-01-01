@@ -33,7 +33,9 @@ class Constraints():
 
         @staticmethod
         def read_attribute(cls, text_content : list[str], starting_index : int):
-            setattr(cls,"W",Instance.read_1D(text_content,starting_index))
+            W, i = Instance.read_1D(text_content,starting_index)
+            setattr(cls,"W",W)
+            return i
             
 
         @staticmethod
@@ -49,7 +51,9 @@ class Constraints():
 
         @staticmethod
         def read_attribute(cls, text_content : list[str], starting_index : int):
-            setattr(cls,"R",Instance.read_1D(text_content,starting_index))
+            R, i = Instance.read_1D(text_content,starting_index)
+            setattr(cls,"R",R)
+            return i
 
         @staticmethod
         def print_attribute(cls, file):
@@ -64,7 +68,9 @@ class Constraints():
 
         @staticmethod
         def read_attribute(cls, text_content : list[str], starting_index : int):
-            setattr(cls,"S",Instance.read_2D(cls.n, text_content,starting_index))
+            S, i = Instance.read_2D(cls.n, text_content,starting_index)
+            setattr(cls,"S",S)
+            return i
 
         @staticmethod
         def print_attribute(cls, file):
@@ -81,7 +87,9 @@ class Constraints():
 
         @staticmethod
         def read_attribute(cls, text_content : list[str], starting_index : int):
-            setattr(cls,"D",Instance.read_1D(text_content,starting_index))
+            D, i = Instance.read_1D(text_content,starting_index)
+            setattr(cls,"D",D)
+            return i
 
         @staticmethod
         def print_attribute(cls, file):
