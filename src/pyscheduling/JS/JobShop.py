@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 import pyscheduling.Problem as RootProblem
 import pyscheduling.SMSP.riPrecLmax as riPrecLmax
+import pyscheduling.SMSP.rihiCi as rihiCi
 
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
@@ -103,7 +104,12 @@ class Graph:
             edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
         """
         emanating_vertices = [edge[0] for edge in edges_to_add]
-        weights = [vertice[1] for vertice in self.vertices if vertice[0] in emanating_vertices]
+        weights = []
+        for emanating_vertice in emanating_vertices :
+            for vertice in self.vertices :
+                if vertice[0]==emanating_vertice :
+                    weights.append(vertice[1])
+                    break
         for edge_ind in range(len(edges_to_add)):
             self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
 
@@ -189,8 +195,9 @@ class Graph:
         vertices = self.get_operations_on_machine(machine_id)
         jobs_number = len(vertices)
         P = []
-        for vertice in self.vertices :
-            if vertice[0] in vertices : P.append(vertice[1])
+        for vertice in vertices :
+            for graph_vertice in self.vertices :
+                if graph_vertice[0] == vertice : P.append(graph_vertice[1])
         R = [self.longest_path(self.source,vertice) for vertice in vertices]
         D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
         return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
@@ -212,6 +219,7 @@ class riwiTi_Graph:
         operations = instance.P
         release_dates = instance.R
         self.vertices = [((-1,0),0)]
+        self.sink = []
         for job_id in range(len(operations)): 
             self.sink.append((0,-job_id-1))
             self.vertices.append(((0,-job_id-1),0))
@@ -225,7 +233,7 @@ class riwiTi_Graph:
                 self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
                 self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
             self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
-            self.edges[((job[nb_operation - 1][0],job_index),(0,-job_id-1))] = job[nb_operation - 1][1]
+            self.edges[((job[nb_operation - 1][0],job_index),(0,-job_index-1))] = job[nb_operation - 1][1]
             job_index += 1
 
     def add_edge(self, u, v, weight : int):
@@ -263,8 +271,7 @@ class riwiTi_Graph:
         Returns:
             list[tuple(int,int)]: list of operations to be executed on machine_id
         """
-        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
-        if machine_id==0: vertices.remove((0,-1))
+        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id and vertice[0][1]>-1]
         return vertices
     
     def add_disdjunctive_arcs(self, edges_to_add : list):
@@ -274,7 +281,12 @@ class riwiTi_Graph:
             edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
         """
         emanating_vertices = [edge[0] for edge in edges_to_add]
-        weights = [vertice[1] for vertice in self.vertices if vertice[0] in emanating_vertices]
+        weights = []
+        for emanating_vertice in emanating_vertices :
+            for vertice in self.vertices :
+                if vertice[0]==emanating_vertice :
+                    weights.append(vertice[1])
+                    break
         for edge_ind in range(len(edges_to_add)):
             self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
 
@@ -331,11 +343,25 @@ class riwiTi_Graph:
         """
         return self.longest_path(self.source,self.sink[job_id])
 
-    def temporary_job_completion(self,temporary_edges : list):
+    def all_jobs_completion(self):
         jobs_completion = []
-        self.add_disdjunctive_arcs(temporary_edges)
         for job_id in range(len(self.sink)):
-            jobs_completion.append(jobs_completion(job_id))
+            jobs_completion.append(self.job_completion(job_id))
+        return jobs_completion
+
+    def wiTi(self, external_weights : list[int], due_dates : list[int]):
+        jobs_completion = self.all_jobs_completion()
+        objective_value = 0
+        for job_id in range(len(jobs_completion)):
+            objective_value += external_weights[job_id]*max(jobs_completion[job_id]-due_dates[job_id],0)
+        return objective_value
+    
+    def temporary_job_completion(self,temporary_edges : list):
+        # jobs_completion = []
+        self.add_disdjunctive_arcs(temporary_edges)
+        # for job_id in range(len(self.sink)):
+        #     jobs_completion.append(self.job_completion(job_id))
+        jobs_completion = self.all_jobs_completion()
         self.remove_edges(temporary_edges)
         return jobs_completion
 
@@ -358,7 +384,7 @@ class riwiTi_Graph:
             
         return precedence_constraints
 
-    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
+    def generate_rihiCi(self, machine_id : int, precedenceConstraints : list[tuple], exeternal_weights : list[int], external_due : list[int], jobs_completion : list[int]):
         """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
 
         Args:
@@ -371,11 +397,20 @@ class riwiTi_Graph:
         vertices = self.get_operations_on_machine(machine_id)
         jobs_number = len(vertices)
         P = []
-        for vertice in self.vertices :
-            if vertice[0] in vertices : P.append(vertice[1])
+        for vertice in vertices :
+            for graph_vertice in self.vertices :
+                if graph_vertice[0] == vertice : P.append(graph_vertice[1])
         R = [self.longest_path(self.source,vertice) for vertice in vertices]
-        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
-        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
+        D = []
+        for vertice_ind in range(len(vertices)) :
+            Di = []
+            for job_ind in range(len(self.sink)):
+                distance = self.longest_path(vertices[vertice_ind],self.sink[job_ind])
+                if distance == float('-inf') : Di.append(float('inf'))
+                else :
+                    Di.append(max(jobs_completion[job_ind],external_due[job_ind])-distance+P[vertice_ind])
+            D.append(Di)
+        return rihiCi.rihiCi_Instance(name="", n=jobs_number, P=P, R=R, Precedence=precedenceConstraints, external_params=len(self.sink), D=D, W=exeternal_weights)
 
 
 @dataclass
@@ -434,7 +469,7 @@ class JobShopInstance(RootProblem.Instance):
            (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)
         """
         P = []  
-        i = startIndex
+        i = startIndex + 1
         for _ in range(self.n):
             ligne = content[i].strip().split('\t')
             P_k = [(int(ligne[j-1]),int(ligne[j])) for j in range(1, len(ligne), 2)]
@@ -664,7 +699,10 @@ class JobShopSolution(RootProblem.Solution):
     def cmax(self):
         """Sets the schedule of each machine then sets the makespan
         """
-        jobs_progression = [(0,0) for job in range(self.instance.n)]
+        
+        if hasattr(self.instance,"R") :
+            jobs_progression = [(0,self.instance.R[job]) for job in range(self.instance.n)]
+        else : jobs_progression = [(0,0) for job in range(self.instance.n)]
         remaining_machines = list(range(0,self.instance.m))
         remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines}
         while len(remaining_machines) > 0 :
