@@ -326,6 +326,8 @@ class Heuristics():
             precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
             solution.objective_value = graph.critical_path()
 
+        solution.cmax()
+        
         return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
