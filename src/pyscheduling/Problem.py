@@ -11,13 +11,13 @@ class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
-class Constraints(Enum):
+class Constraints_Enum(Enum):
     W = "weight"
     R = "release"
     S = "setup"
     D = "due"
 
-class new_Constraints():
+class Constraints():
 
     @staticmethod
     def sorting_func(constraint):
