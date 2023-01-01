@@ -1,4 +1,3 @@
-from crypt import methods
 from math import exp
 from time import perf_counter
 
