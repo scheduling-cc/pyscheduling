@@ -121,7 +121,7 @@ class rihiCi_Instance(SingleMachine.SingleInstance):
         Returns:
             object: default solving method
         """
-        return None
+        return Heuristics.ACT
 
 
 class Heuristics():
