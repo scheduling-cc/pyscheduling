@@ -171,7 +171,7 @@ class Heuristics():
 
 
     def ACT(instance : rihiCi_Instance):
-        avgP = sum(instance.P)/len(instance.P)
+        avgP = int(sum(instance.P)/len(instance.P))
         K = 0.1
         sorting_rule = lambda instance,t,job_id : sum([(float(instance.W[k])/float(instance.P[job_id]))*exp(-max(instance.D[job_id][k]-instance.P[job_id]+(instance.R[job_id]-t),0)/(K*avgP)) for k in range(instance.external_params)])
         return Heuristics.dynamic_dispatch_rule_with_precedence(instance,sorting_rule,True)
