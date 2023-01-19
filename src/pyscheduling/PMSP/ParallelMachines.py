@@ -636,33 +636,76 @@ class ParallelSolution(RootProblem.Solution):
         """
         set_jobs = set()
         is_valid = True
+        obj_list = []
+        obj_sol = 0
+        objective = self.instance.get_objective()
         for machine in self.machines:
             prev_job = None
-            ci, setup_time, expected_start_time = 0, 0, 0
-            for i, element in enumerate(machine.job_schedule):
-                job, startTime, endTime = element
+            expected_start_time, setup_time, ci  = 0, 0, 0
+            obj_machine = 0
+            for i, job_element in enumerate(machine.job_schedule):
+                job_id, startTime, endTime = job_element
                 # Test End Time + start Time
+                
+                # Check release constraint
                 if hasattr(self.instance,'R'):
-                    expected_start_time = max(self.instance.R[job],ci)
+                    expected_start_time = max(self.instance.R[job_id],ci)
                 else:
                     expected_start_time = ci
+                
+                # Check setup constraint
                 if hasattr(self.instance,'S'):
                     if prev_job is None:
-                        setup_time = self.instance.S[machine.machine_num][job][job]
+                        setup_time = self.instance.S[machine.machine_num][job_id][job_id]
                     else:
-                        setup_time = self.instance.S[machine.machine_num][prev_job][job]
-                else: setup_time = 0
+                        setup_time = self.instance.S[machine.machine_num][prev_job][job_id]
+                else: 
+                    setup_time = 0
 
-                proc_time = self.instance.P[job][machine.machine_num]
-                ci = expected_start_time + proc_time + setup_time
+                proc_time = self.instance.P[job_id][machine.machine_num]
+                ci = expected_start_time + setup_time + proc_time 
+
                 if startTime != expected_start_time or endTime != ci:
                     print(f'## Error: in machine {machine.machine_num}' +
-                          f' found {element} expected {job,expected_start_time, ci}')
+                          f' found {job_element} expected {job_id,expected_start_time, ci}')
                     is_valid = False
-                set_jobs.add(job)
-                prev_job = job
+                
+                if objective == Objective.Cmax:
+                    obj_machine = ci
+                elif objective == Objective.wiCi:
+                    obj_machine += self.instance.W[job_id] * ci
+                elif objective == Objective.wiTi:
+                    obj_machine += self.instance.W[job_id] * max(ci-self.instance.D[job_id], 0)
+                elif objective == Objective.wiFi:
+                    obj_machine += self.instance.W[job_id] * (ci-self.instance.R[job_id])
+                elif objective == Objective.Lmax:
+                    obj_machine = max(obj_machine, ci - self.instance.D[job_id])
 
-        is_valid &= len(set_jobs) == self.instance.n
+                set_jobs.add(job_id)
+                prev_job = job_id
+            
+            if obj_machine != machine.objective_value:
+                print(f'## Error: in machine {machine.machine_num}' +
+                    f' found objective_value = {machine.objective_value} expected {obj_machine}')
+                is_valid = False
+
+            obj_list.append(obj_machine)
+
+        if objective in self.max_objectives:
+            obj_sol = max(obj_list)
+        elif objective in self.sum_objectives:
+            obj_sol = sum(obj_list)
+
+        if obj_sol != self.objective_value:
+            print(f'## Error: in solution' +
+                    f' found objective_value = {self.objective_value} expected {obj_sol}')
+            is_valid = False
+        
+        if len(set_jobs) != self.instance.n:
+            print(f'## Error: in number of jobs' +
+                    f' found {len(set_jobs)} job(s) expected {self.instance.n}')
+            is_valid = False
+
         return is_valid
 
 

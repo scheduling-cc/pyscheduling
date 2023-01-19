@@ -820,35 +820,58 @@ class SingleSolution(RootProblem.Solution):
         set_jobs = set()
         is_valid = True
         prev_job = None
-        ci, setup_time, expected_start_time = 0, 0, 0
+        expected_start_time, setup_time, ci = 0, 0, 0
+        obj = 0
+        objective = self.instance.get_objective()
         for i, element in enumerate(self.machine.job_schedule):
-            job, startTime, endTime = element
+            job_id, startTime, endTime = element
             # Test End Time + start Time
             if hasattr(self.instance, 'R'):
-                expected_start_time = max(self.instance.R[job], ci)
+                expected_start_time = max(self.instance.R[job_id], ci)
             else:
                 expected_start_time = ci
             if hasattr(self.instance, 'S'):
                 if prev_job is None:
-                    setup_time = self.instance.S[job][job]
+                    setup_time = self.instance.S[job_id][job_id]
                 else:
-                    setup_time = self.instance.S[prev_job][job]
+                    setup_time = self.instance.S[prev_job][job_id]
             else:
                 setup_time = 0
 
-            proc_time = self.instance.P[job]
+            proc_time = self.instance.P[job_id]
             ci = expected_start_time + proc_time + setup_time
 
             if startTime != expected_start_time or endTime != ci:
                 if startTime > expected_start_time and endTime - startTime == proc_time + setup_time :
                     if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
                 else :
-                    if verbosity : print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                    if verbosity : print(f'## Error:  found {element} expected {job_id,expected_start_time, ci}')
                     is_valid = False
-            set_jobs.add(job)
-            prev_job = job
 
-        is_valid &= len(set_jobs) == self.instance.n
+            if objective == Objective.Cmax:
+                obj = ci
+            elif objective == Objective.wiCi:
+                obj += self.instance.W[job_id] * ci
+            elif objective == Objective.wiTi:
+                obj += self.instance.W[job_id] * max(ci-self.instance.D[job_id], 0)
+            elif objective == Objective.wiFi:
+                obj += self.instance.W[job_id] * (ci-self.instance.R[job_id])
+            elif objective == Objective.Lmax:
+                obj = max(obj, ci - self.instance.D[job_id])
+
+            set_jobs.add(job_id)
+            prev_job = job_id
+
+        if obj != self.objective_value:
+            print(f'## Error: in solution' +
+                    f' found objective_value = {self.objective_value} expected {obj}')
+            is_valid = False
+
+        if len(set_jobs) != self.instance.n:
+            print(f'## Error: in number of jobs' +
+                    f' found {len(set_jobs)} job(s) expected {self.instance.n}')
+            is_valid = False
+
         return is_valid
 
 
