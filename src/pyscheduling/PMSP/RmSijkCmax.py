@@ -124,7 +124,7 @@ if DOCPLEX_IMPORTED:
                 k_tasks = sorted(k_tasks, key= lambda x: x[1])
                 sol.machines[k].job_schedule = k_tasks
             
-            sol.compute_objective()
+            sol.compute_objective(sol.instance)
             return sol
 
         @staticmethod
