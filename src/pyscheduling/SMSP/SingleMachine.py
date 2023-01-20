@@ -423,7 +423,7 @@ class Machine:
             Objective.wiTi: self.wiTi_cache,
             Objective.wiFi: self.wiFi_cache
         }
-
+      
     def __repr__(self):
         return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective_value)
 
@@ -486,7 +486,9 @@ class Machine:
             return startIndex, None
         if obj_cache is None:  # Initialize obj_cache to the size of job_schedule
             obj_cache = [-1] * len(self.job_schedule)
+            self.objectives_map[objective] = obj_cache
             startIndex = 0
+            
         elif len(obj_cache) != len(self.job_schedule):
             obj_cache.insert(startIndex, -1) # Insert an element in obj_cache corresponding to the position where a new job has been inserted
         
@@ -551,7 +553,6 @@ class Machine:
         """
         startIndex, obj_cache = self.init_cache(instance, startIndex)
         ci, job_prev_i, obj = self.init_obj(startIndex, obj_cache)
-        
         for i in range(startIndex, len(self.job_schedule)):
             job_i = self.job_schedule[i].id
             ci, start_time = self.compute_current_ci(instance, ci, job_prev_i, job_i)
@@ -585,7 +586,6 @@ class Machine:
         objective = instance.get_objective()
         obj_cache = self.objectives_map.get(objective, None)
         obj = obj_cache[first_pos - 1] if first_pos > 0 and obj_cache is not None else 0
-       
         for i in range(first_pos, len(self.job_schedule) + 1): # +1 for edge cases when inserting in empty schedule or at the very end of a non empty schedule
 
             # If job needs to be inserted to position i
@@ -820,35 +820,58 @@ class SingleSolution(RootProblem.Solution):
         set_jobs = set()
         is_valid = True
         prev_job = None
-        ci, setup_time, expected_start_time = 0, 0, 0
+        expected_start_time, setup_time, ci = 0, 0, 0
+        obj = 0
+        objective = self.instance.get_objective()
         for i, element in enumerate(self.machine.job_schedule):
-            job, startTime, endTime = element
+            job_id, startTime, endTime = element
             # Test End Time + start Time
             if hasattr(self.instance, 'R'):
-                expected_start_time = max(self.instance.R[job], ci)
+                expected_start_time = max(self.instance.R[job_id], ci)
             else:
                 expected_start_time = ci
             if hasattr(self.instance, 'S'):
                 if prev_job is None:
-                    setup_time = self.instance.S[job][job]
+                    setup_time = self.instance.S[job_id][job_id]
                 else:
-                    setup_time = self.instance.S[prev_job][job]
+                    setup_time = self.instance.S[prev_job][job_id]
             else:
                 setup_time = 0
 
-            proc_time = self.instance.P[job]
+            proc_time = self.instance.P[job_id]
             ci = expected_start_time + proc_time + setup_time
 
             if startTime != expected_start_time or endTime != ci:
                 if startTime > expected_start_time and endTime - startTime == proc_time + setup_time :
                     if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
                 else :
-                    if verbosity : print(f'## Error:  found {element} expected {job,expected_start_time, ci}')
+                    if verbosity : print(f'## Error:  found {element} expected {job_id,expected_start_time, ci}')
                     is_valid = False
-            set_jobs.add(job)
-            prev_job = job
 
-        is_valid &= len(set_jobs) == self.instance.n
+            if objective == Objective.Cmax:
+                obj = ci
+            elif objective == Objective.wiCi:
+                obj += self.instance.W[job_id] * ci
+            elif objective == Objective.wiTi:
+                obj += self.instance.W[job_id] * max(ci-self.instance.D[job_id], 0)
+            elif objective == Objective.wiFi:
+                obj += self.instance.W[job_id] * (ci-self.instance.R[job_id])
+            elif objective == Objective.Lmax:
+                obj = max(obj, ci - self.instance.D[job_id])
+
+            set_jobs.add(job_id)
+            prev_job = job_id
+
+        if obj != self.objective_value:
+            print(f'## Error: in solution' +
+                    f' found objective_value = {self.objective_value} expected {obj}')
+            is_valid = False
+
+        if len(set_jobs) != self.instance.n:
+            print(f'## Error: in number of jobs' +
+                    f' found {len(set_jobs)} job(s) expected {self.instance.n}')
+            is_valid = False
+
         return is_valid
 
 
