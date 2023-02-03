@@ -9,6 +9,7 @@ from math import exp
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Solver
 import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JobShop_methods as js_methods
 
 @dataclass
 class JmriwiTi_Instance(JobShop.JobShopInstance):
@@ -113,7 +114,7 @@ class JmriwiTi_Instance(JobShop.JobShopInstance):
         """
         return RootProblem.Objective.wiTi
 
-class Heuristics():
+class Heuristics(js_methods.Heuristics):
 
     @staticmethod
     def shifting_bottleneck(instance : JmriwiTi_Instance):

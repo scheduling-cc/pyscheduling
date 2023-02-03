@@ -8,6 +8,7 @@ from time import perf_counter
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Solver
 import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JobShop_methods as js_methods
 
 try:
     import docplex
@@ -49,7 +50,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
         """Random generation of JmCmax problem instance
 
         Args:
@@ -64,10 +65,6 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         Returns:
             JmCmax_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
-        if(Pmax == -1):
-            Pmax = randint(Pmin, 100)
         instance = cls(InstanceName, jobs_number, configuration_number)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
         return instance
@@ -269,7 +266,7 @@ if DOCPLEX_IMPORTED:
             else:
                 print("Docplex import error: you can not use this solver")
 
-class Heuristics():
+class Heuristics(js_methods.Heuristics):
 
     @staticmethod
     def shifting_bottleneck(instance : JmCmax_Instance):
