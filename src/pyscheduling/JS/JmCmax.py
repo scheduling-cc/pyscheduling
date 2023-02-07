@@ -269,6 +269,27 @@ if DOCPLEX_IMPORTED:
 class Heuristics(js_methods.Heuristics):
 
     @staticmethod
+    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
+        """contains a list of static dispatching rules to be chosen from
+
+        Args:
+            instance (JmCmax_Instance): Instance to be solved
+            rule_number (int, optional) : Index of the rule to use. Defaults to 1.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        default_rule = lambda instance, job_tuple: instance.P[job_tuple[0]][job_tuple[1][0]]
+        rules_dict = {
+            0: default_rule,
+            1: lambda instance, job_tuple: sum(instance.P[job_tuple[0]][oper_idx] for oper_idx in job_tuple[1])
+        }
+        
+        sorting_func = rules_dict.get(rule_number, default_rule)
+
+        return Heuristics.dispatch_heuristic(instance, sorting_func, reverse)
+
+    @staticmethod
     def shifting_bottleneck(instance : JmCmax_Instance):
         """Shifting bottleneck heuristic, Pinedo page 193
 

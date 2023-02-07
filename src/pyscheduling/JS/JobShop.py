@@ -583,7 +583,7 @@ class JobShopInstance(RootProblem.Instance):
         visited_machine = list(range(self.m))
         for j in range(self.n):
             Pj = []
-            nb_operation_j = random.randint(1, self.m-1)
+            nb_operation_j = random.randint(1, self.m)
             for _ in range(nb_operation_j):
                 machine_id = random.randint(0, self.m-1)
                 while(machine_id in [i[0] for i in Pj]) : machine_id = random.randint(0, self.m-1) # checks recirculation
@@ -731,6 +731,7 @@ class JobShopSolution(RootProblem.Solution):
             self.machines = machines
         self.objective_value = 0
         self.graph = graph
+        self.job_schedule = {j: Job(j, 0, 0) for j in range(self.instance.n)}
 
     def create_solution_graph(self, invert_weights = True):
         """Create the graph containing both conjunctive and disjunctive arcs from the schedule
@@ -797,10 +798,11 @@ class JobShopSolution(RootProblem.Solution):
             start_time = nx_dists[0][Node(first_machine_id, j)]
             end_time = nx_dists[0][self.graph.jobs_sinks[j]]
 
-            jobs_times[j] = (-start_time, -end_time)
+            jobs_times[j] = Job(j, -start_time, -end_time)
         
-        jobs_times[-1] = (0, -nx_dists[0][self.graph.sink])
+        jobs_times[-1] = Job(-1, 0, -nx_dists[0][self.graph.sink])
         self.graph.jobs_times = jobs_times
+        self.job_schedule = jobs_times
         return jobs_times 
 
     def completion_time(self, job_id: int, recompute_distances = False):
@@ -835,7 +837,7 @@ class JobShopSolution(RootProblem.Solution):
         if recompute_distances or self.graph.jobs_times is None:
             self.all_completion_times()
         
-        return self.fix_objective(self.graph.jobs_times)
+        return self.fix_objective()
 
     def __str__(self):
         return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
@@ -878,7 +880,7 @@ class JobShopSolution(RootProblem.Solution):
         setup_time = self.instance.S[m_id][last_job][job_id] if hasattr(self.instance, "S") else 0
         remaining_setup_time = max(setup_time-(start_time-last_t),0)
 
-        end_time = start_time + remaining_setup_time + proc_time
+        end_time = start_time + setup_time + proc_time
 
         return start_time, end_time
     
@@ -892,19 +894,26 @@ class JobShopSolution(RootProblem.Solution):
         Returns:
             int: the new objective
         """
+        saved_job = self.job_schedule[job_id]
+        new_obj = self.objective_value
+        self.job_schedule[job_id] = Job(job_id, min(start_time, saved_job.start_time), max(end_time, saved_job.end_time))
+
         objective = self.instance.get_objective()
         if objective == RootProblem.Objective.Cmax:
-            return max(self.objective_value, end_time)
+            new_obj =  max(self.job_schedule[j].end_time for j in range(self.instance.n))
         elif objective == RootProblem.Objective.wiCi:
-            return self.objective_value + self.instance.W[job_id] * end_time
+            new_obj =  sum( self.instance.W[j] * self.job_schedule[j].end_time for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.wiFi:
-            return self.objective_value + self.instance.W[job_id] * (end_time - self.instance.R[job_id])
+            new_obj =  sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.wiTi:
-            return self.objective_value + self.instance.W[job_id] * max(end_time-self.instance.D[job_id],0)
+            new_obj =  sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.Lmax:
-            return max( self.objective_value, end_time-self.instance.D[job_id]) 
+            new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[2] for j in range(self.instance.n) ) )
+        
+        self.job_schedule[job_id] = saved_job
+        return new_obj
 
-    def fix_objective(self, jobs_times):
+    def fix_objective(self):
         """Compute objective value of solution out of the jobs_times dict
 
         Args:
@@ -912,15 +921,15 @@ class JobShopSolution(RootProblem.Solution):
         """
         objective = self.instance.get_objective()
         if objective == RootProblem.Objective.Cmax:
-            self.objective_value = max(jobs_times[j][1] for j in range(self.instance.n))
+            self.objective_value = max(self.job_schedule[j].end_time for j in range(self.instance.n))
         elif objective == RootProblem.Objective.wiCi:
-            self.objective_value = sum( self.instance.W[j] * jobs_times[j][1] for j in range(self.instance.n) )
+            self.objective_value = sum( self.instance.W[j] * self.job_schedule[j].end_time for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.wiFi:
-            self.objective_value = sum( self.instance.W[j] * (jobs_times[j][1] - jobs_times[j][0] ) for j in range(self.instance.n) )
+            self.objective_value = sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.wiTi:
-            self.objective_value = sum( self.instance.W[j] * max(jobs_times[j][1] - self.instance.D[j], 0) for j in range(self.instance.n) )
+            self.objective_value = sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.Lmax:
-            self.objective_value = max( 0, max( jobs_times[j][1]-self.instance.D[j] for j in range(self.instance.n) ) )
+            self.objective_value = max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
 
         return self.objective_value
 
@@ -967,9 +976,10 @@ class JobShopSolution(RootProblem.Solution):
                 if job.id == j:
                     end_time = job.end_time
             
-            jobs_times[j] = (start_time, end_time)
+            jobs_times[j] = Job(j, start_time, end_time)
 
-        return self.fix_objective(jobs_times)
+        self.job_schedule = jobs_times
+        return self.fix_objective()
 
     def cmax(self):
         """Sets the schedule of each machine then sets the makespan
