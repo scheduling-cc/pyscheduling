@@ -41,7 +41,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.VALLADA, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
         """Random generation of FmCmax problem instance
 
         Args:

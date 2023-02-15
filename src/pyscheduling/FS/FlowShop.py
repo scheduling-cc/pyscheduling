@@ -16,7 +16,7 @@ Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 
 class GenerationProtocol(Enum):
-    VALLADA = 1
+    BASE = 1
 
 
 class GenerationLaw(Enum):
@@ -289,6 +289,7 @@ class FlowShopInstance(RootProblem.Instance):
             list[int]: due time table
         """
         di = []
+        PJobs = [min(PJobs[j]) for j in range(self.n)]
         sumP = sum(PJobs)
         for j in range(self.n):
             if hasattr(self, 'R'):
