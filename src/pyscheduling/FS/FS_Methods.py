@@ -5,7 +5,7 @@ from typing import Callable
 from functools import partial
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.FS.FlowShop import *
+import pyscheduling.FS.FlowShop as FS
 from pyscheduling.Problem import Job
 
 try:
@@ -22,7 +22,7 @@ DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 class Heuristics():
     
     @staticmethod
-    def dispatch_heuristic(instance : FlowShopInstance, rule : Callable, reverse: bool = False):
+    def dispatch_heuristic(instance : FS.FlowShopInstance, rule : Callable, reverse: bool = False):
         """Orders the jobs according to the rule (lambda function) and returns the schedule accordignly
 
         Args:
@@ -34,7 +34,7 @@ class Heuristics():
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
         startTime = perf_counter()
-        solution = FlowShopSolution(instance)
+        solution = FS.FlowShopSolution(instance)
         
         remaining_jobs_list = list(range(instance.n))
         sort_rule = partial(rule, instance)
@@ -44,7 +44,7 @@ class Heuristics():
         solution.compute_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    def BIBA(instance: FlowShopInstance):
+    def BIBA(instance: FS.FlowShopInstance):
         """the greedy constructive heuristic (Best Insertion Based approach) to find an initial solution of flowshop instances 
 
         Args:
@@ -55,7 +55,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         start_time = perf_counter()
-        solution = FlowShopSolution(instance=instance)
+        solution = FS.FlowShopSolution(instance=instance)
 
         remaining_jobs_list = [j for j in range(instance.n)]
 
@@ -77,7 +77,7 @@ class Heuristics():
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
-    def grasp(instance: FlowShopInstance, p: float, r: int, n_iterations: int):
+    def grasp(instance: FS.FlowShopInstance, p: float, r: int, n_iterations: int):
         """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
@@ -93,7 +93,7 @@ class Heuristics():
         solveResult = RootProblem.SolveResult()
         best_solution = None
         for _ in range(n_iterations):
-            solution = FlowShopSolution(instance)
+            solution = FS.FlowShopSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
@@ -124,7 +124,7 @@ class Heuristics():
         solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         return solveResult
 
-    def MINIT(instance : FlowShopInstance):
+    def MINIT(instance : FS.FlowShopInstance):
         """Gupta's MINIT heuristic which is based on iteratively scheduling a new job at the end
         so that it minimizes the idle time at the last machine
 
@@ -135,7 +135,7 @@ class Heuristics():
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
         start_time = perf_counter()
-        solution = FlowShopSolution(instance=instance)
+        solution = FS.FlowShopSolution(instance=instance)
 
         #step 1 : Find pairs of jobs (job_i,job_j) which minimizes the idle time
         min_idleTime = None
@@ -178,6 +178,83 @@ class Heuristics():
 
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
+class Metaheuristics():
+
+    @staticmethod
+    def lahc(instance: FS.FlowShopInstance, **kwargs):
+        """ Returns the solution using the LAHC algorithm
+        Args:
+            instance (ParallelInstance): Instance object to solve
+            Lfa (int, optional): Size of the candidates list. Defaults to 25.
+            n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
+            Non_improv (int, optional): LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
+            LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
+            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+            init_sol_method: The method used to get the initial solution. Defaults to "constructive"
+            seed (int, optional): Seed for the random operators to make the algo deterministic
+        Returns:
+            Problem.SolveResult: the solver result of the execution of the metaheuristic
+        """
+        # Extracting parameters
+        time_limit_factor = kwargs.get("time_limit_factor", None)
+        init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
+        Lfa = kwargs.get("Lfa", 30)
+        n_iterations = kwargs.get("n_iterations", 5000)
+        Non_improv = kwargs.get("Non_improv", 500)
+        LS = kwargs.get("LS", True)
+        seed = kwargs.get("seed", None)
+
+        if seed:
+            random.seed(seed)
+
+        first_time = perf_counter()
+        if time_limit_factor:
+            time_limit = instance.m * instance.n * time_limit_factor
+
+        # Generate init solutoin using the initial solution method
+        solution_init = init_sol_method(instance).best_solution
+        
+        if not solution_init:
+            return RootProblem.SolveResult()
+        
+        all_solutions = []
+        solution_best = solution_init.copy()  # Save the current best solution
+        all_solutions.append(solution_best)
+        lahc_list = [solution_init.objective_value for i in range(Lfa)]  # Create LAHC list
+
+        N = 0
+        i = 0
+        time_to_best = perf_counter() - first_time
+        current_solution = solution_init.copy()
+        while i < n_iterations and N < Non_improv:
+            # check time limit if exists
+            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                break
+            
+            solution_i = FS.NeighbourhoodGeneration.random_neighbour(current_solution)
+            #print(i, "Generated", solution_i.objective_value, "Current:", current_solution.objective_value, "Best:", solution_best.objective_value)
+            if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
+
+                current_solution = solution_i
+                if solution_i.objective_value < solution_best.objective_value:
+                    all_solutions.append(solution_i)
+                    solution_best = solution_i.copy()
+                    time_to_best = (perf_counter() - first_time)
+                    N = 0
+            lahc_list[i % Lfa] = solution_i.objective_value
+            i += 1
+            N += 1
+           
+        # Construct the solve result
+        solve_result = RootProblem.SolveResult(
+            best_solution=solution_best,
+            solutions=all_solutions,
+            runtime=(perf_counter() - first_time),
+            time_to_best=time_to_best,
+        )
+         
+        return solve_result
+
 if DOCPLEX_IMPORTED:
     class CSP():
 
@@ -212,9 +289,9 @@ if DOCPLEX_IMPORTED:
                         self.best_values[self.stop_times[self.stop_idx]] = obj_val
 
         @staticmethod
-        def _csp_transform_solution(msol, E_i, instance: FlowShopInstance):
+        def _csp_transform_solution(msol, E_i, instance: FS.FlowShopInstance):
 
-            sol = FlowShopSolution(instance)
+            sol = FS.FlowShopSolution(instance)
             for k in range(instance.m):
                 k_tasks = []
                 for i in range(instance.n):
@@ -245,7 +322,7 @@ if DOCPLEX_IMPORTED:
             """
             if "docplex" in sys.modules:
                 # Extracting parameters
-                objective = kwargs.get("objective", "wiCi")
+                objective = instance.get_objective()
                 log_path = kwargs.get("log_path", None)
                 time_limit = kwargs.get("time_limit", 300)
                 nb_threads = kwargs.get("threads", 1)
@@ -308,8 +385,17 @@ if DOCPLEX_IMPORTED:
                         model.add( model.end_before_start(E_i[i][k - 1], E_i[i][k]) )
 
                 # Add objective
-                model.add( model.minimize( model.max(model.end_of(job_i) for i in E for job_i in E_i[i]) ) )
-
+                if objective == RootProblem.Objective.Cmax:
+                    model.add( model.minimize( model.max(model.end_of(job_i) for i in E for job_i in E_i[i]) ) )
+                elif objective == RootProblem.Objective.wiCi:
+                    model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i][-1]) for i in E ) )) # sum_{i in E} wi * ci
+                elif objective == RootProblem.Objective.wiFi:
+                    model.add(model.minimize( sum( instance.W[i] * (model.end_of(E_i[i][-1]) - instance.R[i]) for i in E ) )) # sum_{i in E} wi * (ci - ri)
+                elif objective == RootProblem.Objective.wiTi:
+                    model.add( model.minimize( 
+                        sum( instance.W[i] * model.max(model.end_of(E_i[i]) - instance.D[i], 0) for i in E ) # sum_{i in E} wi * Ti
+                    ))
+                
                 # Link the callback to save stats of the solve process
                 mycallback = CSP.MyCallback(stop_times=stop_times)
                 model.add_solver_callback(mycallback)

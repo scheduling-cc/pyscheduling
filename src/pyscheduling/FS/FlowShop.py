@@ -439,7 +439,7 @@ class FlowShopSolution(RootProblem.Solution):
             self.job_schedule = []
         else: 
             self.job_schedule = job_schedule
-        self.objective_value = 0
+        self.objective_value = objective_value
 
     def __str__(self):
         return "Objective : " + str(self.objective_value) + "\n" + "Jobs sequence : " + "\t".join(map(str, self.job_schedule)) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
@@ -688,8 +688,6 @@ class NeighbourhoodGeneration():
         while random_pos == random_job_index:
             random_pos = random.randrange(job_schedule_len)
 
-        print(random_job_index, random_pos)
-
         # Simulate applying the swap move
         random_job = job_schedule.pop(random_job_index)
         job_schedule.insert(random_pos, random_job)
@@ -739,3 +737,23 @@ class NeighbourhoodGeneration():
             return solution
 
         return solution_copy
+    
+    @staticmethod
+    def random_neighbour(solution_i):
+        """Generates a random neighbour solution of the given solution
+
+        Args:
+            solution_i (FlowShopSolution): Solution at iteration i
+
+        Returns:
+            FlowShopSolution: New solution
+        """ 
+        r = random.random()
+        if r < 0.5:
+            solution = NeighbourhoodGeneration.random_insert(
+                solution_i, force_improve=False, inplace=False)
+        else:
+            solution = NeighbourhoodGeneration.random_swap(
+                solution_i, force_improve=False, inplace=False)
+       
+        return solution
