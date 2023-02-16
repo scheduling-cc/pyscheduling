@@ -701,12 +701,10 @@ class FS_LocalSearch(RootProblem.LocalSearch):
                 new_objective = solution_copy.compute_objective(startIndex= min(i, j))
                 solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
 
-                print(f"Swapping {i} and {j}, old_obj = {old_obj}, new_obj = {new_objective}")
                 if new_objective < old_obj and (move is None or new_objective < move[2]):
                         move = (i, j, new_objective)
 
             if not move is None:
-                print(f"Chosen the move {move} for job {i}")
                 i, j, new_objective = move
                 solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
                 solution_copy.compute_objective(startIndex= min(i, j))
@@ -837,7 +835,6 @@ class NeighbourhoodGeneration():
         solution_copy.job_schedule = [job for job in solution_copy.job_schedule if job.id not in removed_jobs]
         solution_copy.compute_objective()
 
-        print("Removed the following jobs: ", removed_jobs, "Current obj is ", solution_copy.objective_value)
         # Construction by inserting the removed jobs one by one
         for n_j, j in enumerate(removed_jobs):
             move = None
@@ -852,10 +849,8 @@ class NeighbourhoodGeneration():
 
                 if move is None or move[1] > new_obj:
                     move = (pos, new_obj)
-                    print(f"\tReplacing best move of {n_j}:{j} {move}")
             
             # Apply the best move
-            print(f"Inserting job {n_j}: {j} in pos {move[0]} with an objective of {move[1]}")
             solution_copy.job_schedule.pop(prev_pos)
             solution_copy.job_schedule.insert(move[0], Job(j, 0, 0))
             solution_copy.compute_objective(startIndex=move[0])
