@@ -465,12 +465,17 @@ class FlowShopSolution(RootProblem.Solution):
             for machine in self.machines :
                 machine.oper_schedule = [Job(job.id,0,0) for job in self.job_schedule]
 
-        elif len(self.job_schedule) != len(self.machines[0].oper_schedule): # Inserting one job only
-            inserted_job_id = self.job_schedule[startIndex].id
-            for machine in self.machines :
-                machine.oper_schedule.insert(startIndex,Job(inserted_job_id,0,0))
+        else:
+            if len(self.job_schedule) != len(self.machines[0].oper_schedule): # Add the missing jobs or remove the surplus
+                diff = len(self.job_schedule) - len(self.machines[0].oper_schedule)
+                if diff > 0: # There are missing jobs in machines
+                    for machine in self.machines :
+                        machine.oper_schedule.extend( [Job(self.instance.n + 1, 0, 0) for _ in range(diff) ] )
+                else: # There are more jobs in machines, delete the last diff jobs
+                    for machine in self.machines :
+                        del machine.oper_schedule[diff:]
 
-        else: # Change starting from startIndex
+            # Change jobs order from startIndex
             for machine in self.machines:
                 for i in range(startIndex, len(self.job_schedule)):
                     job_id, start, end = self.job_schedule[i]
@@ -654,14 +659,65 @@ class FlowShopSolution(RootProblem.Solution):
 
 
 class FS_LocalSearch(RootProblem.LocalSearch):
-    pass
     
+    @staticmethod
+    def _iterative_best_insert(solution: FlowShopSolution, inplace: bool = False):
+        
+        solution_copy = solution.copy() if not inplace else solution
+        for pos in range(len(solution_copy.job_schedule)):
+            job = solution_copy.job_schedule[pos]
+            old_objective = solution_copy.objective_value
+            taken_pos = pos
+            prev_pos = pos
+            for new_pos in range(len(solution_copy.job_schedule)):
+                if(pos != new_pos):
+                    # Apply the insertion
+                    taken_job = solution_copy.job_schedule.pop(prev_pos)
+                    solution_copy.job_schedule.insert(new_pos, taken_job)
+                    new_objective = solution_copy.compute_objective(
+                        startIndex= min(prev_pos, new_pos))
 
+                    if new_objective < old_objective:
+                        taken_pos = new_pos
+                        old_objective = new_objective
+                    prev_pos = new_pos
+            if taken_pos != prev_pos:
+                solution_copy.job_schedule.pop(prev_pos)
+                solution_copy.job_schedule.insert(taken_pos, job)
+                solution_copy.compute_objective(min(taken_pos, prev_pos))
+        return solution_copy
+    
+    @staticmethod
+    def _iterative_best_swap(solution: FlowShopSolution, inplace: bool = False):
+
+        solution_copy = solution.copy() if not inplace else solution
+        job_schedule_len = len(solution_copy.job_schedule)
+        old_obj = solution_copy.objective_value
+        for i in range(0, job_schedule_len):
+            move = None
+            for j in range(i+1, job_schedule_len):
+
+                solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
+                new_objective = solution_copy.compute_objective(startIndex= min(i, j))
+                solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
+
+                print(f"Swapping {i} and {j}, old_obj = {old_obj}, new_obj = {new_objective}")
+                if new_objective < old_obj and (move is None or new_objective < move[2]):
+                        move = (i, j, new_objective)
+
+            if not move is None:
+                print(f"Chosen the move {move} for job {i}")
+                i, j, new_objective = move
+                solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
+                solution_copy.compute_objective(startIndex= min(i, j))
+                old_obj = solution_copy.objective_value
+
+        return solution_copy
 
 class NeighbourhoodGeneration():
 
     @staticmethod
-    def random_insert(solution: FlowShopSolution, force_improve: bool = True, inplace: bool = True):
+    def random_insert(solution: FlowShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1):
         """Performs an insert of a random job in a random position
 
         Args:
@@ -677,21 +733,21 @@ class NeighbourhoodGeneration():
         else:
             solution_copy = solution
 
-        # Select the two different random jobs to be swapped 
         job_schedule = solution_copy.job_schedule
         job_schedule_len = len(job_schedule)
         old_objective = solution_copy.objective_value
 
-        # Get the job and the position
-        random_job_index = random.randrange(job_schedule_len)
-        random_pos = random_job_index
-        while random_pos == random_job_index:
-            random_pos = random.randrange(job_schedule_len)
+        for _ in range(nb_moves):
+            # Get the job and the position
+            random_job_index = random.randrange(job_schedule_len)
+            random_pos = random_job_index
+            while random_pos == random_job_index:
+                random_pos = random.randrange(job_schedule_len)
 
-        # Simulate applying the swap move
-        random_job = job_schedule.pop(random_job_index)
-        job_schedule.insert(random_pos, random_job)
-        new_objective = solution_copy.compute_objective(startIndex= min(random_job_index, random_pos))
+            # Simulate applying the insertion move
+            random_job = job_schedule.pop(random_job_index)
+            job_schedule.insert(random_pos, random_job)
+            new_objective = solution_copy.compute_objective(startIndex= min(random_job_index, random_pos))
 
         # Update the solution
         if force_improve and (new_objective > old_objective):
@@ -700,7 +756,7 @@ class NeighbourhoodGeneration():
         return solution_copy
 
     @staticmethod
-    def random_swap(solution: FlowShopSolution, force_improve: bool = True, inplace: bool = True):
+    def random_swap(solution: FlowShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1):
         """Performs a random swap between 2 jobs
 
         Args:
@@ -721,16 +777,18 @@ class NeighbourhoodGeneration():
         job_schedule_len = len(job_schedule)
         old_objective = solution_copy.objective_value
 
-        random_job_index = random.randrange(job_schedule_len)
-        other_job_index = random.randrange(job_schedule_len)
-        while other_job_index == random_job_index:
-            other_job_index = random.randrange(job_schedule_len)
+        for _ in range(nb_moves):
 
-        # Simulate applying the swap move
-        job_schedule[random_job_index], job_schedule[other_job_index] = job_schedule[
-                    other_job_index], job_schedule[random_job_index]
-        
-        new_objective = solution_copy.compute_objective(startIndex= min(random_job_index, other_job_index))
+            random_job_index = random.randrange(job_schedule_len)
+            other_job_index = random.randrange(job_schedule_len)
+            while other_job_index == random_job_index:
+                other_job_index = random.randrange(job_schedule_len)
+
+            # Simulate applying the swap move
+            job_schedule[random_job_index], job_schedule[other_job_index] = job_schedule[
+                        other_job_index], job_schedule[random_job_index]
+            
+            new_objective = solution_copy.compute_objective(startIndex= min(random_job_index, other_job_index))
 
         # Update the solution
         if force_improve and (new_objective > old_objective):
@@ -739,7 +797,7 @@ class NeighbourhoodGeneration():
         return solution_copy
     
     @staticmethod
-    def random_neighbour(solution_i):
+    def random_neighbour(solution_i: FlowShopSolution):
         """Generates a random neighbour solution of the given solution
 
         Args:
@@ -751,9 +809,55 @@ class NeighbourhoodGeneration():
         r = random.random()
         if r < 0.5:
             solution = NeighbourhoodGeneration.random_insert(
-                solution_i, force_improve=False, inplace=False)
+                solution_i, force_improve=False, inplace=False, nb_moves=2)
         else:
             solution = NeighbourhoodGeneration.random_swap(
-                solution_i, force_improve=False, inplace=False)
+                solution_i, force_improve=False, inplace=False, nb_moves=2)
        
         return solution
+
+    @staticmethod
+    def deconstruct_construct(solution_i: FlowShopSolution, d: float = 0.25):
+        """Generates a random neighbour solution of the given solution using the deconstruct - construct strategy
+
+        The procedure removes a set of jobs and insert them using best insertion (greedy) 
+
+        Args:
+            solution_i (FlowShopSolution): Solution at iteration i
+
+        Returns:
+            FlowShopSolution: New solution
+        """ 
+        solution_copy = solution_i.copy()
+        # Deconstruction of d (percentage) random jobs out all jobs
+        all_jobs = set(range(solution_copy.instance.n))
+        nb_removed_jobs = int(solution_copy.instance.n * d )
+        removed_jobs = random.sample(all_jobs, nb_removed_jobs)
+
+        solution_copy.job_schedule = [job for job in solution_copy.job_schedule if job.id not in removed_jobs]
+        solution_copy.compute_objective()
+
+        print("Removed the following jobs: ", removed_jobs, "Current obj is ", solution_copy.objective_value)
+        # Construction by inserting the removed jobs one by one
+        for n_j, j in enumerate(removed_jobs):
+            move = None
+            prev_pos = None
+            for pos in range(len(solution_copy.job_schedule) + 1):
+                if prev_pos is not None:
+                    solution_copy.job_schedule.pop(prev_pos)
+
+                solution_copy.job_schedule.insert(pos, Job(j, 0, 0))
+                new_obj = solution_copy.compute_objective(startIndex=pos-1)
+                prev_pos = pos
+
+                if move is None or move[1] > new_obj:
+                    move = (pos, new_obj)
+                    print(f"\tReplacing best move of {n_j}:{j} {move}")
+            
+            # Apply the best move
+            print(f"Inserting job {n_j}: {j} in pos {move[0]} with an objective of {move[1]}")
+            solution_copy.job_schedule.pop(prev_pos)
+            solution_copy.job_schedule.insert(move[0], Job(j, 0, 0))
+            solution_copy.compute_objective(startIndex=move[0])
+
+        return solution_copy
