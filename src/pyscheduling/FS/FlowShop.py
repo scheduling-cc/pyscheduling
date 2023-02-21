@@ -729,7 +729,7 @@ class FlowShopSolution(RootProblem.Solution):
 class FS_LocalSearch(RootProblem.LocalSearch):
     
     @staticmethod
-    def _iterative_best_insert(solution: FlowShopSolution, inplace: bool = False):
+    def _iterative_best_insert(solution: FlowShopSolution, inplace: bool = True):
         
         solution_copy = solution.copy() if not inplace else solution
         jobs_list = [job.id for job in solution_copy.job_schedule]
@@ -761,7 +761,7 @@ class FS_LocalSearch(RootProblem.LocalSearch):
         return solution_copy
     
     @staticmethod
-    def _iterative_best_swap(solution: FlowShopSolution, inplace: bool = False):
+    def _iterative_best_swap(solution: FlowShopSolution, inplace: bool = True):
 
         solution_copy = solution.copy() if not inplace else solution
         job_schedule_len = len(solution_copy.job_schedule)
@@ -903,7 +903,7 @@ class NeighbourhoodGeneration():
         """ 
         solution_copy = solution_i.copy()
         # Deconstruction of d (percentage) random jobs out all jobs
-        all_jobs = set(range(solution_copy.instance.n))
+        all_jobs = list(range(solution_copy.instance.n))
         nb_removed_jobs = int(solution_copy.instance.n * d )
         removed_jobs = random.sample(all_jobs, nb_removed_jobs)
 

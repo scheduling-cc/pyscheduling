@@ -78,7 +78,7 @@ class Heuristics():
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
-    def grasp(instance: FS.FlowShopInstance, p: float, r: int, n_iterations: int):
+    def grasp(instance: FS.FlowShopInstance, p: float = 0.5, r: int = 0.5, n_iterations: int = 5):
         """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
@@ -237,7 +237,7 @@ class Metaheuristics():
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
             
-            solution_i = FS.NeighbourhoodGeneration.deconstruct_construct(current_solution)
+            solution_i = FS.NeighbourhoodGeneration.random_neighbour(current_solution)
             if LS:
                 solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:

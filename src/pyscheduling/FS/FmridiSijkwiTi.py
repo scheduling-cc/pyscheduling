@@ -147,3 +147,6 @@ class Heuristics(FS_Methods.Heuristics):
             list[object]: list of functions
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+
+class Metaheuristics(FS_Methods.Metaheuristics):
+    pass
