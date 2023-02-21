@@ -655,7 +655,75 @@ class FlowShopSolution(RootProblem.Solution):
         """
         Check if solution respects the constraints
         """
-        return True
+        is_valid = True
+        set_jobs = set( job.id for job in self.job_schedule )
+        if len(set_jobs) != self.instance.n or len(self.job_schedule) != self.instance.n:
+            print("The set of scheduled jobs in solution is not the one expected, missing or extra jobs are found!")
+            is_valid = False
+        job_times = {i: (0, 0) for i in range(self.instance.n)}
+
+        for k, machine in enumerate(self.machines):
+            
+            if len(machine.oper_schedule) != len(self.job_schedule): # Same length
+                print(f"There is a difference between the set of jobs " +
+                    f"in solution ({len(self.job_schedule)}) and in machine ({len(machine.oper_schedule)})")
+
+            expected_start_time, setup_time, ci  = 0, 0, 0
+            prev_job = None
+            for i, job_element in enumerate(machine.oper_schedule):
+                job_id, startTime, endTime = job_element
+
+                if i < len(self.job_schedule) and job_id != self.job_schedule[i].id: # Same jobs
+                    print(f"Difference between job schdule in solution and "+
+                    f"machine {k} oper schedule in position {i}: solution[{i}] = {self.job_schedule[i].id}"+
+                    f" machine[{i}] = {job_id}")
+                
+                # Check start and end times
+                prev_start, prev_end = job_times[job_id]
+                if hasattr(self.instance,'R'):
+                    expected_start_time = max(self.instance.R[job_id], prev_end, ci)
+                else: 
+                    expected_start_time = max(prev_end, ci)
+
+                # Check setup constraint
+                setup_time = 0
+                if hasattr(self.instance,'S'):
+                    if prev_job is None:
+                        setup_time = self.instance.S[machine.machine_num][job_id][job_id]
+                    else:
+                        setup_time = self.instance.S[machine.machine_num][prev_job][job_id]
+                
+                remaining_setupTime = max(setup_time-(expected_start_time-ci),0)
+                proc_time = self.instance.P[job_id][machine.machine_num]
+                ci = expected_start_time + remaining_setupTime + proc_time         
+
+                if startTime != expected_start_time or endTime != ci:
+                    print(f'## Error: in machine {machine.machine_num}' +
+                          f' found {job_element} expected {job_id,expected_start_time, ci}')
+                    is_valid = False
+                
+                start_job = expected_start_time if k == 0 else prev_start
+                job_times[job_id] = (start_job, ci)
+
+                prev_job = job_id
+            
+        objective = self.instance.get_objective()
+        expected_obj = 0
+        if objective == RootProblem.Objective.Cmax:
+            expected_obj = max(period[1] for period in job_times.values())
+        elif objective == RootProblem.Objective.wiCi:
+            expected_obj = sum( self.instance.W[i] * job_times[i][1] for i in job_times )
+        elif objective == RootProblem.Objective.wiFi:
+            expected_obj = sum( self.instance.W[i] * (job_times[i][1] - self.instance.R[i]) for i in job_times)
+        elif objective == RootProblem.Objective.wiTi:
+            expected_obj = sum( self.instance.W[i] * max(job_times[i][1]-self.instance.D[i],0) for i in job_times )
+
+        if expected_obj != self.objective_value:
+            print(f'## Error: in solution' +
+                    f' found objective_value = {self.objective_value} expected {expected_obj}')
+            is_valid = False
+
+        return is_valid
 
 
 class FS_LocalSearch(RootProblem.LocalSearch):
@@ -664,7 +732,13 @@ class FS_LocalSearch(RootProblem.LocalSearch):
     def _iterative_best_insert(solution: FlowShopSolution, inplace: bool = False):
         
         solution_copy = solution.copy() if not inplace else solution
-        for pos in range(len(solution_copy.job_schedule)):
+        jobs_list = [job.id for job in solution_copy.job_schedule]
+        for job_id in jobs_list:
+            for i, job in enumerate(solution_copy.job_schedule):
+                if job.id == job_id:
+                    pos = i
+                    break
+            
             job = solution_copy.job_schedule[pos]
             old_objective = solution_copy.objective_value
             taken_pos = pos
@@ -674,8 +748,7 @@ class FS_LocalSearch(RootProblem.LocalSearch):
                     # Apply the insertion
                     taken_job = solution_copy.job_schedule.pop(prev_pos)
                     solution_copy.job_schedule.insert(new_pos, taken_job)
-                    new_objective = solution_copy.compute_objective(
-                        startIndex= min(prev_pos, new_pos))
+                    new_objective = solution_copy.compute_objective(min(prev_pos, new_pos))
 
                     if new_objective < old_objective:
                         taken_pos = new_pos
@@ -702,13 +775,15 @@ class FS_LocalSearch(RootProblem.LocalSearch):
                 solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
 
                 if new_objective < old_obj and (move is None or new_objective < move[2]):
-                        move = (i, j, new_objective)
+                    move = (i, j, new_objective)
 
             if not move is None:
                 i, j, new_objective = move
                 solution_copy.job_schedule[i], solution_copy.job_schedule[j] = solution_copy.job_schedule[j], solution_copy.job_schedule[i]
                 solution_copy.compute_objective(startIndex= min(i, j))
                 old_obj = solution_copy.objective_value
+            else:
+                solution_copy.compute_objective()
 
         return solution_copy
 
