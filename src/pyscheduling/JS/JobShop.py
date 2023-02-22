@@ -704,9 +704,6 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"], machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def compute_completion_time(self, instance: JobShopInstance, startIndex: int = 0):
-        pass
-
 
 @dataclass
 class JobShopSolution(RootProblem.Solution):
@@ -908,7 +905,7 @@ class JobShopSolution(RootProblem.Solution):
         elif objective == RootProblem.Objective.wiTi:
             new_obj =  sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
         elif objective == RootProblem.Objective.Lmax:
-            new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[2] for j in range(self.instance.n) ) )
+            new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
         
         self.job_schedule[job_id] = saved_job
         return new_obj
@@ -936,33 +933,43 @@ class JobShopSolution(RootProblem.Solution):
     def compute_objective(self):
         """Compute the machines correct schedules and sets the objective value
         """
-        jobs_progression = [(0,0) for job in range(self.instance.n)] # (machine_idx_job, t)
+        jobs_timeline = [(0,0) for job in range(self.instance.n)] # (machine_idx_job, t)
         remaining_machines = list(range(0,self.instance.m))
-        remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines} # (last_job_index, t)
+        machines_timeline = {machine_id : (0,0) for machine_id in remaining_machines} # (last_job_index, t)
         while len(remaining_machines) > 0 :
             for machine_id in remaining_machines :
-                current_time = remaining_machines_current_job_index[machine_id][1]
-                next_job_index = remaining_machines_current_job_index[machine_id][0]
-                current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                while machine_id == self.instance.P[current_job][jobs_progression[current_job][0]][0] :
-                    startTime = max(current_time,jobs_progression[current_job][1])
-                    endTime = startTime + self.instance.P[current_job][jobs_progression[current_job][0]][1]
-                    self.machines[machine_id].job_schedule[next_job_index] = Job(current_job,
-                    startTime,endTime)
+                curr_machine = self.machines[machine_id]
+                next_job_index, current_time = machines_timeline[machine_id]
+                curr_job = curr_machine.job_schedule[next_job_index][0]
+                prev_job = curr_machine.job_schedule[next_job_index - 1][0] if next_job_index > 0 else next_job_index 
+
+                while machine_id == self.instance.P[curr_job][jobs_timeline[curr_job][0]][0] :
+
+                    oper_idx, last_t = jobs_timeline[curr_job]
+                    m_id, proc_time = self.instance.P[curr_job][oper_idx]
+
+                    ri = self.instance.R[curr_job] if hasattr(self.instance, "R") else 0
+                    startTime = max(current_time, last_t, ri)
+                    setup_time = self.instance.S[m_id][prev_job][curr_job] if hasattr(self.instance, "S") else 0
+                    endTime = startTime + setup_time + proc_time
+
+                    self.machines[machine_id].job_schedule[next_job_index] = Job(curr_job, startTime,endTime)
                     
                     current_time = endTime
                     next_job_index += 1
+                    prev_job = curr_job
 
-                    jobs_progression[current_job] = (jobs_progression[current_job][0]+1, current_time)
+                    jobs_timeline[curr_job] = (jobs_timeline[curr_job][0]+1, current_time)
+
 
                     if next_job_index == len(self.machines[machine_id].job_schedule) :
                         self.machines[machine_id].objective = current_time
-                        self.machines[machine_id].last_job = current_job
+                        self.machines[machine_id].last_job = curr_job
                         remaining_machines.remove(machine_id)
                         break
                     else :
-                        current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                remaining_machines_current_job_index[machine_id] = (next_job_index,current_time)
+                        curr_job = self.machines[machine_id].job_schedule[next_job_index][0]
+                machines_timeline[machine_id] = (next_job_index,current_time)
         
         jobs_times = dict()
         for j in range(self.instance.n):
@@ -980,48 +987,6 @@ class JobShopSolution(RootProblem.Solution):
 
         self.job_schedule = jobs_times
         return self.fix_objective()
-
-    def cmax(self):
-        """Sets the schedule of each machine then sets the makespan
-        """
-        
-        if hasattr(self.instance,"R") :
-            jobs_progression = [(0,self.instance.R[job]) for job in range(self.instance.n)]
-        else : jobs_progression = [(0,0) for job in range(self.instance.n)]
-        remaining_machines = list(range(0,self.instance.m))
-        remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines}
-        while len(remaining_machines) > 0 :
-            for machine_id in remaining_machines :
-                current_time = remaining_machines_current_job_index[machine_id][1]
-                next_job_index = remaining_machines_current_job_index[machine_id][0]
-                current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                while machine_id == self.instance.P[current_job][jobs_progression[current_job][0]][0] :
-                    startTime = max(current_time,jobs_progression[current_job][1])
-                    endTime = startTime + self.instance.P[current_job][jobs_progression[current_job][0]][1]
-                    self.machines[machine_id].job_schedule[next_job_index] = Job(current_job,
-                    startTime,endTime)
-                    
-                    current_time = endTime
-                    next_job_index += 1
-
-                    jobs_progression[current_job] = (jobs_progression[current_job][0]+1, current_time)
-
-                    if next_job_index == len(self.machines[machine_id].job_schedule) :
-                        self.machines[machine_id].objective = current_time
-                        self.machines[machine_id].last_job = current_job
-                        remaining_machines.remove(machine_id)
-                        break
-                    else :
-                        current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                remaining_machines_current_job_index[machine_id] = (next_job_index,current_time)
-
-        self.objective_value = max([machine.objective for machine in self.machines])
-
-        return self.objective_value
-
-
-    def fix_cmax(self):
-        pass
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -1119,54 +1084,57 @@ class JobShopSolution(RootProblem.Solution):
         Check if solution respects the constraints
         """
         is_valid = True
-        precedence_in_jobs = [[op[0] for op in job] for job in self.instance.P]
-        for machine_id in range(len(self.machines)) :
+        job_times = dict()
+        for i in range(self.instance.n):
             ci = 0
-            for job_ind in range(len(self.machines[machine_id].job_schedule)) :
+            ri = self.instance.R[i] if hasattr(self.instance, "R") else 0
+            start_i = 0
+            for j, oper_tuple in enumerate(self.instance.P[i]):
+                m_id, proc_time = oper_tuple
+                curr_machine = self.machines[m_id]
 
-                element = self.machines[machine_id].job_schedule[job_ind]
-                job_id, start_time, end_time = element
-
-                operation_of_job_id = precedence_in_jobs[job_id]
-                job = None
-                for precedence_machine_id in range(len(operation_of_job_id)) :
-                    if operation_of_job_id[precedence_machine_id] == machine_id : break
-                if precedence_machine_id != 0 :
-                    precedent_machine_id = operation_of_job_id[precedence_machine_id-1]
-
-                    for job in self.machines[precedent_machine_id].job_schedule :
-                        if job.id == job_id : break
-
-                    previous_op_end_time = job.end_time
-                else : previous_op_end_time = 0
-
+                # Look for job i operation on machine m_id
+                oper_i_m_pos = None
+                for idx, job in enumerate(curr_machine.job_schedule):
+                    if job.id == i: 
+                        oper_i_m_pos = idx
+                        break
                 
-                expected_start_time = max(previous_op_end_time,ci)
+                if oper_i_m_pos is None:
+                    is_valid = False
+                    print(f"## Error: operation {i}-{j} of job {i} on machine {m_id} is not found")
+                else:
+                    oper_i_m = curr_machine.job_schedule[oper_i_m_pos]
+                    prev_job = curr_machine.job_schedule[oper_i_m_pos - 1].id if oper_i_m_pos > 0 else i
+                    prev_m_end = curr_machine.job_schedule[oper_i_m_pos - 1].end_time if oper_i_m_pos > 0 else 0
+                    setup_time = self.instance.S[m_id][prev_job][i] if hasattr(self.instance, "S") else 0
 
-                proc_time = self.instance.P[job_id][precedence_machine_id][1]
-                ci = expected_start_time + proc_time
+                    expected_start_time = max(ri, prev_m_end, ci)
+                    expected_end_time = expected_start_time + setup_time + proc_time
 
-                if start_time != expected_start_time or end_time != ci:
-                    if start_time > expected_start_time and end_time - start_time == proc_time:
-                        if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
-                    else :
-                        if verbosity : 
-                            print(f'## Error:  found {element} expected {job_id,expected_start_time, ci}')
-                            if job is not None :
-                                print(f'## {element} needs to be sheduled after {job}')
+                    if expected_start_time != oper_i_m.start_time or expected_end_time != oper_i_m.end_time:
                         is_valid = False
+                        print(f'## Error: operation {i}-{j} expected {(i, expected_start_time, expected_end_time)}, got {oper_i_m}')
+                    
+                    start_i = expected_start_time if j == 0 else start_i
+                    ci = expected_end_time
+
+            job_times[i] = Job(i, start_i, ci)
         
-        if is_valid :
-            solution_copy = self.copy()
-            if self.instance.get_objective() == RootProblem.Objective.wiCi:
-                is_valid = self.objective_value == solution_copy.wiCi()
-            elif self.instance.get_objective() == RootProblem.Objective.wiTi:
-                is_valid = self.objective_value == solution_copy.wiTi()
-            elif self.instance.get_objective() == RootProblem.Objective.Cmax:
-                is_valid = self.objective_value == solution_copy.cmax()
-            elif self.instance.get_objective() == RootProblem.Objective.Lmax:
-                is_valid = self.objective_value == solution_copy.Lmax()
-            if not is_valid :
-                if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
+        objective = self.instance.get_objective()
+        if objective == RootProblem.Objective.Cmax:
+            expected_obj =  max(job_times[j].end_time for j in range(self.instance.n))
+        elif objective == RootProblem.Objective.wiCi:
+            expected_obj =  sum( self.instance.W[j] * job_times[j].end_time for j in range(self.instance.n) )
+        elif objective == RootProblem.Objective.wiFi:
+            expected_obj =  sum( self.instance.W[j] * (job_times[j].end_time - job_times[j][0] ) for j in range(self.instance.n) )
+        elif objective == RootProblem.Objective.wiTi:
+            expected_obj =  sum( self.instance.W[j] * max(job_times[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
+        elif objective == RootProblem.Objective.Lmax:
+            expected_obj =  max( 0, max( job_times[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
+
+        if expected_obj != self.objective_value:
+            is_valid = False
+            print(f'## Error: objective value found {self.objective_value} expected {expected_obj}')
 
         return is_valid
