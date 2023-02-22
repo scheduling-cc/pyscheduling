@@ -7,7 +7,7 @@ from math import exp
 
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver
+from pyscheduling.Problem import GenerationLaw, Solver
 import pyscheduling.JS.JobShop as JobShop
 import pyscheduling.JS.JobShop_methods as js_methods
 
@@ -47,27 +47,34 @@ class JmriwiTi_Instance(JobShop.JobShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
-        """Random generation of JmCmax problem instance
-
+    def generate_random(cls, n: int, m: int, instance_name: str = "",
+                        protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Pmin: int = 1, Pmax: int = 100,
+                        Wmin: int = 1, Wmax: int = 1,
+                        alpha: float = 2.0,
+                        due_time_factor: float = 0.5):
+        """Random generation of FmriSijkCmax problem instance
         Args:
-            jobs_number (int): number of jobs of the instance
-            configuration_number (int): number of machines of the instance
-            protocol (JobShop.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to JobShop.GenerationProtocol.VALLADA.
-            law (JobShop.GenerationLaw, optional): probablistic law of generation. Defaults to JobShop.GenerationLaw.UNIFORM.
+            n (int): number of jobs of the instance
+            m (int): number of machines of the instance
+            protocol (FlowShop.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to FlowShop.GenerationProtocol.VALLADA.
+            law (FlowShop.GenerationLaw, optional): probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
+            Gamma (float, optional): Setup time factor. Defaults to 0.0.
+            Smin (int, optional): Minimal setup time. Defaults to -1.
+            Smax (int, optional): Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
-
         Returns:
-            JmCmax_Instance: the randomly generated instance
+            FmSijkwiFi_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
-        if(Pmax == -1):
-            Pmax = randint(Pmin, 100)
-        instance = cls(InstanceName, jobs_number, configuration_number)
+        instance = cls(instance_name, n, m)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
+        instance.D = instance.generate_D(
+                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
         return instance
 
     def to_txt(self, path: Path) -> None:

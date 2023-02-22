@@ -16,15 +16,11 @@ import matplotlib.pyplot as plt
 import pyscheduling.Problem as RootProblem
 import pyscheduling.SMSP.riPrecLmax as riPrecLmax
 import pyscheduling.SMSP.rihiCi as rihiCi
-from pyscheduling.Problem import Job
+from pyscheduling.Problem import GenerationLaw, Job
 
 class GenerationProtocol(Enum):
-    VALLADA = 1
+    BASE = 1
 
-
-class GenerationLaw(Enum):
-    UNIFORM = 1
-    NORMAL = 2
 
 Node = namedtuple('Node', ['machine_id', 'job_id'])
 
@@ -32,7 +28,7 @@ Node = namedtuple('Node', ['machine_id', 'job_id'])
 class JobsGraph:
     source: Node
     sink: Node
-    jobs_sinks: Node
+    jobs_sinks: list[Node]
     DG: nx.DiGraph
     jobs_times: dict = None 
 
@@ -473,45 +469,6 @@ class JobShopInstance(RootProblem.Instance):
         self.graph = JobsGraph(source, sink, jobs_sinks, DG)
         return self.graph
 
-    @classmethod
-    @abstractmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
-
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            JobShopInstance:
-
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def generate_random(cls, protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            JobShopInstance:
-        """
-        pass
-
-    @abstractmethod
-    def to_txt(self, path: Path) -> None:
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        pass
-
     def read_P(self, content: list[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
 
@@ -531,41 +488,28 @@ class JobShopInstance(RootProblem.Instance):
             i += 1
         return (P, i)
 
-    def read_R(self, content: list[str], startIndex: int):
-        """Read the release time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the release time table
-
-        Returns:
-           (list[int],int): (Table of release time, index of the next section of the instance)
-        """
-        pass
-
     def read_S(self, content: list[str], startIndex: int):
         """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
-
         Args:
             content (list[str]): lines of the file of the instance
             startIndex (int): Index from where starts the Setup time table of matrices
-
         Returns:
            (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
         """
-        pass
-
-    def read_D(self, content: list[str], startIndex: int):
-        """Read the due time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the due time table
-
-        Returns:
-           (list[int],int): (Table of due time, index of the next section of the instance)
-        """
-        pass
+        i = startIndex
+        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        i += 1  # Skip SSD
+        endIndex = startIndex+1+self.n*self.m+self.m
+        while i != endIndex:
+            i = i+1  # Skip Mk
+            Si = []
+            for k in range(self.n):
+                ligne = content[i].strip().split('\t')
+                Sij = [int(ligne[j]) for j in range(self.n)]
+                Si.append(Sij)
+                i += 1
+            S.append(Si)
+        return (S, i)
 
     def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
@@ -613,6 +557,30 @@ class JobShopInstance(RootProblem.Instance):
                     P[job_list_id].append((machine_id,n))
         return P
 
+    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+        """Random generation of jobs weights table
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Wmin (int): Minimal weight
+            Wmax (int): Maximal weight
+        Returns:
+           list[int]: Table of jobs weights
+        """
+        W = []
+        for j in range(self.n):
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(Wmin, Wmax))
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Wmin+Wmax*value))
+                while n < Wmin or n > Wmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Wmin+Wmax*value))
+            W.append(n)
+
+        return W
+
     def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
@@ -627,7 +595,22 @@ class JobShopInstance(RootProblem.Instance):
         Returns:
             list[int]: release time table
         """
-        pass
+        ri = []
+        for j in range(self.n):
+            sum_p = sum(oper[1] for oper in PJobs[j])
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(0, alpha * (sum_p / self.m)))
+
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            ri.append(n)
+
+        return ri
 
     def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
@@ -643,21 +626,61 @@ class JobShopInstance(RootProblem.Instance):
         Returns:
             list[list[list[int]]]: Setup time table of matrix
         """
-        pass
+        S = []
+        for i in range(self.m):
+            Si = []
+            for j in range(self.n):
+                Sij = []
+                for k in range(self.n):
+                    if law.name == "UNIFORM":  # Use uniform law
+                        Sij.append(int(random.uniform(Smin, Smax)))
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
+                    elif law.name == "NORMAL":  # Use normal law
+                        value = np.random.normal(0, 1)
+                        setup = int(abs(Smin+Smax*value))
+                        while setup < Smin or setup > Smax:
+                            value = np.random.normal(0, 1)
+                            setup = int(abs(Smin+Smax*value))
+                        Sij.append(setup)
+                Si.append(Sij)
+            S.append(Si)
+
+        return S
+
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
-
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
             law (GenerationLaw): probablistic law of generation
+            PJobs (list[float]): Table of processing time
             Pmin (int): Minimal processing time
             Pmax (int): Maximal processing time
-
+            fraction (float): due time factor
         Returns:
             list[int]: due time table
         """
-        pass
+        di = []
+        PJobs = [min(oper[1] for oper in PJobs[j]) for j in range(self.n)]
+        sum_p = sum(PJobs)
+        for j in range(self.n):
+            if hasattr(self, 'R'):
+                startTime = self.R[j] + PJobs[j]
+            else:
+                startTime = PJobs[j]
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(
+                    startTime, startTime + due_time_factor * sum_p))
+
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            di.append(n)
+
+        return di
 
 
 @dataclass
@@ -755,7 +778,7 @@ class JobShopSolution(RootProblem.Solution):
                     
                     setup_time = self.instance.S[m_id][prev_job.id][job.id] \
                         if hasattr(self.instance, 'S') else 0
-                    proc_time = [job[1] for job in self.instance.P[prev_job.id] if job[0] == m_id][0]
+                    proc_time = [oper[1] for oper in self.instance.P[prev_job.id] if oper[0] == m_id][0]
                     weight = inverted_weights * (proc_time + setup_time)
                     
                     edges_list.append( ( prev_node, curr_node, weight ) )
@@ -940,8 +963,8 @@ class JobShopSolution(RootProblem.Solution):
             for machine_id in remaining_machines :
                 curr_machine = self.machines[machine_id]
                 next_job_index, current_time = machines_timeline[machine_id]
-                curr_job = curr_machine.job_schedule[next_job_index][0]
-                prev_job = curr_machine.job_schedule[next_job_index - 1][0] if next_job_index > 0 else next_job_index 
+                curr_job = curr_machine.job_schedule[next_job_index].id
+                prev_job = curr_machine.job_schedule[next_job_index - 1].id if next_job_index > 0 else curr_job 
 
                 while machine_id == self.instance.P[curr_job][jobs_timeline[curr_job][0]][0] :
 
