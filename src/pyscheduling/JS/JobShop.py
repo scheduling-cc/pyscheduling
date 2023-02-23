@@ -799,6 +799,7 @@ class JobShopSolution(RootProblem.Solution):
         Returns:
             bool: True if the schedule is feasible
         """
+        self.graph = None
         self.check_graph()
         return nx.is_directed_acyclic_graph(self.graph.DG)
 
@@ -820,7 +821,7 @@ class JobShopSolution(RootProblem.Solution):
 
             jobs_times[j] = Job(j, -start_time, -end_time)
         
-        jobs_times[-1] = Job(-1, 0, -nx_dists[0][self.graph.sink])
+        #jobs_times[-1] = Job(-1, 0, -nx_dists[0][self.graph.sink])
         self.graph.jobs_times = jobs_times
         self.job_schedule = jobs_times
         return jobs_times 
@@ -920,15 +921,15 @@ class JobShopSolution(RootProblem.Solution):
 
         objective = self.instance.get_objective()
         if objective == RootProblem.Objective.Cmax:
-            new_obj =  max(self.job_schedule[j].end_time for j in range(self.instance.n))
+            new_obj =  max(self.job_schedule[j].end_time for j in self.job_schedule)
         elif objective == RootProblem.Objective.wiCi:
-            new_obj =  sum( self.instance.W[j] * self.job_schedule[j].end_time for j in range(self.instance.n) )
+            new_obj =  sum( self.instance.W[j] * self.job_schedule[j].end_time for j in self.job_schedule )
         elif objective == RootProblem.Objective.wiFi:
-            new_obj =  sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in range(self.instance.n) )
+            new_obj =  sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in self.job_schedule )
         elif objective == RootProblem.Objective.wiTi:
-            new_obj =  sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
+            new_obj =  sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in self.job_schedule )
         elif objective == RootProblem.Objective.Lmax:
-            new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
+            new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in self.job_schedule ) )
         
         self.job_schedule[job_id] = saved_job
         return new_obj
@@ -941,15 +942,15 @@ class JobShopSolution(RootProblem.Solution):
         """
         objective = self.instance.get_objective()
         if objective == RootProblem.Objective.Cmax:
-            self.objective_value = max(self.job_schedule[j].end_time for j in range(self.instance.n))
+            self.objective_value = max(self.job_schedule[j].end_time for j in self.job_schedule)
         elif objective == RootProblem.Objective.wiCi:
-            self.objective_value = sum( self.instance.W[j] * self.job_schedule[j].end_time for j in range(self.instance.n) )
+            self.objective_value = sum( self.instance.W[j] * self.job_schedule[j].end_time for j in self.job_schedule )
         elif objective == RootProblem.Objective.wiFi:
-            self.objective_value = sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in range(self.instance.n) )
+            self.objective_value = sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in self.job_schedule )
         elif objective == RootProblem.Objective.wiTi:
-            self.objective_value = sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
+            self.objective_value = sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in self.job_schedule )
         elif objective == RootProblem.Objective.Lmax:
-            self.objective_value = max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
+            self.objective_value = max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in self.job_schedule ) )
 
         return self.objective_value
 
@@ -959,6 +960,7 @@ class JobShopSolution(RootProblem.Solution):
         jobs_timeline = [(0,0) for job in range(self.instance.n)] # (machine_idx_job, t)
         remaining_machines = list(range(0,self.instance.m))
         machines_timeline = {machine_id : (0,0) for machine_id in remaining_machines} # (last_job_index, t)
+        jobs_times = dict()
         while len(remaining_machines) > 0 :
             for machine_id in remaining_machines :
                 curr_machine = self.machines[machine_id]
@@ -967,7 +969,7 @@ class JobShopSolution(RootProblem.Solution):
                 prev_job = curr_machine.job_schedule[next_job_index - 1].id if next_job_index > 0 else curr_job 
 
                 while machine_id == self.instance.P[curr_job][jobs_timeline[curr_job][0]][0] :
-
+                    
                     oper_idx, last_t = jobs_timeline[curr_job]
                     m_id, proc_time = self.instance.P[curr_job][oper_idx]
 
@@ -976,7 +978,8 @@ class JobShopSolution(RootProblem.Solution):
                     setup_time = self.instance.S[m_id][prev_job][curr_job] if hasattr(self.instance, "S") else 0
                     endTime = startTime + setup_time + proc_time
 
-                    self.machines[machine_id].job_schedule[next_job_index] = Job(curr_job, startTime,endTime)
+                    new_job = Job(curr_job, startTime,endTime)
+                    self.machines[machine_id].job_schedule[next_job_index] = new_job
                     
                     current_time = endTime
                     next_job_index += 1
@@ -984,6 +987,9 @@ class JobShopSolution(RootProblem.Solution):
 
                     jobs_timeline[curr_job] = (jobs_timeline[curr_job][0]+1, current_time)
 
+                    global_job = jobs_times.get(curr_job, new_job)
+                    jobs_times[curr_job] = Job(curr_job, min(global_job.start_time, new_job.start_time),
+                                                         max(global_job.end_time, new_job.end_time) )
 
                     if next_job_index == len(self.machines[machine_id].job_schedule) :
                         self.machines[machine_id].objective = current_time
@@ -994,20 +1000,6 @@ class JobShopSolution(RootProblem.Solution):
                         curr_job = self.machines[machine_id].job_schedule[next_job_index][0]
                 machines_timeline[machine_id] = (next_job_index,current_time)
         
-        jobs_times = dict()
-        for j in range(self.instance.n):
-            first_machine_id = self.instance.P[j][0][0]
-            last_machine_id = self.instance.P[j][-1][0]
-
-            for job in self.machines[first_machine_id].job_schedule:
-                if job.id == j:
-                    start_time = job.start_time
-            for job in self.machines[last_machine_id].job_schedule:
-                if job.id == j:
-                    end_time = job.end_time
-            
-            jobs_times[j] = Job(j, start_time, end_time)
-
         self.job_schedule = jobs_times
         return self.fix_objective()
 
@@ -1161,3 +1153,179 @@ class JobShopSolution(RootProblem.Solution):
             print(f'## Error: objective value found {self.objective_value} expected {expected_obj}')
 
         return is_valid
+
+class NeighbourhoodGeneration():
+
+    @staticmethod
+    def best_insert_oper(solution: JobShopSolution, m_id: int, job_id: int):
+
+        curr_machine = solution.machines[m_id]
+        move = None
+        prev_pos = None
+        for pos in range(len(curr_machine.job_schedule) + 1):
+            
+            if prev_pos is not None:
+                curr_machine.job_schedule.pop(prev_pos)
+
+            curr_machine.job_schedule.insert(pos, Job(job_id, 0, 0))
+            if solution.is_feasible():
+                new_obj = solution.compute_objective()
+
+                if move is None or move[1] > new_obj:
+                    move = (pos, new_obj)
+
+            prev_pos = pos
+
+        # Apply the best move
+        curr_machine.job_schedule.pop(prev_pos)
+        curr_machine.job_schedule.insert(move[0], Job(job_id, 0, 0))
+        solution.compute_objective()
+
+        return solution
+
+    @staticmethod
+    def random_insert(solution: JobShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1):
+        """Performs an insert of a random job in a random position
+        Args:
+            solution (JobShopSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+        Returns:
+            JobShopSolution: New solution
+        """
+        if not inplace or force_improve:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        old_objective = solution_copy.objective_value
+
+        iter = 0
+        tabu_moves = set()
+        while iter < nb_moves:
+            # Get random machine,job and the position
+            random_machine_index = random.randrange(solution.instance.m)
+            job_schedule = solution_copy.machines[random_machine_index].job_schedule
+            job_schedule_len = len(job_schedule)
+            
+            random_job_index = random.randrange(job_schedule_len)
+            random_pos = random_job_index
+            while random_pos == random_job_index:
+                random_pos = random.randrange(job_schedule_len)
+            
+            if (random_machine_index, random_job_index, random_pos) in tabu_moves:
+                continue
+
+            # Simulate applying the insertion move
+            random_job = job_schedule.pop(random_job_index)
+            job_schedule.insert(random_pos, random_job)
+            
+            if solution_copy.is_feasible():
+                new_objective = solution_copy.compute_objective()
+                iter += 1
+                tabu_moves.clear()
+            else: # Add to tabu moves
+                tabu_moves.add( (random_machine_index, random_job_index, random_pos) )
+
+        # Update the solution
+        if force_improve and (new_objective > old_objective):
+            return solution
+
+        return solution_copy
+
+    @staticmethod
+    def random_swap(solution: JobShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1):
+        """Performs a random swap between 2 jobs
+        Args:
+            solution (JobShopSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+        Returns:
+            JobShopSolution: New solution
+        """
+        if not inplace or force_improve:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        # Select the two different random jobs to be swapped 
+        old_objective = solution_copy.objective_value
+
+        iter = 0
+        tabu_moves = set()
+        while iter < nb_moves:
+            # Get random machine,job and the position
+            random_machine_index = random.randrange(solution.instance.m)
+            job_schedule = solution_copy.machines[random_machine_index].job_schedule
+            job_schedule_len = len(job_schedule)
+
+            random_job_index = random.randrange(job_schedule_len)
+            other_job_index = random.randrange(job_schedule_len)
+            while other_job_index == random_job_index:
+                other_job_index = random.randrange(job_schedule_len)
+
+            if (random_machine_index, random_job_index, other_job_index) in tabu_moves:
+                continue
+            
+            # Simulate applying the swap move
+            job_schedule[random_job_index], job_schedule[other_job_index] = job_schedule[
+                        other_job_index], job_schedule[random_job_index]
+
+            if solution_copy.is_feasible():
+                new_objective = solution_copy.compute_objective()
+                iter += 1
+                tabu_moves.clear()
+            else: # Add to tabu moves
+                tabu_moves.add( (random_machine_index, random_job_index, other_job_index) )
+
+        # Update the solution
+        if force_improve and (new_objective > old_objective):
+            return solution
+
+        return solution_copy
+
+    @staticmethod
+    def random_neighbour(solution_i: JobShopSolution, nb_moves: int = 2):
+        """Generates a random neighbour solution of the given solution
+        Args:
+            solution_i (JobShopSolution): Solution at iteration i
+        Returns:
+            JobShopSolution: New solution
+        """ 
+        r = random.random()
+        if r < 0.5:
+            solution = NeighbourhoodGeneration.random_insert(
+                solution_i, force_improve=False, inplace=False, nb_moves=nb_moves)
+        else:
+            solution = NeighbourhoodGeneration.random_swap(
+                solution_i, force_improve=False, inplace=False, nb_moves=nb_moves)
+       
+        return solution
+
+    @staticmethod
+    def deconstruct_construct(solution_i: JobShopSolution, d: float = 0.25):
+        """Generates a random neighbour solution of the given solution using the deconstruct - construct strategy
+        The procedure removes a set of jobs and insert them using best insertion (greedy) 
+        Args:
+            solution_i (FlowShopSolution): Solution at iteration i
+        Returns:
+            FlowShopSolution: New solution
+        """ 
+        solution_copy = solution_i.copy()
+        # Deconstruction of d (percentage) random jobs out all jobs
+        all_jobs = list(range(solution_copy.instance.n))
+        nb_removed_jobs = int(solution_copy.instance.n * d )
+        removed_jobs = random.sample(all_jobs, nb_removed_jobs)
+
+        for machine in solution_copy.machines:
+            machine.job_schedule = [job for job in machine.job_schedule if job.id not in removed_jobs]
+
+        solution_copy.compute_objective()
+
+        # Construction by inserting the removed jobs one by one
+        for n_j, j in enumerate(removed_jobs):
+            for idx, oper_tuple in enumerate(solution_copy.instance.P[j]):
+                m_id, proc_time = oper_tuple
+                solution_copy = NeighbourhoodGeneration.best_insert_oper(solution_copy, m_id, j)
+                
+        return solution_copy
