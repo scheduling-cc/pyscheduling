@@ -26,6 +26,7 @@ Node = namedtuple('Node', ['machine_id', 'job_id'])
 
 @dataclass
 class JobsGraph:
+    instance: RootProblem.Instance
     source: Node
     sink: Node
     jobs_sinks: list[Node]
@@ -60,8 +61,8 @@ class JobsGraph:
                 # Add edges
                 if nb == 0: # Add source to first job edge
                     release_date = instance.R[j] if hasattr(instance, 'R') else 0 
-                    setup_time = instance.S[oper[0]][j][j] if hasattr(instance, 'S') else 0
-                    edges_list.append((source, oper_node, inverted_weights * (release_date + setup_time)))
+
+                    edges_list.append((source, oper_node, inverted_weights * release_date))
                 else: # Add precedence constraints between operations of same job (order between machines)
                     edges_list.append( (prev_oper_node, oper_node, inverted_weights * prev_oper[1]) )
                 
@@ -75,6 +76,7 @@ class JobsGraph:
         DG.add_nodes_from(nodes_list)
         DG.add_weighted_edges_from(edges_list)
         
+        self.instance = instance
         self.source = source
         self.sink = sink
         self.jobs_sinks = jobs_sinks
@@ -112,8 +114,17 @@ class JobsGraph:
             edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
         """
         adjacency_matrix = dict(self.DG.adjacency())
-        self.DG.add_weighted_edges_from([(edge[0],edge[1],  
-            adjacency_matrix[edge[0]][next(iter(adjacency_matrix[edge[0]]))]['weight']) for edge in edges_to_add])
+
+        #Change the weight of the incident conjunctive edge of the first operation to include setup time
+        first_op = edges_to_add[0][0]
+        precedent_op = [op for op in self.DG.nodes() if self.DG.has_edge(op,first_op)][0]
+        setup_time = self.S[first_op[0]][first_op[1]][first_op[1]] if hasattr(self, 'S') else 0
+        self.DG[precedent_op][first_op]['weight'] = self.DG[precedent_op][first_op]['weight'] + setup_time
+
+        for edge in edges_to_add :
+            processing_time = adjacency_matrix[edge[0]][next(iter(adjacency_matrix[edge[0]]))]['weight']
+            setup_time = self.S[edge[0][0]][edge[0][1]][edge[1][1]] if hasattr(self, 'S') else 0
+            self.DG.add_weighted_edges_from([(edge[0],edge[1],processing_time + setup_time)])
 
     def generate_precedence_constraints(self, unscheduled_machines : list[int]):
         precedence_constraints = []
