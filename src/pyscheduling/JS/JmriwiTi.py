@@ -135,7 +135,8 @@ class Heuristics(js_methods.Heuristics):
         """
         startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
-        graph = JobShop.riwiTi_Graph(instance)
+        #graph = JobShop.riwiTi_Graph(instance)
+        graph = JobShop.JobsGraph(instance)
         jobs_completion_time = graph.all_jobs_completion()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
@@ -188,7 +189,7 @@ class Heuristics(js_methods.Heuristics):
             graph.add_disdjunctive_arcs(edges_to_add)
             precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
         
-        solution.cmax()
+        solution.compute_objective()
         solution.objective_value = graph.wiTi(instance.W,instance.D)
         
 

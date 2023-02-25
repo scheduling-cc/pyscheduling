@@ -50,7 +50,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
         """Random generation of JmCmax problem instance
 
         Args:
@@ -301,7 +301,8 @@ class Heuristics(js_methods.Heuristics):
         """
         startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
-        graph = JobShop.Graph(instance)
+        #graph = JobShop.Graph(instance)
+        graph = JobShop.JobsGraph(instance)
         Cmax = graph.critical_path()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
@@ -344,7 +345,7 @@ class Heuristics(js_methods.Heuristics):
             precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
             solution.objective_value = graph.critical_path()
 
-        solution.cmax()
+        solution.compute_objective()
         
         return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
 

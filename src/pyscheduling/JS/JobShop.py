@@ -32,6 +32,182 @@ class JobsGraph:
     DG: nx.DiGraph
     jobs_times: dict = None 
 
+    def __init__(self, instance, invert_weights = True):
+        """Create the conjunctive graph from the instance definition
+
+        Args:
+            invert_weights (bool, optional): convert the weights to negative to use shortest path algos for critical path. Defaults to True.
+
+        Returns:
+            nx.DiGraph: conjunctive graph from instance.
+        """
+        DG = nx.DiGraph()
+        inverted_weights = -1 if invert_weights else 1
+        
+        source = Node(-2, 0)
+        sink = Node(-1, -1)
+        jobs_sinks = [ Node(-1, j) for j in range(instance.n) ]
+        
+        # Create nodes and edges
+        edges_list = []
+        nodes_list = [source, sink]
+        nodes_list.extend(jobs_sinks)
+        for j in range(instance.n):
+            for nb, oper in enumerate(instance.P[j]):
+                oper_node = Node(oper[0], j)
+                nodes_list.append(oper_node)
+                
+                # Add edges
+                if nb == 0: # Add source to first job edge
+                    release_date = instance.R[j] if hasattr(instance, 'R') else 0 
+                    setup_time = instance.S[oper[0]][j][j] if hasattr(instance, 'S') else 0
+                    edges_list.append((source, oper_node, inverted_weights * (release_date + setup_time)))
+                else: # Add precedence constraints between operations of same job (order between machines)
+                    edges_list.append( (prev_oper_node, oper_node, inverted_weights * prev_oper[1]) )
+                
+                prev_oper_node = oper_node
+                prev_oper = oper
+            
+            # Add last operation to sink edge
+            edges_list.append((oper_node, jobs_sinks[j], inverted_weights * oper[1]))
+            edges_list.append((jobs_sinks[j], sink, 0))
+                
+        DG.add_nodes_from(nodes_list)
+        DG.add_weighted_edges_from(edges_list)
+        
+        self.source = source
+        self.sink = sink
+        self.jobs_sinks = jobs_sinks
+        self.DG = DG
+
+    def draw(self):
+        pos = nx.spring_layout(self.DG)
+        nx.draw(self.DG, pos, with_labels=True)
+        edge_labels = nx.get_edge_attributes(self.DG, 'weight')
+        nx.draw_networkx_edge_labels(self.DG, pos, edge_labels=edge_labels)
+        plt.show()
+    
+    def longest_path(self, u, v):
+        #return -nx.shortest_path_length(self.DG, source=u, target=v, weight='weight')
+        return -nx.bellman_ford_path_length(self.DG, source=u, target=v, weight='weight')
+
+    def critical_path(self):
+        return self.longest_path(self.source, self.sink)
+
+    def get_operations_on_machine(self, machine_id : int):
+        """returns the vertices corresponding to operations to be executed on machine_id
+
+        Args:
+            machine_id (int): id of a machine
+
+        Returns:
+            list[tuple(int,int)]: list of operations to be executed on machine_id
+        """
+        return [node for node in self.DG.nodes() if node[0]==machine_id]
+
+    def add_disdjunctive_arcs(self, edges_to_add : list):
+        """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
+
+        Args:
+            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
+        """
+        adjacency_matrix = dict(self.DG.adjacency())
+        self.DG.add_weighted_edges_from([(edge[0],edge[1],  
+            adjacency_matrix[edge[0]][next(iter(adjacency_matrix[edge[0]]))]['weight']) for edge in edges_to_add])
+
+    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
+        precedence_constraints = []
+        for machine_id in unscheduled_machines :
+            vertices = self.get_operations_on_machine(machine_id);
+            for u in vertices :
+                for v in vertices :
+                    if u is not v and nx.has_path(self.DG, u, v) : precedence_constraints.append((u[1],v[1]))
+            
+        return precedence_constraints
+
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
+        """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+        Args:
+            machine_id (int): id of the machine
+            Cmax (int): current makespan
+
+        Returns:
+            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance
+        """
+        vertices = self.get_operations_on_machine(machine_id)
+        jobs_number = len(vertices)
+
+        adjacency_matrix = dict(self.DG.adjacency())
+        P = [-adjacency_matrix[vertice][next(iter(adjacency_matrix[vertice]))]['weight'] for vertice in vertices]
+
+        R = [self.longest_path(self.source,vertice) for vertice in vertices]
+
+        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind]
+                                    for vertice_ind in range(len(vertices))]
+
+        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
+
+    def job_completion(self,job_id):
+        """returns the distance of the critical path which corresponds to the Makespan
+
+        Returns:
+            int: critical path distance
+        """
+        return self.longest_path(self.source, self.jobs_sinks[job_id])
+
+    def all_jobs_completion(self):
+        jobs_completion = []
+        for job_id in range(len(self.jobs_sinks)):
+            jobs_completion.append(self.job_completion(job_id))
+        return jobs_completion
+
+    def wiTi(self, external_weights : list[int], due_dates : list[int]):
+        jobs_completion = self.all_jobs_completion()
+        objective_value = 0
+        for job_id in range(len(jobs_completion)):
+            objective_value += external_weights[job_id]*max(jobs_completion[job_id]-due_dates[job_id],0)
+        return objective_value
+
+    def temporary_job_completion(self,temporary_edges : list):
+        # jobs_completion = []
+        self.add_disdjunctive_arcs(temporary_edges)
+        # for job_id in range(len(self.sink)):
+        #     jobs_completion.append(self.job_completion(job_id))
+        jobs_completion = self.all_jobs_completion()
+        self.DG.remove_edges_from(temporary_edges)
+        return jobs_completion
+
+    def generate_rihiCi(self, machine_id : int, precedenceConstraints : list[tuple], exeternal_weights : list[int], external_due : list[int], jobs_completion : list[int]):
+        """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+        Args:
+            machine_id (int): id of the machine
+            Cmax (int): current makespan
+
+        Returns:
+            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance
+        """
+        vertices = self.get_operations_on_machine(machine_id)
+        jobs_number = len(vertices)
+        
+        adjacency_matrix = dict(self.DG.adjacency())
+        P = [adjacency_matrix[vertice][next(iter(adjacency_matrix[vertice]))]['weight'] for vertice in vertices]
+            
+        R = [self.longest_path(self.source,vertice) for vertice in vertices]
+
+        D = []
+        for vertice_ind in range(len(vertices)) :
+            Di = []
+            for job_ind in range(len(self.sink)):
+                distance = self.longest_path(vertices[vertice_ind],self.jobs_sinks[job_ind])
+                if distance == float('-inf') : Di.append(float('inf'))
+                else :
+                    Di.append(max(jobs_completion[job_ind],external_due[job_ind])-distance+P[vertice_ind])
+            D.append(Di)
+        
+        return rihiCi.rihiCi_Instance(name="", n=jobs_number, P=P, R=R, Precedence=precedenceConstraints, external_params=len(self.sink), D=D, W=exeternal_weights)
+
 @dataclass
 class Graph:
     source = (-1,0)
@@ -205,6 +381,7 @@ class Graph:
         R = [self.longest_path(self.source,vertice) for vertice in vertices]
         D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
         return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
+
 
 @dataclass
 class riwiTi_Graph:
