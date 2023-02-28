@@ -26,10 +26,10 @@ Node = namedtuple('Node', ['machine_id', 'job_id'])
 
 @dataclass
 class JobsGraph:
-    instance: RootProblem.Instance
     source: Node
     sink: Node
     jobs_sinks: list[Node]
+    inverted_weights : bool
     DG: nx.DiGraph
     jobs_times: dict = None 
 
@@ -44,6 +44,7 @@ class JobsGraph:
         """
         DG = nx.DiGraph()
         inverted_weights = -1 if invert_weights else 1
+        
         
         source = Node(-2, 0)
         sink = Node(-1, -1)
@@ -81,6 +82,7 @@ class JobsGraph:
         self.sink = sink
         self.jobs_sinks = jobs_sinks
         self.DG = DG
+        self.inverted_weights = invert_weights
 
     def draw(self):
         pos = nx.spring_layout(self.DG)
@@ -91,7 +93,8 @@ class JobsGraph:
     
     def longest_path(self, u, v):
         #return -nx.shortest_path_length(self.DG, source=u, target=v, weight='weight')
-        return -nx.bellman_ford_path_length(self.DG, source=u, target=v, weight='weight')
+        inverted_weights = -1 if self.inverted_weights else 1
+        return inverted_weights*nx.bellman_ford_path_length(self.DG, source=u, target=v, weight='weight')
 
     def critical_path(self):
         return self.longest_path(self.source, self.sink)
@@ -107,18 +110,19 @@ class JobsGraph:
         """
         return [node for node in self.DG.nodes() if node[0]==machine_id]
 
-    def add_disdjunctive_arcs(self, edges_to_add : list):
+    def add_disdjunctive_arcs(self, instance, edges_to_add : list):
         """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
 
         Args:
             edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
         """
         adjacency_matrix = dict(self.DG.adjacency())
+        inverted_weights = -1 if self.inverted_weights else 1
 
         #Change the weight of the incident conjunctive edge of the first operation to include setup time
         first_op = edges_to_add[0][0]
         precedent_op = [op for op in self.DG.nodes() if self.DG.has_edge(op,first_op)][0]
-        setup_time = self.S[first_op[0]][first_op[1]][first_op[1]] if hasattr(self, 'S') else 0
+        setup_time = inverted_weights*instance.S[first_op[0]][first_op[1]][first_op[1]] if hasattr(self, 'S') else 0
         self.DG[precedent_op][first_op]['weight'] = self.DG[precedent_op][first_op]['weight'] + setup_time
 
         for edge in edges_to_add :
@@ -180,9 +184,9 @@ class JobsGraph:
             objective_value += external_weights[job_id]*max(jobs_completion[job_id]-due_dates[job_id],0)
         return objective_value
 
-    def temporary_job_completion(self,temporary_edges : list):
+    def temporary_job_completion(self,instance, temporary_edges : list):
         # jobs_completion = []
-        self.add_disdjunctive_arcs(temporary_edges)
+        self.add_disdjunctive_arcs(instance, temporary_edges)
         # for job_id in range(len(self.sink)):
         #     jobs_completion.append(self.job_completion(job_id))
         jobs_completion = self.all_jobs_completion()
@@ -219,443 +223,12 @@ class JobsGraph:
         
         return rihiCi.rihiCi_Instance(name="", n=jobs_number, P=P, R=R, Precedence=precedenceConstraints, external_params=len(self.sink), D=D, W=exeternal_weights)
 
-@dataclass
-class Graph:
-    source = (-1,0)
-    sink = (0,-1)
-
-    vertices : list[tuple]
-    edges : dict
-
-    def __init__(self, instance):
-        """Creates the dijunctives graph from a JmCmax processing times table
-
-        Args:
-            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
-        """
-        self.vertices = [(self.source,0),(self.sink,0)]
-        self.edges = {}
-        
-        job_index = 0
-        operations = instance.P
-        for job in operations:
-            release_date = instance.R[job_index] if hasattr(instance, 'R') else 0 
-            self.edges[(self.source,(job[0][0],job_index))] = release_date
-            nb_operation = len(job)
-            for operation_ind in range(nb_operation - 1):
-                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
-                self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
-            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
-            self.edges[((job[nb_operation - 1][0],job_index),self.sink)] = job[nb_operation - 1][1]
-            job_index += 1
-
-    def add_edge(self, u, v, weight : int):
-        """Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            weight (int): processing time of operation u
-        """
-        self.edges[(u,v)] = weight
-
-    def get_edge(self, u, v):
-        """returns the weight of the edge from u to v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            
-
-        Returns:
-            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
-        """
-        try:
-            return self.edges[(u,v)]
-        except:
-            return -1
-
-    def get_operations_on_machine(self, machine_id : int):
-        """returns the vertices corresponding to operations to be executed on machine_id
-
-        Args:
-            machine_id (int): id of a machine
-
-        Returns:
-            list[tuple(int,int)]: list of operations to be executed on machine_id
-        """
-        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
-        if machine_id==0: vertices.remove((0,-1))
-        return vertices
-    
-    def add_disdjunctive_arcs(self, edges_to_add : list):
-        """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
-
-        Args:
-            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
-        """
-        emanating_vertices = [edge[0] for edge in edges_to_add]
-        weights = []
-        for emanating_vertice in emanating_vertices :
-            for vertice in self.vertices :
-                if vertice[0]==emanating_vertice :
-                    weights.append(vertice[1])
-                    break
-        for edge_ind in range(len(edges_to_add)):
-            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
-
-    def dijkstra(self, start_vertex):
-        """Evaluate the longest distance from the start_vertex to every other vertex
-
-        Args:
-            start_vertex (tuple(int,int)): starting vertex
-
-        Returns:
-            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
-        """
-        vertices_list = [vertice[0] for vertice in self.vertices]
-        D = {v:-float('inf') for v in vertices_list}
-        D[start_vertex] = 0
-
-        pq = PriorityQueue()
-        pq.put((0, start_vertex))
-
-        while not pq.empty():
-            (dist, current_vertex) = pq.get()
-
-            for neighbor in vertices_list:
-                if self.get_edge(current_vertex,neighbor) != -1:
-                    distance = self.get_edge(current_vertex,neighbor)
-                    old_cost = D[neighbor]
-                    new_cost = D[current_vertex] + distance
-                    if new_cost > old_cost:
-                        pq.put((new_cost, neighbor))
-                        D[neighbor] = new_cost
-
-        return D
-
-    def longest_path(self,u, v):
-        """returns the longest distance from vertex u to vertex v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-
-        Returns:
-            int: longest distance, is -inf if v is unreachable from u
-        """
-        return self.dijkstra(u)[v]
-
-    def critical_path(self):
-        """returns the distance of the critical path which corresponds to the Makespan
-
-        Returns:
-            int: critical path distance
-        """
-        return self.longest_path(self.source,self.sink)
-
-    def if_path(self, u, v):
-        if self.get_edge(u,v) != -1 : return True
-        else :
-            vertices_going_to_v = [vertice[0] for vertice in self.edges.keys() if vertice[1]==v]
-            for vertice in vertices_going_to_v :
-                if self.if_path(u,vertice) is True : return True
-            return False
-        pass
-
-    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
-        precedence_constraints = []
-        for machine_id in unscheduled_machines :
-            vertices = self.get_operations_on_machine(machine_id);
-            for u in vertices :
-                for v in vertices :
-                    if u is not v and self.if_path(u,v) : precedence_constraints.append((u[1],v[1]))
-            
-        return precedence_constraints
-
-    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
-        """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
-
-        Args:
-            machine_id (int): id of the machine
-            Cmax (int): current makespan
-
-        Returns:
-            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance
-        """
-        vertices = self.get_operations_on_machine(machine_id)
-        jobs_number = len(vertices)
-        P = []
-        for vertice in vertices :
-            for graph_vertice in self.vertices :
-                if graph_vertice[0] == vertice : P.append(graph_vertice[1])
-        R = [self.longest_path(self.source,vertice) for vertice in vertices]
-        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
-        return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
-
-
-@dataclass
-class riwiTi_Graph:
-    source = (-1,0)
-    sink = list[tuple]
-
-    vertices : list[tuple]
-    edges : dict
-
-    def __init__(self,instance):
-        """Creates the dijunctives graph from a JmCmax processing times table
-
-        Args:
-            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
-        """
-        operations = instance.P
-        release_dates = instance.R
-        self.vertices = [((-1,0),0)]
-        self.sink = []
-        for job_id in range(len(operations)): 
-            self.sink.append((0,-job_id-1))
-            self.vertices.append(((0,-job_id-1),0))
-        self.edges = {}
-        
-        job_index = 0
-        for job in operations:
-            self.edges[(self.source,(job[0][0],job_index))] = release_dates[job_index]
-            nb_operation = len(job)
-            for operation_ind in range(nb_operation - 1):
-                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
-                self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
-            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
-            self.edges[((job[nb_operation - 1][0],job_index),(0,-job_index-1))] = job[nb_operation - 1][1]
-            job_index += 1
-
-    def add_edge(self, u, v, weight : int):
-        """Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            weight (int): processing time of operation u
-        """
-        self.edges[(u,v)] = weight
-
-    def get_edge(self, u, v):
-        """returns the weight of the edge from u to v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            
-
-        Returns:
-            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
-        """
-        try:
-            return self.edges[(u,v)]
-        except:
-            return -1
-
-    def get_operations_on_machine(self, machine_id : int):
-        """returns the vertices corresponding to operations to be executed on machine_id
-
-        Args:
-            machine_id (int): id of a machine
-
-        Returns:
-            list[tuple(int,int)]: list of operations to be executed on machine_id
-        """
-        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id and vertice[0][1]>-1]
-        return vertices
-    
-    def add_disdjunctive_arcs(self, edges_to_add : list):
-        """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
-
-        Args:
-            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
-        """
-        emanating_vertices = [edge[0] for edge in edges_to_add]
-        weights = []
-        for emanating_vertice in emanating_vertices :
-            for vertice in self.vertices :
-                if vertice[0]==emanating_vertice :
-                    weights.append(vertice[1])
-                    break
-        for edge_ind in range(len(edges_to_add)):
-            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
-
-    def remove_edges(self,edges_to_remove : list):
-        for edge in edges_to_remove : del self.edges[edge]
-    
-    def dijkstra(self, start_vertex):
-        """Evaluate the longest distance from the start_vertex to every other vertex
-
-        Args:
-            start_vertex (tuple(int,int)): starting vertex
-
-        Returns:
-            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
-        """
-        vertices_list = [vertice[0] for vertice in self.vertices]
-        D = {v:-float('inf') for v in vertices_list}
-        D[start_vertex] = 0
-
-        pq = PriorityQueue()
-        pq.put((0, start_vertex))
-
-        while not pq.empty():
-            (dist, current_vertex) = pq.get()
-
-            for neighbor in vertices_list:
-                if self.get_edge(current_vertex,neighbor) != -1:
-                    distance = self.get_edge(current_vertex,neighbor)
-                    old_cost = D[neighbor]
-                    new_cost = D[current_vertex] + distance
-                    if new_cost > old_cost:
-                        pq.put((new_cost, neighbor))
-                        D[neighbor] = new_cost
-
-        return D
-
-    def longest_path(self,u, v):
-        """returns the longest distance from vertex u to vertex v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-
-        Returns:
-            int: longest distance, is -inf if v is unreachable from u
-        """
-        return self.dijkstra(u)[v]
-
-    def job_completion(self,job_id):
-        """returns the distance of the critical path which corresponds to the Makespan
-
-        Returns:
-            int: critical path distance
-        """
-        return self.longest_path(self.source,self.sink[job_id])
-
-    def all_jobs_completion(self):
-        jobs_completion = []
-        for job_id in range(len(self.sink)):
-            jobs_completion.append(self.job_completion(job_id))
-        return jobs_completion
-
-    def wiTi(self, external_weights : list[int], due_dates : list[int]):
-        jobs_completion = self.all_jobs_completion()
-        objective_value = 0
-        for job_id in range(len(jobs_completion)):
-            objective_value += external_weights[job_id]*max(jobs_completion[job_id]-due_dates[job_id],0)
-        return objective_value
-    
-    def temporary_job_completion(self,temporary_edges : list):
-        # jobs_completion = []
-        self.add_disdjunctive_arcs(temporary_edges)
-        # for job_id in range(len(self.sink)):
-        #     jobs_completion.append(self.job_completion(job_id))
-        jobs_completion = self.all_jobs_completion()
-        self.remove_edges(temporary_edges)
-        return jobs_completion
-
-    def if_path(self, u, v):
-        if self.get_edge(u,v) != -1 : return True
-        else :
-            vertices_going_to_v = [vertice[0] for vertice in self.edges.keys() if vertice[1]==v]
-            for vertice in vertices_going_to_v :
-                if self.if_path(u,vertice) is True : return True
-            return False
-        pass
-
-    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
-        precedence_constraints = []
-        for machine_id in unscheduled_machines :
-            vertices = self.get_operations_on_machine(machine_id);
-            for u in vertices :
-                for v in vertices :
-                    if u is not v and self.if_path(u,v) : precedence_constraints.append((u[1],v[1]))
-            
-        return precedence_constraints
-
-    def generate_rihiCi(self, machine_id : int, precedenceConstraints : list[tuple], exeternal_weights : list[int], external_due : list[int], jobs_completion : list[int]):
-        """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
-
-        Args:
-            machine_id (int): id of the machine
-            Cmax (int): current makespan
-
-        Returns:
-            riPrecLmax_Instance: generated 1|ri,prec|Lmax instance
-        """
-        vertices = self.get_operations_on_machine(machine_id)
-        jobs_number = len(vertices)
-        P = []
-        for vertice in vertices :
-            for graph_vertice in self.vertices :
-                if graph_vertice[0] == vertice : P.append(graph_vertice[1])
-        R = [self.longest_path(self.source,vertice) for vertice in vertices]
-        D = []
-        for vertice_ind in range(len(vertices)) :
-            Di = []
-            for job_ind in range(len(self.sink)):
-                distance = self.longest_path(vertices[vertice_ind],self.sink[job_ind])
-                if distance == float('-inf') : Di.append(float('inf'))
-                else :
-                    Di.append(max(jobs_completion[job_ind],external_due[job_ind])-distance+P[vertice_ind])
-            D.append(Di)
-        return rihiCi.rihiCi_Instance(name="", n=jobs_number, P=P, R=R, Precedence=precedenceConstraints, external_params=len(self.sink), D=D, W=exeternal_weights)
-
 
 @dataclass
 class JobShopInstance(RootProblem.Instance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
-
-    def create_graph(self, invert_weights = True):
-        """Create the conjunctive graph from the instance definition
-
-        Args:
-            invert_weights (bool, optional): convert the weights to negative to use shortest path algos for critical path. Defaults to True.
-
-        Returns:
-            nx.DiGraph: conjunctive graph from instance.
-        """
-        DG = nx.DiGraph()
-        inverted_weights = -1 if invert_weights else 1
-        
-        source = Node(-2, 0)
-        sink = Node(-1, -1)
-        jobs_sinks = [ Node(-1, j) for j in range(self.n) ]
-        
-        # Create nodes and edges
-        edges_list = []
-        nodes_list = [source, sink]
-        nodes_list.extend(jobs_sinks)
-        for j in range(self.n):
-            for nb, oper in enumerate(self.P[j]):
-                oper_node = Node(oper[0], j)
-                nodes_list.append(oper_node)
-                
-                # Add edges
-                if nb == 0: # Add source to first job edge
-                    release_date = self.R[j] if hasattr(self, 'R') else 0 
-                    setup_time = self.S[oper[0]][j][j] if hasattr(self, 'S') else 0
-                    edges_list.append((source, oper_node, inverted_weights * (release_date + setup_time)))
-                else: # Add precedence constraints between operations of same job (order between machines)
-                    edges_list.append( (prev_oper_node, oper_node, inverted_weights * prev_oper[1]) )
-                
-                prev_oper_node = oper_node
-                prev_oper = oper
-            
-            # Add last operation to sink edge
-            edges_list.append((oper_node, jobs_sinks[j], inverted_weights * oper[1]))
-            edges_list.append((jobs_sinks[j], sink, 0))
-                
-        DG.add_nodes_from(nodes_list)
-        DG.add_weighted_edges_from(edges_list)
-        
-        self.graph = JobsGraph(source, sink, jobs_sinks, DG)
-        return self.graph
 
     def read_P(self, content: list[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
@@ -941,6 +514,18 @@ class JobShopSolution(RootProblem.Solution):
         self.graph = graph
         self.job_schedule = {j: Job(j, 0, 0) for j in range(self.instance.n)}
 
+    def _create_graph(self, invert_weights = True):
+        """Create the conjunctive graph from the instance definition
+
+        Args:
+            invert_weights (bool, optional): convert the weights to negative to use shortest path algos for critical path. Defaults to True.
+
+        Returns:
+            nx.DiGraph: conjunctive graph from instance.
+        """
+        self.graph = JobsGraph(self.instance,invert_weights)
+        return self.graph
+        
     def create_solution_graph(self, invert_weights = True):
         """Create the graph containing both conjunctive and disjunctive arcs from the schedule
 
@@ -953,7 +538,7 @@ class JobShopSolution(RootProblem.Solution):
         """
         inverted_weights = -1 if invert_weights else 1
         # DF contains only conjunctive arcs
-        self.graph = self.instance.create_graph(invert_weights)
+        self.graph = self._create_graph(invert_weights)
         DG = self.graph.DG
 
         # Add disjunctive arcs according to the schedule
@@ -963,16 +548,11 @@ class JobShopSolution(RootProblem.Solution):
                 if j_idx != 0: # Add arc between prev_job and current job
                     prev_node = Node(m_id, prev_job.id)
                     curr_node = Node(m_id, job.id)
-                    
-                    setup_time = self.instance.S[m_id][prev_job.id][job.id] \
-                        if hasattr(self.instance, 'S') else 0
-                    proc_time = [oper[1] for oper in self.instance.P[prev_job.id] if oper[0] == m_id][0]
-                    weight = inverted_weights * (proc_time + setup_time)
-                    
-                    edges_list.append( ( prev_node, curr_node, weight ) )
+                    edges_list.append( ( prev_node, curr_node) )
                 prev_job = job
-                
-        DG.add_weighted_edges_from(edges_list)
+
+        if len(edges_list)!=0 : DG.add_disdjunctive_arcs(edges_list)
+        
         return self.graph
 
     def check_graph(self):

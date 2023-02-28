@@ -301,15 +301,14 @@ class Heuristics(js_methods.Heuristics):
         """
         startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
-        #graph = JobShop.Graph(instance)
-        graph = JobShop.JobsGraph(instance)
-        Cmax = graph.critical_path()
+        solution.create_solution_graph()
+        Cmax = solution.graph.critical_path()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
         precedence_constraints = [] # Tuple of (job_i_id, job_j_id) with job_i preceding job_j
 
         while len(remaining_machines)>0:
-            Cmax = graph.critical_path()
+            Cmax = solution.graph.critical_path()
             machines_schedule = []
             taken_solution = None
             objective_value = None
@@ -317,7 +316,7 @@ class Heuristics(js_methods.Heuristics):
             edges_to_add = None
             for machine in remaining_machines:
                 
-                vertices = [op[1] for op in graph.get_operations_on_machine(machine)]
+                vertices = [op[1] for op in solution.graph.get_operations_on_machine(machine)]
                 job_id_mapping = {i:vertices[i] for i in range(len(vertices))}
                 mapped_constraints =[]
                 for precedence in precedence_constraints :
@@ -325,7 +324,7 @@ class Heuristics(js_methods.Heuristics):
                         mapped_constraints.append((list(job_id_mapping.keys())
                             [list(job_id_mapping.values()).index(precedence[0])],list(job_id_mapping.keys())
                             [list(job_id_mapping.values()).index(precedence[1])]))
-                Lmax_instance = graph.generate_riPrecLmax(machine,Cmax,mapped_constraints)
+                Lmax_instance = solution.graph.generate_riPrecLmax(machine,Cmax,mapped_constraints)
                 
                 BB = JobShop.riPrecLmax.BB(Lmax_instance)
                 BB.solve()
@@ -341,9 +340,9 @@ class Heuristics(js_methods.Heuristics):
             scheduled_machines.append(taken_machine)
             solution.machines[taken_machine].job_schedule = taken_solution
             solution.machines[taken_machine].objective = taken_solution[len(taken_solution)-1].end_time
-            graph.add_disdjunctive_arcs(edges_to_add)
-            precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
-            solution.objective_value = graph.critical_path()
+            solution.graph.add_disdjunctive_arcs(instance,edges_to_add)
+            precedence_constraints = list(solution.graph.generate_precedence_constraints(remaining_machines))
+            solution.objective_value = solution.graph.critical_path()
 
         solution.compute_objective()
         
