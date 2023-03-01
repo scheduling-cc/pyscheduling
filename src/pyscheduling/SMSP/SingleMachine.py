@@ -464,7 +464,7 @@ class Machine:
         """
         
         startTime = max(prev_ci, instance.R[job_i]) if hasattr(instance, 'R') else prev_ci
-        setupTime = instance.S[job_prev_i][job_i] if hasattr(instance, 'S') else 0
+        setupTime = instance.S[job_prev_i][job_i] if hasattr(instance, 'S') and job_prev_i != -1 else 0
         proc_time = instance.P[job_i]
 
         ci = startTime + setupTime + proc_time
@@ -1137,7 +1137,7 @@ class NeighbourhoodGeneration():
 
     @staticmethod
     def passive_swap(solution: SingleSolution, force_improve: bool = True):
-        """Performs a swap between the 2 less effective jobs in terms of WSPT rule
+        """Performs a swap between the 2 least effective jobs in terms of WSPT rule
 
         Args:
             solution (SingleSolution): Solution to be improved

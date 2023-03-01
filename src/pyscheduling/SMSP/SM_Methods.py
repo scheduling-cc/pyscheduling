@@ -63,13 +63,12 @@ class Heuristics():
 
         remaining_jobs_list = list(range(instance.n))
         ci = min(instance.R)
-        sort_rule = partial(rule, instance)
         
         insert_idx = 0
         while(len(remaining_jobs_list)>0):
             ci = max( ci, min(instance.R[job_id] for job_id in remaining_jobs_list) ) # Advance the current ci to at least a time t > min_Ri
             filtered_remaining_jobs_list = list(filter(partial(filter_fun, instance, ci),remaining_jobs_list))
-            filtered_remaining_jobs_list.sort(key= sort_rule, reverse=reverse)
+            filtered_remaining_jobs_list.sort(key= partial(rule, instance, ci), reverse=reverse)
 
             taken_job = filtered_remaining_jobs_list[0]
             #ci = solution.machine.objective_insert(taken_job, insert_idx, instance)
