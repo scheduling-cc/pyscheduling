@@ -12,7 +12,7 @@ import pyscheduling.JS.JobShop as JobShop
 import pyscheduling.JS.JobShop_methods as js_methods
 
 @dataclass
-class JmriSijkwiCmax_Instance(JobShop.JobShopInstance):
+class JmriSijkCmax_Instance(JobShop.JobShopInstance):
     P: list[list[int]] = field(default_factory=list)  # Processing time
     W: list[int] = field(default_factory=list)
     R: list[int] = field(default_factory=list)
