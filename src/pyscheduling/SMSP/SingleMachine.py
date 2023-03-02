@@ -1,23 +1,26 @@
 import json
 import random
 import sys
+import warnings
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-import warnings
+from typing import List
 
 import numpy as np
-import pyscheduling.Problem as RootProblem
 from matplotlib import pyplot as plt
-from pyscheduling.Problem import Constraints, DecoratorsHelper, Job, Objective, GenerationLaw
+
+import pyscheduling.Problem as RootProblem
+from pyscheduling.Problem import (Constraints, DecoratorsHelper, GenerationLaw,
+                                  Job, Objective)
 
 
 class GenerationProtocol(Enum):
     BASE = 1
 
 
-def single_instance(constraints: list[Constraints], objective: Objective):
+def single_instance(constraints: List[Constraints], objective: Objective):
     """Decorator to build an Instance class from the list of constraints and objective
 
     Args:
@@ -284,7 +287,7 @@ class SingleInstance(RootProblem.Instance):
 
         return W
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, alpha: float):
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -314,7 +317,7 @@ class SingleInstance(RootProblem.Instance):
 
         return ri
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], gamma: float, Smin: int = 0, Smax: int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time matrix
 
         Args:
@@ -353,7 +356,7 @@ class SingleInstance(RootProblem.Instance):
 
         return Si
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
@@ -395,13 +398,13 @@ class Machine:
 
     objective_value: int = 0
     last_job: int = -1
-    job_schedule: list[Job] = field(default_factory=list)
+    job_schedule: List[Job] = field(default_factory=list)
     # this table serves as a cache to save the total weighted completion time reached after each job in job_schedule
-    wiCi_cache: list[int] = field(default_factory=list)
+    wiCi_cache: List[int] = field(default_factory=list)
     # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
-    wiTi_cache: list[int] = field(default_factory=list)
+    wiTi_cache: List[int] = field(default_factory=list)
 
-    def __init__(self, objective_value: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_cache: list[int] = None, wiTi_cache: list[int] = None, wiFi_cache: list[int] = None):
+    def __init__(self, objective_value: int = 0, last_job: int = -1, job_schedule: List[Job] = None, wiCi_cache: List[int] = None, wiTi_cache: List[int] = None, wiFi_cache: List[int] = None):
         """Constructor of Machine
 
         Args:
@@ -494,7 +497,7 @@ class Machine:
         
         return startIndex, obj_cache
     
-    def init_obj(self, startIndex: int = 0, obj_cache: list[int] = None):
+    def init_obj(self, startIndex: int = 0, obj_cache: List[int] = None):
         """This is a helper method to initialize the values of ci, prev_job and objective from the current schedule and the objective cache if present.
 
         Args:

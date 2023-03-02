@@ -1,12 +1,12 @@
-from math import exp
 import random
 import sys
+from functools import partial
+from math import exp
 from time import perf_counter
 from typing import Callable
-from functools import partial
 
-import pyscheduling.Problem as RootProblem
 import pyscheduling.FS.FlowShop as FS
+import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Job
 
 try:

@@ -1,22 +1,21 @@
 import json
-import sys
 import random
-from queue import PriorityQueue
-from enum import Enum
-from pathlib import Path
-from abc import abstractmethod
+import sys
 from collections import namedtuple
 from dataclasses import dataclass, field
-import warnings
+from enum import Enum
+from pathlib import Path
+from typing import List
 
-import numpy as np
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 
 import pyscheduling.Problem as RootProblem
-import pyscheduling.SMSP.riPrecLmax as riPrecLmax
 import pyscheduling.SMSP.rihiCi as rihiCi
+import pyscheduling.SMSP.riPrecLmax as riPrecLmax
 from pyscheduling.Problem import GenerationLaw, Job
+
 
 class GenerationProtocol(Enum):
     BASE = 1
@@ -28,7 +27,7 @@ Node = namedtuple('Node', ['machine_id', 'job_id'])
 class JobsGraph:
     source: Node
     sink: Node
-    jobs_sinks: list[Node]
+    jobs_sinks: List[Node]
     inverted_weights : bool
     DG: nx.DiGraph
     jobs_times: dict = None 
@@ -110,7 +109,7 @@ class JobsGraph:
         """
         return [node for node in self.DG.nodes() if node[0]==machine_id]
 
-    def add_disdjunctive_arcs(self, instance, edges_to_add : list):
+    def add_disdjunctive_arcs(self, instance, edges_to_add : List[tuple]):
         """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
 
         Args:
@@ -130,7 +129,7 @@ class JobsGraph:
             setup_time = self.S[edge[0][0]][edge[0][1]][edge[1][1]] if hasattr(self, 'S') else 0
             self.DG.add_weighted_edges_from([(edge[0],edge[1],processing_time + setup_time)])
 
-    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
+    def generate_precedence_constraints(self, unscheduled_machines : List[int]):
         precedence_constraints = []
         for machine_id in unscheduled_machines :
             vertices = self.get_operations_on_machine(machine_id);
@@ -140,7 +139,7 @@ class JobsGraph:
             
         return precedence_constraints
 
-    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : List[tuple]):
         """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
 
         Args:
@@ -177,14 +176,14 @@ class JobsGraph:
             jobs_completion.append(self.job_completion(job_id))
         return jobs_completion
 
-    def wiTi(self, external_weights : list[int], due_dates : list[int]):
+    def wiTi(self, external_weights : List[int], due_dates : List[int]):
         jobs_completion = self.all_jobs_completion()
         objective_value = 0
         for job_id in range(len(jobs_completion)):
             objective_value += external_weights[job_id]*max(jobs_completion[job_id]-due_dates[job_id],0)
         return objective_value
 
-    def temporary_job_completion(self,instance, temporary_edges : list):
+    def temporary_job_completion(self,instance, temporary_edges : List[tuple]):
         # jobs_completion = []
         self.add_disdjunctive_arcs(instance, temporary_edges)
         # for job_id in range(len(self.sink)):
@@ -193,7 +192,7 @@ class JobsGraph:
         self.DG.remove_edges_from(temporary_edges)
         return jobs_completion
 
-    def generate_rihiCi(self, machine_id : int, precedenceConstraints : list[tuple], exeternal_weights : list[int], external_due : list[int], jobs_completion : list[int]):
+    def generate_rihiCi(self, machine_id : int, precedenceConstraints : List[tuple], exeternal_weights : List[int], external_due : List[int], jobs_completion : List[int]):
         """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
 
         Args:
@@ -230,7 +229,7 @@ class JobShopInstance(RootProblem.Instance):
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
 
-    def read_P(self, content: list[str], startIndex: int):
+    def read_P(self, content: List[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
 
         Args:
@@ -249,7 +248,7 @@ class JobShopInstance(RootProblem.Instance):
             i += 1
         return (P, i)
 
-    def read_S(self, content: list[str], startIndex: int):
+    def read_S(self, content: List[str], startIndex: int):
         """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
         Args:
             content (list[str]): lines of the file of the instance
@@ -342,7 +341,7 @@ class JobShopInstance(RootProblem.Instance):
 
         return W
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -373,7 +372,7 @@ class JobShopInstance(RootProblem.Instance):
 
         return ri
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -408,7 +407,7 @@ class JobShopInstance(RootProblem.Instance):
 
         return S
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
@@ -450,9 +449,9 @@ class Machine:
     machine_num: int
     objective: int = 0
     last_job: int = -1
-    job_schedule: list[Job] = field(default_factory=list)
+    job_schedule: List[Job] = field(default_factory=list)
 
-    def __init__(self, machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+    def __init__(self, machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: List[Job] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -492,9 +491,9 @@ class Machine:
 @dataclass
 class JobShopSolution(RootProblem.Solution):
 
-    machines: list[Machine]
+    machines: List[Machine]
 
-    def __init__(self, instance: JobShopInstance = None, machines: list[Machine] = None, objective_value: int = 0, graph: JobsGraph = None):
+    def __init__(self, instance: JobShopInstance = None, machines: List[Machine] = None, objective_value: int = 0, graph: JobsGraph = None):
         """Constructor of RmSijkCmax_Solution
 
         Args:

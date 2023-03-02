@@ -2,9 +2,12 @@ import os
 import sys
 
 import pytest
-from pyscheduling.FS import FmriSijkCmax, FmriSijkwiCi, FmriSijkwiFi, FmridiSijkwiTi, FS_Methods
+
+from pyscheduling.FS import (FmridiSijkwiTi, FmriSijkCmax, FmriSijkwiCi,
+                             FmriSijkwiFi, FS_methods)
 from pyscheduling.FS.FlowShop import FlowShopSolution, FS_LocalSearch
-from pyscheduling.Problem import SolveResult, SolveStatus, Objective
+from pyscheduling.Problem import Objective, SolveResult, SolveStatus
+
 
 # Helper functions
 def check_solve_result(solve_result, expected_nb_sol=None):

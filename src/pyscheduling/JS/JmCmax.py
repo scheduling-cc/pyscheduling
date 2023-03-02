@@ -1,20 +1,19 @@
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint
-import sys
 from time import perf_counter
+from typing import List
 
-
+import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JS_methods as js_methods
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Solver
-import pyscheduling.JS.JobShop as JobShop
-import pyscheduling.JS.JobShop_methods as js_methods
 
 try:
     import docplex
+    from docplex.cp.expression import INTERVAL_MAX
     from docplex.cp.model import CpoModel
     from docplex.cp.solver.cpo_callback import CpoCallback
-    from docplex.cp.expression import INTERVAL_MAX
 except ImportError:
     pass
 
@@ -22,7 +21,7 @@ DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
 @dataclass
 class JmCmax_Instance(JobShop.JobShopInstance):
-    P: list[list[int]] = field(default_factory=list)  # Processing time
+    P: List[List[int]] = field(default_factory=list)  # Processing time
 
     @classmethod
     def read_txt(cls, path: Path):

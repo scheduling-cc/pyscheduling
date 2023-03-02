@@ -2,9 +2,12 @@ import os
 import sys
 
 import pytest
-from pyscheduling.JS import JmriSijkCmax, JmriSijkwiCi, JmriSijkwiFi, JmridiSijkwiTi, JobShop_methods
-from pyscheduling.JS.JobShop import JobShopSolution, JobShopInstance
-from pyscheduling.Problem import SolveResult, SolveStatus, Objective
+
+from pyscheduling.JS import (JmridiSijkwiTi, JmriSijkCmax, JmriSijkwiCi,
+                             JmriSijkwiFi, JS_methods)
+from pyscheduling.JS.JobShop import JobShopInstance, JobShopSolution
+from pyscheduling.Problem import Objective, SolveResult, SolveStatus
+
 
 # Helper functions
 def check_solve_result(solve_result, expected_nb_sol=None):

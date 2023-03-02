@@ -1,21 +1,19 @@
-import sys
 from dataclasses import dataclass, field
-from random import randint, uniform
 from pathlib import Path
-from time import perf_counter
+from random import randint, uniform
+from typing import List
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_Methods as Methods
+import pyscheduling.SMSP.SM_methods as Methods
 
 
 @dataclass
 class riPrecLmax_Instance(SingleMachine.SingleInstance):
-    P: list[int] = field(default_factory=list)  # Processing time
-    R: list[int] = field(default_factory=list) # release time
-    D: list[int] = field(default_factory=list) # due time
-    Precedence : list[tuple] = field(default_factory=list) # precedence constraint
+    P: List[int] = field(default_factory=list)  # Processing time
+    R: List[int] = field(default_factory=list) # release time
+    D: List[int] = field(default_factory=list) # due time
+    Precedence : List[tuple] = field(default_factory=list) # precedence constraint
 
     def copy(self):
         return riPrecLmax_Instance(str(self.name),self.n,list(self.P),list(self.R),list(self.D))
@@ -92,7 +90,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
             f.write(str(self.D[i])+"\t")
         f.close()        
 
-    def LB_preemptive_EDD(self, start_time : int = 0, jobs_list : list[int] = None):
+    def LB_preemptive_EDD(self, start_time : int = 0, jobs_list : List[int] = None):
         """returns the objective value returned by applying the preemptive EDD rule on the instance
         object from a given starting time and remaining jobs list to be scheduled
 

@@ -1,27 +1,21 @@
 import json
-import sys
 import random
+import sys
 from abc import abstractmethod
-from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import List
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 import pyscheduling.Problem as RootProblem
-
-Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
+from pyscheduling.Problem import Job, GenerationLaw
 
 
 class GenerationProtocol(Enum):
     BASE = 1
-
-
-class GenerationLaw(Enum):
-    UNIFORM = 1
-    NORMAL = 2
 
 @dataclass
 class FlowShopInstance(RootProblem.Instance):
@@ -68,7 +62,7 @@ class FlowShopInstance(RootProblem.Instance):
         """
         pass
 
-    def read_P(self, content: list[str], startIndex: int):
+    def read_P(self, content: List[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
 
         Args:
@@ -87,7 +81,7 @@ class FlowShopInstance(RootProblem.Instance):
             i += 1
         return (P, i)
 
-    def read_R(self, content: list[str], startIndex: int):
+    def read_R(self, content: List[str], startIndex: int):
         """Read the release time table from a list of lines extracted from the file of the instance
 
         Args:
@@ -104,7 +98,7 @@ class FlowShopInstance(RootProblem.Instance):
             ri.append(int(ligne[j]))
         return (ri, i+1)
 
-    def read_S(self, content: list[str], startIndex: int):
+    def read_S(self, content: List[str], startIndex: int):
         """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
 
         Args:
@@ -129,7 +123,7 @@ class FlowShopInstance(RootProblem.Instance):
             S.append(Si)
         return (S, i)
 
-    def read_D(self, content: list[str], startIndex: int):
+    def read_D(self, content: List[str], startIndex: int):
         """Read the due time table from a list of lines extracted from the file of the instance
 
         Args:
@@ -175,7 +169,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return P
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -206,7 +200,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return ri
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -274,7 +268,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return W
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
@@ -317,9 +311,9 @@ class Machine:
     
     objective_value: int = 0
     last_job: int = -1
-    oper_schedule: list[Job] = field(default_factory=list)
+    oper_schedule: List[Job] = field(default_factory=list)
     
-    def __init__(self, machine_num:int, oper_schedule: list[Job] = None, last_job: int = -1, objective_value: int = 0) -> None:
+    def __init__(self, machine_num:int, oper_schedule: List[Job] = None, last_job: int = -1, objective_value: int = 0) -> None:
         """Constructor of Machine
 
         Args:
@@ -415,10 +409,10 @@ class Machine:
 @dataclass
 class FlowShopSolution(RootProblem.Solution):
 
-    machines: list[Machine]
-    job_schedule = list[int]
+    machines: List[Machine]
+    job_schedule = List[int]
 
-    def __init__(self, instance: FlowShopInstance = None, machines: list[Machine] = None, job_schedule : list[int] = None, objective_value: int = 0):
+    def __init__(self, instance: FlowShopInstance = None, machines: List[Machine] = None, job_schedule : List[int] = None, objective_value: int = 0):
         """Constructor of RmSijkCmax_Solution
 
         Args:

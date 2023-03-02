@@ -1,12 +1,12 @@
-from functools import partial
-from math import exp
 import random
+from functools import partial
 from time import perf_counter
 from typing import Callable
 
-import pyscheduling.Problem as RootProblem
 import pyscheduling.JS.JobShop as js
+import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Job
+
 
 class Heuristics():
 

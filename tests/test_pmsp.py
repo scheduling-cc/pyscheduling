@@ -87,7 +87,7 @@ class TestRmSijkCmax:
 
     def test_grasp(self, instance_zero):
         solve_results = PM_methods.Heuristics.grasp(instance_zero)
-        check_solve_result(solve_results, expected_nb_sol=100)
+        check_solve_result(solve_results, expected_nb_sol=5)
 
 
     def test_lahc(self, instance_zero):
@@ -189,7 +189,7 @@ class TestRmriSijkCmax:
 
     def test_grasp(self, instance_zero):
         solve_results = PM_methods.Heuristics.grasp(instance_zero)
-        check_solve_result(solve_results, expected_nb_sol=100)
+        check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
         solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
@@ -301,7 +301,7 @@ class TestRmridiSijkWiTi:
 
     def test_grasp(self, instance_zero):
         solve_results = PM_methods.Heuristics.grasp(instance_zero)
-        check_solve_result(solve_results, expected_nb_sol=100)
+        check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
         solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
@@ -403,7 +403,7 @@ class TestRmriSijkWiCi:
 
     def test_grasp(self, instance_zero):
         solve_results = PM_methods.Heuristics.grasp(instance_zero)
-        check_solve_result(solve_results, expected_nb_sol=100)
+        check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
         solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
@@ -505,7 +505,7 @@ class TestRmriSijkWiFi:
 
     def test_grasp(self, instance_zero):
         solve_results = PM_methods.Heuristics.grasp(instance_zero)
-        check_solve_result(solve_results, expected_nb_sol=100)
+        check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
         solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})

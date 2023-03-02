@@ -1,15 +1,14 @@
-from functools import partial
-from math import exp
 import random
 import sys
+from functools import partial
+from math import exp
 from time import perf_counter
-from typing import Callable
+from typing import Callable, List
 
 import pyscheduling.Problem as RootProblem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-from pyscheduling.Problem import Solver
+from pyscheduling.Problem import Objective, Solver
 from pyscheduling.SMSP.SingleMachine import Job
-from pyscheduling.Problem import Objective
 
 try:
     from docplex.cp.expression import INTERVAL_MAX
@@ -118,7 +117,7 @@ class Heuristics():
         return solveResult
 
     @staticmethod
-    def grasp(instance: SingleMachine.SingleInstance, p: float, r: int, n_iterations: int):
+    def grasp(instance: SingleMachine.SingleInstance, p: float = 0.5, r: int = 0.5, n_iterations: int = 5):
         """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
@@ -526,7 +525,7 @@ class ExactSolvers():
 class Heuristics_HelperFunctions():
 
     @staticmethod
-    def rule_candidate(remaining_jobs : list[int], rule : object, reverse : bool = True):
+    def rule_candidate(remaining_jobs : List[int], rule : object, reverse : bool = True):
         """Extract the highest index job using the specific passed rule.
 
         Args:

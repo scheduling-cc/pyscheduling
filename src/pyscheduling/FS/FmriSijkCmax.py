@@ -1,21 +1,18 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint, uniform
+from typing import List
 
-from time import perf_counter
-
-
+import pyscheduling.FS.FlowShop as FlowShop
+import pyscheduling.FS.FS_methods as FS_methods
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import GenerationLaw, Solver
-import pyscheduling.FS.FlowShop as FlowShop
-import pyscheduling.FS.FS_Methods as FS_Methods
 
 
 @dataclass
 class FmriSijkCmax_Instance(FlowShop.FlowShopInstance):
-    P: list[list[int]] = field(default_factory=list)  # Processing time
-    S: list[list[list[int]]] = field(default_factory=list) # Setup time
-    R: list[int] = field(default_factory=list)  # release dates
+    P: List[List[int]] = field(default_factory=list)  # Processing time
+    S: List[List[List[int]]] = field(default_factory=list) # Setup time
+    R: List[int] = field(default_factory=list)  # release dates
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -120,7 +117,7 @@ class FmriSijkCmax_Instance(FlowShop.FlowShopInstance):
         return RootProblem.Objective.Cmax
 
 
-class Heuristics(FS_Methods.Heuristics):
+class Heuristics(FS_methods.Heuristics):
 
     @classmethod
     def all_methods(cls):
@@ -131,5 +128,5 @@ class Heuristics(FS_Methods.Heuristics):
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-class Metaheuristics(FS_Methods.Metaheuristics):
+class Metaheuristics(FS_methods.Metaheuristics):
     pass

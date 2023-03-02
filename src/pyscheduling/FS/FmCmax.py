@@ -3,17 +3,18 @@ from pathlib import Path
 from random import randint
 
 from time import perf_counter
+from typing import List
 
 
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Solver, Job
 import pyscheduling.FS.FlowShop as FlowShop
-import pyscheduling.FS.FS_Methods as FS_Methods
+import pyscheduling.FS.FS_methods as FS_methods
 
 
 @dataclass
 class FmCmax_Instance(FlowShop.FlowShopInstance):
-    P: list[list[int]] = field(default_factory=list)  # Processing time
+    P: List[List[int]] = field(default_factory=list)  # Processing time
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -96,7 +97,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         return RootProblem.Objective.Cmax
 
 
-class Heuristics(FS_Methods.Heuristics):
+class Heuristics(FS_methods.Heuristics):
 
     @staticmethod
     def slope(instance: FmCmax_Instance):
@@ -128,5 +129,5 @@ class Heuristics(FS_Methods.Heuristics):
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-class Metaheuristics(FS_Methods.Metaheuristics):
+class Metaheuristics(FS_methods.Metaheuristics):
     pass

@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "pyscheduling"
-version = "0.1.5"
+version = "0.1.7"
 description = "THE python package to solve scheduling problems"
 authors = ["Amine ATHMANI", "Taha ARBAOUI", "Akram LAISSAOUI", "Mourad Terzi", "Mohammed Henni"]
 license = "CC-BY-NC-ND-4.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 matplotlib = "^3.5.2"
 networkx = "^3.0"
 

@@ -1,22 +1,19 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint
-import sys
-from time import perf_counter
-from math import exp
+from typing import List
 
-
+import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JS_methods as js_methods
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import GenerationLaw, Solver
-import pyscheduling.JS.JobShop as JobShop
-import pyscheduling.JS.JobShop_methods as js_methods
+
 
 @dataclass
 class JmriSijkwiFi_Instance(JobShop.JobShopInstance):
-    P: list[list[int]] = field(default_factory=list)  # Processing time
-    W: list[int] = field(default_factory=list)
-    R: list[int] = field(default_factory=list)
-    S: list[list[list[int]]] = field(default_factory=list) # Setup time
+    P: List[List[int]] = field(default_factory=list)  # Processing time
+    W: List[int] = field(default_factory=list)
+    R: List[int] = field(default_factory=list)
+    S: List[List[List[int]]] = field(default_factory=list) # Setup time
 
     @classmethod
     def read_txt(cls, path: Path):
