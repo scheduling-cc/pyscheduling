@@ -1,25 +1,13 @@
-import heapq
-import imp
-from os import stat
-import random
-import sys
-from dataclasses import dataclass, field
-from pathlib import Path
-from random import randint, uniform
 from statistics import mean
-from time import perf_counter
-from unittest import result
 
+import numpy as np
 
-import matplotlib.pyplot as plt
-import numpy as np 
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Constraints, Objective, Solver
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
 import pyscheduling.PMSP.PM_methods as pm_methods
-from pyscheduling.Problem import Job
+import pyscheduling.Problem as RootProblem
+from pyscheduling.PMSP.ParallelMachines import parallel_instance
+from pyscheduling.Problem import Constraints, Job, Objective, Solver
+
 
 @parallel_instance([Constraints.R,Constraints.W,Constraints.S], Objective.wiFi)
 class RmriSijkWiFi_Instance(ParallelMachines.ParallelInstance):

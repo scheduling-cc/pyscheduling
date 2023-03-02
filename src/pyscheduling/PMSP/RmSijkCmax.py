@@ -1,21 +1,12 @@
-import random
 import sys
-from dataclasses import dataclass, field
-from pathlib import Path
-from random import randint, uniform
 from statistics import mean
 from time import perf_counter
 
-import matplotlib.pyplot as plt
-import numpy as np
-from numpy.random import choice as np_choice
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Constraints, Objective, Solver
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
 import pyscheduling.PMSP.PM_methods as pm_methods
-from pyscheduling.Problem import Job
+import pyscheduling.Problem as RootProblem
+from pyscheduling.PMSP.ParallelMachines import parallel_instance
+from pyscheduling.Problem import Constraints, Job, Objective, Solver
 
 try:
     import docplex

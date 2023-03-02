@@ -1,12 +1,16 @@
-from math import exp
 import heapq
 import random
+from math import exp
 from time import perf_counter
-import numpy as np 
+from typing import List
+
+import numpy as np
 from numpy.random import choice as np_choice
-import pyscheduling.Problem as RootProblem
+
 import pyscheduling.PMSP.ParallelMachines as pm
+import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Job
+
 
 class Heuristics():
 
@@ -89,7 +93,7 @@ class Heuristics():
         return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
-    def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 100):
+    def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 5):
         """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
@@ -619,7 +623,7 @@ class AntColony(object):
 
         return aco_graph
 
-    def spread_pheronome_global(self, all_solutions: list[pm.ParallelSolution]):
+    def spread_pheronome_global(self, all_solutions: List[pm.ParallelSolution]):
         """Update pheromone levels globally after finding new solutions
 
         Args:

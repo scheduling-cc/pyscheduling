@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import List
 
-
-from pyscheduling.Problem import Objective
 from pyscheduling.PMSP import *
+from pyscheduling.Problem import Objective
+
 
 class Constraints(Enum):
     W = "weight"
@@ -41,7 +42,7 @@ problems = {
 class Problem():
     key = None
     instance : ParallelMachines.ParallelInstance
-    constraints : list[Constraints]
+    constraints : List[Constraints]
     objective : Objective
     heuristics = None
     metaheuristics = None

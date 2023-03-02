@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List
 
 
 from pyscheduling.Problem import Objective, Constraints
@@ -21,7 +22,7 @@ problems = {
 class Problem():
     key = None
     instance : SingleMachine.SingleInstance
-    constraints : list[Constraints]
+    constraints : List[Constraints]
     objective : Objective
     heuristics = None
     metaheuristics = None

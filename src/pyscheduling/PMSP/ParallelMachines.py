@@ -1,24 +1,26 @@
-import json
-import sys
 import random
+import sys
 from abc import abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-import warnings
+from typing import List
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import DecoratorsHelper, Job, GenerationLaw, Constraints, Objective
+from pyscheduling.Problem import (Constraints, DecoratorsHelper, GenerationLaw,
+                                  Job, Objective)
 from pyscheduling.SMSP.SingleMachine import Machine as SMachine
 
+
 class GenerationProtocol(Enum):
-    VALLADA = 1
+    BASE = 1
+    VALLADA = 2
 
 
-def parallel_instance(constraints: list[Constraints], objective: Objective):
+def parallel_instance(constraints: List[Constraints], objective: Objective):
     """Decorator to build an Instance class from the list of constraints and objective
 
     Args:
@@ -271,7 +273,7 @@ class ParallelInstance(RootProblem.Instance):
 
         return P
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -302,7 +304,7 @@ class ParallelInstance(RootProblem.Instance):
 
         return ri
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -344,7 +346,7 @@ class ParallelInstance(RootProblem.Instance):
 
         return S
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
@@ -448,12 +450,12 @@ class Machine(SMachine):
 @dataclass
 class ParallelSolution(RootProblem.Solution):
 
-    machines: list[Machine]
+    machines: List[Machine]
     # Class variables
     max_objectives = {Objective.Cmax, Objective.Lmax}
     sum_objectives = {Objective.wiCi, Objective.wiTi, Objective.wiFi}
 
-    def __init__(self, instance: ParallelInstance = None, machines: list[Machine] = None, objective_value: int = 0):
+    def __init__(self, instance: ParallelInstance = None, machines: List[Machine] = None, objective_value: int = 0):
         """Constructor of RmSijkCmax_Solution
 
         Args:
@@ -977,7 +979,7 @@ class PM_LocalSearch(RootProblem.LocalSearch):
         return solution
     
     @staticmethod
-    def best_insertion_machine(solution : ParallelSolution,machine_id : int, job_id : int):
+    def best_insertion_machine(solution : ParallelSolution, machine_id : int, job_id : int):
         """Find the best position to insert a job job_id in the machine machine_id
 
         Args:

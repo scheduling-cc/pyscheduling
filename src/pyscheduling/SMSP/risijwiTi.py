@@ -1,12 +1,13 @@
 from math import exp
 from time import perf_counter
+from typing import List
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Constraints, Objective
 import pyscheduling.SMSP.SingleMachine as SingleMachine
+import pyscheduling.SMSP.SM_methods as Methods
+from pyscheduling.Problem import Constraints, Objective
 from pyscheduling.SMSP.SingleMachine import single_instance
-import pyscheduling.SMSP.SM_Methods as Methods
-from pyscheduling.SMSP.SM_Methods import ExactSolvers
+from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
 @single_instance([Constraints.W, Constraints.R, Constraints.S, Constraints.D], Objective.wiTi)
@@ -76,7 +77,7 @@ class Metaheuristics(Methods.Metaheuristics):
 class Heuristics_HelperFunctions():
 
     @staticmethod
-    def ACTS_WSECi_Sorting(instance : risijwiTi_Instance, remaining_jobs : list[SingleMachine.Job], t : int, prev_job : int):
+    def ACTS_WSECi_Sorting(instance : risijwiTi_Instance, remaining_jobs : List[SingleMachine.Job], t : int, prev_job : int):
         """Returns the prev_job and the job to be scheduled next based on ACTS_WSECi rule.
         It returns a couple of previous job scheduled and the new job to be scheduled. The previous job will be the
         same than the taken job if it's the first time when the rule is applied, is the same prev_job passed as

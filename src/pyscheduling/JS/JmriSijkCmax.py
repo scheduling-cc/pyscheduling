@@ -1,17 +1,18 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint, uniform
 from typing import List
 
-import pyscheduling.FS.FlowShop as FlowShop
-import pyscheduling.FS.FS_methods as FS_methods
+import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JS_methods as js_methods
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver
+from pyscheduling.Problem import GenerationLaw, Solver
 
 
 @dataclass
-class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
+class JmriSijkCmax_Instance(JobShop.JobShopInstance):
     P: List[List[int]] = field(default_factory=list)  # Processing time
+    W: List[int] = field(default_factory=list)
+    R: List[int] = field(default_factory=list)
     S: List[List[List[int]]] = field(default_factory=list) # Setup time
 
     @classmethod
@@ -25,25 +26,31 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            FmSijkCmax_Instance:
+            JmriSijkwiCmax_Instance:
 
         """
         f = open(path, "r")
         content = f.read().split('\n')
         ligne0 = content[0].split(' ')
         n = int(ligne0[0])  # number of configuration
-        m = int(ligne0[2])  # number of jobs
-        i = 2
+        m = int(ligne0[1])  # number of jobs
+        i = 1
         instance = cls("test", n, m)
         instance.P, i = instance.read_P(content, i)
+        instance.W, i = instance.read_1D(content, i)
+        instance.R, i = instance.read_1D(content, i)
         instance.S, i = instance.read_S(content, i)
         f.close()
         return instance
 
     @classmethod
-    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, Gamma: float = 0.0, Smin:  int = -1, Smax: int = -1, InstanceName: str = ""):
-        """Random generation of FmSijkCmax problem instance
-
+    def generate_random(cls, n: int, m: int, instance_name: str = "",
+                        protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Pmin: int = 10, Pmax: int = 100,
+                        Wmin: int = 1, Wmax: int = 1,
+                        alpha: float = 2.0,
+                        Gamma: float = 2.0, Smin: int = 1, Smax: int = 50):
+        """Random generation of JmriSijkwiCmax problem instance
         Args:
             n (int): number of jobs of the instance
             m (int): number of machines of the instance
@@ -55,22 +62,14 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
             Smin (int, optional): Minimal setup time. Defaults to -1.
             Smax (int, optional): Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
-
         Returns:
-            FmSijkCmax_Instance: the randomly generated instance
+            JmriSijkwiCmax_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
-        if(Pmax == -1):
-            Pmax = randint(Pmin, 100)
-        if(Gamma == 0.0):
-            Gamma = round(uniform(1.0, 3.0), 1)
-        if(Smin == -1):
-            Smin = randint(1, 100)
-        if(Smax == -1):
-            Smax = randint(Smin, 100)
-        instance = cls(InstanceName, n, m)
+        instance = cls(instance_name, n, m)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
         instance.S = instance.generate_S(
             protocol, law, instance.P, Gamma, Smin, Smax)
         return instance
@@ -82,13 +81,23 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
             path (Path): path to the resulting txt file
         """
         f = open(path, "w")
-        f.write(str(self.n)+"  "+str(self.m)+"\n")
-        f.write(str(self.m)+"\n")
-        for i in range(self.n):
-            for j in range(self.m):
-                f.write("\t"+str(j)+"\t"+str(self.P[i][j]))
+        f.write(str(self.n)+" "+str(self.m)+"\n")
+
+        f.write("Processing times\n")
+        for job in self.P:
+            for operation in job:
+                f.write(str(operation[0])+"\t"+str(operation[1])+"\t")
             f.write("\n")
-        f.write("SSD\n")
+
+        f.write("Weights\n")
+        for i in range(self.n):
+            f.write(str(self.W[i])+"\t")
+
+        f.write("\nRelease time\n")
+        for i in range(self.n):
+            f.write(str(self.R[i])+"\t")
+
+        f.write("\nSSD\n")
         for i in range(self.m):
             f.write("M"+str(i)+"\n")
             for j in range(self.n):
@@ -103,7 +112,7 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
         Returns:
             object: default solving method
         """
-        return Heuristics.MINIT
+        return Heuristics.BIBA
 
     def get_objective(self):
         """to get the objective tackled by the instance
@@ -113,8 +122,7 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
         """
         return RootProblem.Objective.Cmax
 
-
-class Heuristics(FS_methods.Heuristics):
+class Heuristics(js_methods.Heuristics):
 
     @classmethod
     def all_methods(cls):
@@ -124,6 +132,3 @@ class Heuristics(FS_methods.Heuristics):
             list[object]: list of functions
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-class Metaheuristics(FS_methods.Metaheuristics):
-    pass

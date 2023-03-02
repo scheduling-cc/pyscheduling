@@ -21,3 +21,15 @@
 ## v0.1.4 (30/09/2022)
 
 - First public release, fixed some bugs from v0.1.3 and distributed to pypi
+
+## v0.1.5 (16/12/2022)
+
+- Added SMSP and PMSP generic problems
+
+## v0.1.6 (20/01/2023)
+
+- Hot fix some problems in PMSP
+
+## v0.1.7 (02/03/2023)
+
+- Added all 4 categories' generic problems, downgraded to python3.8

@@ -1,11 +1,11 @@
 from time import perf_counter
 
 import pyscheduling.Problem as RootProblem
+import pyscheduling.SMSP.SingleMachine as SingleMachine
+import pyscheduling.SMSP.SM_methods as Methods
 from pyscheduling.Problem import Constraints, Objective, Solver
 from pyscheduling.SMSP.SingleMachine import single_instance
-import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_Methods as Methods
-from pyscheduling.SMSP.SM_Methods import ExactSolvers
+from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
 @single_instance([Constraints.W, Constraints.R], Objective.wiCi)

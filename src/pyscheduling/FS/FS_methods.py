@@ -1,17 +1,16 @@
-from functools import partial
-from math import exp
 import random
 import sys
+from functools import partial
+from math import exp
 from time import perf_counter
 from typing import Callable
 
+import pyscheduling.FS.FlowShop as FS
 import pyscheduling.Problem as RootProblem
-import pyscheduling.SMSP.SingleMachine as SingleMachine
-from pyscheduling.Problem import Solver
-from pyscheduling.SMSP.SingleMachine import Job
-from pyscheduling.Problem import Objective
+from pyscheduling.Problem import Job
 
 try:
+    import docplex
     from docplex.cp.expression import INTERVAL_MAX
     from docplex.cp.model import CpoModel
     from docplex.cp.solver.cpo_callback import CpoCallback
@@ -20,10 +19,11 @@ except ImportError:
 
 DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
-class Heuristics():
 
+class Heuristics():
+    
     @staticmethod
-    def dispatch_heuristic(instance : SingleMachine.SingleInstance, rule : Callable, reverse: bool = False):
+    def dispatch_heuristic(instance : FS.FlowShopInstance, rule : Callable, reverse: bool = False):
         """Orders the jobs according to the rule (lambda function) and returns the schedule accordignly
 
         Args:
@@ -35,91 +35,50 @@ class Heuristics():
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
         startTime = perf_counter()
-        solution = SingleMachine.SingleSolution(instance)
+        solution = FS.FlowShopSolution(instance)
         
         remaining_jobs_list = list(range(instance.n))
         sort_rule = partial(rule, instance)
 
         remaining_jobs_list.sort(key=sort_rule, reverse=reverse)
-        solution.machine.job_schedule = [SingleMachine.Job(job_id, -1, -1) for job_id in remaining_jobs_list]
+        solution.job_schedule = [Job(job_id, -1, -1) for job_id in remaining_jobs_list]
         solution.compute_objective()
         return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    def dynamic_dispatch_rule(instance : SingleMachine.SingleInstance, rule : Callable, filter_fun: Callable, reverse: bool = False):
-        """Orders the jobs respecting the filter according to the rule. 
-        The order is dynamic since it is determined each time a new job is inserted
+    def BIBA(instance: FS.FlowShopInstance):
+        """the greedy constructive heuristic (Best Insertion Based approach) to find an initial solution of flowshop instances 
 
         Args:
-            instance (SingleInstance): Instance to be solved
-            rule (Callable): a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
-            filter (Callable): a lambda function that defines a filter condition taking the instance, job_id and current time as the parameters
-            reverse (bool, optional): flag to sort in decreasing order. Defaults to False.
+            instance (FlowShopInstance): Instance to be solved by the heuristic
+
 
         Returns:
-            RootProblem.SolveResult: SolveResult of the instance by the method
+            Problem.SolveResult: the solver result of the execution of the heuristic
         """
-        startTime = perf_counter()
-        solution = SingleMachine.SingleSolution(instance)
+        start_time = perf_counter()
+        solution = FS.FlowShopSolution(instance=instance)
 
-        remaining_jobs_list = list(range(instance.n))
-        ci = min(instance.R)
-        sort_rule = partial(rule, instance)
-        
-        insert_idx = 0
-        while(len(remaining_jobs_list)>0):
-            ci = max( ci, min(instance.R[job_id] for job_id in remaining_jobs_list) ) # Advance the current ci to at least a time t > min_Ri
-            filtered_remaining_jobs_list = list(filter(partial(filter_fun, instance, ci),remaining_jobs_list))
-            filtered_remaining_jobs_list.sort(key= sort_rule, reverse=reverse)
+        remaining_jobs_list = [j for j in range(instance.n)]
 
-            taken_job = filtered_remaining_jobs_list[0]
-            #ci = solution.machine.objective_insert(taken_job, insert_idx, instance)
-            solution.machine.job_schedule.append(SingleMachine.Job(taken_job,-1,-1))
-            solution.compute_objective()
-            ci = solution.objective_value
-            remaining_jobs_list.remove(taken_job)
-            insert_idx += 1
-        
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
-
-    @staticmethod
-    def BIBA(instance: SingleMachine.SingleInstance):
-        """Returns the solution according to the best insertion based approach algorithm (GECCO Article)
-
-        Args:
-            instance (SingleMachine.SingleInstance): SMSP instance to be solved
-
-        Returns:
-            SolveResult: the solve result of the execution of the heuristic
-        """
-        startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
-        solveResult.all_solutions = []
-        solution = SingleMachine.SingleSolution(instance)
-        remaining_jobs_list = [i for i in range(instance.n)]
         while len(remaining_jobs_list) != 0:
-            insertions_list = []
+            min_obj = None
             for i in remaining_jobs_list:
-                for k in range(0, len(solution.machine.job_schedule) + 1):
-                    insertions_list.append(
-                        (i, k, solution.machine.simulate_remove_insert(-1, i, k, instance)))
 
-            best_insertion = min(insertions_list, key= lambda insertion: insertion[2]) 
-            taken_job, taken_pos, ci = best_insertion
-            solution.machine.job_schedule.insert(taken_pos, Job(taken_job, 0, 0))
-            solution.machine.compute_objective(instance, startIndex=taken_pos)
-            solution.fix_objective()
-            if taken_pos == len(solution.machine.job_schedule)-1:
-                solution.machine.last_job = taken_job
+                start_time, end_time = solution.simulate_insert_last(i)
+                new_obj = solution.simulate_insert_objective(i, start_time, end_time)
+
+                if not min_obj or (min_obj > new_obj):
+                    min_obj = new_obj
+                    taken_job = i
+
+            solution.job_schedule.append(Job(taken_job, 0, 0))
+            solution.compute_objective(startIndex=len(solution.job_schedule) - 1)
             remaining_jobs_list.remove(taken_job)
-
-        solveResult.all_solutions.append(solution)
-        solveResult.best_solution = solution
-        solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
-        return solveResult
+        
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
-    def grasp(instance: SingleMachine.SingleInstance, p: float, r: int, n_iterations: int):
+    def grasp(instance: FS.FlowShopInstance, p: float = 0.5, r: int = 0.5, n_iterations: int = 5):
         """Returns the solution using the Greedy randomized adaptive search procedure algorithm
 
         Args:
@@ -135,28 +94,26 @@ class Heuristics():
         solveResult = RootProblem.SolveResult()
         best_solution = None
         for _ in range(n_iterations):
-            solution = SingleMachine.SingleSolution(instance)
+            solution = FS.FlowShopSolution(instance)
             remaining_jobs_list = [i for i in range(instance.n)]
             while len(remaining_jobs_list) != 0:
                 insertions_list = []
                 for i in remaining_jobs_list:
-                    for k in range(0, len(solution.machine.job_schedule) + 1):
-                        insertions_list.append(
-                            (i, k, solution.machine.simulate_remove_insert(-1, i, k, instance)))
+                    start_time, end_time = solution.simulate_insert_last(i)
+                    new_obj = solution.simulate_insert_objective(i, start_time, end_time)
+                    insertions_list.append((i, new_obj))
 
-                insertions_list.sort(key=lambda insertion: insertion[2])
+                insertions_list.sort(key=lambda insertion: insertion[1])
                 proba = random.random()
                 if proba < p:
                     rand_insertion = insertions_list[0]
                 else:
                     rand_insertion = random.choice(
                         insertions_list[0:int(instance.n * r)])
-                taken_job, taken_pos, ci = rand_insertion
-                solution.machine.job_schedule.insert(taken_pos, Job(taken_job, 0, 0))
-                solution.machine.compute_objective(instance, startIndex=taken_pos)
-                solution.fix_objective()
-                if taken_pos == len(solution.machine.job_schedule)-1:
-                    solution.machine.last_job = taken_job
+                
+                taken_job, new_obj = rand_insertion
+                solution.job_schedule.append(Job(taken_job, 0, 0))
+                solution.compute_objective(startIndex=len(solution.job_schedule) - 1)
                 remaining_jobs_list.remove(taken_job)
 
             solveResult.all_solutions.append(solution)
@@ -168,32 +125,83 @@ class Heuristics():
         solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
         return solveResult
 
+    def MINIT(instance : FS.FlowShopInstance):
+        """Gupta's MINIT heuristic which is based on iteratively scheduling a new job at the end
+        so that it minimizes the idle time at the last machine
+
+        Args:
+            instance (FlowShop.FlowShopInstance): Instance to be solved
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        start_time = perf_counter()
+        solution = FS.FlowShopSolution(instance=instance)
+
+        #step 1 : Find pairs of jobs (job_i,job_j) which minimizes the idle time
+        min_idleTime = None
+        idleTime_ij_list = []
+        for job_i in range(instance.n):
+            for job_j in range(instance.n):
+                if job_i != job_j :
+                    pair = (job_i,job_j)
+                    solution.job_schedule = [Job(job_i, 0, 0),Job(job_j, 0, 0)] 
+                    solution.compute_objective()
+                    idleTime_ij = solution.idle_time()
+                    idleTime_ij_list.append((pair,idleTime_ij))
+                    if min_idleTime is None or idleTime_ij<min_idleTime : min_idleTime = idleTime_ij
+
+        min_IT_list = [pair_idleTime_couple for pair_idleTime_couple in idleTime_ij_list if pair_idleTime_couple[1] == min_idleTime]
+        #step 2 : Break the tie by choosing the pair based on performance at increasingly earlier machines (m-2,m-3,..)
+        # For simplicity purposes, a random choice is performed
+        min_IT = random.choice(min_IT_list)
+        
+        i, j = min_IT[0] # Taken pair
+        job_schedule = [Job(i, 0, 0), Job(j, 0, 0)]
+        solution.job_schedule = job_schedule
+        solution.compute_objective()
+        #step 3 :
+        remaining_jobs_list = [job_id for job_id in list(range(instance.n)) if job_id not in {i, j}]
+
+        while len(remaining_jobs_list) > 0 :
+            min_IT_factor = None
+            old_idleTime = solution.idle_time()
+            for job_id in remaining_jobs_list:
+                last_job_startTime, new_cmax = solution.simulate_insert_last(job_id)
+                factor = old_idleTime + (last_job_startTime - solution.machines[instance.m-1].objective_value)
+                if min_IT_factor is None or factor < min_IT_factor:
+                    min_IT_factor = factor
+                    taken_job = job_id
+
+            solution.job_schedule.append(Job(taken_job, 0, 0))
+            remaining_jobs_list.remove(taken_job)
+            solution.compute_objective(startIndex=len(job_schedule)-1)
+
+        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+
 class Metaheuristics():
 
     @staticmethod
-    def lahc(instance : SingleMachine.SingleInstance, **kwargs):
-        """Returns the solution using the LAHC algorithm
-
+    def lahc(instance: FS.FlowShopInstance, **kwargs):
+        """ Returns the solution using the LAHC algorithm
         Args:
-            instance (SingleMachine.SingleInstance): Instance object to solve
+            instance (ParallelInstance): Instance object to solve
             Lfa (int, optional): Size of the candidates list. Defaults to 25.
             n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
             Non_improv (int, optional): LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
             LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
             time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
-            init_sol_method: The method used to get the initial solution. Defaults to "WSECi"
+            init_sol_method: The method used to get the initial solution. Defaults to "constructive"
             seed (int, optional): Seed for the random operators to make the algo deterministic
-            
         Returns:
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
-
         # Extracting parameters
         time_limit_factor = kwargs.get("time_limit_factor", None)
         init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
         Lfa = kwargs.get("Lfa", 30)
-        n_iterations = kwargs.get("n_iterations", 500000)
-        Non_improv = kwargs.get("Non_improv", 50000)
+        n_iterations = kwargs.get("n_iterations", 5000)
+        Non_improv = kwargs.get("Non_improv", 500)
         LS = kwargs.get("LS", True)
         seed = kwargs.get("seed", None)
 
@@ -202,15 +210,15 @@ class Metaheuristics():
 
         first_time = perf_counter()
         if time_limit_factor:
-            time_limit = instance.n * time_limit_factor
+            time_limit = instance.m * instance.n * time_limit_factor
 
         # Generate init solutoin using the initial solution method
         solution_init = init_sol_method(instance).best_solution
-
+        
         if not solution_init:
             return RootProblem.SolveResult()
-
-        local_search = SingleMachine.SM_LocalSearch()
+        
+        local_search = FS.FS_LocalSearch()
 
         if LS:
             solution_init = local_search.improve(solution_init)  # Improve it with LS
@@ -218,32 +226,32 @@ class Metaheuristics():
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
         all_solutions.append(solution_best)
-        lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
+        lahc_list = [solution_init.objective_value for i in range(Lfa)]  # Create LAHC list
 
         N = 0
         i = 0
         time_to_best = perf_counter() - first_time
-        current_solution = solution_init
+        current_solution = solution_init.copy()
         while i < n_iterations and N < Non_improv:
             # check time limit if exists
             if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
-
-            solution_i = SingleMachine.NeighbourhoodGeneration.lahc_neighbour(current_solution)
-
+            
+            solution_i = FS.NeighbourhoodGeneration.random_neighbour(current_solution)
             if LS:
                 solution_i = local_search.improve(solution_i)
             if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
+
                 current_solution = solution_i
                 if solution_i.objective_value < solution_best.objective_value:
                     all_solutions.append(solution_i)
-                    solution_best = solution_i
+                    solution_best = solution_i.copy()
                     time_to_best = (perf_counter() - first_time)
                     N = 0
             lahc_list[i % Lfa] = solution_i.objective_value
             i += 1
             N += 1
-
+           
         # Construct the solve result
         solve_result = RootProblem.SolveResult(
             best_solution=solution_best,
@@ -251,11 +259,10 @@ class Metaheuristics():
             runtime=(perf_counter() - first_time),
             time_to_best=time_to_best,
         )
-
+         
         return solve_result
-    
-    @staticmethod
-    def SA(instance: SingleMachine.SingleInstance, **kwargs):
+
+    def SA(instance: FS.FlowShopInstance, **kwargs):
         """ Returns the solution using the simulated annealing algorithm
         
         Args:
@@ -277,15 +284,14 @@ class Metaheuristics():
         """
 
         # Extracting the parameters
-        restriced = kwargs.get("restricted", False)
         time_limit_factor = kwargs.get("time_limit_factor", None)
         init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
         T0 = kwargs.get("T0", 1.4)
         Tf = kwargs.get("Tf", 0.01)
         k = kwargs.get("k", 0.1)
         b = kwargs.get("b", 0.99)
-        n_iterations = kwargs.get("n_iterations", 20)
-        Non_improv = kwargs.get("Non_improv", 5000)
+        n_iterations = kwargs.get("n_iterations", 10)
+        Non_improv = kwargs.get("Non_improv", 50)
         LS = kwargs.get("LS", True)
         seed = kwargs.get("seed", None)
 
@@ -301,7 +307,7 @@ class Metaheuristics():
         if not solution_init:
             return RootProblem.SolveResult()
 
-        local_search = SingleMachine.SM_LocalSearch()
+        local_search = FS.FS_LocalSearch()
 
         if LS:
             solution_init = local_search.improve(solution_init)
@@ -315,16 +321,13 @@ class Metaheuristics():
         all_solutions.append(solution_init)
         solution_best = solution_init
         while T > Tf and (N != Non_improv):
-            # check time limit if exists
-            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
-                break
+
             for i in range(0, n_iterations):
                 # check time limit if exists
                 if time_limit_factor and (perf_counter() - first_time) >= time_limit:
                     break
 
-                # solution_i = ParallelMachines.NeighbourhoodGeneration.generate_NX(solution_best)  # Generate solution in Neighbour
-                solution_i = SingleMachine.NeighbourhoodGeneration.LEJ_neighbour(solution_best)
+                solution_i = FS.NeighbourhoodGeneration.deconstruct_construct(solution_init)
                 if LS:
                     # Improve generated solution using LS
                     solution_i = local_search.improve(solution_i)
@@ -357,16 +360,6 @@ class Metaheuristics():
         )
 
         return solve_result
-
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 if DOCPLEX_IMPORTED:
     class CSP():
@@ -402,20 +395,21 @@ if DOCPLEX_IMPORTED:
                         self.best_values[self.stop_times[self.stop_idx]] = obj_val
 
         @staticmethod
-        def _csp_transform_solution(msol, E_i, instance, objective : Objective):
+        def _csp_transform_solution(msol, E_i, instance: FS.FlowShopInstance):
 
-            sol = instance.create_solution()
-            k_tasks = []
-            for i in range(instance.n):
-                start = msol[E_i[i]][0]
-                end = msol[E_i[i]][1]
-                k_tasks.append(Job(i,start,end))
-                
-                k_tasks = sorted(k_tasks, key= lambda x: x[1])
-                sol.machine.job_schedule = k_tasks
+            sol = FS.FlowShopSolution(instance)
+            for k in range(instance.m):
+                k_tasks = []
+                for i in range(instance.n):
+                    start = msol[E_i[i][k]][0]
+                    end = msol[E_i[i][k]][1]
+                    k_tasks.append(Job(i,start,end))
+
+                    k_tasks = sorted(k_tasks, key= lambda x: x[1])
+                    sol.machines[k].oper_schedule = [job[0] for job in k_tasks]
             
-            sol.compute_objective()
-
+            sol.job_schedule = sol.machines[0].oper_schedule
+            
             return sol
         
         @staticmethod
@@ -442,32 +436,72 @@ if DOCPLEX_IMPORTED:
                     "stop_times", [time_limit // 4, time_limit // 2, (time_limit * 3) // 4, time_limit])
 
                 E = range(instance.n)
+                M = range(instance.m)
 
-                # Construct the model
-                model = CpoModel("smspModel")
+                model = CpoModel("FS_Model")
 
-                # Jobs interval_vars including the release date and processing times constraints
-                E_i = []
+                # Preparing transition matrices
+                trans_matrix = {}
+                if hasattr(instance, 'S'):
+                    for k in range(instance.m):
+                        k_matrix = [ [0 for _ in range(instance.n + 1)] for _ in range(instance.n + 1) ]
+                        for i in range(instance.n):
+                            ele = instance.S[k][i][i]
+                            k_matrix[i+1][0] = ele
+                            k_matrix[0][i+1] = ele
+
+                            for j in range(instance.n):
+                                k_matrix[i+1][j+1] = instance.S[k][i][j]
+
+                        trans_matrix[k] = model.transition_matrix(k_matrix)
+                    
+                    # Create a dummy job for the first task
+                    first_task = model.interval_var(size=0, optional= False, start = 0, name=f'first_task')
+
+                E_i = [[] for i in E]
+                M_k = [[] for k in M]
+                types_k = [ list(range(1, instance.n + 1)) for k in M ]
                 for i in E:
-                    start_period = (instance.R[i], INTERVAL_MAX) if hasattr(instance, 'R') else (0, INTERVAL_MAX)
-                    job_i = model.interval_var( start = start_period,
-                                                size = instance.P[i], optional= False, name=f'E[{i}]')
-                    E_i.append(job_i)
+                    for k in M:
+                        start_period = (instance.R[i], INTERVAL_MAX) if hasattr(instance, 'R') else (0, INTERVAL_MAX)
+                        job_i = model.interval_var( start = start_period,
+                                                    size = instance.P[i][k], optional= False, name=f'E[{i},{k}]')
+                        E_i[i].append(job_i)
+                        M_k[k].append(job_i)
 
-                # Sequential execution on the machine
-                machine_sequence = model.sequence_var( E_i, list(E) )
-                model.add( model.no_overlap(machine_sequence) )
-                
-                # Define the objective 
-                if objective == Objective.wiCi:
-                    model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i]) for i in E ) )) # sum_{i in E} wi * ci
-                elif objective == Objective.wiTi:
+                # No overlap inside machines
+                seq_array = []
+                for k in M:
+                    if hasattr(instance, 'S'):
+                        seq_k = model.sequence_var([first_task] + M_k[k], [0] + types_k[k], name=f"Seq_{k}")
+                        model.add( model.no_overlap(seq_k, trans_matrix[k]) )
+                    else:
+                        seq_k = model.sequence_var(M_k[k], types_k[k], name=f"Seq_{k}")
+                        model.add( model.no_overlap(seq_k) )
+                        
+                    seq_array.append(seq_k)
+                    
+                # Same sequence constraint
+                for k in range(1, instance.m):
+                    model.add( model.same_sequence(seq_array[k - 1], seq_array[k]) )
+
+                # Precedence constraint between machines for each job
+                for i in E:
+                    for k in range(1, instance.m):
+                        model.add( model.end_before_start(E_i[i][k - 1], E_i[i][k]) )
+
+                # Add objective
+                if objective == RootProblem.Objective.Cmax:
+                    model.add( model.minimize( model.max(model.end_of(job_i) for i in E for job_i in E_i[i]) ) )
+                elif objective == RootProblem.Objective.wiCi:
+                    model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i][-1]) for i in E ) )) # sum_{i in E} wi * ci
+                elif objective == RootProblem.Objective.wiFi:
+                    model.add(model.minimize( sum( instance.W[i] * (model.end_of(E_i[i][-1]) - instance.R[i]) for i in E ) )) # sum_{i in E} wi * (ci - ri)
+                elif objective == RootProblem.Objective.wiTi:
                     model.add( model.minimize( 
                         sum( instance.W[i] * model.max(model.end_of(E_i[i]) - instance.D[i], 0) for i in E ) # sum_{i in E} wi * Ti
                     ))
-                elif objective == Objective.Cmax:
-                    model.add(model.minimize( max( model.end_of(E_i[i]) for i in E ) )) # max_{i in E} ci 
-
+                
                 # Link the callback to save stats of the solve process
                 mycallback = CSP.MyCallback(stop_times=stop_times)
                 model.add_solver_callback(mycallback)
@@ -482,7 +516,7 @@ if DOCPLEX_IMPORTED:
                         logFile.write('\n\t'.join(msol.get_solver_log().split("!")))
                         logFile.flush()
 
-                sol = CSP._csp_transform_solution(msol, E_i, instance, objective)
+                sol = CSP._csp_transform_solution(msol, E_i, instance)
 
                 # Construct the solve result
                 kpis = {
@@ -523,35 +557,3 @@ class ExactSolvers():
         def csp(instance, **kwargs):
             print("Docplex import error: you can not use this solver")
             return None
-
-class Heuristics_HelperFunctions():
-
-    @staticmethod
-    def rule_candidate(remaining_jobs : list[int], rule : object, reverse : bool = True):
-        """Extract the highest index job using the specific passed rule.
-
-        Args:
-            remaining_jobs (list[int]): The list of jobs on which we apply the rule
-            rule (object): The rule (function) which is used in the heuristic in order to extract the candidate job
-            reverse (bool, optional): When true, the candidate returned is the job with the highest value returned by the rule.
-            When false, returns the job with the lowest value returned by the rule. Defaults to True.
-
-        Returns:
-            int: returns the job candidate by the given rule from remaining_jobs
-        """
-        max_rule_value = -1
-        min_rule_value = None
-        for job in remaining_jobs:
-            rule_value = rule(job)
-            if max_rule_value<rule_value: 
-                max_rule_value = rule_value
-                taken_job_max = job
-            if min_rule_value is None or min_rule_value>rule_value:
-                min_rule_value = rule_value
-                taken_job_min = job
-        if reverse: return taken_job_max
-        else: return taken_job_min
-
-
-
- 

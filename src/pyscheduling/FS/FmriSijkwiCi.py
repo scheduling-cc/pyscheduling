@@ -1,20 +1,21 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint
-
+from random import randint, uniform
 from time import perf_counter
 from typing import List
 
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver, Job
 import pyscheduling.FS.FlowShop as FlowShop
 import pyscheduling.FS.FS_methods as FS_methods
+import pyscheduling.Problem as RootProblem
+from pyscheduling.Problem import GenerationLaw, Solver
 
 
 @dataclass
-class FmCmax_Instance(FlowShop.FlowShopInstance):
+class FmriSijkwiCi_Instance(FlowShop.FlowShopInstance):
     P: List[List[int]] = field(default_factory=list)  # Processing time
+    W: List[int] = field(default_factory=list)  # weights
+    R: List[int] = field(default_factory=list)  # release dates
+    S: List[List[List[int]]] = field(default_factory=list) # Setup time
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -27,7 +28,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
             FileNotFoundError: when the file does not exist
 
         Returns:
-            FmCmax_Instance:
+            FmSijkCmax_Instance:
 
         """
         f = open(path, "r")
@@ -38,13 +39,21 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         i = 2
         instance = cls("test", n, m)
         instance.P, i = instance.read_P(content, i)
+        instance.W, i = instance.read_1D(content, i)
+        instance.R, i = instance.read_R(content, i)
+        instance.S, i = instance.read_S(content, i)
         f.close()
         return instance
 
     @classmethod
-    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
-        """Random generation of FmCmax problem instance
-
+    def generate_random(cls, n: int, m: int, instance_name: str = "",
+                        protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Pmin: int = 1, Pmax: int = 100,
+                        Wmin: int = 1, Wmax: int = 1,
+                        alpha: float = 2.0,
+                        Gamma: float = 2.0, Smin: int = 10, Smax: int = 100):
+        
+        """Random generation of FmriSijkwiCi problem instance
         Args:
             n (int): number of jobs of the instance
             m (int): number of machines of the instance
@@ -52,17 +61,21 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
             law (FlowShop.GenerationLaw, optional): probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
+            Gamma (float, optional): Setup time factor. Defaults to 0.0.
+            Smin (int, optional): Minimal setup time. Defaults to -1.
+            Smax (int, optional): Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
 
         Returns:
-            FmCmax_Instance: the randomly generated instance
+            FmSijkwiCi_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
-        if(Pmax == -1):
-            Pmax = randint(Pmin, 100)
-        instance = cls(InstanceName, n, m)
+        instance = FmriSijkwiCi_Instance(instance_name, n, m)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
+        instance.S = instance.generate_S(
+            protocol, law, instance.P, Gamma, Smin, Smax)
         return instance
 
     def to_txt(self, path: Path) -> None:
@@ -77,7 +90,24 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         for i in range(self.n):
             for j in range(self.m):
                 f.write("\t"+str(j)+"\t"+str(self.P[i][j]))
-            f.write("\n")
+            if i != self.n - 1:
+                f.write("\n")
+
+        f.write("\nWeights\n")
+        for i in range(self.n):
+            f.write(str(self.W[i])+"\t")
+
+        f.write("\nRelease time\n")
+        for i in range(self.n):
+            f.write(str(self.R[i])+"\t")
+
+        f.write("\nSSD\n")
+        for i in range(self.m):
+            f.write("M"+str(i)+"\n")
+            for j in range(self.n):
+                for k in range(self.n):
+                    f.write(str(self.S[i][j][k])+"\t")
+                f.write("\n")
         f.close()
 
     def init_sol_method(self):
@@ -86,39 +116,18 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         Returns:
             object: default solving method
         """
-        return Heuristics.slope
+        return Heuristics.BIBA
 
     def get_objective(self):
         """to get the objective tackled by the instance
 
         Returns:
-            RootProblem.Objective: Makespan
+            RootProblem.Objective:
         """
-        return RootProblem.Objective.Cmax
+        return RootProblem.Objective.wiCi
 
 
 class Heuristics(FS_methods.Heuristics):
-
-    @staticmethod
-    def slope(instance: FmCmax_Instance):
-        """Inspired from Jonhson's rule, this heuristic schedules first the jobs with the smallest processing times on the first machines
-
-        Args:
-            instance (FmCmax_Instance): Instance to be solved by the heuristic
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the heuristic
-        """
-        start_time = perf_counter()
-        solution = FlowShop.FlowShopSolution(instance=instance)
-        jobs = list(range(instance.n))
-        # m+1 to translate the set of numbers of m from [[0,m-1]] to [[1,m]]
-        # machine_id+1 to translate the set of numbers of machine_id from [[0,m-1]] to [[1,m]]
-        slope_index = lambda job_id : -sum([((instance.m + 1) - (2*(machine_id+1)-1))*instance.P[job_id][machine_id] for machine_id in range(instance.m)])
-        jobs.sort(reverse=True,key=slope_index)
-        solution.job_schedule = [ Job(job_id, 0, 0) for job_id in jobs]
-        solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @classmethod
     def all_methods(cls):
