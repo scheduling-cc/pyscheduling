@@ -2,7 +2,7 @@
 name = "pyscheduling"
 version = "0.1.7"
 description = "THE python package to solve scheduling problems"
-authors = ["Amine ATHMANI", "Taha ARBAOUI", "Akram LAISSAOUI", "Mourad Terzi", "Mohammed Henni"]
+authors = ["Amine ATHMANI", "Taha ARBAOUI", "Akram LAISSAOUI", "Mourad TERZI", "Mohammed HENNI"]
 license = "CC-BY-NC-ND-4.0"
 readme = "README.md"
 
