@@ -38,9 +38,7 @@ def single_instance(constraints : list[Constraints], objective : Objective):
         instance = cls(jobs_number, instance_name=InstanceName)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
 
-        args_dict = {   "instance" : instance,
-                        "jobs_number": jobs_number,
-                        "protocol": protocol, "law":law,
+        args_dict = {   "protocol": protocol, "law":law,
                         "Wmin":Wmin, "Wmax":Wmax,
                         "Pmin":Pmin, "Pmax":Pmax,
                         "alpha":alpha,
@@ -48,7 +46,7 @@ def single_instance(constraints : list[Constraints], objective : Objective):
                         "gamma":Gamma, "Smin":Smin, "Smax":Smax}
         
         for constraint in constraints:
-            constraint.generate_attribute(**args_dict)
+            constraint.generate_attribute(instance,**args_dict)
 
         return instance    
 
@@ -173,137 +171,6 @@ class SingleInstance(RootProblem.Instance):
             P.append(n)
 
         return P
-
-    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
-        """Random generation of jobs weights table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            Wmin (int): Minimal weight
-            Wmax (int): Maximal weight
-
-        Returns:
-           list[int]: Table of jobs weights
-        """
-        W = []
-        for j in range(self.n):
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.randint(Wmin, Wmax+1))
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Wmin+Wmax*value))
-                while n < Wmin or n > Wmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Wmin+Wmax*value))
-            W.append(n)
-
-        return W
-
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, alpha: float):
-        """Random generation of release time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[float]): Table of processing time
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-            alpha (float): release time factor
-
-        Returns:
-            list[int]: release time table
-        """
-        ri = []
-        for j in range(self.n):
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(0, alpha * PJobs[j]))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            ri.append(n)
-
-        return ri
-
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], gamma: float, Smin: int = 0, Smax: int = 0):
-        """Random generation of setup time matrix
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[float]): Table of processing time
-            gamma (float): Setup time factor
-            Smin (int, optional): Minimal setup time . Defaults to 0.
-            Smax (int, optional): Maximal setup time. Defaults to 0.
-
-        Returns:
-            list[list[int]]: Setup time matrix
-        """
-        Si = []
-        for j in range(self.n):
-            Sij = []
-            for k in range(self.n):
-                if j == k:
-                    Sij.append(0)  # check space values
-                else:
-                    if law.name == "UNIFORM":  # Use uniform law
-                        min_p = min(PJobs[k], PJobs[j])
-                        max_p = max(PJobs[k], PJobs[j])
-                        Smin = int(gamma * min_p)
-                        Smax = int(gamma * max_p)
-                        Sij.append(int(random.uniform(Smin, Smax)))
-
-                    elif law.name == "NORMAL":  # Use normal law
-                        value = np.random.normal(0, 1)
-                        setup = int(abs(Smin+Smax*value))
-                        while setup < Smin or setup > Smax:
-                            value = np.random.normal(0, 1)
-                            setup = int(abs(Smin+Smax*value))
-                        Sij.append(setup)
-            Si.append(Sij)
-
-        return Si
-
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float):
-        """Random generation of due time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[float]): Table of processing time
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-            fraction (float): due time factor
-
-        Returns:
-            list[int]: due time table
-        """
-        di = []
-        sumP = sum(PJobs)
-        for j in range(self.n):
-            if hasattr(self, 'R'):
-                startTime = self.R[j] + PJobs[j]
-            else:
-                startTime = PJobs[j]
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(
-                    startTime, startTime + due_time_factor * sumP))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            di.append(n)
-
-        return di
 
 
 @dataclass

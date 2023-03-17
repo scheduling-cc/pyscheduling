@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-import numpy as np
 import random
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
@@ -16,7 +15,7 @@ class GenerationLaw(Enum):
     UNIFORM = 1
     NORMAL = 2
 
-class Constraints_Enum(Enum):
+class ConstraintsEnum(Enum):
     W = "weight"
     R = "release"
     S = "setup"
@@ -44,35 +43,27 @@ class Constraints_Enum(Enum):
 
 class Constraints():
 
-    @staticmethod
-    def sorting_func(constraint):
-        if constraint is Constraints.W : return 0
-        elif constraint is Constraints.R : return 1
-        elif constraint is Constraints.S : return 2
-        elif constraint is Constraints.D : return 3
-
     class W():
         @staticmethod
-        def create_attribute(cls,var):
-            setattr(cls,"W",var) if var is not None else setattr(cls,"W",list())
+        def create_attribute(instance,var):
+            setattr(instance,"W",var) if var is not None else setattr(instance,"W",list())
 
         @staticmethod
-        def read_attribute(cls, text_content : list[str], starting_index : int):
+        def read_attribute(instance, text_content : list[str], starting_index : int):
             W, i = Instance.read_1D(text_content,starting_index)
-            setattr(cls,"W",W)
+            setattr(instance,"W",W)
             return i
             
         @staticmethod
-        def print_attribute(cls, file):
-            W = getattr(cls,"W")
+        def print_attribute(instance, file):
+            W = getattr(instance,"W")
             file.write("\nWeights\n")
-            for i in range(cls.n):
+            for i in range(instance.n):
                 file.write(str(W[i])+"\t")
 
         @staticmethod
-        def generate_attribute(**kwargs):
+        def generate_attribute(instance,**kwargs):
             law = kwargs.get("law")
-            instance = kwargs.get("instance")
             Wmin = kwargs.get("Wmin")
             Wmax = kwargs.get("Wmax")
             W = []
@@ -80,10 +71,10 @@ class Constraints():
                 if law.name == "UNIFORM":  # Generate uniformly
                     n = int(random.randint(Wmin, Wmax+1))
                 elif law.name == "NORMAL":  # Use normal law
-                    value = np.random.normal(0, 1)
+                    value = random.gauss(0, 1)
                     n = int(abs(Wmin+Wmax*value))
                     while n < Wmin or n > Wmax:
-                        value = np.random.normal(0, 1)
+                        value = random.gauss(0, 1)
                         n = int(abs(Wmin+Wmax*value))
                 W.append(n)
 
@@ -92,26 +83,25 @@ class Constraints():
 
     class R():
         @staticmethod
-        def create_attribute(cls,var):
-            setattr(cls,"R",var) if var is not None else setattr(cls,"R",list())
+        def create_attribute(instance,var):
+            setattr(instance,"R",var) if var is not None else setattr(instance,"R",list())
 
         @staticmethod
-        def read_attribute(cls, text_content : list[str], starting_index : int):
+        def read_attribute(instance, text_content : list[str], starting_index : int):
             R, i = Instance.read_1D(text_content,starting_index)
-            setattr(cls,"R",R)
+            setattr(instance,"R",R)
             return i
 
         @staticmethod
-        def print_attribute(cls, file):
-            R = getattr(cls,"R")
+        def print_attribute(instance, file):
+            R = getattr(instance,"R")
             file.write("\nRelease time\n")
-            for i in range(cls.n):
+            for i in range(instance.n):
                 file.write(str(R[i])+"\t")
 
         @staticmethod
-        def generate_attribute(**kwargs):
+        def generate_attribute(instance,**kwargs):
             law = kwargs.get("law")
-            instance = kwargs.get("instance")
             PJobs = instance.P
             Pmin = kwargs.get("Pmin")
             Pmax = kwargs.get("Pmax")
@@ -122,10 +112,10 @@ class Constraints():
                     n = int(random.uniform(0, alpha * PJobs[j]))
 
                 elif law.name == "NORMAL":  # Use normal law
-                    value = np.random.normal(0, 1)
+                    value = random.gauss(0, 1)
                     n = int(abs(Pmin+Pmax*value))
                     while n < Pmin or n > Pmax:
-                        value = np.random.normal(0, 1)
+                        value = random.gauss(0, 1)
                         n = int(abs(Pmin+Pmax*value))
 
                 ri.append(n)
@@ -135,28 +125,27 @@ class Constraints():
     
     class S():
         @staticmethod
-        def create_attribute(cls,var):
-            setattr(cls,"S",var) if var is not None else setattr(cls,"S",list())
+        def create_attribute(instance,var):
+            setattr(instance,"S",var) if var is not None else setattr(instance,"S",list())
 
         @staticmethod
-        def read_attribute(cls, text_content : list[str], starting_index : int):
-            S, i = Instance.read_2D(cls.n, text_content,starting_index)
-            setattr(cls,"S",S)
+        def read_attribute(instance, text_content : list[str], starting_index : int):
+            S, i = Instance.read_2D(instance.n, text_content,starting_index)
+            setattr(instance,"S",S)
             return i
 
         @staticmethod
-        def print_attribute(cls, file):
-            S = getattr(cls,"S")
+        def print_attribute(instance, file):
+            S = getattr(instance,"S")
             file.write("\nSSD\n")
-            for i in range(cls.n):
-                for j in range(cls.n):
+            for i in range(instance.n):
+                for j in range(instance.n):
                     file.write(str(S[i][j])+"\t")
                 file.write("\n")
     
         @staticmethod
-        def generate_attribute(**kwargs):
+        def generate_attribute(instance,**kwargs):
             law = kwargs.get("law")
-            instance = kwargs.get("instance")
             PJobs = instance.P
             Smin = kwargs.get("Smin")
             Smax = kwargs.get("Smax")
@@ -176,10 +165,10 @@ class Constraints():
                             Sij.append(int(random.uniform(Smin, Smax)))
 
                         elif law.name == "NORMAL":  # Use normal law
-                            value = np.random.normal(0, 1)
+                            value = random.gauss(0, 1)
                             setup = int(abs(Smin+Smax*value))
                             while setup < Smin or setup > Smax:
-                                value = np.random.normal(0, 1)
+                                value = random.gauss(0, 1)
                                 setup = int(abs(Smin+Smax*value))
                             Sij.append(setup)
                 Si.append(Sij)
@@ -189,26 +178,25 @@ class Constraints():
 
     class D():
         @staticmethod
-        def create_attribute(cls,var):
-            setattr(cls,"D",var) if var is not None else setattr(cls,"D",list())
+        def create_attribute(instance,var):
+            setattr(instance,"D",var) if var is not None else setattr(instance,"D",list())
 
         @staticmethod
-        def read_attribute(cls, text_content : list[str], starting_index : int):
+        def read_attribute(instance, text_content : list[str], starting_index : int):
             D, i = Instance.read_1D(text_content,starting_index)
-            setattr(cls,"D",D)
+            setattr(instance,"D",D)
             return i
 
         @staticmethod
-        def print_attribute(cls, file):
-            D = getattr(cls,"D")
+        def print_attribute(instance, file):
+            D = getattr(instance,"D")
             file.write("\nDue time\n")
-            for i in range(cls.n):
+            for i in range(instance.n):
                 file.write(str(D[i])+"\t")
 
         @staticmethod
-        def generate_attribute(**kwargs):
+        def generate_attribute(instance,**kwargs):
             law = kwargs.get("law")
-            instance = kwargs.get("instance")
             PJobs = instance.P
             Pmin = kwargs.get("Pmin")
             Pmax = kwargs.get("Pmax")
@@ -225,16 +213,22 @@ class Constraints():
                         startTime, startTime + due_time_factor * sumP))
 
                 elif law.name == "NORMAL":  # Use normal law
-                    value = np.random.normal(0, 1)
+                    value = random.gauss(0, 1)
                     n = int(abs(Pmin+Pmax*value))
                     while n < Pmin or n > Pmax:
-                        value = np.random.normal(0, 1)
+                        value = random.gauss(0, 1)
                         n = int(abs(Pmin+Pmax*value))
 
                 di.append(n)
 
             instance.D = di
             return di
+        
+
+    sorting_dict = {W : 0, R : 1, S : 2, D : 3}
+    @staticmethod
+    def sorting_func(constraint):
+        return Constraints.sorting_dict[constraint]
 
 
 class Objective(Enum):  # Negative value are for minimization problems, Positive values are for maximization problems
