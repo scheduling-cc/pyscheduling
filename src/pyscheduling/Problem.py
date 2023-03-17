@@ -4,8 +4,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
+import numpy as np
+import random
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
+
+class GenerationProtocol(Enum):
+    BASE = 1
 
 class GenerationLaw(Enum):
     UNIFORM = 1
@@ -57,13 +62,34 @@ class Constraints():
             setattr(cls,"W",W)
             return i
             
-
         @staticmethod
         def print_attribute(cls, file):
             W = getattr(cls,"W")
             file.write("\nWeights\n")
             for i in range(cls.n):
                 file.write(str(W[i])+"\t")
+
+        @staticmethod
+        def generate_attribute(**kwargs):
+            law = kwargs.get("law")
+            instance = kwargs.get("instance")
+            Wmin = kwargs.get("Wmin")
+            Wmax = kwargs.get("Wmax")
+            W = []
+            for j in range(instance.n):
+                if law.name == "UNIFORM":  # Generate uniformly
+                    n = int(random.randint(Wmin, Wmax+1))
+                elif law.name == "NORMAL":  # Use normal law
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Wmin+Wmax*value))
+                    while n < Wmin or n > Wmax:
+                        value = np.random.normal(0, 1)
+                        n = int(abs(Wmin+Wmax*value))
+                W.append(n)
+
+            instance.W = W
+            return W
+
     class R():
         @staticmethod
         def create_attribute(cls,var):
@@ -81,6 +107,32 @@ class Constraints():
             file.write("\nRelease time\n")
             for i in range(cls.n):
                 file.write(str(R[i])+"\t")
+
+        @staticmethod
+        def generate_attribute(**kwargs):
+            law = kwargs.get("law")
+            instance = kwargs.get("instance")
+            PJobs = instance.P
+            Pmin = kwargs.get("Pmin")
+            Pmax = kwargs.get("Pmax")
+            alpha = kwargs.get("alpha")
+            ri = []
+            for j in range(instance.n):
+                if law.name == "UNIFORM":  # Generate uniformly
+                    n = int(random.uniform(0, alpha * PJobs[j]))
+
+                elif law.name == "NORMAL":  # Use normal law
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+                    while n < Pmin or n > Pmax:
+                        value = np.random.normal(0, 1)
+                        n = int(abs(Pmin+Pmax*value))
+
+                ri.append(n)
+
+            instance.R=ri
+            return ri
+    
     class S():
         @staticmethod
         def create_attribute(cls,var):
@@ -100,6 +152,41 @@ class Constraints():
                 for j in range(cls.n):
                     file.write(str(S[i][j])+"\t")
                 file.write("\n")
+    
+        @staticmethod
+        def generate_attribute(**kwargs):
+            law = kwargs.get("law")
+            instance = kwargs.get("instance")
+            PJobs = instance.P
+            Smin = kwargs.get("Smin")
+            Smax = kwargs.get("Smax")
+            gamma = kwargs.get("gamma")
+            Si = []
+            for j in range(instance.n):
+                Sij = []
+                for k in range(instance.n):
+                    if j == k:
+                        Sij.append(0)  # check space values
+                    else:
+                        if law.name == "UNIFORM":  # Use uniform law
+                            min_p = min(PJobs[k], PJobs[j])
+                            max_p = max(PJobs[k], PJobs[j])
+                            Smin = int(gamma * min_p)
+                            Smax = int(gamma * max_p)
+                            Sij.append(int(random.uniform(Smin, Smax)))
+
+                        elif law.name == "NORMAL":  # Use normal law
+                            value = np.random.normal(0, 1)
+                            setup = int(abs(Smin+Smax*value))
+                            while setup < Smin or setup > Smax:
+                                value = np.random.normal(0, 1)
+                                setup = int(abs(Smin+Smax*value))
+                            Sij.append(setup)
+                Si.append(Sij)
+
+            instance.S = Si
+            return Si
+
     class D():
         @staticmethod
         def create_attribute(cls,var):
@@ -117,6 +204,37 @@ class Constraints():
             file.write("\nDue time\n")
             for i in range(cls.n):
                 file.write(str(D[i])+"\t")
+
+        @staticmethod
+        def generate_attribute(**kwargs):
+            law = kwargs.get("law")
+            instance = kwargs.get("instance")
+            PJobs = instance.P
+            Pmin = kwargs.get("Pmin")
+            Pmax = kwargs.get("Pmax")
+            due_time_factor = kwargs.get("due_time_factor")
+            di = []
+            sumP = sum(PJobs)
+            for j in range(instance.n):
+                if hasattr(instance,"R"):
+                    startTime = instance.R[j] + PJobs[j]
+                else:
+                    startTime = PJobs[j]
+                if law.name == "UNIFORM":  # Generate uniformly
+                    n = int(random.uniform(
+                        startTime, startTime + due_time_factor * sumP))
+
+                elif law.name == "NORMAL":  # Use normal law
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+                    while n < Pmin or n > Pmax:
+                        value = np.random.normal(0, 1)
+                        n = int(abs(Pmin+Pmax*value))
+
+                di.append(n)
+
+            instance.D = di
+            return di
 
 
 class Objective(Enum):  # Negative value are for minimization problems, Positive values are for maximization problems
