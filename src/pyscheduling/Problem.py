@@ -6,6 +6,8 @@ from pathlib import Path
 from time import perf_counter
 from typing import Dict, List
 
+import plotly.figure_factory as ff
+
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 class GenerationLaw(Enum):
@@ -280,6 +282,59 @@ class Solution(ABC):
             path (Path): path to the resulting txt file
         """
         pass
+    
+    def _plot_tasks(self, tasks_df: List[dict], path: Path = None):
+        """Plots the tasks (in plotly dict format), it can be called by all problems.
+
+        Args:
+            tasks_df (List[dict]): Tasks list of dicts specifying start and end dates and description
+            path (Path, optional): The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+        """
+        barwidth = 0.2
+        colors = {'Idle': 'rgb(78, 110, 129)',
+                'Setup': 'rgb(246, 107, 14)',
+                'Processing': 'rgb(52, 152, 219)',
+                'black': 'rgb(0, 0, 0)'}
+        
+        cmax_value = max(task["Finish"] for task in tasks_df)
+        y_max = self.instance.m if hasattr(self.instance, "m") else 0.5
+
+        fig = ff.create_gantt(tasks_df, colors=colors, index_col='Type', show_colorbar=True,
+                            group_tasks=True, showgrid_x=True, showgrid_y=True, bar_width=barwidth)
+
+        fig.update_yaxes(autorange="reversed") #if not specified as 'reversed', the tasks will be listed from bottom up       
+        fig.update_layout(
+            xaxis_type='linear',
+            title='Gantt Chart',
+            #bargap=0.1,
+            #width=850,
+            height=500,              
+            xaxis_title="Time", 
+            yaxis_title="Machine",
+            hovermode = "x"
+        )
+        fig.add_vline(x=cmax_value, line_width=4, line_dash="dashdot", line_color="Red")
+
+        # Add rectangle shapes
+        if not hasattr(self.instance, "S"):
+            for task in tasks_df:
+                if task["Type"] == "Processing":
+                    y_ref = int(task["Task"][1:])
+                    fig.add_shape(type="rect", x0=task["Start"], x1=task["Finish"], y0=y_ref-barwidth, y1=y_ref+barwidth, line=dict(color=colors["black"])) 
+        
+        # Cmax value
+        fig.add_annotation(
+            x=cmax_value, 
+            y=-2*barwidth,
+            text=f'Objective_value: {self.objective_value}',
+            font=dict(size=12, color="red", family="Courier New, monospace"),
+            align="right"
+        )
+
+        if path is not None:
+            fig.write_image(path)
+        else:
+            fig.show()
 
     @abstractmethod
     def plot(self) -> None:

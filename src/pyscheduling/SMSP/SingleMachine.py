@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import (Constraints, DecoratorsHelper, GenerationLaw,
@@ -751,70 +750,44 @@ class SingleSolution(RootProblem.Solution):
         f.write(self.__str__())
         f.close()
 
-    def plot(self, path: Path = None) -> None:
-        """Plot the gantt diagram for the solution
+    def plot(self, path: Path = None):
+        """Plot the solution into a gantt diagramm
 
         Args:
-            path (Path, optional): path to export the diagram to a file, if not specified it does not save it to file. Defaults to None.
+            types (str, optional): The type of tasks to plot, a string where each letter corresponds to one type: R for release, \n
+                S for setup and P for Processing. Defaults to "RSP".
+            path (Path, optional): The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
         """
-        if "matplotlib" in sys.modules:
-            if self.instance is not None:
-                # Add Tasks ID
-                fig, gnt = plt.subplots()
+        tasks_df = []
+        schedule = self.machine.job_schedule
+        prev = schedule[0].id # First job in the schedule
+        prevEndTime = 0
+        for element in schedule:
+            job_index, startTime, endTime = element
+            
+            # Idle time
+            if prevEndTime < startTime:
+                idle_time_task = dict(Task=f"M0", Description=f"J{job_index} idle", Start=prevEndTime,
+                                    Finish = startTime, Type = 'Idle')
+                tasks_df.append(idle_time_task)
+            
+            # Setup time
+            end_setup = startTime + self.instance.S[prev][job_index] if hasattr(self.instance, "S") else startTime
+            if startTime != end_setup:
+                setup_task = dict(Task=f"M0", Description=f"J{job_index} setup",
+                                Start = startTime, Finish = end_setup, Type = 'Setup')
+                tasks_df.append(setup_task)
+            
+            # Proc time
+            end_proc = end_setup + self.instance.P[job_index]
+            proc_task = dict(Task=f"M0", Description=f"J{job_index} proc", 
+                            Start = end_setup, Finish = end_proc, Type = 'Processing')
+            tasks_df.append(proc_task)
+            
+            prev = job_index
+            prevEndTime = endTime
 
-                # Setting labels for x-axis and y-axis
-                gnt.set_xlabel('seconds')
-                gnt.set_ylabel('Machines')
-
-                # Setting ticks on y-axis
-
-                ticks = []
-                ticks_labels = []
-                ticks.append(15)
-
-                gnt.set_yticks(ticks)
-                # Labelling tickes of y-axis
-                gnt.set_yticklabels(ticks_labels)
-
-                # Setting graph attribute
-                gnt.grid(True)
-
-                schedule = self.machine.job_schedule
-
-                prev = -1
-                prevEndTime = 0
-                for element in schedule:
-                    job_index, startTime, endTime = element
-                    if prevEndTime < startTime:
-                        # Idle Time
-                        gnt.broken_barh(
-                            [(prevEndTime, startTime - prevEndTime)], (10, 9), facecolors=('tab:gray'))
-                    if prev != -1:
-                        if hasattr(self.instance, 'S'):
-                            setupTime = self.instance.S[prev][job_index]
-                        else:
-                            setupTime = 0
-                            # Setup Time
-                        gnt.broken_barh([(startTime, setupTime)], (
-                            10, 9), facecolors=('tab:orange'))
-                        # Processing Time
-                        gnt.broken_barh([(startTime + setupTime,
-                                        self.instance.P[job_index])], (10, 9), facecolors=('tab:blue'))
-                    else:
-                        gnt.broken_barh([(startTime, self.instance.P[job_index])], (
-                            10, 9), facecolors=('tab:blue'))
-                    prev = job_index
-                    prevEndTime = endTime
-                if path:
-                    plt.savefig(path)
-                else:
-                    plt.show()
-                return
-            else:
-                print("Please assign the solved instance to the solution object")
-        else:
-            print("Matplotlib is not installed, you can't use gant_plot")
-            return
+        return self._plot_tasks(tasks_df, path)
 
     def is_valid(self, verbosity : bool = False):
         """
