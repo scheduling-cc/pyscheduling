@@ -1,20 +1,11 @@
-import heapq
-import random
 import sys
-from dataclasses import dataclass, field
-from pathlib import Path
-from random import randint, uniform
 from statistics import mean
-from time import perf_counter
 
-import matplotlib.pyplot as plt
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Constraints, Objective, Solver
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
 import pyscheduling.PMSP.PM_methods as pm_methods
-from pyscheduling.Problem import Job
+import pyscheduling.Problem as RootProblem
+from pyscheduling.PMSP.ParallelMachines import parallel_instance
+from pyscheduling.Problem import Constraints, Job, Objective, Solver
 
 try:
     import gurobipy as gp
@@ -113,7 +104,7 @@ if DOCPLEX_IMPORTED:
                 k_tasks = sorted(k_tasks, key=lambda x: x[1])
                 sol.machines[i].job_schedule = k_tasks
 
-            sol.compute_objective()
+            sol.compute_objective(sol.instance)
             return sol
 
         @staticmethod
@@ -782,178 +773,5 @@ class Heuristics(pm_methods.Heuristics):
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-
 class Metaheuristics(pm_methods.Metaheuristics):
-    
-    @staticmethod
-    def GA(instance: RmriSijkCmax_Instance, **kwargs):
-        """Returns the solution using the genetic algorithm
-
-        Args:
-            instance (RmSijkCmax_Instance): Instance to be solved
-
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the metaheuristic
-        """
-        startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
-        solveResult.best_solution, solveResult.all_solutions = GeneticAlgorithm.solve(
-            instance, **kwargs)
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
-        solveResult.runtime = perf_counter() - startTime
-        return solveResult
-
-    
-class GeneticAlgorithm():
-
-    @staticmethod
-    def solve(instance: RmriSijkCmax_Instance, pop_size=50, p_cross=0.7, p_mut=0.5, p_ls=1, pressure=30, n_iterations=100):
-        population = GeneticAlgorithm.generate_population(
-            instance, pop_size, LS=(p_ls != 0))
-        delta = 0
-        i = 0
-        N = 0
-        local_search = ParallelMachines.PM_LocalSearch()
-        best_cmax = None
-        best_solution = None
-        solutions = []
-        while i < n_iterations and N < 20:  # ( instance.n*instance.m*50/2000 ):
-            # Select the parents
-            parent_1, parent_2 = GeneticAlgorithm.selection(population, pressure)
-
-            # Cross parents
-            pc = random.uniform(0, 1)
-            if pc < p_cross:
-                child1, child2 = GeneticAlgorithm.crossover(instance, parent_1, parent_2)
-            else:
-                child1, child2 = parent_1, parent_2
-
-            # Mutation
-            # Child 1
-            pm = random.uniform(0, 1)
-            if pm < p_mut:
-                child1 = GeneticAlgorithm.mutation(instance, child1)
-            # Child 2
-            pm = random.uniform(0, 1)
-            if pm < p_mut:
-                child2 = GeneticAlgorithm.mutation(instance, child2)
-
-            # Local Search
-            # Child 1
-            pls = random.uniform(0, 1)
-            if pls < p_ls:
-                child1 = local_search.improve(child1)
-            # Child 2
-            pls = random.uniform(0, 1)
-            if pls < p_ls:
-                child2 = local_search.improve(child2)
-
-            best_child = child1 if child1.objective_value <= child2.objective_value else child2
-            if not best_cmax or best_child.objective_value < best_cmax:
-                solutions.append(best_child)
-                best_cmax = best_child.objective_value
-                best_solution = best_child
-                N = 0
-            # Replacement
-            GeneticAlgorithm.replacement(population, child1)
-            GeneticAlgorithm.replacement(population, child2)
-            i += 1
-            N += 1
-
-        return best_solution, solutions
-
-    @staticmethod
-    def generate_population(instance: RmriSijkCmax_Instance, pop_size=40, LS=True):
-        population = []
-        i = 0
-        nb_solution = 0
-        nb_rules = 38
-        heapq.heapify(population)
-        local_search = ParallelMachines.PM_LocalSearch()
-        while nb_solution < pop_size:
-            # Generate a solution using a heuristic
-            if i == 0:
-                solution_i = Heuristics.BIBA(instance).best_solution
-            elif i <= nb_rules:
-                solution_i = Heuristics.list_heuristic(
-                    instance, **{"rule": i}).best_solution
-            elif i <= nb_rules * 2:
-                solution_i = Heuristics.list_heuristic(
-                    instance, **{"rule": i - nb_rules, "decreasing": True}).best_solution
-            else:
-                solution_i = Heuristics.ordered_constructive(
-                    instance, **{"is_random": True}).best_solution
-
-            if LS:
-                solution_i = local_search.improve(solution_i)
-
-            if solution_i not in population:
-                heapq.heappush(population, solution_i)
-                nb_solution += 1
-            i += 1
-
-        return population
-
-    @staticmethod
-    def selection(population, pressure):
-        parent1 = population[0]
-        parent2 = random.choice(population)
-        
-        return parent1, parent2
-
-    @staticmethod
-    def crossover(instance: RmriSijkCmax_Instance, parent_1, parent_2):
-        child1 = ParallelMachines.ParallelSolution(instance)
-        child2 = ParallelMachines.ParallelSolution(instance)
-
-        for i, machine1 in enumerate(parent_1.machines):
-            machine2 = parent_2.machines[i]
-            # generate 2 random crossing points
-            cross_point_1 = random.randint(0, len(machine1.job_schedule)-1)
-            cross_point_2 = random.randint(0, len(machine2.job_schedule)-1)
-
-            child1.machines[i].job_schedule.extend(
-                machine1.job_schedule[0:cross_point_1])
-            child2.machines[i].job_schedule.extend(
-                machine2.job_schedule[0:cross_point_2])
-            
-            print(len(child1.machines[i].job_schedule))
-            print(len(child2.machines[i].job_schedule))
-            child1.machines[i].compute_objective(instance)
-            child2.machines[i].compute_objective(instance)
-
-            GeneticAlgorithm.complete_solution(instance, parent_1, child2)
-            GeneticAlgorithm.complete_solution(instance, parent_2, child1)
-
-        return child1, child2
-
-    @staticmethod
-    def mutation(instance: RmriSijkCmax_Instance, child: ParallelMachines.ParallelSolution):
-        # Random Internal Swap
-        child = ParallelMachines.NeighbourhoodGeneration.random_swap(
-            child, force_improve=False, internal=True)
-        return child
-
-    @staticmethod
-    def complete_solution(instance: RmriSijkCmax_Instance, parent, child: ParallelMachines.ParallelSolution):
-        # Cache the jobs affected to both childs
-        child_jobs = set(
-            job[0] for machine in child.machines for job in machine.job_schedule)
-        for i, machine_parent in enumerate(parent.machines):
-            for job in machine_parent.job_schedule:
-                if job[0] not in child_jobs:
-                    child = ParallelMachines.PM_LocalSearch.best_insertion_machine(
-                        child, i, job[0])
-
-        child.fix_objective()
-
-    @staticmethod
-    def replacement(population, child):
-        if child not in population:
-            worst_index = max(enumerate(population),
-                              key=lambda x: x[1].objective_value)[0]
-            if child.objective_value <= population[worst_index].objective_value:
-                heapq.heappushpop(population, child)
-                return True
-
-        return False
+    pass

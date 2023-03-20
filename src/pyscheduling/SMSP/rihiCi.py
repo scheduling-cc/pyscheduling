@@ -1,26 +1,24 @@
-import sys
+from dataclasses import dataclass, field
 from functools import partial
 from math import exp
-from dataclasses import dataclass, field
-from random import randint, uniform
 from pathlib import Path
+from random import randint, uniform
 from time import perf_counter
-from typing import Callable
+from typing import Callable, List
 
 import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_Methods as Methods
+import pyscheduling.SMSP.SM_methods as Methods
 
 
 @dataclass
 class rihiCi_Instance(SingleMachine.SingleInstance):
-    P: list[int] = field(default_factory=list)  # Processing time
-    R: list[int] = field(default_factory=list) # release time
-    Precedence : list[tuple] = field(default_factory=list) # precedence constraint
+    P: List[int] = field(default_factory=list)  # Processing time
+    R: List[int] = field(default_factory=list) # release time
+    Precedence : List[tuple] = field(default_factory=list) # precedence constraint
     external_params : int = 0
-    W : list[int] = field(default_factory=list)
-    D: list[list[int]] = field(default_factory=list) # due time
+    W : List[int] = field(default_factory=list)
+    D: List[List[int]] = field(default_factory=list) # due time
 
     def copy(self):
         return rihiCi_Instance(str(self.name),self.n,list(self.P),list(self.R),list(self.D))

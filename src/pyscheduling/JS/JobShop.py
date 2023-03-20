@@ -1,88 +1,102 @@
 import json
-import sys
 import random
-from queue import PriorityQueue
-from enum import Enum
-from pathlib import Path
-from abc import abstractmethod
+import sys
 from collections import namedtuple
 from dataclasses import dataclass, field
-import warnings
+from enum import Enum
+from pathlib import Path
+from typing import List
 
-import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 
 import pyscheduling.Problem as RootProblem
-import pyscheduling.SMSP.riPrecLmax as riPrecLmax
 import pyscheduling.SMSP.rihiCi as rihiCi
+import pyscheduling.SMSP.riPrecLmax as riPrecLmax
+from pyscheduling.Problem import GenerationLaw, Job
 
-
-Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 class GenerationProtocol(Enum):
-    VALLADA = 1
+    BASE = 1
 
 
-class GenerationLaw(Enum):
-    UNIFORM = 1
-    NORMAL = 2
-
+Node = namedtuple('Node', ['machine_id', 'job_id'])
 
 @dataclass
-class Graph:
-    source = (-1,0)
-    sink = (0,-1)
+class JobsGraph:
+    source: Node
+    sink: Node
+    jobs_sinks: List[Node]
+    inverted_weights : bool
+    DG: nx.DiGraph
+    jobs_times: dict = None 
 
-    vertices : list[tuple]
-    edges : dict
-
-    def __init__(self, instance):
-        """Creates the dijunctives graph from a JmCmax processing times table
-
-        Args:
-            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
-        """
-        self.vertices = [(self.source,0),(self.sink,0)]
-        self.edges = {}
-        
-        job_index = 0
-        operations = instance.P
-        for job in operations:
-            release_date = instance.R[job_index] if hasattr(instance, 'R') else 0 
-            self.edges[(self.source,(job[0][0],job_index))] = release_date
-            nb_operation = len(job)
-            for operation_ind in range(nb_operation - 1):
-                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
-                self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
-            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
-            self.edges[((job[nb_operation - 1][0],job_index),self.sink)] = job[nb_operation - 1][1]
-            job_index += 1
-
-    def add_edge(self, u, v, weight : int):
-        """Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
+    def __init__(self, instance, invert_weights = True):
+        """Create the conjunctive graph from the instance definition
 
         Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            weight (int): processing time of operation u
-        """
-        self.edges[(u,v)] = weight
-
-    def get_edge(self, u, v):
-        """returns the weight of the edge from u to v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            
+            invert_weights (bool, optional): convert the weights to negative to use shortest path algos for critical path. Defaults to True.
 
         Returns:
-            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
+            nx.DiGraph: conjunctive graph from instance.
         """
-        try:
-            return self.edges[(u,v)]
-        except:
-            return -1
+        DG = nx.DiGraph()
+        inverted_weights = -1 if invert_weights else 1
+        
+        
+        source = Node(-2, 0)
+        sink = Node(-1, -1)
+        jobs_sinks = [ Node(-1, j) for j in range(instance.n) ]
+        
+        # Create nodes and edges
+        edges_list = []
+        nodes_list = [source, sink]
+        nodes_list.extend(jobs_sinks)
+        for j in range(instance.n):
+            for nb, oper in enumerate(instance.P[j]):
+                oper_node = Node(oper[0], j)
+                nodes_list.append(oper_node)
+                
+                # Add edges
+                if nb == 0: # Add source to first job edge
+                    release_date = instance.R[j] if hasattr(instance, 'R') else 0 
+
+                    edges_list.append((source, oper_node, inverted_weights * release_date))
+                else: # Add precedence constraints between operations of same job (order between machines)
+                    edges_list.append( (prev_oper_node, oper_node, inverted_weights * prev_oper[1]) )
+                
+                prev_oper_node = oper_node
+                prev_oper = oper
+            
+            # Add last operation to sink edge
+            edges_list.append((oper_node, jobs_sinks[j], inverted_weights * oper[1]))
+            edges_list.append((jobs_sinks[j], sink, 0))
+                
+        DG.add_nodes_from(nodes_list)
+        DG.add_weighted_edges_from(edges_list)
+        
+        self.instance = instance
+        self.source = source
+        self.sink = sink
+        self.jobs_sinks = jobs_sinks
+        self.DG = DG
+        self.inverted_weights = invert_weights
+
+    def draw(self):
+        pos = nx.spring_layout(self.DG)
+        nx.draw(self.DG, pos, with_labels=True)
+        edge_labels = nx.get_edge_attributes(self.DG, 'weight')
+        nx.draw_networkx_edge_labels(self.DG, pos, edge_labels=edge_labels)
+        plt.show()
+    
+    def longest_path(self, u, v):
+        #return -nx.shortest_path_length(self.DG, source=u, target=v, weight='weight')
+        inverted_weights = -1 if self.inverted_weights else 1
+        return inverted_weights*nx.bellman_ford_path_length(self.DG, source=u, target=v, weight='weight')
+
+    def critical_path(self):
+        return self.longest_path(self.source, self.sink)
 
     def get_operations_on_machine(self, machine_id : int):
         """returns the vertices corresponding to operations to be executed on machine_id
@@ -93,96 +107,39 @@ class Graph:
         Returns:
             list[tuple(int,int)]: list of operations to be executed on machine_id
         """
-        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id]
-        if machine_id==0: vertices.remove((0,-1))
-        return vertices
-    
-    def add_disdjunctive_arcs(self, edges_to_add : list):
+        return [node for node in self.DG.nodes() if node[0]==machine_id]
+
+    def add_disdjunctive_arcs(self, instance, edges_to_add : List[tuple]):
         """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
 
         Args:
             edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
         """
-        emanating_vertices = [edge[0] for edge in edges_to_add]
-        weights = []
-        for emanating_vertice in emanating_vertices :
-            for vertice in self.vertices :
-                if vertice[0]==emanating_vertice :
-                    weights.append(vertice[1])
-                    break
-        for edge_ind in range(len(edges_to_add)):
-            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
+        adjacency_matrix = dict(self.DG.adjacency())
+        inverted_weights = -1 if self.inverted_weights else 1
 
-    def dijkstra(self, start_vertex):
-        """Evaluate the longest distance from the start_vertex to every other vertex
+        #Change the weight of the incident conjunctive edge of the first operation to include setup time
+        first_op = edges_to_add[0][0]
+        precedent_op = [op for op in self.DG.nodes() if self.DG.has_edge(op,first_op)][0]
+        setup_time = inverted_weights*instance.S[first_op[0]][first_op[1]][first_op[1]] if hasattr(self, 'S') else 0
+        self.DG[precedent_op][first_op]['weight'] = self.DG[precedent_op][first_op]['weight'] + setup_time
 
-        Args:
-            start_vertex (tuple(int,int)): starting vertex
+        for edge in edges_to_add :
+            processing_time = adjacency_matrix[edge[0]][next(iter(adjacency_matrix[edge[0]]))]['weight']
+            setup_time = self.S[edge[0][0]][edge[0][1]][edge[1][1]] if hasattr(self, 'S') else 0
+            self.DG.add_weighted_edges_from([(edge[0],edge[1],processing_time + setup_time)])
 
-        Returns:
-            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
-        """
-        vertices_list = [vertice[0] for vertice in self.vertices]
-        D = {v:-float('inf') for v in vertices_list}
-        D[start_vertex] = 0
-
-        pq = PriorityQueue()
-        pq.put((0, start_vertex))
-
-        while not pq.empty():
-            (dist, current_vertex) = pq.get()
-
-            for neighbor in vertices_list:
-                if self.get_edge(current_vertex,neighbor) != -1:
-                    distance = self.get_edge(current_vertex,neighbor)
-                    old_cost = D[neighbor]
-                    new_cost = D[current_vertex] + distance
-                    if new_cost > old_cost:
-                        pq.put((new_cost, neighbor))
-                        D[neighbor] = new_cost
-
-        return D
-
-    def longest_path(self,u, v):
-        """returns the longest distance from vertex u to vertex v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-
-        Returns:
-            int: longest distance, is -inf if v is unreachable from u
-        """
-        return self.dijkstra(u)[v]
-
-    def critical_path(self):
-        """returns the distance of the critical path which corresponds to the Makespan
-
-        Returns:
-            int: critical path distance
-        """
-        return self.longest_path(self.source,self.sink)
-
-    def if_path(self, u, v):
-        if self.get_edge(u,v) != -1 : return True
-        else :
-            vertices_going_to_v = [vertice[0] for vertice in self.edges.keys() if vertice[1]==v]
-            for vertice in vertices_going_to_v :
-                if self.if_path(u,vertice) is True : return True
-            return False
-        pass
-
-    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
+    def generate_precedence_constraints(self, unscheduled_machines : List[int]):
         precedence_constraints = []
         for machine_id in unscheduled_machines :
             vertices = self.get_operations_on_machine(machine_id);
             for u in vertices :
                 for v in vertices :
-                    if u is not v and self.if_path(u,v) : precedence_constraints.append((u[1],v[1]))
+                    if u is not v and nx.has_path(self.DG, u, v) : precedence_constraints.append((u[1],v[1]))
             
         return precedence_constraints
 
-    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : list[tuple]):
+    def generate_riPrecLmax(self, machine_id : int, Cmax : int, precedenceConstraints : List[tuple]):
         """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
 
         Args:
@@ -194,146 +151,16 @@ class Graph:
         """
         vertices = self.get_operations_on_machine(machine_id)
         jobs_number = len(vertices)
-        P = []
-        for vertice in vertices :
-            for graph_vertice in self.vertices :
-                if graph_vertice[0] == vertice : P.append(graph_vertice[1])
+
+        adjacency_matrix = dict(self.DG.adjacency())
+        P = [-adjacency_matrix[vertice][next(iter(adjacency_matrix[vertice]))]['weight'] for vertice in vertices]
+
         R = [self.longest_path(self.source,vertice) for vertice in vertices]
-        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind] for vertice_ind in range(len(vertices))]
+
+        D = [Cmax - self.longest_path(vertices[vertice_ind],self.sink) + P[vertice_ind]
+                                    for vertice_ind in range(len(vertices))]
+
         return riPrecLmax.riPrecLmax_Instance(name="",n=jobs_number,P=P,R=R,D=D, Precedence=precedenceConstraints)
-
-@dataclass
-class riwiTi_Graph:
-    source = (-1,0)
-    sink = list[tuple]
-
-    vertices : list[tuple]
-    edges : dict
-
-    def __init__(self,instance):
-        """Creates the dijunctives graph from a JmCmax processing times table
-
-        Args:
-            operations (list[tuple(int,int),int]): list of couples of (operation,processing time of the operation) for every job
-        """
-        operations = instance.P
-        release_dates = instance.R
-        self.vertices = [((-1,0),0)]
-        self.sink = []
-        for job_id in range(len(operations)): 
-            self.sink.append((0,-job_id-1))
-            self.vertices.append(((0,-job_id-1),0))
-        self.edges = {}
-        
-        job_index = 0
-        for job in operations:
-            self.edges[(self.source,(job[0][0],job_index))] = release_dates[job_index]
-            nb_operation = len(job)
-            for operation_ind in range(nb_operation - 1):
-                self.vertices.append(((job[operation_ind][0],job_index),job[operation_ind][1]))
-                self.edges[((job[operation_ind][0],job_index),(job[operation_ind+1][0],job_index))] = job[operation_ind][1]
-            self.vertices.append(((job[nb_operation - 1][0],job_index),job[nb_operation - 1][1]))
-            self.edges[((job[nb_operation - 1][0],job_index),(0,-job_index-1))] = job[nb_operation - 1][1]
-            job_index += 1
-
-    def add_edge(self, u, v, weight : int):
-        """Add an edge from operation u to operation v with weight corresponding to the processing time of operation u
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            weight (int): processing time of operation u
-        """
-        self.edges[(u,v)] = weight
-
-    def get_edge(self, u, v):
-        """returns the weight of the edge from u to v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-            
-
-        Returns:
-            int: weight of the edge which corresponds to the processing time of operation u, is -1 if edge does not exist
-        """
-        try:
-            return self.edges[(u,v)]
-        except:
-            return -1
-
-    def get_operations_on_machine(self, machine_id : int):
-        """returns the vertices corresponding to operations to be executed on machine_id
-
-        Args:
-            machine_id (int): id of a machine
-
-        Returns:
-            list[tuple(int,int)]: list of operations to be executed on machine_id
-        """
-        vertices = [vertice[0] for vertice in self.vertices if vertice[0][0]==machine_id and vertice[0][1]>-1]
-        return vertices
-    
-    def add_disdjunctive_arcs(self, edges_to_add : list):
-        """Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
-
-        Args:
-            edges_to_add (list[tuple(tuple(int,int),tuple(int,int))]): list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
-        """
-        emanating_vertices = [edge[0] for edge in edges_to_add]
-        weights = []
-        for emanating_vertice in emanating_vertices :
-            for vertice in self.vertices :
-                if vertice[0]==emanating_vertice :
-                    weights.append(vertice[1])
-                    break
-        for edge_ind in range(len(edges_to_add)):
-            self.add_edge(edges_to_add[edge_ind][0],edges_to_add[edge_ind][1],weights[edge_ind])
-
-    def remove_edges(self,edges_to_remove : list):
-        for edge in edges_to_remove : del self.edges[edge]
-    
-    def dijkstra(self, start_vertex):
-        """Evaluate the longest distance from the start_vertex to every other vertex
-
-        Args:
-            start_vertex (tuple(int,int)): starting vertex
-
-        Returns:
-            dict{tuple(int,int):int}: dict where the keys are the vertices and values are the longest distance from the starting vertex to the corresponding key vertex. the value is -inf if the corresponding key vertex in unreachable from the start_vertex
-        """
-        vertices_list = [vertice[0] for vertice in self.vertices]
-        D = {v:-float('inf') for v in vertices_list}
-        D[start_vertex] = 0
-
-        pq = PriorityQueue()
-        pq.put((0, start_vertex))
-
-        while not pq.empty():
-            (dist, current_vertex) = pq.get()
-
-            for neighbor in vertices_list:
-                if self.get_edge(current_vertex,neighbor) != -1:
-                    distance = self.get_edge(current_vertex,neighbor)
-                    old_cost = D[neighbor]
-                    new_cost = D[current_vertex] + distance
-                    if new_cost > old_cost:
-                        pq.put((new_cost, neighbor))
-                        D[neighbor] = new_cost
-
-        return D
-
-    def longest_path(self,u, v):
-        """returns the longest distance from vertex u to vertex v
-
-        Args:
-            u (tuple(int,int)): operation
-            v (tuple(int,int)): operation
-
-        Returns:
-            int: longest distance, is -inf if v is unreachable from u
-        """
-        return self.dijkstra(u)[v]
 
     def job_completion(self,job_id):
         """returns the distance of the critical path which corresponds to the Makespan
@@ -341,50 +168,31 @@ class riwiTi_Graph:
         Returns:
             int: critical path distance
         """
-        return self.longest_path(self.source,self.sink[job_id])
+        return self.longest_path(self.source, self.jobs_sinks[job_id])
 
     def all_jobs_completion(self):
         jobs_completion = []
-        for job_id in range(len(self.sink)):
+        for job_id in range(len(self.jobs_sinks)):
             jobs_completion.append(self.job_completion(job_id))
         return jobs_completion
 
-    def wiTi(self, external_weights : list[int], due_dates : list[int]):
+    def wiTi(self, external_weights : List[int], due_dates : List[int]):
         jobs_completion = self.all_jobs_completion()
         objective_value = 0
         for job_id in range(len(jobs_completion)):
             objective_value += external_weights[job_id]*max(jobs_completion[job_id]-due_dates[job_id],0)
         return objective_value
-    
-    def temporary_job_completion(self,temporary_edges : list):
+
+    def temporary_job_completion(self,instance, temporary_edges : List[tuple]):
         # jobs_completion = []
-        self.add_disdjunctive_arcs(temporary_edges)
+        self.add_disdjunctive_arcs(instance, temporary_edges)
         # for job_id in range(len(self.sink)):
         #     jobs_completion.append(self.job_completion(job_id))
         jobs_completion = self.all_jobs_completion()
-        self.remove_edges(temporary_edges)
+        self.DG.remove_edges_from(temporary_edges)
         return jobs_completion
 
-    def if_path(self, u, v):
-        if self.get_edge(u,v) != -1 : return True
-        else :
-            vertices_going_to_v = [vertice[0] for vertice in self.edges.keys() if vertice[1]==v]
-            for vertice in vertices_going_to_v :
-                if self.if_path(u,vertice) is True : return True
-            return False
-        pass
-
-    def generate_precedence_constraints(self, unscheduled_machines : list[int]):
-        precedence_constraints = []
-        for machine_id in unscheduled_machines :
-            vertices = self.get_operations_on_machine(machine_id);
-            for u in vertices :
-                for v in vertices :
-                    if u is not v and self.if_path(u,v) : precedence_constraints.append((u[1],v[1]))
-            
-        return precedence_constraints
-
-    def generate_rihiCi(self, machine_id : int, precedenceConstraints : list[tuple], exeternal_weights : list[int], external_due : list[int], jobs_completion : list[int]):
+    def generate_rihiCi(self, machine_id : int, precedenceConstraints : List[tuple], exeternal_weights : List[int], external_due : List[int], jobs_completion : List[int]):
         """generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
 
         Args:
@@ -396,20 +204,22 @@ class riwiTi_Graph:
         """
         vertices = self.get_operations_on_machine(machine_id)
         jobs_number = len(vertices)
-        P = []
-        for vertice in vertices :
-            for graph_vertice in self.vertices :
-                if graph_vertice[0] == vertice : P.append(graph_vertice[1])
+        
+        adjacency_matrix = dict(self.DG.adjacency())
+        P = [adjacency_matrix[vertice][next(iter(adjacency_matrix[vertice]))]['weight'] for vertice in vertices]
+            
         R = [self.longest_path(self.source,vertice) for vertice in vertices]
+
         D = []
         for vertice_ind in range(len(vertices)) :
             Di = []
             for job_ind in range(len(self.sink)):
-                distance = self.longest_path(vertices[vertice_ind],self.sink[job_ind])
+                distance = self.longest_path(vertices[vertice_ind],self.jobs_sinks[job_ind])
                 if distance == float('-inf') : Di.append(float('inf'))
                 else :
                     Di.append(max(jobs_completion[job_ind],external_due[job_ind])-distance+P[vertice_ind])
             D.append(Di)
+        
         return rihiCi.rihiCi_Instance(name="", n=jobs_number, P=P, R=R, Precedence=precedenceConstraints, external_params=len(self.sink), D=D, W=exeternal_weights)
 
 
@@ -419,46 +229,7 @@ class JobShopInstance(RootProblem.Instance):
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
 
-    @classmethod
-    @abstractmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
-
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            JobShopInstance:
-
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def generate_random(cls, protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            JobShopInstance:
-        """
-        pass
-
-    @abstractmethod
-    def to_txt(self, path: Path) -> None:
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        pass
-
-    def read_P(self, content: list[str], startIndex: int):
+    def read_P(self, content: List[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
 
         Args:
@@ -477,41 +248,28 @@ class JobShopInstance(RootProblem.Instance):
             i += 1
         return (P, i)
 
-    def read_R(self, content: list[str], startIndex: int):
-        """Read the release time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the release time table
-
-        Returns:
-           (list[int],int): (Table of release time, index of the next section of the instance)
-        """
-        pass
-
-    def read_S(self, content: list[str], startIndex: int):
+    def read_S(self, content: List[str], startIndex: int):
         """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
-
         Args:
             content (list[str]): lines of the file of the instance
             startIndex (int): Index from where starts the Setup time table of matrices
-
         Returns:
            (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
         """
-        pass
-
-    def read_D(self, content: list[str], startIndex: int):
-        """Read the due time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the due time table
-
-        Returns:
-           (list[int],int): (Table of due time, index of the next section of the instance)
-        """
-        pass
+        i = startIndex
+        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        i += 1  # Skip SSD
+        endIndex = startIndex+1+self.n*self.m+self.m
+        while i != endIndex:
+            i = i+1  # Skip Mk
+            Si = []
+            for k in range(self.n):
+                ligne = content[i].strip().split('\t')
+                Sij = [int(ligne[j]) for j in range(self.n)]
+                Si.append(Sij)
+                i += 1
+            S.append(Si)
+        return (S, i)
 
     def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
@@ -529,7 +287,7 @@ class JobShopInstance(RootProblem.Instance):
         visited_machine = list(range(self.m))
         for j in range(self.n):
             Pj = []
-            nb_operation_j = random.randint(1, self.m-1)
+            nb_operation_j = random.randint(1, self.m)
             for _ in range(nb_operation_j):
                 machine_id = random.randint(0, self.m-1)
                 while(machine_id in [i[0] for i in Pj]) : machine_id = random.randint(0, self.m-1) # checks recirculation
@@ -559,7 +317,31 @@ class JobShopInstance(RootProblem.Instance):
                     P[job_list_id].append((machine_id,n))
         return P
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float):
+    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+        """Random generation of jobs weights table
+        Args:
+            protocol (GenerationProtocol): given protocol of generation of random instances
+            law (GenerationLaw): probablistic law of generation
+            Wmin (int): Minimal weight
+            Wmax (int): Maximal weight
+        Returns:
+           list[int]: Table of jobs weights
+        """
+        W = []
+        for j in range(self.n):
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(Wmin, Wmax))
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Wmin+Wmax*value))
+                while n < Wmin or n > Wmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Wmin+Wmax*value))
+            W.append(n)
+
+        return W
+
+    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -573,9 +355,24 @@ class JobShopInstance(RootProblem.Instance):
         Returns:
             list[int]: release time table
         """
-        pass
+        ri = []
+        for j in range(self.n):
+            sum_p = sum(oper[1] for oper in PJobs[j])
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(0, alpha * (sum_p / self.m)))
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            ri.append(n)
+
+        return ri
+
+    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -589,21 +386,61 @@ class JobShopInstance(RootProblem.Instance):
         Returns:
             list[list[list[int]]]: Setup time table of matrix
         """
-        pass
+        S = []
+        for i in range(self.m):
+            Si = []
+            for j in range(self.n):
+                Sij = []
+                for k in range(self.n):
+                    if law.name == "UNIFORM":  # Use uniform law
+                        Sij.append(int(random.uniform(Smin, Smax)))
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax):
+                    elif law.name == "NORMAL":  # Use normal law
+                        value = np.random.normal(0, 1)
+                        setup = int(abs(Smin+Smax*value))
+                        while setup < Smin or setup > Smax:
+                            value = np.random.normal(0, 1)
+                            setup = int(abs(Smin+Smax*value))
+                        Sij.append(setup)
+                Si.append(Sij)
+            S.append(Si)
+
+        return S
+
+    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
-
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
             law (GenerationLaw): probablistic law of generation
+            PJobs (list[float]): Table of processing time
             Pmin (int): Minimal processing time
             Pmax (int): Maximal processing time
-
+            fraction (float): due time factor
         Returns:
             list[int]: due time table
         """
-        pass
+        di = []
+        PJobs = [min(oper[1] for oper in PJobs[j]) for j in range(self.n)]
+        sum_p = sum(PJobs)
+        for j in range(self.n):
+            if hasattr(self, 'R'):
+                startTime = self.R[j] + PJobs[j]
+            else:
+                startTime = PJobs[j]
+            if law.name == "UNIFORM":  # Generate uniformly
+                n = int(random.uniform(
+                    startTime, startTime + due_time_factor * sum_p))
+
+            elif law.name == "NORMAL":  # Use normal law
+                value = np.random.normal(0, 1)
+                n = int(abs(Pmin+Pmax*value))
+                while n < Pmin or n > Pmax:
+                    value = np.random.normal(0, 1)
+                    n = int(abs(Pmin+Pmax*value))
+
+            di.append(n)
+
+        return di
 
 
 @dataclass
@@ -612,9 +449,9 @@ class Machine:
     machine_num: int
     objective: int = 0
     last_job: int = -1
-    job_schedule: list[Job] = field(default_factory=list)
+    job_schedule: List[Job] = field(default_factory=list)
 
-    def __init__(self, machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None) -> None:
+    def __init__(self, machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: List[Job] = None) -> None:
         """Constructor of Machine
 
         Args:
@@ -650,16 +487,13 @@ class Machine:
     def fromDict(machine_dict):
         return Machine(machine_dict["machine_num"], machine_dict["objective"], machine_dict["last_job"], machine_dict["job_schedule"])
 
-    def compute_completion_time(self, instance: JobShopInstance, startIndex: int = 0):
-        pass
-
 
 @dataclass
 class JobShopSolution(RootProblem.Solution):
 
-    machines: list[Machine]
+    machines: List[Machine]
 
-    def __init__(self, instance: JobShopInstance = None, machines: list[Machine] = None, objective_value: int = 0):
+    def __init__(self, instance: JobShopInstance = None, machines: List[Machine] = None, objective_value: int = 0, graph: JobsGraph = None):
         """Constructor of RmSijkCmax_Solution
 
         Args:
@@ -676,6 +510,122 @@ class JobShopSolution(RootProblem.Solution):
         else:
             self.machines = machines
         self.objective_value = 0
+        self.graph = graph
+        self.job_schedule = {j: Job(j, 0, 0) for j in range(self.instance.n)}
+
+    def _create_graph(self, invert_weights = True):
+        """Create the conjunctive graph from the instance definition
+
+        Args:
+            invert_weights (bool, optional): convert the weights to negative to use shortest path algos for critical path. Defaults to True.
+
+        Returns:
+            nx.DiGraph: conjunctive graph from instance.
+        """
+        self.graph = JobsGraph(self.instance,invert_weights)
+        return self.graph
+        
+    def create_solution_graph(self, invert_weights = True):
+        """Create the graph containing both conjunctive and disjunctive arcs from the schedule
+
+        Args:
+            solution (JobShopSolution): the solution representing the schedule
+            invert_weights (bool, optional): convert the weights to negative to use shortest path algos for critical path. Defaults to True.
+
+        Returns:
+            nx.DiGraph: graph representing the solution with a source and list of sinks
+        """
+        inverted_weights = -1 if invert_weights else 1
+        # DF contains only conjunctive arcs
+        self.graph = self._create_graph(invert_weights)
+        DG = self.graph.DG
+
+        # Add disjunctive arcs according to the schedule
+        edges_list = []
+        for m_id, machine in enumerate(self.machines):
+            for j_idx, job in enumerate(machine.job_schedule):
+                if j_idx != 0: # Add arc between prev_job and current job
+                    prev_node = Node(m_id, prev_job.id)
+                    curr_node = Node(m_id, job.id)
+                    edges_list.append( ( prev_node, curr_node) )
+                prev_job = job
+
+        if len(edges_list)!=0 : DG.add_disdjunctive_arcs(edges_list)
+        
+        return self.graph
+
+    def check_graph(self):
+        """Check whether the graph is built or not yet, build it if not.
+        """
+        if self.graph is None:
+            self.create_solution_graph()
+
+    def is_feasible(self):
+        """Check if the schedule is feasible. i.e. the graph is acyclic
+
+        Returns:
+            bool: True if the schedule is feasible
+        """
+        self.graph = None
+        self.check_graph()
+        return nx.is_directed_acyclic_graph(self.graph.DG)
+
+    def all_completion_times(self):
+        """Computes completion times from the graph using bellman ford algorithm
+
+        Returns:
+            dict: dict of completion times for each job and the makespan (-1 key)
+        """
+        self.check_graph()
+        # Use bellman-ford to find distances from source to each sink
+        nx_dists = nx.single_source_bellman_ford(self.graph.DG, source=self.graph.source)
+        
+        jobs_times = dict()
+        for j in range(self.instance.n):
+            first_machine_id = self.instance.P[j][0][0]
+            start_time = nx_dists[0][Node(first_machine_id, j)]
+            end_time = nx_dists[0][self.graph.jobs_sinks[j]]
+
+            jobs_times[j] = Job(j, -start_time, -end_time)
+        
+        #jobs_times[-1] = Job(-1, 0, -nx_dists[0][self.graph.sink])
+        self.graph.jobs_times = jobs_times
+        self.job_schedule = jobs_times
+        return jobs_times 
+
+    def completion_time(self, job_id: int, recompute_distances = False):
+        """Return completion time for job with job_id
+
+        Args:
+            job_id (int): id of the job
+            recompute_distances (bool, optional): used to not compute distances if already computed. Defaults to False.
+
+        Returns:
+            int: completion time of job_id
+        """
+        if job_id not in range(-1, self.instance.n):
+            return False
+        
+        self.check_graph()
+        if recompute_distances or self.graph.jobs_times is None:
+            self.all_completion_times()
+        
+        return self.graph.jobs_times[job_id]
+
+    def compute_objective_graph(self, recompute_distances = False):
+        """Compute the objective using the disjunctive graph. Build it if necessary
+
+        Args:
+            recompute_distances (bool, optional): used to not compute distances if already computed. Defaults to False.
+
+        Returns:
+            int: objective value
+        """
+        self.check_graph()
+        if recompute_distances or self.graph.jobs_times is None:
+            self.all_completion_times()
+        
+        return self.fix_objective()
 
     def __str__(self):
         return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
@@ -696,47 +646,129 @@ class JobShopSolution(RootProblem.Solution):
             return self.objective_value < other.objective_value
         else : return other.objective_value < self.objective_value
     
-    def cmax(self):
-        """Sets the schedule of each machine then sets the makespan
-        """
+    def simulate_insert_last(self, job_id : int, oper_idx : int, last_t: int):
+        """returns start_time and completion_time of job_id-oper_idx if scheduled at the end of its machine's job_schedule
+        Args:
+            job_id (int): job to be scheduled at the end
+            oper_idx (int): index of the job's operation to be scheduled
+            last_t (int): latest timestamp of the job's previous operation
+        Returns:
+            int, int: start_time of job_id-oper_idx, completion_time of job_id-oper_idx
+        """ 
+        m_id, proc_time = self.instance.P[job_id][oper_idx]
+
+        current_machine = self.machines[m_id]
+        if len(current_machine.job_schedule) > 0:
+            last_job, last_start, last_end = current_machine.job_schedule[-1]
+        else:
+            last_job, last_start, last_end = job_id, 0, 0
+        # Simulate the insertion into the last position of current_machine
+        release_date = self.instance.R[job_id] if hasattr(self.instance, "R") else 0
+        start_time = max(release_date, last_t, last_end)
+        setup_time = self.instance.S[m_id][last_job][job_id] if hasattr(self.instance, "S") else 0
+        remaining_setup_time = max(setup_time-(start_time-last_t),0)
+
+        end_time = start_time + setup_time + proc_time
+
+        return start_time, end_time
+    
+    def simulate_insert_objective(self, job_id, start_time, end_time):
+        """Returns the new objective if job_id is inserted at the end with start_time and end_time
+        Args:
+            job_id (int): id of the inserted job
+            start_time (int): start time of the job
+            end_time (int): end time of the job
         
-        if hasattr(self.instance,"R") :
-            jobs_progression = [(0,self.instance.R[job]) for job in range(self.instance.n)]
-        else : jobs_progression = [(0,0) for job in range(self.instance.n)]
-        remaining_machines = list(range(0,self.instance.m))
-        remaining_machines_current_job_index = {machine_id : (0,0) for machine_id in remaining_machines}
-        while len(remaining_machines) > 0 :
-            for machine_id in remaining_machines :
-                current_time = remaining_machines_current_job_index[machine_id][1]
-                next_job_index = remaining_machines_current_job_index[machine_id][0]
-                current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                while machine_id == self.instance.P[current_job][jobs_progression[current_job][0]][0] :
-                    startTime = max(current_time,jobs_progression[current_job][1])
-                    endTime = startTime + self.instance.P[current_job][jobs_progression[current_job][0]][1]
-                    self.machines[machine_id].job_schedule[next_job_index] = Job(current_job,
-                    startTime,endTime)
-                    
-                    current_time = endTime
-                    next_job_index += 1
+        Returns:
+            int: the new objective
+        """
+        saved_job = self.job_schedule[job_id]
+        new_obj = self.objective_value
+        self.job_schedule[job_id] = Job(job_id, min(start_time, saved_job.start_time), max(end_time, saved_job.end_time))
 
-                    jobs_progression[current_job] = (jobs_progression[current_job][0]+1, current_time)
+        objective = self.instance.get_objective()
+        if objective == RootProblem.Objective.Cmax:
+            new_obj =  max(self.job_schedule[j].end_time for j in self.job_schedule)
+        elif objective == RootProblem.Objective.wiCi:
+            new_obj =  sum( self.instance.W[j] * self.job_schedule[j].end_time for j in self.job_schedule )
+        elif objective == RootProblem.Objective.wiFi:
+            new_obj =  sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in self.job_schedule )
+        elif objective == RootProblem.Objective.wiTi:
+            new_obj =  sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in self.job_schedule )
+        elif objective == RootProblem.Objective.Lmax:
+            new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in self.job_schedule ) )
+        
+        self.job_schedule[job_id] = saved_job
+        return new_obj
 
-                    if next_job_index == len(self.machines[machine_id].job_schedule) :
-                        self.machines[machine_id].objective = current_time
-                        self.machines[machine_id].last_job = current_job
-                        remaining_machines.remove(machine_id)
-                        break
-                    else :
-                        current_job = self.machines[machine_id].job_schedule[next_job_index][0]
-                remaining_machines_current_job_index[machine_id] = (next_job_index,current_time)
+    def fix_objective(self):
+        """Compute objective value of solution out of the jobs_times dict
 
-        self.objective_value = max([machine.objective for machine in self.machines])
+        Args:
+            jobs_times (dict): dict of job_id: (start_time, end_time)
+        """
+        objective = self.instance.get_objective()
+        if objective == RootProblem.Objective.Cmax:
+            self.objective_value = max(self.job_schedule[j].end_time for j in self.job_schedule)
+        elif objective == RootProblem.Objective.wiCi:
+            self.objective_value = sum( self.instance.W[j] * self.job_schedule[j].end_time for j in self.job_schedule )
+        elif objective == RootProblem.Objective.wiFi:
+            self.objective_value = sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in self.job_schedule )
+        elif objective == RootProblem.Objective.wiTi:
+            self.objective_value = sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in self.job_schedule )
+        elif objective == RootProblem.Objective.Lmax:
+            self.objective_value = max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in self.job_schedule ) )
 
         return self.objective_value
 
+    def compute_objective(self):
+        """Compute the machines correct schedules and sets the objective value
+        """
+        jobs_timeline = [(0,0) for job in range(self.instance.n)] # (machine_idx_job, t)
+        remaining_machines = list(range(0,self.instance.m))
+        machines_timeline = {machine_id : (0,0) for machine_id in remaining_machines} # (last_job_index, t)
+        jobs_times = dict()
+        while len(remaining_machines) > 0 :
+            for machine_id in remaining_machines :
+                curr_machine = self.machines[machine_id]
+                next_job_index, current_time = machines_timeline[machine_id]
+                curr_job = curr_machine.job_schedule[next_job_index].id
+                prev_job = curr_machine.job_schedule[next_job_index - 1].id if next_job_index > 0 else curr_job 
 
-    def fix_cmax(self):
-        pass
+                while machine_id == self.instance.P[curr_job][jobs_timeline[curr_job][0]][0] :
+                    
+                    oper_idx, last_t = jobs_timeline[curr_job]
+                    m_id, proc_time = self.instance.P[curr_job][oper_idx]
+
+                    ri = self.instance.R[curr_job] if hasattr(self.instance, "R") else 0
+                    startTime = max(current_time, last_t, ri)
+                    setup_time = self.instance.S[m_id][prev_job][curr_job] if hasattr(self.instance, "S") else 0
+                    endTime = startTime + setup_time + proc_time
+
+                    new_job = Job(curr_job, startTime,endTime)
+                    self.machines[machine_id].job_schedule[next_job_index] = new_job
+                    
+                    current_time = endTime
+                    next_job_index += 1
+                    prev_job = curr_job
+
+                    jobs_timeline[curr_job] = (jobs_timeline[curr_job][0]+1, current_time)
+
+                    global_job = jobs_times.get(curr_job, new_job)
+                    jobs_times[curr_job] = Job(curr_job, min(global_job.start_time, new_job.start_time),
+                                                         max(global_job.end_time, new_job.end_time) )
+
+                    if next_job_index == len(self.machines[machine_id].job_schedule) :
+                        self.machines[machine_id].objective = current_time
+                        self.machines[machine_id].last_job = curr_job
+                        remaining_machines.remove(machine_id)
+                        break
+                    else :
+                        curr_job = self.machines[machine_id].job_schedule[next_job_index][0]
+                machines_timeline[machine_id] = (next_job_index,current_time)
+        
+        self.job_schedule = jobs_times
+        return self.fix_objective()
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -834,54 +866,233 @@ class JobShopSolution(RootProblem.Solution):
         Check if solution respects the constraints
         """
         is_valid = True
-        precedence_in_jobs = [[op[0] for op in job] for job in self.instance.P]
-        for machine_id in range(len(self.machines)) :
+        job_times = dict()
+        for i in range(self.instance.n):
             ci = 0
-            for job_ind in range(len(self.machines[machine_id].job_schedule)) :
+            ri = self.instance.R[i] if hasattr(self.instance, "R") else 0
+            start_i = 0
+            for j, oper_tuple in enumerate(self.instance.P[i]):
+                m_id, proc_time = oper_tuple
+                curr_machine = self.machines[m_id]
 
-                element = self.machines[machine_id].job_schedule[job_ind]
-                job_id, start_time, end_time = element
-
-                operation_of_job_id = precedence_in_jobs[job_id]
-                job = None
-                for precedence_machine_id in range(len(operation_of_job_id)) :
-                    if operation_of_job_id[precedence_machine_id] == machine_id : break
-                if precedence_machine_id != 0 :
-                    precedent_machine_id = operation_of_job_id[precedence_machine_id-1]
-
-                    for job in self.machines[precedent_machine_id].job_schedule :
-                        if job.id == job_id : break
-
-                    previous_op_end_time = job.end_time
-                else : previous_op_end_time = 0
-
+                # Look for job i operation on machine m_id
+                oper_i_m_pos = None
+                for idx, job in enumerate(curr_machine.job_schedule):
+                    if job.id == i: 
+                        oper_i_m_pos = idx
+                        break
                 
-                expected_start_time = max(previous_op_end_time,ci)
+                if oper_i_m_pos is None:
+                    is_valid = False
+                    print(f"## Error: operation {i}-{j} of job {i} on machine {m_id} is not found")
+                else:
+                    oper_i_m = curr_machine.job_schedule[oper_i_m_pos]
+                    prev_job = curr_machine.job_schedule[oper_i_m_pos - 1].id if oper_i_m_pos > 0 else i
+                    prev_m_end = curr_machine.job_schedule[oper_i_m_pos - 1].end_time if oper_i_m_pos > 0 else 0
+                    setup_time = self.instance.S[m_id][prev_job][i] if hasattr(self.instance, "S") else 0
 
-                proc_time = self.instance.P[job_id][precedence_machine_id][1]
-                ci = expected_start_time + proc_time
+                    expected_start_time = max(ri, prev_m_end, ci)
+                    expected_end_time = expected_start_time + setup_time + proc_time
 
-                if start_time != expected_start_time or end_time != ci:
-                    if start_time > expected_start_time and end_time - start_time == proc_time:
-                        if verbosity : warnings.warn(f'## Warning: found {element} could have been scheduled earlier to reduce idle time')
-                    else :
-                        if verbosity : 
-                            print(f'## Error:  found {element} expected {job_id,expected_start_time, ci}')
-                            if job is not None :
-                                print(f'## {element} needs to be sheduled after {job}')
+                    if expected_start_time != oper_i_m.start_time or expected_end_time != oper_i_m.end_time:
                         is_valid = False
+                        print(f'## Error: operation {i}-{j} expected {(i, expected_start_time, expected_end_time)}, got {oper_i_m}')
+                    
+                    start_i = expected_start_time if j == 0 else start_i
+                    ci = expected_end_time
+
+            job_times[i] = Job(i, start_i, ci)
         
-        if is_valid :
-            solution_copy = self.copy()
-            if self.instance.get_objective() == RootProblem.Objective.wiCi:
-                is_valid = self.objective_value == solution_copy.wiCi()
-            elif self.instance.get_objective() == RootProblem.Objective.wiTi:
-                is_valid = self.objective_value == solution_copy.wiTi()
-            elif self.instance.get_objective() == RootProblem.Objective.Cmax:
-                is_valid = self.objective_value == solution_copy.cmax()
-            elif self.instance.get_objective() == RootProblem.Objective.Lmax:
-                is_valid = self.objective_value == solution_copy.Lmax()
-            if not is_valid :
-                if verbosity : print(f'## Error:  objective value found {self.objective_value} expected {solution_copy.objective_value}')
+        objective = self.instance.get_objective()
+        if objective == RootProblem.Objective.Cmax:
+            expected_obj =  max(job_times[j].end_time for j in range(self.instance.n))
+        elif objective == RootProblem.Objective.wiCi:
+            expected_obj =  sum( self.instance.W[j] * job_times[j].end_time for j in range(self.instance.n) )
+        elif objective == RootProblem.Objective.wiFi:
+            expected_obj =  sum( self.instance.W[j] * (job_times[j].end_time - job_times[j][0] ) for j in range(self.instance.n) )
+        elif objective == RootProblem.Objective.wiTi:
+            expected_obj =  sum( self.instance.W[j] * max(job_times[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
+        elif objective == RootProblem.Objective.Lmax:
+            expected_obj =  max( 0, max( job_times[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
+
+        if expected_obj != self.objective_value:
+            is_valid = False
+            print(f'## Error: objective value found {self.objective_value} expected {expected_obj}')
 
         return is_valid
+
+class NeighbourhoodGeneration():
+
+    @staticmethod
+    def best_insert_oper(solution: JobShopSolution, m_id: int, job_id: int):
+
+        curr_machine = solution.machines[m_id]
+        move = None
+        prev_pos = None
+        for pos in range(len(curr_machine.job_schedule) + 1):
+            
+            if prev_pos is not None:
+                curr_machine.job_schedule.pop(prev_pos)
+
+            curr_machine.job_schedule.insert(pos, Job(job_id, 0, 0))
+            if solution.is_feasible():
+                new_obj = solution.compute_objective()
+
+                if move is None or move[1] > new_obj:
+                    move = (pos, new_obj)
+
+            prev_pos = pos
+
+        # Apply the best move
+        curr_machine.job_schedule.pop(prev_pos)
+        curr_machine.job_schedule.insert(move[0], Job(job_id, 0, 0))
+        solution.compute_objective()
+
+        return solution
+
+    @staticmethod
+    def random_insert(solution: JobShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1):
+        """Performs an insert of a random job in a random position
+        Args:
+            solution (JobShopSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+        Returns:
+            JobShopSolution: New solution
+        """
+        if not inplace or force_improve:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        old_objective = solution_copy.objective_value
+
+        iter = 0
+        tabu_moves = set()
+        while iter < nb_moves:
+            # Get random machine,job and the position
+            random_machine_index = random.randrange(solution.instance.m)
+            job_schedule = solution_copy.machines[random_machine_index].job_schedule
+            job_schedule_len = len(job_schedule)
+            
+            random_job_index = random.randrange(job_schedule_len)
+            random_pos = random_job_index
+            while random_pos == random_job_index:
+                random_pos = random.randrange(job_schedule_len)
+            
+            if (random_machine_index, random_job_index, random_pos) in tabu_moves:
+                continue
+
+            # Simulate applying the insertion move
+            random_job = job_schedule.pop(random_job_index)
+            job_schedule.insert(random_pos, random_job)
+            
+            if solution_copy.is_feasible():
+                new_objective = solution_copy.compute_objective()
+                iter += 1
+                tabu_moves.clear()
+            else: # Add to tabu moves
+                tabu_moves.add( (random_machine_index, random_job_index, random_pos) )
+
+        # Update the solution
+        if force_improve and (new_objective > old_objective):
+            return solution
+
+        return solution_copy
+
+    @staticmethod
+    def random_swap(solution: JobShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1):
+        """Performs a random swap between 2 jobs
+        Args:
+            solution (JobShopSolution): Solution to be improved
+            objective (RootProblem.Objective) : objective to consider
+            force_improve (bool, optional): If true, to apply the move, it must improve the solution. Defaults to True.
+        Returns:
+            JobShopSolution: New solution
+        """
+        if not inplace or force_improve:
+            solution_copy = solution.copy()
+        else:
+            solution_copy = solution
+
+        # Select the two different random jobs to be swapped 
+        old_objective = solution_copy.objective_value
+
+        iter = 0
+        tabu_moves = set()
+        while iter < nb_moves:
+            # Get random machine,job and the position
+            random_machine_index = random.randrange(solution.instance.m)
+            job_schedule = solution_copy.machines[random_machine_index].job_schedule
+            job_schedule_len = len(job_schedule)
+
+            random_job_index = random.randrange(job_schedule_len)
+            other_job_index = random.randrange(job_schedule_len)
+            while other_job_index == random_job_index:
+                other_job_index = random.randrange(job_schedule_len)
+
+            if (random_machine_index, random_job_index, other_job_index) in tabu_moves:
+                continue
+            
+            # Simulate applying the swap move
+            job_schedule[random_job_index], job_schedule[other_job_index] = job_schedule[
+                        other_job_index], job_schedule[random_job_index]
+
+            if solution_copy.is_feasible():
+                new_objective = solution_copy.compute_objective()
+                iter += 1
+                tabu_moves.clear()
+            else: # Add to tabu moves
+                tabu_moves.add( (random_machine_index, random_job_index, other_job_index) )
+
+        # Update the solution
+        if force_improve and (new_objective > old_objective):
+            return solution
+
+        return solution_copy
+
+    @staticmethod
+    def random_neighbour(solution_i: JobShopSolution, nb_moves: int = 2):
+        """Generates a random neighbour solution of the given solution
+        Args:
+            solution_i (JobShopSolution): Solution at iteration i
+        Returns:
+            JobShopSolution: New solution
+        """ 
+        r = random.random()
+        if r < 0.5:
+            solution = NeighbourhoodGeneration.random_insert(
+                solution_i, force_improve=False, inplace=False, nb_moves=nb_moves)
+        else:
+            solution = NeighbourhoodGeneration.random_swap(
+                solution_i, force_improve=False, inplace=False, nb_moves=nb_moves)
+       
+        return solution
+
+    @staticmethod
+    def deconstruct_construct(solution_i: JobShopSolution, d: float = 0.25):
+        """Generates a random neighbour solution of the given solution using the deconstruct - construct strategy
+        The procedure removes a set of jobs and insert them using best insertion (greedy) 
+        Args:
+            solution_i (FlowShopSolution): Solution at iteration i
+        Returns:
+            FlowShopSolution: New solution
+        """ 
+        solution_copy = solution_i.copy()
+        # Deconstruction of d (percentage) random jobs out all jobs
+        all_jobs = list(range(solution_copy.instance.n))
+        nb_removed_jobs = int(solution_copy.instance.n * d )
+        removed_jobs = random.sample(all_jobs, nb_removed_jobs)
+
+        for machine in solution_copy.machines:
+            machine.job_schedule = [job for job in machine.job_schedule if job.id not in removed_jobs]
+
+        solution_copy.compute_objective()
+
+        # Construction by inserting the removed jobs one by one
+        for n_j, j in enumerate(removed_jobs):
+            for idx, oper_tuple in enumerate(solution_copy.instance.P[j]):
+                m_id, proc_time = oper_tuple
+                solution_copy = NeighbourhoodGeneration.best_insert_oper(solution_copy, m_id, j)
+                
+        return solution_copy

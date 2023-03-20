@@ -1,11 +1,10 @@
-from enum import Enum
-import os
-import sys
-from pathlib import Path
-import time
 import csv
+from enum import Enum
+from pathlib import Path
+from typing import List
 
 import pyscheduling.Problem as Problem
+
 
 class Log(Enum):
     objective = "objective_value"
@@ -26,7 +25,7 @@ def write_excel(fname : Path, result):
         dict_writer.writeheader()
         dict_writer.writerows(result)
 
-def run_solver_instance(fname : Path, instances : list[Problem.Instance],methods_args : list[object],kwargs={}, log_param : list[Log] = [Log.objective,Log.runtime]):
+def run_solver_instance(fname : Path, instances : List[Problem.Instance],methods_args : List[object],kwargs={}, log_param : List[Log] = [Log.objective,Log.runtime]):
     """Performs the benchmark of a list of methods on a list of instances, creates a csv file of the results and
     outputs the results
 

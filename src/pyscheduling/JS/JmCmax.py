@@ -1,19 +1,19 @@
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from random import randint
-import sys
 from time import perf_counter
+from typing import List
 
-
+import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JS_methods as js_methods
 import pyscheduling.Problem as RootProblem
 from pyscheduling.Problem import Solver
-import pyscheduling.JS.JobShop as JobShop
 
 try:
     import docplex
+    from docplex.cp.expression import INTERVAL_MAX
     from docplex.cp.model import CpoModel
     from docplex.cp.solver.cpo_callback import CpoCallback
-    from docplex.cp.expression import INTERVAL_MAX
 except ImportError:
     pass
 
@@ -21,7 +21,7 @@ DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
 @dataclass
 class JmCmax_Instance(JobShop.JobShopInstance):
-    P: list[list[int]] = field(default_factory=list)  # Processing time
+    P: List[List[int]] = field(default_factory=list)  # Processing time
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -49,7 +49,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
         """Random generation of JmCmax problem instance
 
         Args:
@@ -64,10 +64,6 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         Returns:
             JmCmax_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
-        if(Pmax == -1):
-            Pmax = randint(Pmin, 100)
         instance = cls(InstanceName, jobs_number, configuration_number)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
         return instance
@@ -269,7 +265,28 @@ if DOCPLEX_IMPORTED:
             else:
                 print("Docplex import error: you can not use this solver")
 
-class Heuristics():
+class Heuristics(js_methods.Heuristics):
+
+    @staticmethod
+    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
+        """contains a list of static dispatching rules to be chosen from
+
+        Args:
+            instance (JmCmax_Instance): Instance to be solved
+            rule_number (int, optional) : Index of the rule to use. Defaults to 1.
+
+        Returns:
+            RootProblem.SolveResult: SolveResult of the instance by the method
+        """
+        default_rule = lambda instance, job_tuple: instance.P[job_tuple[0]][job_tuple[1][0]]
+        rules_dict = {
+            0: default_rule,
+            1: lambda instance, job_tuple: sum(instance.P[job_tuple[0]][oper_idx] for oper_idx in job_tuple[1])
+        }
+        
+        sorting_func = rules_dict.get(rule_number, default_rule)
+
+        return Heuristics.dispatch_heuristic(instance, sorting_func, reverse)
 
     @staticmethod
     def shifting_bottleneck(instance : JmCmax_Instance):
@@ -283,14 +300,14 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
-        graph = JobShop.Graph(instance)
-        Cmax = graph.critical_path()
+        solution.create_solution_graph()
+        Cmax = solution.graph.critical_path()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
         precedence_constraints = [] # Tuple of (job_i_id, job_j_id) with job_i preceding job_j
 
         while len(remaining_machines)>0:
-            Cmax = graph.critical_path()
+            Cmax = solution.graph.critical_path()
             machines_schedule = []
             taken_solution = None
             objective_value = None
@@ -298,7 +315,7 @@ class Heuristics():
             edges_to_add = None
             for machine in remaining_machines:
                 
-                vertices = [op[1] for op in graph.get_operations_on_machine(machine)]
+                vertices = [op[1] for op in solution.graph.get_operations_on_machine(machine)]
                 job_id_mapping = {i:vertices[i] for i in range(len(vertices))}
                 mapped_constraints =[]
                 for precedence in precedence_constraints :
@@ -306,7 +323,7 @@ class Heuristics():
                         mapped_constraints.append((list(job_id_mapping.keys())
                             [list(job_id_mapping.values()).index(precedence[0])],list(job_id_mapping.keys())
                             [list(job_id_mapping.values()).index(precedence[1])]))
-                Lmax_instance = graph.generate_riPrecLmax(machine,Cmax,mapped_constraints)
+                Lmax_instance = solution.graph.generate_riPrecLmax(machine,Cmax,mapped_constraints)
                 
                 BB = JobShop.riPrecLmax.BB(Lmax_instance)
                 BB.solve()
@@ -322,11 +339,11 @@ class Heuristics():
             scheduled_machines.append(taken_machine)
             solution.machines[taken_machine].job_schedule = taken_solution
             solution.machines[taken_machine].objective = taken_solution[len(taken_solution)-1].end_time
-            graph.add_disdjunctive_arcs(edges_to_add)
-            precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
-            solution.objective_value = graph.critical_path()
+            solution.graph.add_disdjunctive_arcs(instance,edges_to_add)
+            precedence_constraints = list(solution.graph.generate_precedence_constraints(remaining_machines))
+            solution.objective_value = solution.graph.critical_path()
 
-        solution.cmax()
+        solution.compute_objective()
         
         return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
 

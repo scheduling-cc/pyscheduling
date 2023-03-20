@@ -1,31 +1,43 @@
-import heapq
-import imp
-from os import stat
-import random
-import sys
-from dataclasses import dataclass, field
-from pathlib import Path
-from random import randint, uniform
 from statistics import mean
-from time import perf_counter
-from unittest import result
 
+import numpy as np
 
-import matplotlib.pyplot as plt
-import numpy as np 
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Constraints, Objective, Solver
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
 import pyscheduling.PMSP.PM_methods as pm_methods
-from pyscheduling.Problem import Job
+import pyscheduling.Problem as RootProblem
+from pyscheduling.PMSP.ParallelMachines import parallel_instance
+from pyscheduling.Problem import Constraints, Job, Objective, Solver
+
 
 @parallel_instance([Constraints.R,Constraints.W,Constraints.S], Objective.wiFi)
 class RmriSijkWiFi_Instance(ParallelMachines.ParallelInstance):
     
     def init_sol_method(self):
         return Heuristics.BIBA
+    
+    def lower_bound(self):
+        """Computes the lower bound of sum(WiTi) of the instance 
+        from the minimal completion time between job pairs on the number of machines
+
+        Returns:
+            int: Lower Bound of sum(WiTi)
+        """
+        # Preparing ranges
+        M = range(self.m)
+        E = range(self.n)
+        # Compute lower bound
+        LB = 0
+        for j in E:
+            min_wifi_j = None
+            for k in M:
+                for i in E:  # (i for i in E if i != j ):
+                    cj = self.R[j] + self.P[j][k] + self.S[k][i][j]
+                    wifi_j = self.W[j]*(cj - self.R[j])
+                    if min_wifi_j is None or wifi_j < min_wifi_j:
+                        min_wifi_j = wifi_j
+            LB += min_wifi_j
+    
+        return LB
 
 class Heuristics(pm_methods.Heuristics):
     @staticmethod

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
+from typing import Dict, List
 import random
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
@@ -368,7 +369,7 @@ class Instance(ABC):
         pass
 
     @staticmethod
-    def read_1D(content: list[str], startIndex: int):
+    def read_1D(content: List[str], startIndex: int):
         """Read a table from a list of lines extracted from the file of the instance
 
         Args:
@@ -386,7 +387,7 @@ class Instance(ABC):
         return (vector, i+1)
 
     @staticmethod
-    def read_2D(dimension_i : int, content: list[str], startIndex: int):
+    def read_2D(dimension_i : int, content: List[str], startIndex: int):
         """Read a matrix from a list of lines extracted from the file of the instance
 
         Args:
@@ -408,7 +409,7 @@ class Instance(ABC):
         return (Matrix, startIndex+1+dimension_i)
 
     @staticmethod
-    def read_3D(dimension_i : int, dimension_j : int, content: list[str], startIndex: int):
+    def read_3D(dimension_i : int, dimension_j : int, content: List[str], startIndex: int):
         """Read the table of matrices from a list of lines extracted from the file of the instance
 
         Args:
@@ -497,16 +498,16 @@ class SolveStatus(Enum):
 @dataclass
 class SolveResult:
 
-    all_solutions: list[Solution]
+    all_solutions: List[Solution]
     best_solution: Solution  # Needs to be consistent with "all_solutions" list
     time_to_best: float
     solve_status: SolveStatus
     runtime: float
-    kpis: dict[str, object]  # Other metrics that are problem / solver specific
+    kpis: Dict[str, object]  # Other metrics that are problem / solver specific
 
     def __init__(self, best_solution: Solution = None, runtime: float = -1,
                  time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE,
-                 solutions: list[Solution] = None, kpis: list[str, object] = None):
+                 solutions: List[Solution] = None, kpis: Dict[str, object] = None):
         """constructor of SolveResult
 
         Args:
@@ -546,10 +547,10 @@ class SolveResult:
 @dataclass
 class LocalSearch():
 
-    methods: list[object] = field(default_factory=list)
+    methods: List[object] = field(default_factory=list)
     copy_solution: bool = False  # by default for performance reasons
 
-    def __init__(self, methods: list[object] = None, copy_solution: bool = False):
+    def __init__(self, methods: List[object] = None, copy_solution: bool = False):
         """Constructor of LocalSearch
 
         Args:
@@ -598,7 +599,7 @@ class Branch_Bound():
     root: object = None
     objective_value = None
     best_solution : Solution = None
-    all_solution : list[Solution] = field(default_factory=list)
+    all_solution : List[Solution] = field(default_factory=list)
     start_time : float = 0
     runtime : float = 0
 
@@ -607,7 +608,7 @@ class Branch_Bound():
         lower_bound: float = None
         if_solution: bool = False
         partial_solution: object = None
-        sub_nodes: list[object] = field(default_factory=list)
+        sub_nodes: List[object] = field(default_factory=list)
 
         def delete(self):
             """To delete the variable definitely

@@ -1,21 +1,21 @@
 from dataclasses import dataclass, field
-from pathlib import Path
-from random import randint
-import sys
-from time import perf_counter
 from math import exp
+from pathlib import Path
+from time import perf_counter
+from typing import List
 
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver
 import pyscheduling.JS.JobShop as JobShop
+import pyscheduling.JS.JS_methods as js_methods
+import pyscheduling.Problem as RootProblem
+from pyscheduling.Problem import GenerationLaw, Solver
+
 
 @dataclass
 class JmriwiTi_Instance(JobShop.JobShopInstance):
-    P: list[list[int]] = field(default_factory=list)  # Processing time
-    W: list[int] = field(default_factory=list)
-    R: list[int] = field(default_factory=list)
-    D: list[int] = field(default_factory=list)
+    P: List[List[int]] = field(default_factory=list)  # Processing time
+    W: List[int] = field(default_factory=list)
+    R: List[int] = field(default_factory=list)
+    D: List[int] = field(default_factory=list)
 
     @classmethod
     def read_txt(cls, path: Path):
@@ -46,27 +46,34 @@ class JmriwiTi_Instance(JobShop.JobShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.VALLADA, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
-        """Random generation of JmCmax problem instance
-
+    def generate_random(cls, n: int, m: int, instance_name: str = "",
+                        protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        Pmin: int = 1, Pmax: int = 100,
+                        Wmin: int = 1, Wmax: int = 1,
+                        alpha: float = 2.0,
+                        due_time_factor: float = 0.5):
+        """Random generation of FmriSijkCmax problem instance
         Args:
-            jobs_number (int): number of jobs of the instance
-            configuration_number (int): number of machines of the instance
-            protocol (JobShop.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to JobShop.GenerationProtocol.VALLADA.
-            law (JobShop.GenerationLaw, optional): probablistic law of generation. Defaults to JobShop.GenerationLaw.UNIFORM.
+            n (int): number of jobs of the instance
+            m (int): number of machines of the instance
+            protocol (FlowShop.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to FlowShop.GenerationProtocol.VALLADA.
+            law (FlowShop.GenerationLaw, optional): probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.
             Pmin (int, optional): Minimal processing time. Defaults to -1.
             Pmax (int, optional): Maximal processing time. Defaults to -1.
+            Gamma (float, optional): Setup time factor. Defaults to 0.0.
+            Smin (int, optional): Minimal setup time. Defaults to -1.
+            Smax (int, optional): Maximal setup time. Defaults to -1.
             InstanceName (str, optional): name to give to the instance. Defaults to "".
-
         Returns:
-            JmCmax_Instance: the randomly generated instance
+            FmSijkwiFi_Instance: the randomly generated instance
         """
-        if(Pmin == -1):
-            Pmin = randint(1, 100)
-        if(Pmax == -1):
-            Pmax = randint(Pmin, 100)
-        instance = cls(InstanceName, jobs_number, configuration_number)
+        instance = cls(instance_name, n, m)
         instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
+        instance.R = instance.generate_R(
+                protocol, law, instance.P, Pmin, Pmax, alpha)
+        instance.D = instance.generate_D(
+                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
         return instance
 
     def to_txt(self, path: Path) -> None:
@@ -113,7 +120,7 @@ class JmriwiTi_Instance(JobShop.JobShopInstance):
         """
         return RootProblem.Objective.wiTi
 
-class Heuristics():
+class Heuristics(js_methods.Heuristics):
 
     @staticmethod
     def shifting_bottleneck(instance : JmriwiTi_Instance):
@@ -127,8 +134,8 @@ class Heuristics():
         """
         startTime = perf_counter()
         solution = JobShop.JobShopSolution(instance)
-        graph = JobShop.riwiTi_Graph(instance)
-        jobs_completion_time = graph.all_jobs_completion()
+        solution.create_solution_graph()
+        jobs_completion_time = solution.graph.all_jobs_completion()
         remaining_machines = list(range(instance.m))
         scheduled_machines = []
         precedence_constraints = [] # Tuple of (job_i_id, job_j_id) with job_i preceding job_j
@@ -144,7 +151,7 @@ class Heuristics():
             new_jobs_completion = None
             for machine in remaining_machines:
                 
-                vertices = [op[1] for op in graph.get_operations_on_machine(machine)]
+                vertices = [op[1] for op in solution.graph.get_operations_on_machine(machine)]
                 job_id_mapping = {i:vertices[i] for i in range(len(vertices))}
                 mapped_constraints =[]
                 for precedence in precedence_constraints :
@@ -152,7 +159,7 @@ class Heuristics():
                         mapped_constraints.append((list(job_id_mapping.keys())
                             [list(job_id_mapping.values()).index(precedence[0])],list(job_id_mapping.keys())
                             [list(job_id_mapping.values()).index(precedence[1])]))
-                rihiCi_instance = graph.generate_rihiCi(machine,mapped_constraints,instance.W,instance.D,jobs_completion_time)
+                rihiCi_instance = solution.graph.generate_rihiCi(machine,mapped_constraints,instance.W,instance.D,jobs_completion_time)
                 
                 rihiCi_solution = JobShop.rihiCi.Heuristics.ACT(rihiCi_instance).best_solution
 
@@ -160,7 +167,7 @@ class Heuristics():
                 
                 temporary_edges = [((machine,mapped_IDs_solution[ind].id),(machine,mapped_IDs_solution[ind+1].id)) for ind in range(len(rihiCi_solution.machine.job_schedule)-1)]
 
-                temporary_jobs_completion = graph.temporary_job_completion(temporary_edges)
+                temporary_jobs_completion = solution.graph.temporary_job_completion(instance,temporary_edges)
                 machine_criticality = criticality_rule(temporary_jobs_completion,jobs_completion_time)
 
                 if max_criticality is None or max_criticality < machine_criticality:
@@ -177,11 +184,11 @@ class Heuristics():
             jobs_completion_time = new_jobs_completion
             solution.machines[taken_machine].job_schedule = taken_solution
             solution.machines[taken_machine].objective = taken_solution[len(taken_solution)-1].end_time
-            graph.add_disdjunctive_arcs(edges_to_add)
-            precedence_constraints = list(graph.generate_precedence_constraints(remaining_machines))
+            solution.graph.add_disdjunctive_arcs(instance, edges_to_add)
+            precedence_constraints = list(solution.graph.generate_precedence_constraints(remaining_machines))
         
-        solution.cmax()
-        solution.objective_value = graph.wiTi(instance.W,instance.D)
+        solution.compute_objective()
+        solution.objective_value = solution.graph.wiTi(instance.W,instance.D)
         
 
         return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])

@@ -3,7 +3,7 @@ import sys
 
 import pytest
 from pyscheduling.SMSP import *
-import pyscheduling.SMSP.SM_Methods as SM_Methods
+import pyscheduling.SMSP.SM_methods as SM_methods
 from pyscheduling.Problem import SolveResult, SolveStatus
 
 # Helper functions
@@ -72,19 +72,19 @@ class TestrisijwiCi:
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestrisijwiFi:
@@ -142,19 +142,19 @@ class TestrisijwiFi:
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestwiCi:
@@ -274,19 +274,19 @@ class TestriwiCi:
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestwiTi:
@@ -351,19 +351,19 @@ class TestwiTi:
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestriwiTi:
@@ -424,19 +424,19 @@ class TestriwiTi:
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
  
 class TestsijwiTi:
@@ -493,19 +493,19 @@ class TestsijwiTi:
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestrisijwiTi:
@@ -562,19 +562,19 @@ class TestrisijwiTi:
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestsijCmax:
@@ -631,19 +631,19 @@ class TestsijCmax:
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
 
 class TestrisijCmax:
@@ -700,17 +700,17 @@ class TestrisijCmax:
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_biba(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.BIBA(instance_zero)
+        solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_result = SM_Methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
+        solve_result = SM_methods.Heuristics.grasp(instance_zero, 0.3, 0.5, 5)
         check_solve_result(solve_result, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
+        solve_result = SM_methods.Metaheuristics.lahc(instance_zero, n_iterations=20)
         check_solve_result(solve_result)
 
     def test_sa(self, instance_zero):
-        solve_result = SM_Methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
+        solve_result = SM_methods.Metaheuristics.SA(instance_zero, time_limit_factor=0.2)
         check_solve_result(solve_result)
