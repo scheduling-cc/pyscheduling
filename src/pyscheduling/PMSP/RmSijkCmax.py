@@ -1,12 +1,14 @@
 import sys
+from dataclasses import dataclass
 from statistics import mean
 from time import perf_counter
+from typing import ClassVar, List
 
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
-import pyscheduling.Problem as RootProblem
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
-from pyscheduling.Problem import Constraints, Job, Objective, Solver
+import pyscheduling.Problem as Problem
+from pyscheduling.PMSP.ParallelMachines import Constraints
+from pyscheduling.Problem import Job, Objective, Solver
 
 try:
     import docplex
@@ -17,8 +19,13 @@ except ImportError:
 
 DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
-@parallel_instance([Constraints.S], Objective.Cmax)
+@dataclass(init=False)
 class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
+
+    P: List[List[int]]
+    S: List[List[List[int]]]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.S]
+    objective: ClassVar[Objective] = Objective.Cmax
 
     def init_sol_method(self):
         return Heuristics.BIBA
@@ -57,8 +64,8 @@ if DOCPLEX_IMPORTED:
     class CSP():
 
         CPO_STATUS = {
-            "Feasible": RootProblem.SolveStatus.FEASIBLE,
-            "Optimal": RootProblem.SolveStatus.OPTIMAL
+            "Feasible": Problem.SolveStatus.FEASIBLE,
+            "Optimal": Problem.SolveStatus.OPTIMAL
         }
 
         class MyCallback(CpoCallback):
@@ -220,12 +227,12 @@ if DOCPLEX_IMPORTED:
                     "MemUsage": msol.get_infos()["MemoryUsage"]
                 }
                 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=msol.get_infos()["TotalTime"],
                     time_to_best= mycallback.best_sol_time,
                     status=CSP.CPO_STATUS.get(
-                        msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
+                        msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
                     kpis=kpis
                 )
 

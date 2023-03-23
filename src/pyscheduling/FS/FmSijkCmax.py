@@ -5,7 +5,7 @@ from typing import List
 
 import pyscheduling.FS.FlowShop as FlowShop
 import pyscheduling.FS.FS_methods as FS_methods
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Solver
 
 
@@ -41,7 +41,7 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, Gamma: float = 0.0, Smin:  int = -1, Smax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.RandomDistrib = FlowShop.RandomDistrib.UNIFORM, Pmin: int = -1, Pmax: int = -1, Gamma: float = 0.0, Smin:  int = -1, Smax: int = -1, InstanceName: str = ""):
         """Random generation of FmSijkCmax problem instance
 
         Args:
@@ -111,7 +111,7 @@ class FmSijkCmax_Instance(FlowShop.FlowShopInstance):
         Returns:
             RootProblem.Objective: Makespan
         """
-        return RootProblem.Objective.Cmax
+        return Problem.Objective.Cmax
 
 
 class Heuristics(FS_methods.Heuristics):

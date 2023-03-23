@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.rihiCi as rihiCi
 import pyscheduling.SMSP.riPrecLmax as riPrecLmax
-from pyscheduling.Problem import GenerationLaw, Job
+from pyscheduling.Problem import RandomDistrib, Job
 
 
 class GenerationProtocol(Enum):
@@ -224,7 +224,7 @@ class JobsGraph:
 
 
 @dataclass
-class JobShopInstance(RootProblem.Instance):
+class JobShopInstance(Problem.BaseInstance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
@@ -271,7 +271,7 @@ class JobShopInstance(RootProblem.Instance):
             S.append(Si)
         return (S, i)
 
-    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
+    def generate_P(self, protocol: GenerationProtocol, law: RandomDistrib, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
 
         Args:
@@ -317,7 +317,7 @@ class JobShopInstance(RootProblem.Instance):
                     P[job_list_id].append((machine_id,n))
         return P
 
-    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+    def generate_W(self, protocol: GenerationProtocol, law: RandomDistrib, Wmin: int, Wmax: int):
         """Random generation of jobs weights table
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
@@ -341,7 +341,7 @@ class JobShopInstance(RootProblem.Instance):
 
         return W
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
+    def generate_R(self, protocol: GenerationProtocol, law: RandomDistrib, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -372,7 +372,7 @@ class JobShopInstance(RootProblem.Instance):
 
         return ri
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: RandomDistrib, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -407,7 +407,7 @@ class JobShopInstance(RootProblem.Instance):
 
         return S
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
+    def generate_D(self, protocol: GenerationProtocol, law: RandomDistrib, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
         Args:
             protocol (GenerationProtocol): given protocol of generation of random instances
@@ -489,7 +489,7 @@ class Machine:
 
 
 @dataclass
-class JobShopSolution(RootProblem.Solution):
+class JobShopSolution(Problem.BaseSolution):
 
     machines: List[Machine]
 
@@ -687,15 +687,15 @@ class JobShopSolution(RootProblem.Solution):
         self.job_schedule[job_id] = Job(job_id, min(start_time, saved_job.start_time), max(end_time, saved_job.end_time))
 
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             new_obj =  max(self.job_schedule[j].end_time for j in self.job_schedule)
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             new_obj =  sum( self.instance.W[j] * self.job_schedule[j].end_time for j in self.job_schedule )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             new_obj =  sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in self.job_schedule )
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             new_obj =  sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in self.job_schedule )
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             new_obj =  max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in self.job_schedule ) )
         
         self.job_schedule[job_id] = saved_job
@@ -708,15 +708,15 @@ class JobShopSolution(RootProblem.Solution):
             jobs_times (dict): dict of job_id: (start_time, end_time)
         """
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             self.objective_value = max(self.job_schedule[j].end_time for j in self.job_schedule)
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             self.objective_value = sum( self.instance.W[j] * self.job_schedule[j].end_time for j in self.job_schedule )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             self.objective_value = sum( self.instance.W[j] * (self.job_schedule[j].end_time - self.job_schedule[j][0] ) for j in self.job_schedule )
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             self.objective_value = sum( self.instance.W[j] * max(self.job_schedule[j].end_time - self.instance.D[j], 0) for j in self.job_schedule )
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             self.objective_value = max( 0, max( self.job_schedule[j].end_time-self.instance.D[j] for j in self.job_schedule ) )
 
         return self.objective_value
@@ -904,15 +904,15 @@ class JobShopSolution(RootProblem.Solution):
             job_times[i] = Job(i, start_i, ci)
         
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             expected_obj =  max(job_times[j].end_time for j in range(self.instance.n))
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             expected_obj =  sum( self.instance.W[j] * job_times[j].end_time for j in range(self.instance.n) )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             expected_obj =  sum( self.instance.W[j] * (job_times[j].end_time - job_times[j][0] ) for j in range(self.instance.n) )
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             expected_obj =  sum( self.instance.W[j] * max(job_times[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             expected_obj =  max( 0, max( job_times[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
 
         if expected_obj != self.objective_value:

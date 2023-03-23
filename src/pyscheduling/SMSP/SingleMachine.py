@@ -1,3 +1,4 @@
+import itertools
 import json
 import random
 import sys
@@ -10,147 +11,22 @@ from typing import List
 
 import numpy as np
 from matplotlib import pyplot as plt
-from pyscheduling.Problem import Constraints, DecoratorsHelper, Job, Objective, GenerationLaw, GenerationProtocol
-
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import (Constraints, DecoratorsHelper, GenerationLaw,
-                                  Job, Objective)
-
+from pyscheduling.Problem import Job, Objective, RandomDistrib, GenerationProtocol
+import pyscheduling.Problem as Problem
+from pyscheduling.SMSP.Constraints import Constraints
 
 class GenerationProtocol(Enum):
     BASE = 1
 
-def single_instance(constraints : list[Constraints], objective : Objective):
-
-    constraints = sorted(constraints, key=Constraints.sorting_func)
-
-    def init_fn(self, n, instance_name="", W=None, R=None, D=None, S=None):
-        self.n = n
-        self.instance_name = instance_name
-        for constraint in constraints:
-            exec("constraint.create_attribute(self,"+constraint.__name__+")")
-
-    @classmethod
-    def generate_random(cls, jobs_number: int, InstanceName: str = "",
-                        protocol: GenerationProtocol = GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
-                        Wmin: int = 1, Wmax: int = 1,
-                        Pmin: int = 10, Pmax: int = 50,
-                        alpha: float = 2.0,
-                        due_time_factor: float = 0.5,
-                        Gamma: float = 2.0, Smin: int = 1, Smax: int = 25):
-
-        instance = cls(jobs_number, instance_name=InstanceName)
-        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
-
-        args_dict = {   "protocol": protocol, "law":law,
-                        "Wmin":Wmin, "Wmax":Wmax,
-                        "Pmin":Pmin, "Pmax":Pmax,
-                        "alpha":alpha,
-                        "due_time_factor":due_time_factor,
-                        "gamma":Gamma, "Smin":Smin, "Smax":Smax}
-        
-        for constraint in constraints:
-            constraint.generate_attribute(instance,**args_dict)
-
-        return instance    
-
-    @classmethod
-    def read_txt(cls, path: Path):
-        f = open(path, "r")
-        content = f.read().split('\n')
-        ligne0 = content[0].split(' ')
-        n = int(ligne0[0])  # number of jobs
-        i = 1
-        instance = cls(n, "test")
-        instance.P, i = instance.read_1D(content, i)
-        for constraint in constraints:
-            i = constraint.read_attribute(instance,content,i)
-        f.close()
-        return instance
-
-    def to_txt(self, path : Path):
-        f = open(path, "w")
-        f.write(str(self.n))
-        f.write("\nProcessing time\n")
-        for i in range(self.n):
-            f.write(str(self.P[i])+"\t")
-        for constraint in constraints:
-            constraint.print_attribute(self,f)
-        f.close()
-
-    @classmethod
-    def get_objective(cls):
-        """to get the objective defined by the problem
-
-        Returns:
-            RootProblem.Objective: the objective passed to the decorator
-        """
-        return objective
-
-    def wrap(cls):
-        """Wrapper function that adds the basic Instance functions to the wrapped class
-
-        Returns:
-            Instance: subclass of Instance according to the defined problem
-        """
-        DecoratorsHelper.set_new_attr(cls, "__init__", init_fn)
-        DecoratorsHelper.set_new_attr(cls, "__repr__", DecoratorsHelper.repr_fn)
-        DecoratorsHelper.set_new_attr(cls, "__str__", DecoratorsHelper.str_fn)
-        DecoratorsHelper.set_new_attr(cls, "read_txt", read_txt)
-        DecoratorsHelper.set_new_attr(cls, "generate_random", generate_random)
-        DecoratorsHelper.set_new_attr(cls, "to_txt", to_txt)
-        DecoratorsHelper.set_new_attr(cls, "get_objective", get_objective)
-
-        DecoratorsHelper.update_abstractmethods(cls)
-        return cls
-
-    return wrap
-
 @dataclass
-class SingleInstance(RootProblem.Instance):
+class SingleInstance(Problem.BaseInstance):
 
-    n: int  # n : Number of jobs
+    n: int
 
-    @classmethod
-    @abstractmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
+    def __init__(self, n: int, name: str = "Unknown", **kwargs):
+        super().__init__(n, name = name, **kwargs)
 
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            SingleInstance:
-
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def generate_random(cls, protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            SingleInstance:
-        """
-        pass
-
-    @abstractmethod
-    def to_txt(self, path: Path) -> None:
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        pass
-
-    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
+    def generate_P(self, protocol: GenerationProtocol, law: RandomDistrib, Pmin: int, Pmax: int):
         """Random generation of processing time table
 
         Args:
@@ -187,6 +63,7 @@ class Machine:
     wiCi_cache: List[int] = field(default_factory=list)
     # this table serves as a cache to save the total weighted lateness reached after each job in job_schedule
     wiTi_cache: List[int] = field(default_factory=list)
+    wiFi_cache: List[int] = field(default_factory=list)
 
     def __init__(self, objective_value: int = 0, last_job: int = -1, job_schedule: List[Job] = None, wiCi_cache: List[int] = None, wiTi_cache: List[int] = None, wiFi_cache: List[int] = None):
         """Constructor of Machine
@@ -212,7 +89,7 @@ class Machine:
         }
       
     def __repr__(self):
-        return " : ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | " + str(self.objective_value)
+        return f"Machine 0" + " -> ".join(map(str, [(job.id, job.start_time, job.end_time) for job in self.job_schedule])) + " | Objective value: " + str(self.objective_value)
 
     def __str__(self):
         return self.__repr__()
@@ -450,7 +327,7 @@ class Machine:
 
 
 @dataclass
-class SingleSolution(RootProblem.Solution):
+class SingleSolution(Problem.BaseSolution):
 
     machine: Machine
 
@@ -662,7 +539,7 @@ class SingleSolution(RootProblem.Solution):
         return is_valid
 
 
-class SM_LocalSearch(RootProblem.LocalSearch):
+class SM_LocalSearch(Problem.LocalSearch):
 
     @staticmethod
     def _intra_insertion(solution: SingleSolution):

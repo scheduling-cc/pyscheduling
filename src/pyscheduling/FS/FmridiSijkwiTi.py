@@ -4,8 +4,8 @@ from typing import List
 
 import pyscheduling.FS.FlowShop as FlowShop
 import pyscheduling.FS.FS_methods as FS_methods
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import GenerationLaw, Solver
+import pyscheduling.Problem as Problem
+from pyscheduling.Problem import RandomDistrib, Solver
 
 
 @dataclass
@@ -47,7 +47,7 @@ class FmridiSijkwiTi_Instance(FlowShop.FlowShopInstance):
 
     @classmethod
     def generate_random(cls, n: int, m: int, instance_name: str = "",
-                        protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: RandomDistrib = RandomDistrib.UNIFORM,
                         Pmin: int = 1, Pmax: int = 100,
                         Wmin: int = 1, Wmax: int = 1,
                         alpha: float = 2.0,
@@ -131,7 +131,7 @@ class FmridiSijkwiTi_Instance(FlowShop.FlowShopInstance):
         Returns:
             RootProblem.Objective:
         """
-        return RootProblem.Objective.wiTi
+        return Problem.Objective.wiTi
 
 
 class Heuristics(FS_methods.Heuristics):

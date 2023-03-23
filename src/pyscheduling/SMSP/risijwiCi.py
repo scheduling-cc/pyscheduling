@@ -1,15 +1,25 @@
+from dataclasses import dataclass
 from math import exp
+from typing import ClassVar, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Constraints, Objective
-from pyscheduling.SMSP.SingleMachine import single_instance
+from pyscheduling.Problem import Objective
+from pyscheduling.SMSP.SingleMachine import Constraints
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
-@single_instance([Constraints.W, Constraints.R, Constraints.S], Objective.wiCi)
+@dataclass(init=False)
 class risijwiCi_Instance(SingleMachine.SingleInstance):
+
+    P: List[int]
+    W: List[int]
+    R: List[int]
+    D: List[int]
+    S: List[List[int]]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.R, Constraints.S]
+    objective: ClassVar[Objective] = Objective.wiCi
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -23,7 +33,7 @@ class risijwiCi_Instance(SingleMachine.SingleInstance):
 class Heuristics(Methods.Heuristics):
     
     @staticmethod
-    def list_heuristic(instance: risijwiCi_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
+    def list_heuristic(instance: risijwiCi_Instance, rule_number: int = 0, reverse = False) -> Problem.SolveResult:
         """contains a list of static dispatching rules to be chosen from
 
         Args:

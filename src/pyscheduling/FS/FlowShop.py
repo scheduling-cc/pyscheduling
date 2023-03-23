@@ -10,15 +10,15 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Job, GenerationLaw
+import pyscheduling.Problem as Problem
+from pyscheduling.Problem import Job, RandomDistrib
 
 
 class GenerationProtocol(Enum):
     BASE = 1
 
 @dataclass
-class FlowShopInstance(RootProblem.Instance):
+class FlowShopInstance(Problem.BaseInstance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
@@ -140,7 +140,7 @@ class FlowShopInstance(RootProblem.Instance):
             di.append(int(ligne[j]))
         return (di, i+1)
 
-    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
+    def generate_P(self, protocol: GenerationProtocol, law: RandomDistrib, Pmin: int, Pmax: int):
         """Random generation of processing time matrix
 
         Args:
@@ -169,7 +169,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return P
 
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
+    def generate_R(self, protocol: GenerationProtocol, law: RandomDistrib, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
         """Random generation of release time table
 
         Args:
@@ -200,7 +200,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return ri
 
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
+    def generate_S(self, protocol: GenerationProtocol, law: RandomDistrib, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
         """Random generation of setup time table of matrices
 
         Args:
@@ -242,7 +242,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return S
 
-    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
+    def generate_W(self, protocol: GenerationProtocol, law: RandomDistrib, Wmin: int, Wmax: int):
         """Random generation of jobs weights table
 
         Args:
@@ -268,7 +268,7 @@ class FlowShopInstance(RootProblem.Instance):
 
         return W
 
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
+    def generate_D(self, protocol: GenerationProtocol, law: RandomDistrib, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
         """Random generation of due time table
 
         Args:
@@ -407,7 +407,7 @@ class Machine:
         return idleTime
 
 @dataclass
-class FlowShopSolution(RootProblem.Solution):
+class FlowShopSolution(Problem.BaseSolution):
 
     machines: List[Machine]
     job_schedule = List[int]
@@ -477,15 +477,15 @@ class FlowShopSolution(RootProblem.Solution):
 
     def fix_objective(self):
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             self.objective_value = self.machines[-1].objective_value
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             self.objective_value = sum( self.instance.W[job.id] * job.end_time for job in self.machines[-1].oper_schedule )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             self.objective_value = sum( self.instance.W[job.id] * (job.end_time - self.instance.R[job.id]) for job in self.machines[-1].oper_schedule )
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             self.objective_value = sum( self.instance.W[job.id] * max(job.end_time-self.instance.D[job.id],0) for job in self.machines[-1].oper_schedule )
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             self.objective_value = max( 0, max( job.end_time-self.instance.D[job.id] for job in self.machines[-1].oper_schedule ) )
 
         return self.objective_value
@@ -535,15 +535,15 @@ class FlowShopSolution(RootProblem.Solution):
             int: the new objective
         """
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             return end_time
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             return self.objective_value + self.instance.W[job_id] * end_time
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             return self.objective_value + self.instance.W[job_id] * (end_time - self.instance.R[job_id])
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             return self.objective_value + self.instance.W[job_id] * max(end_time-self.instance.D[job_id],0)
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             return max( self.objective_value, end_time-self.instance.D[job_id]) 
 
     def idle_time(self):
@@ -703,13 +703,13 @@ class FlowShopSolution(RootProblem.Solution):
             
         objective = self.instance.get_objective()
         expected_obj = 0
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             expected_obj = max(period[1] for period in job_times.values())
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             expected_obj = sum( self.instance.W[i] * job_times[i][1] for i in job_times )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             expected_obj = sum( self.instance.W[i] * (job_times[i][1] - self.instance.R[i]) for i in job_times)
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             expected_obj = sum( self.instance.W[i] * max(job_times[i][1]-self.instance.D[i],0) for i in job_times )
 
         if expected_obj != self.objective_value:
@@ -720,7 +720,7 @@ class FlowShopSolution(RootProblem.Solution):
         return is_valid
 
 
-class FS_LocalSearch(RootProblem.LocalSearch):
+class FS_LocalSearch(Problem.LocalSearch):
     
     @staticmethod
     def _iterative_best_insert(solution: FlowShopSolution, inplace: bool = True):

@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from time import perf_counter
+from typing import ClassVar, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
 from pyscheduling.Problem import Constraints, Objective
@@ -8,9 +10,21 @@ from pyscheduling.SMSP.SingleMachine import single_instance
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
-@single_instance([Constraints.W], Objective.wiCi)
+@dataclass(init=False)
 class wiCi_Instance(SingleMachine.SingleInstance):
-    pass
+
+    P: List[int]
+    W: List[int]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W]
+    objective: ClassVar[Objective] = Objective.wiCi
+
+    def init_sol_method(self):
+        """Returns the default solving method
+
+        Returns:
+            object: default solving method
+        """
+        return Heuristics.BIBA
 
 class Heuristics():
     @staticmethod
@@ -31,7 +45,7 @@ class Heuristics():
         for job in jobs:
             solution.machine.job_schedule.append(SingleMachine.Job(job,0,0)) 
         solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.OPTIMAL,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

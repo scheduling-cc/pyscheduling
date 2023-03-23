@@ -1,15 +1,23 @@
 from math import exp
+from typing import ClassVar, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Constraints, Objective
-from pyscheduling.SMSP.SingleMachine import single_instance
+from pyscheduling.Problem import Objective
+from pyscheduling.SMSP.SingleMachine import Constraints
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
-@single_instance([Constraints.W, Constraints.R, Constraints.S], Objective.wiFi)
 class risijwiFi_Instance(SingleMachine.SingleInstance):
+
+    P: List[int]
+    W: List[int]
+    R: List[int]
+    D: List[int]
+    S: List[List[int]]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.R, Constraints.S]
+    objective: ClassVar[Objective] = Objective.wiFi
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -23,7 +31,7 @@ class risijwiFi_Instance(SingleMachine.SingleInstance):
 class Heuristics(Methods.Heuristics):
     
     @staticmethod
-    def list_heuristic(instance: risijwiFi_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
+    def list_heuristic(instance: risijwiFi_Instance, rule_number: int = 0, reverse = False) -> Problem.SolveResult:
         """contains a list of static dispatching rules to be chosen from
 
         Args:

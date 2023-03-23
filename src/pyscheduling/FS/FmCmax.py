@@ -6,7 +6,7 @@ from time import perf_counter
 from typing import List
 
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Solver, Job
 import pyscheduling.FS.FlowShop as FlowShop
 import pyscheduling.FS.FS_methods as FS_methods
@@ -42,7 +42,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
+    def generate_random(cls, n: int, m: int, protocol: FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.BASE, law: FlowShop.RandomDistrib = FlowShop.RandomDistrib.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = ""):
         """Random generation of FmCmax problem instance
 
         Args:
@@ -94,7 +94,7 @@ class FmCmax_Instance(FlowShop.FlowShopInstance):
         Returns:
             RootProblem.Objective: Makespan
         """
-        return RootProblem.Objective.Cmax
+        return Problem.Objective.Cmax
 
 
 class Heuristics(FS_methods.Heuristics):
@@ -118,7 +118,7 @@ class Heuristics(FS_methods.Heuristics):
         jobs.sort(reverse=True,key=slope_index)
         solution.job_schedule = [ Job(job_id, 0, 0) for job_id in jobs]
         solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @classmethod
     def all_methods(cls):

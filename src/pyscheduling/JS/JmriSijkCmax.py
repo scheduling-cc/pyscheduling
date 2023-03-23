@@ -4,8 +4,8 @@ from typing import List
 
 import pyscheduling.JS.JobShop as JobShop
 import pyscheduling.JS.JS_methods as js_methods
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import GenerationLaw, Solver
+import pyscheduling.Problem as Problem
+from pyscheduling.Problem import RandomDistrib, Solver
 
 
 @dataclass
@@ -45,7 +45,7 @@ class JmriSijkCmax_Instance(JobShop.JobShopInstance):
 
     @classmethod
     def generate_random(cls, n: int, m: int, instance_name: str = "",
-                        protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: GenerationLaw = GenerationLaw.UNIFORM,
+                        protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: RandomDistrib = RandomDistrib.UNIFORM,
                         Pmin: int = 10, Pmax: int = 100,
                         Wmin: int = 1, Wmax: int = 1,
                         alpha: float = 2.0,
@@ -120,7 +120,7 @@ class JmriSijkCmax_Instance(JobShop.JobShopInstance):
         Returns:
             RootProblem.Objective: Makespan
         """
-        return RootProblem.Objective.Cmax
+        return Problem.Objective.Cmax
 
 class Heuristics(js_methods.Heuristics):
 

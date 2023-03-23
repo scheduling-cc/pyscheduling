@@ -4,233 +4,19 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List
+from typing import ClassVar, Dict, List
 import random
+import itertools
+import statistics
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 
 class GenerationProtocol(Enum):
     BASE = 1
 
-class GenerationLaw(Enum):
+class RandomDistrib(Enum):
     UNIFORM = 1
     NORMAL = 2
-
-class ConstraintsEnum(Enum):
-    W = "weight"
-    R = "release"
-    S = "setup"
-    D = "due"
-
-    @classmethod
-    def to_string(cls):
-        """Print the available constraints for Single Machine
-
-        Returns:
-            str: name of every constraint in different lines
-        """
-        return cls.W.value + "\n" + cls.R.value + "\n" + cls.S.value + "\n" + cls.D.value
-
-    def __lt__(self, other):
-        """redefine less than operator alphabetically
-
-        Args:
-            other (Constraints): Another constraint
-
-        Returns:
-            bool: returns the comparison result
-        """
-        return self.name < other.name
-
-class Constraints():
-
-    class W():
-        @staticmethod
-        def create_attribute(instance,var):
-            setattr(instance,"W",var) if var is not None else setattr(instance,"W",list())
-
-        @staticmethod
-        def read_attribute(instance, text_content : list[str], starting_index : int):
-            W, i = Instance.read_1D(text_content,starting_index)
-            setattr(instance,"W",W)
-            return i
-            
-        @staticmethod
-        def print_attribute(instance, file):
-            W = getattr(instance,"W")
-            file.write("\nWeights\n")
-            for i in range(instance.n):
-                file.write(str(W[i])+"\t")
-
-        @staticmethod
-        def generate_attribute(instance,**kwargs):
-            law = kwargs.get("law")
-            Wmin = kwargs.get("Wmin")
-            Wmax = kwargs.get("Wmax")
-            W = []
-            for j in range(instance.n):
-                if law.name == "UNIFORM":  # Generate uniformly
-                    n = int(random.randint(Wmin, Wmax+1))
-                elif law.name == "NORMAL":  # Use normal law
-                    value = random.gauss(0, 1)
-                    n = int(abs(Wmin+Wmax*value))
-                    while n < Wmin or n > Wmax:
-                        value = random.gauss(0, 1)
-                        n = int(abs(Wmin+Wmax*value))
-                W.append(n)
-
-            instance.W = W
-            return W
-
-    class R():
-        @staticmethod
-        def create_attribute(instance,var):
-            setattr(instance,"R",var) if var is not None else setattr(instance,"R",list())
-
-        @staticmethod
-        def read_attribute(instance, text_content : list[str], starting_index : int):
-            R, i = Instance.read_1D(text_content,starting_index)
-            setattr(instance,"R",R)
-            return i
-
-        @staticmethod
-        def print_attribute(instance, file):
-            R = getattr(instance,"R")
-            file.write("\nRelease time\n")
-            for i in range(instance.n):
-                file.write(str(R[i])+"\t")
-
-        @staticmethod
-        def generate_attribute(instance,**kwargs):
-            law = kwargs.get("law")
-            PJobs = instance.P
-            Pmin = kwargs.get("Pmin")
-            Pmax = kwargs.get("Pmax")
-            alpha = kwargs.get("alpha")
-            ri = []
-            for j in range(instance.n):
-                if law.name == "UNIFORM":  # Generate uniformly
-                    n = int(random.uniform(0, alpha * PJobs[j]))
-
-                elif law.name == "NORMAL":  # Use normal law
-                    value = random.gauss(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-                    while n < Pmin or n > Pmax:
-                        value = random.gauss(0, 1)
-                        n = int(abs(Pmin+Pmax*value))
-
-                ri.append(n)
-
-            instance.R=ri
-            return ri
-    
-    class S():
-        @staticmethod
-        def create_attribute(instance,var):
-            setattr(instance,"S",var) if var is not None else setattr(instance,"S",list())
-
-        @staticmethod
-        def read_attribute(instance, text_content : list[str], starting_index : int):
-            S, i = Instance.read_2D(instance.n, text_content,starting_index)
-            setattr(instance,"S",S)
-            return i
-
-        @staticmethod
-        def print_attribute(instance, file):
-            S = getattr(instance,"S")
-            file.write("\nSSD\n")
-            for i in range(instance.n):
-                for j in range(instance.n):
-                    file.write(str(S[i][j])+"\t")
-                file.write("\n")
-    
-        @staticmethod
-        def generate_attribute(instance,**kwargs):
-            law = kwargs.get("law")
-            PJobs = instance.P
-            Smin = kwargs.get("Smin")
-            Smax = kwargs.get("Smax")
-            gamma = kwargs.get("gamma")
-            Si = []
-            for j in range(instance.n):
-                Sij = []
-                for k in range(instance.n):
-                    if j == k:
-                        Sij.append(0)  # check space values
-                    else:
-                        if law.name == "UNIFORM":  # Use uniform law
-                            min_p = min(PJobs[k], PJobs[j])
-                            max_p = max(PJobs[k], PJobs[j])
-                            Smin = int(gamma * min_p)
-                            Smax = int(gamma * max_p)
-                            Sij.append(int(random.uniform(Smin, Smax)))
-
-                        elif law.name == "NORMAL":  # Use normal law
-                            value = random.gauss(0, 1)
-                            setup = int(abs(Smin+Smax*value))
-                            while setup < Smin or setup > Smax:
-                                value = random.gauss(0, 1)
-                                setup = int(abs(Smin+Smax*value))
-                            Sij.append(setup)
-                Si.append(Sij)
-
-            instance.S = Si
-            return Si
-
-    class D():
-        @staticmethod
-        def create_attribute(instance,var):
-            setattr(instance,"D",var) if var is not None else setattr(instance,"D",list())
-
-        @staticmethod
-        def read_attribute(instance, text_content : list[str], starting_index : int):
-            D, i = Instance.read_1D(text_content,starting_index)
-            setattr(instance,"D",D)
-            return i
-
-        @staticmethod
-        def print_attribute(instance, file):
-            D = getattr(instance,"D")
-            file.write("\nDue time\n")
-            for i in range(instance.n):
-                file.write(str(D[i])+"\t")
-
-        @staticmethod
-        def generate_attribute(instance,**kwargs):
-            law = kwargs.get("law")
-            PJobs = instance.P
-            Pmin = kwargs.get("Pmin")
-            Pmax = kwargs.get("Pmax")
-            due_time_factor = kwargs.get("due_time_factor")
-            di = []
-            sumP = sum(PJobs)
-            for j in range(instance.n):
-                if hasattr(instance,"R"):
-                    startTime = instance.R[j] + PJobs[j]
-                else:
-                    startTime = PJobs[j]
-                if law.name == "UNIFORM":  # Generate uniformly
-                    n = int(random.uniform(
-                        startTime, startTime + due_time_factor * sumP))
-
-                elif law.name == "NORMAL":  # Use normal law
-                    value = random.gauss(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-                    while n < Pmin or n > Pmax:
-                        value = random.gauss(0, 1)
-                        n = int(abs(Pmin+Pmax*value))
-
-                di.append(n)
-
-            instance.D = di
-            return di
-        
-
-    sorting_dict = {W : 0, R : 1, S : 2, D : 3}
-    @staticmethod
-    def sorting_func(constraint):
-        return Constraints.sorting_dict[constraint]
-
 
 class Objective(Enum):  # Negative value are for minimization problems, Positive values are for maximization problems
     Cmax = -1
@@ -249,198 +35,117 @@ class Objective(Enum):  # Negative value are for minimization problems, Positive
         return "\n".join([e.name for e in cls]) 
 
 
-class DecoratorsHelper():
-
-    @staticmethod
-    def set_new_attr(cls, name, value):
-        """helper function to add a new function to the class if the user doesn't define it
-
-        Args:
-            name (str): name of the function
-            value (Callable): function definition
-
-        Returns:
-            bool: True if the function is already defined from the user
-        """
-        if name in cls.__dict__:  # To allow overriding the default functions' implementation
-            return True
-        setattr(cls, name, value)
-        return False
-
-    @staticmethod
-    def repr_fn(self):
-        """__repr__ default function, returns a string of the class name and the fields of the instance
-
-        Returns:
-            str: string representation
-        """
-        return self.__class__.__qualname__ + \
-            '\n'.join([f"({name}={value})"
-                       for name, value in vars(self).items()])
-
-    @staticmethod
-    def str_fn(self):
-        """__str__ default function, returns the object representation
-
-        Returns:
-            str: string representation
-        """
-        return self.__repr__()
-
-    @staticmethod
-    def update_abstractmethods(cls):
-        """
-        Ref: https://github.com/python/cpython/blob/6da1a2e993c955aa69158871b8c8792cef3094c3/Lib/abc.py#L146
-        Recalculate the set of abstract methods of an abstract class.
-        If a class has had one of its abstract methods implemented after the
-        class was created, the method will not be considered implemented until
-        this function is called. Alternatively, if a new abstract method has been
-        added to the class, it will only be considered an abstract method of the
-        class after this function is called.
-        This function should be called before any use is made of the class,
-        usually in class decorators that add methods to the subject class.
-        Returns cls, to allow usage as a class decorator.
-        If cls is not an instance of ABCMeta, does nothing.
-        """
-        if not hasattr(cls, '__abstractmethods__'):
-            # We check for __abstractmethods__ here because cls might by a C
-            # implementation or a python implementation (especially during
-            # testing), and we want to handle both cases.
-            return cls
-
-        abstracts = set()
-        # Check the existing abstract methods of the parents, keep only the ones
-        # that are not implemented.
-        for scls in cls.__bases__:
-            for name in getattr(scls, '__abstractmethods__', ()):
-                value = getattr(cls, name, None)
-                if getattr(value, "__isabstractmethod__", False):
-                    abstracts.add(name)
-        # Also add any other newly added abstract methods.
-        for name, value in cls.__dict__.items():
-            if getattr(value, "__isabstractmethod__", False):
-                abstracts.add(name)
-        cls.__abstractmethods__ = frozenset(abstracts)
-        return cls
-
-
 @dataclass
-class Instance(ABC):
+class BaseInstance(ABC):
 
     name: str
+    n: int
+
+    def __init__(self, n: int, m: int = 1,
+                name: str = "Unknown", **kwargs):
+        
+        self.constraints = sorted(self.constraints, key= lambda x: x._value)
+        self.n = n
+        self.m = m
+        self.name = name
+        
+        for constraint in self.constraints:
+            init_value = kwargs.get(constraint._name, None)
+            constraint.create(self,init_value)
 
     @classmethod
-    @abstractmethod
+    def generate_random(cls, n: int, m: int = 1, instance_name: str = "Unknown",
+                        protocol: GenerationProtocol = GenerationProtocol.BASE,
+                        law: RandomDistrib = RandomDistrib.UNIFORM,
+                        Wmin: int = 1, Wmax: int = 4,
+                        Pmin: int = 10, Pmax: int = 50,
+                        alpha: float = 0.8,
+                        due_time_factor: float = 0.8,
+                        gamma: float = 0.5):
+        
+        """Random generation of a problem instance
+        
+        Args:
+            n (int): number of jobs of the instance
+            m (int): number of machines of the instance
+            instance_name (str, optional): name to give to the instance. Defaults to "Unknown".
+            protocol (GenerationProtocol, optional): given protocol of generation of random instances. Defaults to GenerationProtocol.BASE.
+            law (FlowShop.GenerationLaw, optional): probablistic law of generation. Defaults to GenerationLaw.UNIFORM.
+            Pmin (int, optional): Minimal processing time. Defaults to 10.
+            Pmax (int, optional): Maximal processing time. Defaults to 50.
+            alpha (float, optional): Release time factor. Defaults to 0.8.
+            due_time_factor (float, optional): Due time factor. Defaults to 0.8.
+            gamma (float, optional): Setup time factor. Defaults to 0.5.
+            
+        Returns:
+            BaseInstance: the randomly generated instance
+        """
+
+        instance = cls(n, m = m, name=instance_name)
+        
+        args_dict = {   "protocol": protocol, "law":law,
+                        "Wmin":Wmin, "Wmax":Wmax,
+                        "Pmin":Pmin, "Pmax":Pmax,
+                        "alpha":alpha,
+                        "due_time_factor":due_time_factor,
+                        "gamma":gamma}
+        
+        for constraint in instance.constraints:
+            constraint.generate_random(instance,**args_dict)
+
+        return instance 
+    
+    @classmethod
     def read_txt(cls, path: Path):
         """Read an instance from a txt file according to the problem's format
-
+        
         Args:
             path (Path): path to the txt file of type Path from the pathlib module
-
+        
         Raises:
             FileNotFoundError: when the file does not exist
-
+        
         Returns:
-            Instance:
-
+            BaseInstance: the read instance
         """
-        pass
+        with open(path, "r") as f:
+            content = f.read().split('\n')
+            ligne0 = content[0].split(' ')
+            n = int(ligne0[0])  # number of jobs
+            m = int(ligne0[2]) if len(ligne0) > 2 else 1  # number of machines
+            i = 1
+            instance = cls(n, m = m, instance_name = "from_txt")
+            for constraint in instance.constraints:
+                i = constraint.read(instance,content,i)
 
-    @classmethod
-    @abstractmethod
-    def generate_random(cls, protocol: str = None):
-        """Generate a random instance according to a predefined protocol
+        return instance
 
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            Instance:
-        """
-        pass
-
-    @abstractmethod
-    def to_txt(self, path: Path) -> None:
+    def to_txt(self, path : Path):
         """Export an instance to a txt file
 
         Args:
             path (Path): path to the resulting txt file
         """
-        pass
+        with open(path, "w") as f:
+            f.write(str(self.n)+"  "+str(self.m)+"\n")
+            if self.m > 1:
+                f.write(str(self.m)+"\n")
+            for constraint in self.constraints:
+                constraint.write(self,f)
 
-    @staticmethod
-    def read_1D(content: List[str], startIndex: int):
-        """Read a table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the vector
-
+    def get_objective(self):
+        """getter to the objective class attribute
+        
         Returns:
-           (list[int],int): (vector, index of the next section of the instance)
+            Objective: the objective of the problem
         """
-        i = startIndex + 1
-        line = content[i].strip().split('\t')
-        vector = []  # Table : Processing time of job i
-        for j in line:
-            vector.append(int(j))
-        return (vector, i+1)
-
-    @staticmethod
-    def read_2D(dimension_i : int, content: List[str], startIndex: int):
-        """Read a matrix from a list of lines extracted from the file of the instance
-
-        Args:
-            dimension_i (int): number of lines of the matrix, usually number of jobs 'n'.
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the matrix
-
-        Returns:
-           (list[list[int]],int): (Matrix, index of the next section of the instance)
-        """
-        i = startIndex
-        Matrix = []  # Matrix S_ijk : Setup time between jobs j and k
-        i += 1  # Skip SSD
-        for k in range(dimension_i):
-            line = content[i].strip().split('\t')
-            Matrix_i = [int(val_str) for val_str in line]
-            Matrix.append(Matrix_i)
-            i += 1
-        return (Matrix, startIndex+1+dimension_i)
-
-    @staticmethod
-    def read_3D(dimension_i : int, dimension_j : int, content: List[str], startIndex: int):
-        """Read the table of matrices from a list of lines extracted from the file of the instance
-
-        Args:
-            dimension_i (int): Dimension of the table, usually number of machines 'm'.
-            dimension_j (int): Dimension of the matrix, usually number of jobs 'n'.
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the table of matrices
-
-        Returns:
-           (list[list[list[int]]],int): (Table of matrices, index of the next section of the instance)
-        """
-        i = startIndex
-        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1  # Skip SSD
-        endIndex = startIndex+1+dimension_j*dimension_i+dimension_i
-        while i != endIndex:
-            i = i+1  # Skip Mk
-            Si = []
-            for k in range(dimension_j):
-                ligne = content[i].strip().split('\t')
-                Sij = [int(val_str) for val_str in ligne]
-                Si.append(Sij)
-                i += 1
-            S.append(Si)
-        return (S, i)
+        return self.objective
 
 
 @dataclass
-class Solution(ABC):
+class BaseSolution(ABC):
 
-    instance: Instance
+    instance: BaseInstance
     objective_value: int
 
     @classmethod
@@ -498,16 +203,16 @@ class SolveStatus(Enum):
 @dataclass
 class SolveResult:
 
-    all_solutions: List[Solution]
-    best_solution: Solution  # Needs to be consistent with "all_solutions" list
+    all_solutions: List[BaseSolution]
+    best_solution: BaseSolution  # Needs to be consistent with "all_solutions" list
     time_to_best: float
     solve_status: SolveStatus
     runtime: float
     kpis: Dict[str, object]  # Other metrics that are problem / solver specific
 
-    def __init__(self, best_solution: Solution = None, runtime: float = -1,
+    def __init__(self, best_solution: BaseSolution = None, runtime: float = -1,
                  time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE,
-                 solutions: List[Solution] = None, kpis: Dict[str, object] = None):
+                 solutions: List[BaseSolution] = None, kpis: Dict[str, object] = None):
         """constructor of SolveResult
 
         Args:
@@ -577,7 +282,7 @@ class LocalSearch():
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and func.startswith("_")]
 
-    def improve(self, solution: Solution) -> Solution:
+    def improve(self, solution: BaseSolution) -> BaseSolution:
         """Improves a solution by iteratively calling local search operators
 
         Args:
@@ -595,11 +300,11 @@ class LocalSearch():
 
 @dataclass
 class Branch_Bound():
-    instance: Instance
+    instance: BaseInstance
     root: object = None
     objective_value = None
-    best_solution : Solution = None
-    all_solution : List[Solution] = field(default_factory=list)
+    best_solution : BaseSolution = None
+    all_solution : List[BaseSolution] = field(default_factory=list)
     start_time : float = 0
     runtime : float = 0
 
@@ -714,7 +419,7 @@ class Solver(ABC):
         else:
             self.method = method
 
-    def solve(self, instance: Instance, **data) -> SolveResult:
+    def solve(self, instance: BaseInstance, **data) -> SolveResult:
         """Solves the instance and returns the corresponding solve result
 
         Args:

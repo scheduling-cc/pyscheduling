@@ -1,11 +1,13 @@
 import sys
+from dataclasses import dataclass
 from statistics import mean
+from typing import ClassVar, List
 
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
-import pyscheduling.Problem as RootProblem
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
-from pyscheduling.Problem import Constraints, Job, Objective, Solver
+import pyscheduling.Problem as Problem
+from pyscheduling.PMSP.ParallelMachines import Constraints
+from pyscheduling.Problem import Job, Objective, Solver
 
 try:
     import gurobipy as gp
@@ -20,9 +22,15 @@ except ImportError:
 GUROBI_IMPORTED = True if "gurobipy" in sys.modules else False
 DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
-@parallel_instance([Constraints.R, Constraints.S], Objective.Cmax)
+@dataclass(init=False)
 class RmriSijkCmax_Instance(ParallelMachines.ParallelInstance):
     
+    P: List[List[int]]
+    R: List[int]
+    S: List[List[List[int]]]
+    constraints: ClassVar[Constraints] = [Constraints.P, Constraints.R, Constraints.S]
+    objective: ClassVar[Objective] = Objective.Cmax
+
     def init_sol_method(self):
         return Heuristics.BIBA
     
@@ -60,8 +68,8 @@ if DOCPLEX_IMPORTED:
     class CSP():
 
         CPO_STATUS = {
-            "Feasible": RootProblem.SolveStatus.FEASIBLE,
-            "Optimal": RootProblem.SolveStatus.OPTIMAL
+            "Feasible": Problem.SolveStatus.FEASIBLE,
+            "Optimal": Problem.SolveStatus.OPTIMAL
         }
 
         class MyCallback(CpoCallback):
@@ -260,12 +268,12 @@ if DOCPLEX_IMPORTED:
                     else:
                         kpis[f'Obj-{stop_t}'] = prev
 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=msol.get_infos()["TotalTime"],
                     time_to_best=mycallback.best_sol_time,
                     status=CSP.CPO_STATUS.get(
-                        msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
+                        msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
                     kpis=kpis
                 )
 
@@ -278,8 +286,8 @@ if GUROBI_IMPORTED:
     class MILP():
 
         GUROBI_STATUS = {
-            gp.GRB.INFEASIBLE: RootProblem.SolveStatus.INFEASIBLE,
-            gp.GRB.OPTIMAL: RootProblem.SolveStatus.OPTIMAL
+            gp.GRB.INFEASIBLE: Problem.SolveStatus.INFEASIBLE,
+            gp.GRB.OPTIMAL: Problem.SolveStatus.OPTIMAL
         }
 
         @staticmethod
@@ -312,7 +320,7 @@ if GUROBI_IMPORTED:
         @staticmethod
         def build_callback(mycallback, stop_times=[300, 600, 3600, 7200]):
 
-            setattr(mycallback, "SOLVE_RESULT", RootProblem.SolveResult())
+            setattr(mycallback, "SOLVE_RESULT", Problem.SolveResult())
             setattr(mycallback, "CURR_BEST", None)
             setattr(mycallback, "stop_times", stop_times)
             setattr(mycallback, "best_values", dict())
@@ -457,12 +465,12 @@ if GUROBI_IMPORTED:
                     else:
                         execTimes[f'Obj-{stop_t}'] = prev
 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=model.Runtime,
                     time_to_best=MILP.mycallback.SOLVE_RESULT.time_to_best,
                     status=MILP.GUROBI_STATUS.get(
-                        model.status, RootProblem.SolveStatus.FEASIBLE),
+                        model.status, Problem.SolveStatus.FEASIBLE),
                     kpis=execTimes
                 )
 

@@ -6,7 +6,7 @@ from typing import List
 
 import pyscheduling.JS.JobShop as JobShop
 import pyscheduling.JS.JS_methods as js_methods
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Solver
 
 try:
@@ -49,7 +49,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: JobShop.RandomDistrib = JobShop.RandomDistrib.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
         """Random generation of JmCmax problem instance
 
         Args:
@@ -96,7 +96,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
         Returns:
             RootProblem.Objective: Makespan
         """
-        return RootProblem.Objective.Cmax
+        return Problem.Objective.Cmax
 
 class ExactSolvers():
 
@@ -114,8 +114,8 @@ if DOCPLEX_IMPORTED:
     class CSP():
 
         CPO_STATUS = {
-            "Feasible": RootProblem.SolveStatus.FEASIBLE,
-            "Optimal": RootProblem.SolveStatus.OPTIMAL
+            "Feasible": Problem.SolveStatus.FEASIBLE,
+            "Optimal": Problem.SolveStatus.OPTIMAL
         }
 
         class MyCallback(CpoCallback):
@@ -251,12 +251,12 @@ if DOCPLEX_IMPORTED:
                     "MemUsage": msol.get_infos()["MemoryUsage"]
                 }
                 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=msol.get_infos()["TotalTime"],
                     time_to_best= mycallback.best_sol_time,
                     status=CSP.CPO_STATUS.get(
-                        msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
+                        msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
                     kpis=kpis
                 )
 
@@ -268,7 +268,7 @@ if DOCPLEX_IMPORTED:
 class Heuristics(js_methods.Heuristics):
 
     @staticmethod
-    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
+    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> Problem.SolveResult:
         """contains a list of static dispatching rules to be chosen from
 
         Args:
@@ -345,7 +345,7 @@ class Heuristics(js_methods.Heuristics):
 
         solution.compute_objective()
         
-        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

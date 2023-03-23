@@ -9,9 +9,9 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import (Constraints, DecoratorsHelper, GenerationLaw,
-                                  Job, Objective)
+import pyscheduling.Problem as Problem
+from pyscheduling.BaseConstraints import BaseConstraints as Constraints
+from pyscheduling.Problem import Job, Objective
 from pyscheduling.SMSP.SingleMachine import Machine as SMachine
 
 
@@ -19,396 +19,14 @@ class GenerationProtocol(Enum):
     BASE = 1
     VALLADA = 2
 
-
-def parallel_instance(constraints: List[Constraints], objective: Objective):
-    """Decorator to build an Instance class from the list of constraints and objective
-
-    Args:
-        constraints (list[Constraints]): list of constraints of the defined problem
-        objective (Objective): the objective of the defined problem
-    """
-
-    def init_fn(self, n, m, instance_name="", P=None, W=None, R=None, D=None, S=None):
-        """Constructor to build an instance of the class Instance
-
-        Args:
-            n (int): number of jobs
-            m (int): number of machines
-            instance_name (str, optional): name of the instance. Defaults to "".
-            P (list, optional): processing times vector of length n. Defaults to None.
-            W (list, optional): weights vector of length n. Defaults to None.
-            R (list, optional): release times vector of length n. Defaults to None.
-            D (list, optional): due dates vector of length n. Defaults to None.
-            S (list, optional): setup times matrix (between job i and job j) of dimension m x n x n. Defaults to None.
-        """
-        self.n = n
-        self.m = m
-        self.instance_name = instance_name
-        self.P = P if P is not None else list()
-        if Constraints.W in constraints:
-            self.W = W if W is not None else list()
-        if Constraints.R in constraints:
-            self.R = R if R is not None else list()
-        if Constraints.D in constraints:
-            self.D = D if D is not None else list()
-        if Constraints.S in constraints:
-            self.S = S if S is not None else list()
-
-    @classmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
-
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            risijCmax_Instance:
-        """
-        f = open(path, "r")
-        content = f.read().split('\n')
-        ligne0 = content[0].split(' ')
-        n = int(ligne0[0])  # number of jobs
-        m = int(ligne0[2])  # number of machines
-        i = 1
-        instance = cls(n, m, "test")
-        instance.P, i = instance.read_2D(n, content, i)
-        if Constraints.W in constraints:
-            instance.W, i = instance.read_1D(content, i)
-        if Constraints.R in constraints:
-            instance.R, i = instance.read_1D(content, i)
-        if Constraints.D in constraints:
-            instance.D, i = instance.read_1D(content, i)
-        if Constraints.S in constraints:
-            instance.S, i = instance.read_3D(m, n, content, i)
-        f.close()
-        return instance
-
-    @classmethod
-    def generate_random(cls, jobs_number: int, machines_number: int, InstanceName: str = "",
-                        protocol: GenerationProtocol = GenerationProtocol.VALLADA, law: GenerationLaw = GenerationLaw.UNIFORM,
-                        Wmin: int = 1, Wmax: int = 1,
-                        Pmin: int = 1, Pmax: int = 100,
-                        alpha: float = 2.0,
-                        due_time_factor: float = 0.5,
-                        Gamma: float = 2.0, Smin: int = 10, Smax: int = 100):
-        """Random generation of risijCmax problem instance
-
-        Args:
-            jobs_number (int): number of jobs of the instance
-            InstanceName (str, optional): name to give to the instance. Defaults to "".
-            protocol (SingleMachine.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
-            law (SingleMachine.GenerationLaw, optional): probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
-            Wmin (int, optional): Minimal weight. Defaults to 1.
-            Wmax (int, optional): Maximal weight. Defaults to 1.
-            Pmin (int, optional): Minimal processing time. Defaults to 1.
-            Pmax (int, optional): Maximal processing time. Defaults to 100.
-            alpha (float, optional): Release time factor. Defaults to 2.0.
-            due_time_factor (float, optional): Due time factor. Defaults to 0.5.
-            Gamma (float, optional): Setup time factor. Defaults to 2.0.
-            Smin (int, optional) : Minimal setup time. Defaults to 10.
-            Smax (int, optional) : Maximal setup time. Defaults to 100.
-
-        Returns:
-            risijCmax_Instance: the randomly generated instance
-        """
-        instance = cls(jobs_number, machines_number, instance_name=InstanceName)
-        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
-        if Constraints.W in constraints:
-            instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
-        if Constraints.R in constraints:
-            instance.R = instance.generate_R(
-                protocol, law, instance.P, Pmin, Pmax, alpha)
-        if Constraints.D in constraints:
-            instance.D = instance.generate_D(
-                protocol, law, instance.P, Pmin, Pmax, due_time_factor)
-        if Constraints.S in constraints:
-            instance.S = instance.generate_S(
-                protocol, law, instance.P, Gamma, Smin, Smax)
-
-        return instance
-
-    def to_txt(self, path: Path):
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        f = open(path, "w")
-        f.write(str(self.n)+"  "+str(self.m)+"\n")
-        f.write(str(self.m)+"\n")
-        # Processing Times
-        for i in range(self.n):
-            for j in range(self.m):
-                f.write("\t"+str(j)+"\t"+str(self.P[i][j]))
-            if i != self.n - 1:
-                f.write("\n")
-        
-        if Constraints.W in constraints:
-            f.write("\nWeights\n")
-            for i in range(self.n):
-                f.write(str(self.W[i])+"\t")
-
-        if Constraints.R in constraints:
-            f.write("\nRelease time\n")
-            for i in range(self.n):
-                f.write(str(self.R[i])+"\t")
-
-        if Constraints.D in constraints:
-            f.write("\nDue time\n")
-            for i in range(self.n):
-                f.write(str(self.D[i])+"\t")
-
-        if Constraints.S in constraints:
-            f.write("\nSSD\n")
-            for i in range(self.m):
-                f.write("M"+str(i)+"\n")
-                for j in range(self.n):
-                    for k in range(self.n):
-                        f.write(str(self.S[i][j][k])+"\t")
-                    f.write("\n")
-        f.close()
-
-    @classmethod
-    def get_objective(cls):
-        """to get the objective defined by the problem
-
-        Returns:
-            RootProblem.Objective: the objective passed to the decorator
-        """
-        return objective
-
-    def wrap(cls):
-        """Wrapper function that adds the basic Instance functions to the wrapped class
-
-        Returns:
-            Instance: subclass of Instance according to the defined problem
-        """
-        DecoratorsHelper.set_new_attr(cls, "__init__", init_fn)
-        DecoratorsHelper.set_new_attr(cls, "__repr__", DecoratorsHelper.repr_fn)
-        DecoratorsHelper.set_new_attr(cls, "__str__", DecoratorsHelper.str_fn)
-        DecoratorsHelper.set_new_attr(cls, "read_txt", read_txt)
-        DecoratorsHelper.set_new_attr(cls, "generate_random", generate_random)
-        DecoratorsHelper.set_new_attr(cls, "to_txt", to_txt)
-        DecoratorsHelper.set_new_attr(cls, "get_objective", get_objective)
-
-        DecoratorsHelper.update_abstractmethods(cls)
-        return cls
-
-    return wrap
-
 @dataclass
-class ParallelInstance(RootProblem.Instance):
+class ParallelInstance(Problem.BaseInstance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
 
-    @classmethod
-    @abstractmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
-
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            ParallelInstance:
-
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def generate_random(cls, protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            ParallelInstance:
-        """
-        pass
-
-    @abstractmethod
-    def to_txt(self, path: Path) -> None:
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        pass
-
-    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
-        """Random generation of processing time matrix
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-
-        Returns:
-           list[list[int]]: Matrix of processing time
-        """
-        P = []
-        for j in range(self.n):
-            Pj = []
-            for i in range(self.m):
-                if law.name == "UNIFORM":  # Generate uniformly
-                    n = int(random.uniform(Pmin, Pmax))
-                elif law.name == "NORMAL":  # Use normal law
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-                    while n < Pmin or n > Pmax:
-                        value = np.random.normal(0, 1)
-                        n = int(abs(Pmin+Pmax*value))
-                Pj.append(n)
-            P.append(Pj)
-
-        return P
-
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
-        """Random generation of release time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[list[float]]): Matrix of processing time
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-            alpha (float): release time factor
-
-        Returns:
-            list[int]: release time table
-        """
-        ri = []
-        for j in range(self.n):
-            sum_p = sum(PJobs[j])
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(0, alpha * (sum_p / self.m)))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            ri.append(n)
-
-        return ri
-
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
-        """Random generation of setup time table of matrices
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[list[float]]): Matrix of processing time
-            gamma (float): Setup time factor
-            Smin (int, optional): Minimal setup time . Defaults to 0.
-            Smax (int, optional): Maximal setup time. Defaults to 0.
-
-        Returns:
-            list[list[list[int]]]: Setup time table of matrix
-        """
-        S = []
-        for i in range(self.m):
-            Si = []
-            for j in range(self.n):
-                Sij = []
-                for k in range(self.n):
-                    if j == k:
-                        Sij.append(0)  # check space values
-                    else:
-                        if law.name == "UNIFORM":  # Use uniform law
-                            min_p = min(PJobs[k][i], PJobs[j][i])
-                            max_p = max(PJobs[k][i], PJobs[j][i])
-                            Smin = int(gamma * min_p)
-                            Smax = int(gamma * max_p)
-                            Sij.append(int(random.uniform(Smin, Smax)))
-
-                        elif law.name == "NORMAL":  # Use normal law
-                            value = np.random.normal(0, 1)
-                            setup = int(abs(Smin+Smax*value))
-                            while setup < Smin or setup > Smax:
-                                value = np.random.normal(0, 1)
-                                setup = int(abs(Smin+Smax*value))
-                            Sij.append(setup)
-                Si.append(Sij)
-            S.append(Si)
-
-        return S
-
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
-        """Random generation of due time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[float]): Table of processing time
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-            fraction (float): due time factor
-
-        Returns:
-            list[int]: due time table
-        """
-        di = []
-        PJobs = [min(PJobs[j]) for j in range(self.n)]
-        sumP = sum(PJobs)
-        
-        for j in range(self.n):
-            if hasattr(self, 'R'):
-                startTime = self.R[j] + PJobs[j]
-            else:
-                startTime = PJobs[j]
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(
-                    startTime, startTime + due_time_factor * sumP))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            di.append(n)
-        
-        return di
-
-    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
-        """Random generation of jobs weights table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            Wmin (int): Minimal weight
-            Wmax (int): Maximal weight
-
-        Returns:
-           list[int]: Table of jobs weights
-        """
-        W = []
-        for j in range(self.n):
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(Wmin, Wmax))
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Wmin+Wmax*value))
-                while n < Wmin or n > Wmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Wmin+Wmax*value))
-            W.append(n)
-
-        return W
+    def __init__(self, n: int, m: int, name: str = "Unknown", **kwargs):
+        super().__init__(n, m=m, name = name, **kwargs)
 
 @dataclass
 class Machine(SMachine):
@@ -418,6 +36,14 @@ class Machine(SMachine):
     def __init__(self, machine_num:int, **kwargs):
         super().__init__(**kwargs)
         self.machine_num = machine_num
+    
+    def __repr__(self):
+        return f"Machine {self.machine_num} : " + " -> ".join(map(str, [(job.id, job.start_time, job.end_time)\
+                                    for job in self.job_schedule])) +\
+                                    " | Objective value: " + str(self.objective_value)
+
+    def __str__(self):
+        return self.__repr__()
 
     def copy(self):
         wiCi_copy = self.wiCi_cache if self.wiCi_cache is None else list(self.wiCi_cache)
@@ -448,7 +74,7 @@ class Machine(SMachine):
         return ci, startTime
 
 @dataclass
-class ParallelSolution(RootProblem.Solution):
+class ParallelSolution(Problem.BaseSolution):
 
     machines: List[Machine]
     # Class variables
@@ -474,7 +100,7 @@ class ParallelSolution(RootProblem.Solution):
         self.objective_value = 0
 
     def __repr__(self):
-        return "Objective : " + str(self.objective_value) + "\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Completion_time\n" + "\n".join(map(str, self.machines))
+        return "Objective : " + str(self.objective_value) + "\n\n" + "Machine_ID | Job_schedule (job_id , start_time , completion_time) | Objective value\n\n" + "\n\n####\n\n".join(map(str, self.machines))
 
     def __str__(self):
         return self.__repr__()
@@ -711,7 +337,7 @@ class ParallelSolution(RootProblem.Solution):
         return is_valid
 
 
-class PM_LocalSearch(RootProblem.LocalSearch):
+class PM_LocalSearch(Problem.LocalSearch):
     @staticmethod
     def _external_insertion(solution: ParallelSolution):
         """Delete a job from the machine whose completion_time is maximal and insert it on another one

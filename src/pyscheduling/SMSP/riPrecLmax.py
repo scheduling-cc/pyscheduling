@@ -3,7 +3,7 @@ from pathlib import Path
 from random import randint, uniform
 from typing import List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
 
@@ -45,7 +45,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha : float = 0.0, due_time_factor : float = 0.0, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.RandomDistrib = SingleMachine.RandomDistrib.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha : float = 0.0, due_time_factor : float = 0.0, InstanceName: str = ""):
         """Random generation of riPrecLmax problem instance
 
         Args:
@@ -149,7 +149,7 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
         Returns:
             RootProblem.Objective: Maximal Lateness
         """
-        return RootProblem.Objective.Lmax
+        return Problem.Objective.Lmax
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -182,8 +182,8 @@ class Metaheuristics(Methods.Metaheuristics):
         """
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
-class BB(RootProblem.Branch_Bound):
-    def branch(self, node : RootProblem.Branch_Bound.Node):
+class BB(Problem.Branch_Bound):
+    def branch(self, node : Problem.Branch_Bound.Node):
         """Branching rule from Pinedo book page 44
 
         Args:
@@ -220,7 +220,7 @@ class BB(RootProblem.Branch_Bound):
                 sub_node = self.Node(if_solution=if_solution,partial_solution=new_partial_solution)
                 node.sub_nodes.append(sub_node)
 
-    def bound(self, node : RootProblem.Branch_Bound.Node):
+    def bound(self, node : Problem.Branch_Bound.Node):
         """affects the preemptive_EDD value to the lower bound attribute of the node
 
         Args:
@@ -233,7 +233,7 @@ class BB(RootProblem.Branch_Bound):
         maximum_lateness = max(maximum_lateness,self.instance.LB_preemptive_EDD(startTime,remaining_jobs_list))
         node.lower_bound = maximum_lateness
 
-    def objective(self, node : RootProblem.Branch_Bound.Node):
+    def objective(self, node : Problem.Branch_Bound.Node):
         """Objective value evaluator
 
         Args:

@@ -1,16 +1,26 @@
+from dataclasses import dataclass
 from time import perf_counter
+from typing import ClassVar, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Constraints, Objective, Solver
-from pyscheduling.SMSP.SingleMachine import single_instance
+from pyscheduling.Problem import Objective, Solver
+from pyscheduling.SMSP.SingleMachine import Constraints
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
+from pyscheduling.SMSP.SingleMachine import Constraints
 
-@single_instance([Constraints.W, Constraints.R], Objective.wiCi)
+
+@dataclass(init=False)
 class riwiCi_Instance(SingleMachine.SingleInstance):
-        
+    
+    P: List[int]
+    W: List[int]
+    R: List[int]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.R]
+    objective: ClassVar[Objective] = Objective.wiCi
+
     def init_sol_method(self):
         """Returns the default solving method
 
@@ -51,7 +61,7 @@ class Heuristics():
             remaining_jobs_list.pop(0)
         solution.machine.objective_value=solution.machine.wiCi_cache[instance.n-1]
         solution.fix_objective()
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @staticmethod
     def WSAPT(instance : riwiCi_Instance):
@@ -90,7 +100,7 @@ class Heuristics():
 
         solution.machine.objective_value=solution.machine.wiCi_cache[instance.n-1]
         solution.fix_objective()
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @staticmethod
     def list_heuristic(instance : riwiCi_Instance, rule : int = 1):
@@ -129,7 +139,7 @@ class Heuristics():
             solution.machine.wiCi_cache.append(wiCi)
         solution.machine.objective_value = solution.machine.wiCi_cache[instance.n - 1]
         solution.fix_objective()
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):
@@ -166,7 +176,7 @@ class Metaheuristics(Methods.Metaheuristics):
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
 
         local_search = SingleMachine.SM_LocalSearch()
 
@@ -194,7 +204,7 @@ class Metaheuristics(Methods.Metaheuristics):
             N += 1
 
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),

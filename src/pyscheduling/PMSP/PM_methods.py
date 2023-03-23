@@ -8,7 +8,7 @@ import numpy as np
 from numpy.random import choice as np_choice
 
 import pyscheduling.PMSP.ParallelMachines as pm
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job
 
 
@@ -54,7 +54,7 @@ class Heuristics():
         
         solution.fix_objective()
       
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def BIBA(instance: pm.ParallelInstance):
@@ -90,7 +90,7 @@ class Heuristics():
         
         solution.fix_objective()
           
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 5):
@@ -106,7 +106,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         solveResult.all_solutions = []
         best_solution = None
         for _ in range(n_iterations):
@@ -142,7 +142,7 @@ class Heuristics():
 
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         
         return solveResult
 
@@ -185,7 +185,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
         
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
 
         local_search = pm.PM_LocalSearch()
         if LS: 
@@ -226,7 +226,7 @@ class Metaheuristics():
             N += 1
            
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),
@@ -286,7 +286,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
 
         local_search = pm.PM_LocalSearch()
 
@@ -339,7 +339,7 @@ class Metaheuristics():
             N += 1
             
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             runtime=(perf_counter() - first_time),
             time_to_best=time_to_best,
@@ -359,10 +359,10 @@ class Metaheuristics():
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         solveResult.best_solution, solveResult.all_solutions = GeneticAlgorithm.solve(
             instance, **kwargs) 
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         solveResult.runtime = perf_counter() - startTime
         return solveResult
     
@@ -377,10 +377,10 @@ class Metaheuristics():
             Problem.SolveResult: the solver result of the execution of the metaheuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         AC = AntColony(instance=instance, **data)
         solveResult.best_solution, solveResult.all_solutions = AC.solve() 
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         solveResult.runtime = perf_counter() - startTime
         return solveResult
 

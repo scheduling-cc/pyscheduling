@@ -6,9 +6,10 @@ from random import randint, uniform
 from time import perf_counter
 from typing import Callable, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
+from pyscheduling.SMSP.SingleMachine import Constraints
 
 
 @dataclass
@@ -53,7 +54,7 @@ class rihiCi_Instance(SingleMachine.SingleInstance):
         return instance
 
     @classmethod
-    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Pmin: int = 1, Pmax: int = -1, Wmin : int = 1, Wmax : int = 1, alpha : float = 0.0, due_time_factor : float = 0.0, InstanceName: str = ""):
+    def generate_random(cls, jobs_number: int,  protocol: SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: SingleMachine.RandomDistrib = SingleMachine.RandomDistrib.UNIFORM, Pmin: int = 1, Pmax: int = -1, Wmin : int = 1, Wmax : int = 1, alpha : float = 0.0, due_time_factor : float = 0.0, InstanceName: str = ""):
         """Random generation of riPrecLmax problem instance
 
         Args:
@@ -74,8 +75,8 @@ class rihiCi_Instance(SingleMachine.SingleInstance):
         if(due_time_factor == 0.0):
             due_time_factor = round(uniform(0, 1), 1)
         instance = cls(InstanceName, jobs_number)
-        instance.W = instance.generate_W(protocol, law, Wmin, Wmax)
-        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
+        instance.W = Constraints.generate_1D(protocol, law, Wmin, Wmax)
+        instance.P = Constraints.generate_1D(protocol, law, Pmin, Pmax)
         instance.R = instance.generate_R(protocol,law,instance.P,Pmin,Pmax,alpha)
         for due in instance.D:
             due = instance.generate_D(protocol,law,instance.P,Pmin,Pmax,due_time_factor,RJobs=instance.R) 
@@ -111,7 +112,7 @@ class rihiCi_Instance(SingleMachine.SingleInstance):
         Returns:
             RootProblem.Objective: Maximal Lateness
         """
-        return RootProblem.Objective.wiTi
+        return Problem.Objective.wiTi
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -165,7 +166,7 @@ class Heuristics():
 
         solution.objective_value = ci
         
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
 
     def ACT(instance : rihiCi_Instance):
