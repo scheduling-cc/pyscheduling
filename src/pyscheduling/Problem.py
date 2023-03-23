@@ -4,10 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-from typing import ClassVar, Dict, List
-import random
-import itertools
-import statistics
+from typing import Dict, List
 
 Job = namedtuple('Job', ['id', 'start_time', 'end_time'])
 

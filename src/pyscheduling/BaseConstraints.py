@@ -78,7 +78,17 @@ class BaseConstraints():
         return (S, i)
 
     # Output methods
-    # TODO: add generic 1D, 2D and 3D writers
+    @staticmethod
+    def write_1D(array: List[int], file):
+        file.write("\t".join(map(str,array)))
+
+    @staticmethod
+    def write_2D(matrix: List[List[int]], file):
+        nb_lines = len(matrix)
+        for i in range(nb_lines):
+            BaseConstraints.write_1D(matrix[i], file)
+            if i != nb_lines - 1:
+                file.write("\n")
 
     # Generation methods
     @staticmethod
@@ -87,7 +97,7 @@ class BaseConstraints():
         random_array = []
         for j in range(nb_values):
             if law == RandomDistrib.UNIFORM:  # Generate uniformly
-                n = int(random.randint(min_value, max_value+1))
+                n = int(random.randint(min_value, max_value))
             elif law == RandomDistrib.NORMAL:  # Use normal law
                 n = -1
                 while n < min_value or n > max_value:
@@ -148,11 +158,7 @@ class BaseConstraints():
         @classmethod
         def write(cls, instance, file):
             P = getattr(instance, cls._name )
-            for i in range(instance.n):
-                for j in range(instance.m):
-                    file.write("\t"+str(j)+"\t"+str(P[i][j]))
-                if i != instance.n - 1:
-                    file.write("\n")
+            BaseConstraints.write_2D(P, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
@@ -178,8 +184,7 @@ class BaseConstraints():
         def write(cls, instance, file):
             W = getattr(instance, cls._name)
             file.write("\nWeights\n")
-            for i in range(instance.n):
-                file.write(str(W[i])+"\t")
+            BaseConstraints.write_1D(W, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
@@ -205,8 +210,7 @@ class BaseConstraints():
         def write(cls, instance, file):
             R = getattr(instance, cls._name)
             file.write("\nRelease time\n")
-            for i in range(instance.n):
-                file.write(str(R[i])+"\t")
+            BaseConstraints.write_1D(R, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
@@ -222,49 +226,10 @@ class BaseConstraints():
             setattr(instance, cls._name, R)
             return instance.R
     
-    class S(BaseConstraint):
-        
-        _name = "S"
-        _value = 30
-
-        @classmethod
-        def read(cls, instance, text_content : List[str], starting_index : int):
-            S, i = BaseConstraints.read_3D(instance.m, instance.n, text_content, starting_index)
-            setattr(instance, cls._name, S)
-            return i
-
-        @classmethod
-        def write(cls, instance, file):
-            S = getattr(instance, cls._name)
-            file.write("\nSSD\n")
-            for i in range(instance.m):
-                file.write("M"+str(i)+"\n")
-                for j in range(instance.n):
-                    for k in range(instance.n):
-                        file.write(str(S[i][j][k])+"\t")
-                    file.write("\n")
-    
-        @classmethod
-        def generate_random(cls, instance,**kwargs):
-            law = kwargs.get("law")
-            gamma = kwargs.get("gamma")
-
-            flatten_P = BaseConstraints.flatten_list(instance.P)
-            Pmin = min(flatten_P)
-            Pmax = max(flatten_P)
-            # Limit values
-            Smin = int(gamma * Pmin)
-            Smax = int(gamma * Pmax)
-
-            S = BaseConstraints.generate_3D(instance.m, instance.n, instance.n,
-                                        Smin, Smax, law)
-            setattr(instance, cls._name, S)
-            return instance.S
-
     class D(BaseConstraint):
         
         _name = "D"
-        _value = 40
+        _value = 30
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
@@ -276,8 +241,7 @@ class BaseConstraints():
         def write(cls, instance, file):
             D = getattr(instance, cls._name )
             file.write("\nDue time\n")
-            for i in range(instance.n):
-                file.write(str(D[i])+"\t")
+            BaseConstraints.write_1D(D, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
@@ -297,3 +261,39 @@ class BaseConstraints():
             D = BaseConstraints.generate_1D(instance.n, min_D, max_D, law)
             setattr(instance, cls._name, D)
             return D
+        
+    class S(BaseConstraint):
+        
+        _name = "S"
+        _value = 40
+
+        @classmethod
+        def read(cls, instance, text_content : List[str], starting_index : int):
+            S, i = BaseConstraints.read_3D(instance.m, instance.n, text_content, starting_index)
+            setattr(instance, cls._name, S)
+            return i
+
+        @classmethod
+        def write(cls, instance, file):
+            S = getattr(instance, cls._name)
+            file.write("\nSSD")
+            for i in range(instance.m):
+                file.write("\nM"+str(i)+"\n")
+                BaseConstraints.write_2D(S[i], file)
+    
+        @classmethod
+        def generate_random(cls, instance,**kwargs):
+            law = kwargs.get("law")
+            gamma = kwargs.get("gamma")
+
+            flatten_P = BaseConstraints.flatten_list(instance.P)
+            Pmin = min(flatten_P)
+            Pmax = max(flatten_P)
+            # Limit values
+            Smin = int(gamma * Pmin)
+            Smax = int(gamma * Pmax)
+
+            S = BaseConstraints.generate_3D(instance.m, instance.n, instance.n,
+                                        Smin, Smax, law)
+            setattr(instance, cls._name, S)
+            return instance.S

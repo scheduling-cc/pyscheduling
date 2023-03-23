@@ -1,22 +1,23 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from random import randint, uniform
-from time import perf_counter
-from typing import List
+from typing import ClassVar, List
 
 import pyscheduling.FS.FlowShop as FlowShop
 import pyscheduling.FS.FS_methods as FS_methods
 import pyscheduling.Problem as Problem
-from pyscheduling.Problem import RandomDistrib, Solver
+from pyscheduling.FS.FlowShop import Constraints
+from pyscheduling.Problem import Objective, RandomDistrib
 
 
 @dataclass
 class FmriSijkwiCi_Instance(FlowShop.FlowShopInstance):
-    P: List[List[int]] = field(default_factory=list)  # Processing time
-    W: List[int] = field(default_factory=list)  # weights
-    R: List[int] = field(default_factory=list)  # release dates
-    S: List[List[List[int]]] = field(default_factory=list) # Setup time
-
+    
+    P: List[List[int]]
+    W: List[int]
+    R: List[int]
+    S: List[List[List[int]]]
+    constraints: ClassVar[Constraints] = [Constraints.P, Constraints.W, Constraints.R, Constraints.S]
+    objective: ClassVar[Objective] = Objective.wiCi
     @classmethod
     def read_txt(cls, path: Path):
         """Read an instance from a txt file according to the problem's format
