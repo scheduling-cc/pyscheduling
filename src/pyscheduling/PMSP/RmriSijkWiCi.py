@@ -1,6 +1,5 @@
 from statistics import mean
 
-import numpy as np
 
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
@@ -52,6 +51,9 @@ class Heuristics(pm_methods.Heuristics):
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
         solution = ParallelMachines.ParallelSolution(instance)
+
+        N = range(instance.n)
+        M = range(instance.m)
         for machine in solution.machines:
             machine.wiCi_cache = []
   
@@ -86,27 +88,21 @@ class Heuristics(pm_methods.Heuristics):
             remaining_jobs_list = [(i, setup_max[i])
                                    for i in range(instance.n)]
         elif rule == 8: #Min Si*k
-            setup_mins = [
-                min(min_list) for min_list in [[min(s[:,i]) for s in np.array(instance.S)]
-                                               for i in range(instance.n)]
-            ]
-            remaining_jobs_list = [(i, setup_mins[i])
-                                   for i in range(instance.n)]    
+            setup_mins_per_M = [[min(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_mins = [ min(setup_mins_per_M[i][j] for i in M) for j in N ]
+
+            remaining_jobs_list = [(i, setup_mins[i]) for i in range(instance.n)]    
         elif rule == 9: # Mean Si*k
-            setup_means = [
-                mean(means_list)
-                for means_list in [[mean(s[:,i]) for s in np.array(instance.S)]
-                                   for i in range(instance.n)]
-            ]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [(i, setup_means[i])
                                    for i in range(instance.n)]
         elif rule == 10: # Max Si*k
-            setup_max = [
-                max(max_list) for max_list in [[max(s[:,i]) for s in np.array(instance.S)]
-                                               for i in range(instance.n)]
-            ]
-            remaining_jobs_list = [(i, setup_max[i])
-                                   for i in range(instance.n)]
+            setup_max_per_M = [[max(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_max = [ max(setup_max_per_M[i][j] for i in M) for j in N ]
+
+            remaining_jobs_list = [(i, setup_max[i]) for i in range(instance.n)]
         elif rule == 11: #R + Min P
             remaining_jobs_list = [(i,instance.R[i] + min(instance.P[i])) for i in range(instance.n)]
         elif rule == 12:
@@ -136,25 +132,21 @@ class Heuristics(pm_methods.Heuristics):
             remaining_jobs_list = [(i,instance.R[i] + setup_max[i])
                                    for i in range(instance.n)]
         elif rule == 17: #Min Si*k
-            setup_mins = [
-                min(min_list) for min_list in [[min(s[:,i]) for s in np.array(instance.S)]
-                                               for i in range(instance.n)]
-            ]
+            setup_mins_per_M = [[min(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_mins = [ min(setup_mins_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [(i, instance.R[i] + setup_mins[i])
                                    for i in range(instance.n)]    
         elif rule == 18: # Mean Si*k
-            setup_means = [
-                mean(means_list)
-                for means_list in [[mean(s[:,i]) for s in np.array(instance.S)]
-                                   for i in range(instance.n)]
-            ]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [(i,instance.R[i] + setup_means[i])
                                    for i in range(instance.n)]
         elif rule == 19: # Max Si*k
-            setup_max = [
-                max(max_list) for max_list in [[max(s[:,i]) for s in np.array(instance.S)]
-                                               for i in range(instance.n)]
-            ]
+            setup_max_per_M = [[max(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_max = [ max(setup_max_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [(i,instance.R[i] + setup_max[i])
                                    for i in range(instance.n)]
         elif rule == 20: #R + mean P + mean Sij*
@@ -163,13 +155,15 @@ class Heuristics(pm_methods.Heuristics):
             remaining_jobs_list = [
                 (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
         elif rule == 21: #R + mean P + mean Si*j
-            setup_means = [mean(means_list) for means_list in [
-                [mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [
                 (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
         elif rule == 22: #R + mean P + mean Sij* + mean Si*j
-            setup_means = [mean(means_list) for means_list in 
-                        [[mean(s[i]) + mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) + mean(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in range(instance.n)]
            
         remaining_jobs_list = sorted(remaining_jobs_list,key=lambda x:x[1],reverse=decreasing)

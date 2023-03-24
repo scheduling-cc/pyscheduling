@@ -1,14 +1,10 @@
 from statistics import mean
 from time import perf_counter
 
-import matplotlib.pyplot as plt
-import numpy as np
-
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
-import pyscheduling.Problem as RootProblem
 from pyscheduling.PMSP.ParallelMachines import parallel_instance
-from pyscheduling.Problem import Constraints, Job, Objective, Solver
+from pyscheduling.Problem import Constraints, Objective
 
 
 @parallel_instance([Constraints.R,Constraints.D,Constraints.W,Constraints.S], Objective.wiTi)
@@ -56,50 +52,58 @@ class Heuristics(pm_methods.Heuristics):
         start_time = perf_counter()
         solution = ParallelMachines.ParallelSolution(instance)
         
+        N = range(instance.n)
+        M = range(instance.m)
+
         for machine in solution.machines:
             machine.wiTi_cache = []
             
         if rule == 1: #Earliest due dates 
             remaining_jobs_list = [(i, instance.D[i])
-                                   for i in range(instance.n)]
+                                   for i in N]
         elif rule == 2: #Earliest release dates
-            remaining_jobs_list = [(i,instance.R[i]) for i in range(instance.n)]    # type: ignore
+            remaining_jobs_list = [(i,instance.R[i]) for i in N]    # type: ignore
         elif rule == 3: #Earlist due date + mean processing time
-            remaining_jobs_list = [(i,instance.D[i] + mean(instance.P[i])) for i in range(instance.n)]
+            remaining_jobs_list = [(i,instance.D[i] + mean(instance.P[i])) for i in N]
         elif rule == 4:#Earlist release date + mean processing time
-            remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i])) for i in range(instance.n)]
+            remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i])) for i in N]
         elif rule == 5:  #min(due date - release date) 
-            remaining_jobs_list = [(i,instance.D[i] - instance.R[i]) for i in range(instance.n)]
+            remaining_jobs_list = [(i,instance.D[i] - instance.R[i]) for i in N]
         elif rule == 6: #release date + mean(Pi) + mean(Sij*)
-            setup_means = [mean(means_list) for means_list in [
-                [mean(s[i]) for s in instance.S] for i in range(instance.n)]]
+            setup_means_per_M = [[mean(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [
-                (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
+                (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in N]
         elif rule == 7: #release date + mean(Pi) + mean(Si*j)
-            setup_means = [mean(means_list) for means_list in [
-                [mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [
-                (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
+                (i, instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in N]
         elif rule == 8: #release date + mean(Pi) + mean(Sij*) + mean(Si*j)
-            setup_means = [mean(means_list) for means_list in 
-                        [[mean(s[i]) + mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
-            remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in range(instance.n)]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) + mean(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
+            remaining_jobs_list = [(i,instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in N]
         elif rule == 9:#min(due date - release date) + mean(Pi)
-            remaining_jobs_list = [(i,instance.D[i] - instance.R[i] + mean(instance.P[i])) for i in range(instance.n)]
+            remaining_jobs_list = [(i,instance.D[i] - instance.R[i] + mean(instance.P[i])) for i in N]
         elif rule == 10:#min(due date - release date) + mean(Pi) + mean(Sij*)
             setup_means = [mean(means_list) for means_list in [
-                [mean(s[i]) for s in instance.S] for i in range(instance.n)]]
+                [mean(s[i]) for s in instance.S] for i in N]]
             remaining_jobs_list = [
-                (i, instance.D[i] - instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
+                (i, instance.D[i] - instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in N]
         elif rule == 11: #min(due date - release date) + mean(Pi) + mean(Si*j)
-            setup_means = [mean(means_list) for means_list in [
-                [mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
+            setup_means_per_M = [[mean(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
             remaining_jobs_list = [
-                (i, instance.D[i] - instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
+                (i, instance.D[i] - instance.R[i] + mean(instance.P[i])+setup_means[i]) for i in N]
         elif rule == 12: #min(due date - release date) + mean(Pi) + mean(Sij*) + mean(Si*j)
-            setup_means = [mean(means_list) for means_list in 
-                        [[mean(s[i]) + mean(s[:,i]) for s in np.array(instance.S)] for i in range(instance.n)]]
-            remaining_jobs_list = [(i,instance.D[i] - instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in range(instance.n)]
+            setup_means_per_M = [[mean(instance.S[i][j][k] for k in N) + mean(instance.S[i][k][j] for k in N) for j in N] for i in M ]
+            setup_means = [ mean(setup_means_per_M[i][j] for i in M) for j in N ]
+
+            remaining_jobs_list = [(i,instance.D[i] - instance.R[i] + mean(instance.P[i]) + setup_means[i]) for i in N]
               
         remaining_jobs_list = sorted(remaining_jobs_list,key=lambda x:x[1],reverse=decreasing)
         jobs_list = [element[0] for element in remaining_jobs_list]
