@@ -5,8 +5,8 @@ from typing import ClassVar, List
 import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Constraints, Objective
-from pyscheduling.SMSP.SingleMachine import single_instance
+from pyscheduling.Problem import Objective
+from pyscheduling.SMSP.SingleMachine import Constraints
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
@@ -26,7 +26,7 @@ class wiCi_Instance(SingleMachine.SingleInstance):
         """
         return Heuristics.BIBA
 
-class Heuristics():
+class Heuristics(Methods.Heuristics):
     @staticmethod
     def WSPT(instance : wiCi_Instance):
         """Weighted Shortest Processing Time is Optimal for wiCi problem. A proof by contradiction can simply be found
@@ -57,7 +57,7 @@ class Heuristics():
         return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 
-class Metaheuristics():
+class Metaheuristics(Methods.Metaheuristics):
     @classmethod
     def all_methods(cls):
         """returns all the methods of the given Heuristics class

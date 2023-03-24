@@ -29,7 +29,7 @@ class wiTi_Instance(SingleMachine.SingleInstance):
         return Heuristics.ACT
 
 
-class Heuristics():
+class Heuristics(Methods.Heuristics):
 
     @staticmethod
     def WSPT(instance : wiTi_Instance):

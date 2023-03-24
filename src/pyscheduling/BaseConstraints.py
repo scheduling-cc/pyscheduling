@@ -21,10 +21,7 @@ class BaseConstraints():
            (list[int],int): (vector, index of the next section of the instance)
         """
         i = startIndex + 1
-        line = content[i].strip().split('\t')
-        vector = []  # Table : Processing time of job i
-        for j in line:
-            vector.append(int(j))
+        vector = list(map(int,content[i].strip().split('\t')))
         return (vector, i+1)
 
     @staticmethod

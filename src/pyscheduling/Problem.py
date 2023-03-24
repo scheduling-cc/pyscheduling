@@ -51,7 +51,7 @@ class BaseInstance(ABC):
             constraint.create(self,init_value)
 
     @classmethod
-    def generate_random(cls, n: int, m: int = 1, instance_name: str = "Unknown",
+    def generate_random(cls, n: int, m: int = 1, name: str = "Unknown",
                         protocol: GenerationProtocol = GenerationProtocol.BASE,
                         law: RandomDistrib = RandomDistrib.UNIFORM,
                         Wmin: int = 1, Wmax: int = 4,
@@ -78,7 +78,7 @@ class BaseInstance(ABC):
             BaseInstance: the randomly generated instance
         """
 
-        instance = cls(n, m = m, name=instance_name)
+        instance = cls(n, m = m, name=name)
         
         args_dict = {   "protocol": protocol, "law":law,
                         "Wmin":Wmin, "Wmax":Wmax,
@@ -105,13 +105,14 @@ class BaseInstance(ABC):
         Returns:
             BaseInstance: the read instance
         """
+        path = Path(str(path))
         with open(path, "r") as f:
             content = f.read().split('\n')
             ligne0 = content[0].split(' ')
             n = int(ligne0[0])  # number of jobs
             m = int(ligne0[2]) if len(ligne0) > 2 else 1  # number of machines
             i = 1
-            instance = cls(n, m = m, instance_name = "from_txt")
+            instance = cls(n, m = m, name = path.name)
             for constraint in instance.constraints:
                 i = constraint.read(instance,content,i)
 
@@ -125,8 +126,7 @@ class BaseInstance(ABC):
         """
         with open(path, "w") as f:
             f.write(str(self.n)+"  "+str(self.m)+"\n")
-            if self.m > 1:
-                f.write(str(self.m)+"\n")
+            f.write(str(self.m)+"\n")
             for constraint in self.constraints:
                 constraint.write(self,f)
 

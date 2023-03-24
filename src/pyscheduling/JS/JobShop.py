@@ -14,8 +14,8 @@ import numpy as np
 import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.rihiCi as rihiCi
 import pyscheduling.SMSP.riPrecLmax as riPrecLmax
-from pyscheduling.Problem import RandomDistrib, Job
-
+from pyscheduling.Problem import Objective, RandomDistrib, Job
+from pyscheduling.JS.Constraints import Constraints
 
 class GenerationProtocol(Enum):
     BASE = 1
@@ -228,6 +228,9 @@ class JobShopInstance(Problem.BaseInstance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
+
+    def __init__(self, n: int, m: int, name: str = "Unknown", **kwargs):
+        super().__init__(n, m=m, name = name, **kwargs)
 
     def read_P(self, content: List[str], startIndex: int):
         """Read the Processing time matrix from a list of lines extracted from the file of the instance
@@ -904,15 +907,15 @@ class JobShopSolution(Problem.BaseSolution):
             job_times[i] = Job(i, start_i, ci)
         
         objective = self.instance.get_objective()
-        if objective == Problem.Objective.Cmax:
+        if objective == Objective.Cmax:
             expected_obj =  max(job_times[j].end_time for j in range(self.instance.n))
-        elif objective == Problem.Objective.wiCi:
+        elif objective == Objective.wiCi:
             expected_obj =  sum( self.instance.W[j] * job_times[j].end_time for j in range(self.instance.n) )
-        elif objective == Problem.Objective.wiFi:
+        elif objective == Objective.wiFi:
             expected_obj =  sum( self.instance.W[j] * (job_times[j].end_time - job_times[j][0] ) for j in range(self.instance.n) )
-        elif objective == Problem.Objective.wiTi:
+        elif objective == Objective.wiTi:
             expected_obj =  sum( self.instance.W[j] * max(job_times[j].end_time - self.instance.D[j], 0) for j in range(self.instance.n) )
-        elif objective == Problem.Objective.Lmax:
+        elif objective == Objective.Lmax:
             expected_obj =  max( 0, max( job_times[j].end_time-self.instance.D[j] for j in range(self.instance.n) ) )
 
         if expected_obj != self.objective_value:

@@ -7,7 +7,7 @@ class Constraints(BaseConstraints):
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
-            P, i = Constraints.read_1D(instance.n, text_content,starting_index)
+            P, i = Constraints.read_1D(text_content,starting_index)
             setattr(instance, cls._name, P)
             return i
         
