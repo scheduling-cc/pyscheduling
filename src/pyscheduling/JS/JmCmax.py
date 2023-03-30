@@ -1,13 +1,13 @@
 import sys
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from time import perf_counter
-from typing import List
+from typing import ClassVar, List, Tuple
 
 import pyscheduling.JS.JobShop as JobShop
 import pyscheduling.JS.JS_methods as js_methods
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Solver
+import pyscheduling.Problem as Problem
+from pyscheduling.JS.JobShop import Constraints
+from pyscheduling.Problem import Objective
 
 try:
     import docplex
@@ -19,68 +19,12 @@ except ImportError:
 
 DOCPLEX_IMPORTED = True if "docplex" in sys.modules else False
 
-@dataclass
+@dataclass(init=False)
 class JmCmax_Instance(JobShop.JobShopInstance):
-    P: List[List[int]] = field(default_factory=list)  # Processing time
-
-    @classmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
-
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            JmCmax_Instance:
-
-        """
-        f = open(path, "r")
-        content = f.read().split('\n')
-        ligne0 = content[0].split(' ')
-        n = int(ligne0[0])  # number of configuration
-        m = int(ligne0[1])  # number of jobs
-        i = 1
-        instance = cls("test", n, m)
-        instance.P, i = instance.read_P(content, i)
-        f.close()
-        return instance
-
-    @classmethod
-    def generate_random(cls, jobs_number: int, configuration_number: int, protocol: JobShop.GenerationProtocol = JobShop.GenerationProtocol.BASE, law: JobShop.GenerationLaw = JobShop.GenerationLaw.UNIFORM, Pmin: int = 10, Pmax: int = 100, InstanceName: str = ""):
-        """Random generation of JmCmax problem instance
-
-        Args:
-            jobs_number (int): number of jobs of the instance
-            configuration_number (int): number of machines of the instance
-            protocol (JobShop.GenerationProtocol, optional): given protocol of generation of random instances. Defaults to JobShop.GenerationProtocol.VALLADA.
-            law (JobShop.GenerationLaw, optional): probablistic law of generation. Defaults to JobShop.GenerationLaw.UNIFORM.
-            Pmin (int, optional): Minimal processing time. Defaults to -1.
-            Pmax (int, optional): Maximal processing time. Defaults to -1.
-            InstanceName (str, optional): name to give to the instance. Defaults to "".
-
-        Returns:
-            JmCmax_Instance: the randomly generated instance
-        """
-        instance = cls(InstanceName, jobs_number, configuration_number)
-        instance.P = instance.generate_P(protocol, law, Pmin, Pmax)
-        return instance
-
-    def to_txt(self, path: Path) -> None:
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        f = open(path, "w")
-        f.write(str(self.n)+" "+str(self.m)+"\n")
-        for job in self.P:
-            for operation in job:
-                f.write(str(operation[0])+"\t"+str(operation[1])+"\t")
-            f.write("\n")
-        f.close()
+    
+    P: List[List[Tuple[int, int]]] # Processing time
+    constraints: ClassVar[List[Constraints]] = [Constraints.P]
+    objective: ClassVar[Objective] = Objective.Cmax
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -89,14 +33,7 @@ class JmCmax_Instance(JobShop.JobShopInstance):
             object: default solving method
         """
         return Heuristics.shifting_bottleneck
-
-    def get_objective(self):
-        """to get the objective tackled by the instance
-
-        Returns:
-            RootProblem.Objective: Makespan
-        """
-        return RootProblem.Objective.Cmax
+    
 
 class ExactSolvers():
 
@@ -114,8 +51,8 @@ if DOCPLEX_IMPORTED:
     class CSP():
 
         CPO_STATUS = {
-            "Feasible": RootProblem.SolveStatus.FEASIBLE,
-            "Optimal": RootProblem.SolveStatus.OPTIMAL
+            "Feasible": Problem.SolveStatus.FEASIBLE,
+            "Optimal": Problem.SolveStatus.OPTIMAL
         }
 
         class MyCallback(CpoCallback):
@@ -251,12 +188,12 @@ if DOCPLEX_IMPORTED:
                     "MemUsage": msol.get_infos()["MemoryUsage"]
                 }
                 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=msol.get_infos()["TotalTime"],
                     time_to_best= mycallback.best_sol_time,
                     status=CSP.CPO_STATUS.get(
-                        msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
+                        msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
                     kpis=kpis
                 )
 
@@ -268,7 +205,7 @@ if DOCPLEX_IMPORTED:
 class Heuristics(js_methods.Heuristics):
 
     @staticmethod
-    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> RootProblem.SolveResult:
+    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> Problem.SolveResult:
         """contains a list of static dispatching rules to be chosen from
 
         Args:
@@ -345,7 +282,7 @@ class Heuristics(js_methods.Heuristics):
 
         solution.compute_objective()
         
-        return RootProblem.SolveResult(best_solution=solution,status=RootProblem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

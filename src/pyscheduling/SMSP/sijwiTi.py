@@ -1,17 +1,25 @@
+from dataclasses import dataclass
 from math import exp
 from time import perf_counter
-from typing import List
+from typing import ClassVar, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Constraints, Objective
-from pyscheduling.SMSP.SingleMachine import single_instance
+from pyscheduling.Problem import Objective
+from pyscheduling.SMSP.SingleMachine import Constraints
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
-@single_instance([Constraints.W, Constraints.D, Constraints.S], Objective.wiTi)
+@dataclass(init=False)
 class sijwiTi_Instance(SingleMachine.SingleInstance):
+
+    P: List[int]
+    W: List[int]
+    D: List[int]
+    S: List[List[int]]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.D, Constraints.S]
+    objective: ClassVar[Objective] = Objective.wiTi
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -52,7 +60,7 @@ class Heuristics():
             prev_job = taken_job
         solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @classmethod
     def all_methods(cls):

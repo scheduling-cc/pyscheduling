@@ -1,15 +1,26 @@
+from dataclasses import dataclass
 from statistics import mean
 from time import perf_counter
+from typing import ClassVar, List
 
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
-from pyscheduling.Problem import Constraints, Objective
+import pyscheduling.Problem as Problem
+from pyscheduling.PMSP.ParallelMachines import Constraints
+from pyscheduling.Problem import Job, Objective, Solver
 
 
-@parallel_instance([Constraints.R,Constraints.D,Constraints.W,Constraints.S], Objective.wiTi)
+@dataclass(init=False)
 class RmridiSijkWiTi_Instance(ParallelMachines.ParallelInstance):
     
+    P: List[List[int]]
+    W: List[int]
+    R: List[int]
+    D: List[int]
+    S: List[List[List[int]]]
+    constraints: ClassVar[Constraints] = [Constraints.P, Constraints.W, Constraints.R, Constraints.D, Constraints.S]
+    objective: ClassVar[Objective] = Objective.wiTi
+
     def init_sol_method(self):
         return Heuristics.BIBA
     

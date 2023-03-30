@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 
-from pyscheduling.Problem import Objective, Constraints
+from pyscheduling.Problem import Objective, Constraints, Constraints_Enum
 from pyscheduling.SMSP import *
 
 
@@ -37,7 +37,7 @@ class Problem():
          as described in problems global dict
         """
         if self.objective is not None and self.constraints != []: 
-            self.constraints.sort()
+            self.constraints = sorted(self.constraints, key=Constraints.sorting_func)
             self.key = (tuple(self.constraints),self.objective)
             try:
                 problems[self.key]
@@ -94,10 +94,12 @@ class Problem():
         """
         if type(constraints) == list : 
             for constraint in constraints :
-                if type(constraint) != Constraints : raise  TypeError("Only Constraints Enum elements are allowed :\n"+Constraints.toString())
+                print(constraint,Constraints)
+                print(issubclass(constraint,Constraints))
+                if type(constraint) != Constraints : raise  TypeError("Only Constraints Enum elements are allowed :\n"+Constraints_Enum.to_string())
             self.constraints.extend([constraint for constraint in constraints if constraint not in self.constraints])
         elif (type(constraints) == Constraints) and (constraints not in self.constraints): self.constraints.append(constraints)
-        else: raise  TypeError("Only Constraints Enum elements are allowed :\n"+Constraints.toString())
+        else: raise  TypeError("Only Constraints Enum elements are allowed :\n"+Constraints_Enum.to_string())
         self.set_key()
 
     def remove_constraint(self, constraint : Constraints):

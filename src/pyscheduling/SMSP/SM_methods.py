@@ -5,7 +5,7 @@ from math import exp
 from time import perf_counter
 from typing import Callable, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 from pyscheduling.Problem import Objective, Solver
 from pyscheduling.SMSP.SingleMachine import Job
@@ -42,7 +42,7 @@ class Heuristics():
         remaining_jobs_list.sort(key=sort_rule, reverse=reverse)
         solution.machine.job_schedule = [SingleMachine.Job(job_id, -1, -1) for job_id in remaining_jobs_list]
         solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     def dynamic_dispatch_rule(instance : SingleMachine.SingleInstance, rule : Callable, filter_fun: Callable, reverse: bool = False):
         """Orders the jobs respecting the filter according to the rule. 
@@ -77,7 +77,7 @@ class Heuristics():
             remaining_jobs_list.remove(taken_job)
             insert_idx += 1
         
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     @staticmethod
     def BIBA(instance: SingleMachine.SingleInstance):
@@ -90,7 +90,7 @@ class Heuristics():
             SolveResult: the solve result of the execution of the heuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         solveResult.all_solutions = []
         solution = SingleMachine.SingleSolution(instance)
         remaining_jobs_list = [i for i in range(instance.n)]
@@ -113,7 +113,7 @@ class Heuristics():
         solveResult.all_solutions.append(solution)
         solveResult.best_solution = solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
     @staticmethod
@@ -130,7 +130,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         best_solution = None
         for _ in range(n_iterations):
             solution = SingleMachine.SingleSolution(instance)
@@ -163,7 +163,7 @@ class Heuristics():
 
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
 class Metaheuristics():
@@ -206,7 +206,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
 
         local_search = SingleMachine.SM_LocalSearch()
 
@@ -243,7 +243,7 @@ class Metaheuristics():
             N += 1
 
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),
@@ -297,7 +297,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
 
         local_search = SingleMachine.SM_LocalSearch()
 
@@ -347,7 +347,7 @@ class Metaheuristics():
             N += 1
 
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             runtime=(perf_counter() - first_time),
             time_to_best=time_to_best,
@@ -370,8 +370,8 @@ if DOCPLEX_IMPORTED:
     class CSP():
 
         CPO_STATUS = {
-            "Feasible": RootProblem.SolveStatus.FEASIBLE,
-            "Optimal": RootProblem.SolveStatus.OPTIMAL
+            "Feasible": Problem.SolveStatus.FEASIBLE,
+            "Optimal": Problem.SolveStatus.OPTIMAL
         }
 
         class MyCallback(CpoCallback):
@@ -496,12 +496,12 @@ if DOCPLEX_IMPORTED:
                     else:
                         kpis[f'Obj-{stop_t}'] = prev
 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=msol.get_infos()["TotalTime"],
                     time_to_best=mycallback.best_sol_time,
                     status=CSP.CPO_STATUS.get(
-                        msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
+                        msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
                     kpis=kpis
                 )
 

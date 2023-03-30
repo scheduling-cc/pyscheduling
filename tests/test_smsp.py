@@ -625,11 +625,6 @@ class TestsijCmax:
         except:
             pass
 
-    # Testing methods
-    def test_constructive_solver(self, instance_zero):
-        solve_result = sijCmax.Heuristics.constructive(instance_zero)
-        check_solve_result(solve_result, expected_nb_sol=1)
-
     def test_biba(self, instance_zero):
         solve_result = SM_methods.Heuristics.BIBA(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)

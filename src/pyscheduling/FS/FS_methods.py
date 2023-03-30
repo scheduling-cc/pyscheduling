@@ -6,7 +6,7 @@ from time import perf_counter
 from typing import Callable
 
 import pyscheduling.FS.FlowShop as FS
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job
 
 try:
@@ -43,7 +43,7 @@ class Heuristics():
         remaining_jobs_list.sort(key=sort_rule, reverse=reverse)
         solution.job_schedule = [Job(job_id, -1, -1) for job_id in remaining_jobs_list]
         solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
     def BIBA(instance: FS.FlowShopInstance):
         """the greedy constructive heuristic (Best Insertion Based approach) to find an initial solution of flowshop instances 
@@ -75,7 +75,7 @@ class Heuristics():
             solution.compute_objective(startIndex=len(solution.job_schedule) - 1)
             remaining_jobs_list.remove(taken_job)
         
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def grasp(instance: FS.FlowShopInstance, p: float = 0.5, r: int = 0.5, n_iterations: int = 5):
@@ -91,7 +91,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         best_solution = None
         for _ in range(n_iterations):
             solution = FS.FlowShopSolution(instance)
@@ -122,7 +122,7 @@ class Heuristics():
 
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
     def MINIT(instance : FS.FlowShopInstance):
@@ -177,7 +177,7 @@ class Heuristics():
             remaining_jobs_list.remove(taken_job)
             solution.compute_objective(startIndex=len(job_schedule)-1)
 
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
 class Metaheuristics():
 
@@ -216,7 +216,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
         
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
         
         local_search = FS.FS_LocalSearch()
 
@@ -253,7 +253,7 @@ class Metaheuristics():
             N += 1
            
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             solutions=all_solutions,
             runtime=(perf_counter() - first_time),
@@ -305,7 +305,7 @@ class Metaheuristics():
         solution_init = init_sol_method(instance).best_solution
 
         if not solution_init:
-            return RootProblem.SolveResult()
+            return Problem.SolveResult()
 
         local_search = FS.FS_LocalSearch()
 
@@ -352,7 +352,7 @@ class Metaheuristics():
             N += 1
 
         # Construct the solve result
-        solve_result = RootProblem.SolveResult(
+        solve_result = Problem.SolveResult(
             best_solution=solution_best,
             runtime=(perf_counter() - first_time),
             time_to_best=time_to_best,
@@ -365,8 +365,8 @@ if DOCPLEX_IMPORTED:
     class CSP():
 
         CPO_STATUS = {
-            "Feasible": RootProblem.SolveStatus.FEASIBLE,
-            "Optimal": RootProblem.SolveStatus.OPTIMAL
+            "Feasible": Problem.SolveStatus.FEASIBLE,
+            "Optimal": Problem.SolveStatus.OPTIMAL
         }
 
         class MyCallback(CpoCallback):
@@ -491,13 +491,13 @@ if DOCPLEX_IMPORTED:
                         model.add( model.end_before_start(E_i[i][k - 1], E_i[i][k]) )
 
                 # Add objective
-                if objective == RootProblem.Objective.Cmax:
+                if objective == Problem.Objective.Cmax:
                     model.add( model.minimize( model.max(model.end_of(job_i) for i in E for job_i in E_i[i]) ) )
-                elif objective == RootProblem.Objective.wiCi:
+                elif objective == Problem.Objective.wiCi:
                     model.add(model.minimize( sum( instance.W[i] * model.end_of(E_i[i][-1]) for i in E ) )) # sum_{i in E} wi * ci
-                elif objective == RootProblem.Objective.wiFi:
+                elif objective == Problem.Objective.wiFi:
                     model.add(model.minimize( sum( instance.W[i] * (model.end_of(E_i[i][-1]) - instance.R[i]) for i in E ) )) # sum_{i in E} wi * (ci - ri)
-                elif objective == RootProblem.Objective.wiTi:
+                elif objective == Problem.Objective.wiTi:
                     model.add( model.minimize( 
                         sum( instance.W[i] * model.max(model.end_of(E_i[i]) - instance.D[i], 0) for i in E ) # sum_{i in E} wi * Ti
                     ))
@@ -532,12 +532,12 @@ if DOCPLEX_IMPORTED:
                     else:
                         kpis[f'Obj-{stop_t}'] = prev
 
-                solve_result = RootProblem.SolveResult(
+                solve_result = Problem.SolveResult(
                     best_solution=sol,
                     runtime=msol.get_infos()["TotalTime"],
                     time_to_best=mycallback.best_sol_time,
                     status=CSP.CPO_STATUS.get(
-                        msol.get_solve_status(), RootProblem.SolveStatus.INFEASIBLE),
+                        msol.get_solve_status(), Problem.SolveStatus.INFEASIBLE),
                     kpis=kpis
                 )
 

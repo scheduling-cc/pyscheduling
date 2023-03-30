@@ -9,300 +9,22 @@ from typing import List
 
 import numpy as np
 
-import pyscheduling.Problem as RootProblem
-from pyscheduling.Problem import Job, GenerationLaw
+import pyscheduling.Problem as Problem
+from pyscheduling.Problem import Job
+from pyscheduling.BaseConstraints import BaseConstraints as Constraints
 
 
 class GenerationProtocol(Enum):
     BASE = 1
 
 @dataclass
-class FlowShopInstance(RootProblem.Instance):
+class FlowShopInstance(Problem.BaseInstance):
 
     n: int  # n : Number of jobs
     m: int  # m : Number of machines
 
-    @classmethod
-    @abstractmethod
-    def read_txt(cls, path: Path):
-        """Read an instance from a txt file according to the problem's format
-
-        Args:
-            path (Path): path to the txt file of type Path from the pathlib module
-
-        Raises:
-            FileNotFoundError: when the file does not exist
-
-        Returns:
-            FlowShopInstance:
-
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def generate_random(cls, protocol: str = None):
-        """Generate a random instance according to a predefined protocol
-
-        Args:
-            protocol (string): represents the protocol used to generate the instance
-
-        Returns:
-            FlowShopInstance:
-        """
-        pass
-
-    @abstractmethod
-    def to_txt(self, path: Path) -> None:
-        """Export an instance to a txt file
-
-        Args:
-            path (Path): path to the resulting txt file
-        """
-        pass
-
-    def read_P(self, content: List[str], startIndex: int):
-        """Read the Processing time matrix from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the processing time matrix
-
-        Returns:
-           (list[list[int]],int): (Matrix of processing time, index of the next section of the instance)
-        """
-        P = []  # Matrix P_jk : Execution time of job j on machine k
-        i = startIndex
-        for _ in range(self.n):
-            ligne = content[i].strip().split('\t')
-            P_k = [int(ligne[j]) for j in range(1, self.m*2, 2)]
-            P.append(P_k)
-            i += 1
-        return (P, i)
-
-    def read_R(self, content: List[str], startIndex: int):
-        """Read the release time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the release time table
-
-        Returns:
-           (list[int],int): (Table of release time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        ligne = content[i].strip().split('\t')
-        ri = []  # Table : Release time of job i
-        for j in range(1, len(ligne), 2):
-            ri.append(int(ligne[j]))
-        return (ri, i+1)
-
-    def read_S(self, content: List[str], startIndex: int):
-        """Read the Setup time table of matrices from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the Setup time table of matrices
-
-        Returns:
-           (list[list[list[int]]],int): (Table of matrices of setup time, index of the next section of the instance)
-        """
-        i = startIndex
-        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
-        i += 1  # Skip SSD
-        endIndex = startIndex+1+self.n*self.m+self.m
-        while i != endIndex:
-            i = i+1  # Skip Mk
-            Si = []
-            for k in range(self.n):
-                ligne = content[i].strip().split('\t')
-                Sij = [int(ligne[j]) for j in range(self.n)]
-                Si.append(Sij)
-                i += 1
-            S.append(Si)
-        return (S, i)
-
-    def read_D(self, content: List[str], startIndex: int):
-        """Read the due time table from a list of lines extracted from the file of the instance
-
-        Args:
-            content (list[str]): lines of the file of the instance
-            startIndex (int): Index from where starts the due time table
-
-        Returns:
-           (list[int],int): (Table of due time, index of the next section of the instance)
-        """
-        i = startIndex + 1
-        ligne = content[i].strip().split('\t')
-        di = []  # Table : Due time of job i
-        for j in range(1, len(ligne), 2):
-            di.append(int(ligne[j]))
-        return (di, i+1)
-
-    def generate_P(self, protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int):
-        """Random generation of processing time matrix
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-
-        Returns:
-           list[list[int]]: Matrix of processing time
-        """
-        P = []
-        for j in range(self.n):
-            Pj = []
-            for i in range(self.m):
-                if law.name == "UNIFORM":  # Generate uniformly
-                    n = int(random.uniform(Pmin, Pmax))
-                elif law.name == "NORMAL":  # Use normal law
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-                    while n < Pmin or n > Pmax:
-                        value = np.random.normal(0, 1)
-                        n = int(abs(Pmin+Pmax*value))
-                Pj.append(n)
-            P.append(Pj)
-
-        return P
-
-    def generate_R(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], Pmin: int, Pmax: int, alpha: float):
-        """Random generation of release time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[list[float]]): Matrix of processing time
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-            alpha (float): release time factor
-
-        Returns:
-            list[int]: release time table
-        """
-        ri = []
-        for j in range(self.n):
-            sum_p = sum(PJobs[j])
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(0, alpha * (sum_p / self.m)))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            ri.append(n)
-
-        return ri
-
-    def generate_S(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[List[float]], gamma: float, Smin: int = 0, Smax: int = 0):
-        """Random generation of setup time table of matrices
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[list[float]]): Matrix of processing time
-            gamma (float): Setup time factor
-            Smin (int, optional): Minimal setup time . Defaults to 0.
-            Smax (int, optional): Maximal setup time. Defaults to 0.
-
-        Returns:
-            list[list[list[int]]]: Setup time table of matrix
-        """
-        S = []
-        for i in range(self.m):
-            Si = []
-            for j in range(self.n):
-                Sij = []
-                for k in range(self.n):
-                    if j == k:
-                        Sij.append(0)  # check space values
-                    else:
-                        if law.name == "UNIFORM":  # Use uniform law
-                            min_p = min(PJobs[k][i], PJobs[j][i])
-                            max_p = max(PJobs[k][i], PJobs[j][i])
-                            Smin = int(gamma * min_p)
-                            Smax = int(gamma * max_p)
-                            Sij.append(int(random.uniform(Smin, Smax)))
-
-                        elif law.name == "NORMAL":  # Use normal law
-                            value = np.random.normal(0, 1)
-                            setup = int(abs(Smin+Smax*value))
-                            while setup < Smin or setup > Smax:
-                                value = np.random.normal(0, 1)
-                                setup = int(abs(Smin+Smax*value))
-                            Sij.append(setup)
-                Si.append(Sij)
-            S.append(Si)
-
-        return S
-
-    def generate_W(self, protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int):
-        """Random generation of jobs weights table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            Wmin (int): Minimal weight
-            Wmax (int): Maximal weight
-
-        Returns:
-           list[int]: Table of jobs weights
-        """
-        W = []
-        for j in range(self.n):
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(Wmin, Wmax))
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Wmin+Wmax*value))
-                while n < Wmin or n > Wmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Wmin+Wmax*value))
-            W.append(n)
-
-        return W
-
-    def generate_D(self, protocol: GenerationProtocol, law: GenerationLaw, PJobs: List[float], Pmin: int, Pmax: int, due_time_factor: float):
-        """Random generation of due time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            PJobs (list[float]): Table of processing time
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-            fraction (float): due time factor
-
-        Returns:
-            list[int]: due time table
-        """
-        di = []
-        PJobs = [min(PJobs[j]) for j in range(self.n)]
-        sumP = sum(PJobs)
-        for j in range(self.n):
-            if hasattr(self, 'R'):
-                startTime = self.R[j] + PJobs[j]
-            else:
-                startTime = PJobs[j]
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(
-                    startTime, startTime + due_time_factor * sumP))
-
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-
-            di.append(n)
-
-        return di
+    def __init__(self, n: int, m: int, name: str = "Unknown", **kwargs):
+        super().__init__(n, m=m, name = name, **kwargs)
 
 
 @dataclass
@@ -406,7 +128,7 @@ class Machine:
         return idleTime
 
 @dataclass
-class FlowShopSolution(RootProblem.Solution):
+class FlowShopSolution(Problem.BaseSolution):
 
     machines: List[Machine]
     job_schedule = List[int]
@@ -476,15 +198,15 @@ class FlowShopSolution(RootProblem.Solution):
 
     def fix_objective(self):
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             self.objective_value = self.machines[-1].objective_value
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             self.objective_value = sum( self.instance.W[job.id] * job.end_time for job in self.machines[-1].oper_schedule )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             self.objective_value = sum( self.instance.W[job.id] * (job.end_time - self.instance.R[job.id]) for job in self.machines[-1].oper_schedule )
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             self.objective_value = sum( self.instance.W[job.id] * max(job.end_time-self.instance.D[job.id],0) for job in self.machines[-1].oper_schedule )
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             self.objective_value = max( 0, max( job.end_time-self.instance.D[job.id] for job in self.machines[-1].oper_schedule ) )
 
         return self.objective_value
@@ -534,15 +256,15 @@ class FlowShopSolution(RootProblem.Solution):
             int: the new objective
         """
         objective = self.instance.get_objective()
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             return end_time
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             return self.objective_value + self.instance.W[job_id] * end_time
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             return self.objective_value + self.instance.W[job_id] * (end_time - self.instance.R[job_id])
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             return self.objective_value + self.instance.W[job_id] * max(end_time-self.instance.D[job_id],0)
-        elif objective == RootProblem.Objective.Lmax:
+        elif objective == Problem.Objective.Lmax:
             return max( self.objective_value, end_time-self.instance.D[job_id]) 
 
     def idle_time(self):
@@ -690,13 +412,13 @@ class FlowShopSolution(RootProblem.Solution):
             
         objective = self.instance.get_objective()
         expected_obj = 0
-        if objective == RootProblem.Objective.Cmax:
+        if objective == Problem.Objective.Cmax:
             expected_obj = max(period[1] for period in job_times.values())
-        elif objective == RootProblem.Objective.wiCi:
+        elif objective == Problem.Objective.wiCi:
             expected_obj = sum( self.instance.W[i] * job_times[i][1] for i in job_times )
-        elif objective == RootProblem.Objective.wiFi:
+        elif objective == Problem.Objective.wiFi:
             expected_obj = sum( self.instance.W[i] * (job_times[i][1] - self.instance.R[i]) for i in job_times)
-        elif objective == RootProblem.Objective.wiTi:
+        elif objective == Problem.Objective.wiTi:
             expected_obj = sum( self.instance.W[i] * max(job_times[i][1]-self.instance.D[i],0) for i in job_times )
 
         if expected_obj != self.objective_value:
@@ -707,7 +429,7 @@ class FlowShopSolution(RootProblem.Solution):
         return is_valid
 
 
-class FS_LocalSearch(RootProblem.LocalSearch):
+class FS_LocalSearch(Problem.LocalSearch):
     
     @staticmethod
     def _iterative_best_insert(solution: FlowShopSolution, inplace: bool = True):

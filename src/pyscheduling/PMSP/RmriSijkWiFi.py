@@ -1,15 +1,24 @@
+from dataclasses import dataclass
 from statistics import mean
+from typing import ClassVar, List
 
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
-import pyscheduling.Problem as RootProblem
-from pyscheduling.PMSP.ParallelMachines import parallel_instance
-from pyscheduling.Problem import Constraints, Job, Objective, Solver
+import pyscheduling.Problem as Problem
+from pyscheduling.PMSP.ParallelMachines import Constraints
+from pyscheduling.Problem import Job, Objective, Solver
 
 
-@parallel_instance([Constraints.R,Constraints.W,Constraints.S], Objective.wiFi)
+@dataclass(init=False)
 class RmriSijkWiFi_Instance(ParallelMachines.ParallelInstance):
     
+    P: List[List[int]]
+    W: List[int]
+    R: List[int]
+    S: List[List[List[int]]]
+    constraints: ClassVar[Constraints] = [Constraints.P, Constraints.W, Constraints.R, Constraints.S]
+    objective: ClassVar[Objective] = Objective.wiFi
+
     def init_sol_method(self):
         return Heuristics.BIBA
     

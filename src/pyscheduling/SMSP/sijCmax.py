@@ -1,15 +1,22 @@
+from dataclasses import dataclass
 from time import perf_counter
+from typing import ClassVar, List
 
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
 import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Constraints, Objective
-from pyscheduling.SMSP.SingleMachine import single_instance
+from pyscheduling.Problem import Objective
+from pyscheduling.SMSP.SingleMachine import Constraints
 from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
-@single_instance([Constraints.S], Objective.Cmax)
+@dataclass(init=False)
 class sijCmax_Instance(SingleMachine.SingleInstance):
+
+    P: List[int]
+    S: List[List[int]]
+    constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.S]
+    objective: ClassVar[Objective] = Objective.Cmax
 
     def init_sol_method(self):
         """Returns the default solving method
@@ -69,7 +76,7 @@ class Heuristics(Methods.Heuristics):
             if (ci > solution.objective_value):
                 solution.objective_value = ci
 
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
 
     @classmethod

@@ -4,7 +4,7 @@ from time import perf_counter
 from typing import Callable
 
 import pyscheduling.JS.JobShop as js
-import pyscheduling.Problem as RootProblem
+import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job
 
 
@@ -56,7 +56,7 @@ class Heuristics():
             remaining_jobs.sort(key=sort_rule, reverse=reverse)
 
         solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def BIBA(instance: js.JobShopInstance):
@@ -103,7 +103,7 @@ class Heuristics():
                 remaining_jobs.remove(taken_job)
         
         solution.compute_objective()
-        return RootProblem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
 
     @staticmethod
     def grasp(instance: js.JobShopInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 5):
@@ -117,7 +117,7 @@ class Heuristics():
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
         startTime = perf_counter()
-        solveResult = RootProblem.SolveResult()
+        solveResult = Problem.SolveResult()
         best_solution = None
 
         for _ in range(n_iterations):
@@ -165,7 +165,7 @@ class Heuristics():
 
         solveResult.best_solution = best_solution
         solveResult.runtime = perf_counter() - startTime
-        solveResult.solve_status = RootProblem.SolveStatus.FEASIBLE
+        solveResult.solve_status = Problem.SolveStatus.FEASIBLE
         return solveResult
 
 class Metaheuristics():
