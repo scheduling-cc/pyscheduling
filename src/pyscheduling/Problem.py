@@ -323,13 +323,10 @@ class Solution(ABC):
                     fig.add_shape(type="rect", x0=task["Start"], x1=task["Finish"], y0=y_ref-barwidth, y1=y_ref+barwidth, line=dict(color=colors["black"])) 
         
         # Cmax value
-        fig.add_annotation(
-            x=cmax_value, 
-            y=-2*barwidth,
+        """fig.add_annotation(x=cmax_value, y=-2*barwidth,
             text=f'Objective_value: {self.objective_value}',
-            font=dict(size=12, color="red", family="Courier New, monospace"),
-            align="right"
-        )
+            font=dict(size=12, color="red", family="Courier New, monospace"), align="right"
+        )"""
 
         if path is not None:
             fig.write_image(path)
