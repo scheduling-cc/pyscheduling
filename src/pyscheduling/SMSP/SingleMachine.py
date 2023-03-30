@@ -24,32 +24,6 @@ class SingleInstance(Problem.BaseInstance):
     def __init__(self, n: int, name: str = "Unknown", **kwargs):
         super().__init__(n, name = name, **kwargs)
 
-    def generate_P(self, protocol: GenerationProtocol, law: RandomDistrib, Pmin: int, Pmax: int):
-        """Random generation of processing time table
-
-        Args:
-            protocol (GenerationProtocol): given protocol of generation of random instances
-            law (GenerationLaw): probablistic law of generation
-            Pmin (int): Minimal processing time
-            Pmax (int): Maximal processing time
-
-        Returns:
-           list[int]: Table of processing time
-        """
-        P = []
-        for j in range(self.n):
-            if law.name == "UNIFORM":  # Generate uniformly
-                n = int(random.uniform(Pmin, Pmax))
-            elif law.name == "NORMAL":  # Use normal law
-                value = np.random.normal(0, 1)
-                n = int(abs(Pmin+Pmax*value))
-                while n < Pmin or n > Pmax:
-                    value = np.random.normal(0, 1)
-                    n = int(abs(Pmin+Pmax*value))
-            P.append(n)
-
-        return P
-
 
 @dataclass
 class Machine:

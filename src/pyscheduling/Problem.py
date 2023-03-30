@@ -203,12 +203,12 @@ class BaseSolution(ABC):
             title='Gantt Chart',
             #bargap=0.1,
             #width=850,
-            height=500,              
+            #height=500,              
             xaxis_title="Time", 
             yaxis_title="Machine",
             hovermode = "x"
         )
-        fig.add_vline(x=cmax_value, line_width=4, line_dash="dashdot", line_color="Red")
+        #fig.add_vline(x=cmax_value, line_width=4, line_dash="dashdot", line_color="Red")
 
         # Add rectangle shapes
         if not hasattr(self.instance, "S"):
@@ -218,10 +218,10 @@ class BaseSolution(ABC):
                     fig.add_shape(type="rect", x0=task["Start"], x1=task["Finish"], y0=y_ref-barwidth, y1=y_ref+barwidth, line=dict(color=colors["black"])) 
         
         # Cmax value
-        """fig.add_annotation(x=cmax_value, y=-2*barwidth,
+        fig.add_annotation(x=cmax_value, y=-2*barwidth,
             text=f'Objective_value: {self.objective_value}',
             font=dict(size=12, color="red", family="Courier New, monospace"), align="right"
-        )"""
+        )
 
         if path is not None:
             fig.write_image(path)

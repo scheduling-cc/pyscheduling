@@ -4,6 +4,9 @@ from math import exp
 from time import perf_counter
 from typing import List
 
+import numpy as np
+from numpy.random import choice as np_choice
+
 import pyscheduling.PMSP.ParallelMachines as pm
 import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job
@@ -548,11 +551,11 @@ class AntColony(object):
 
     def __init__(self, instance: pm.ParallelInstance, n_ants: int = 10, n_best: int = 1,
                  n_iterations: int = 100, alpha=1, beta=1, phi: float = 0.081, evaporation: float = 0.01,
-                 q0: float = 0.5, best_ants: int = 10, pheromone_init=10.0):
+                 q0: float = 0.5, best_ants: int = 10, pheromone_init=10):
         
         """_summary_
             Args:
-                distances (2D array): Square matrix of distances. Diagonal is assumed to be inf.
+                distances (2D numpy.array): Square matrix of distances. Diagonal is assumed to be np.inf.
                 n_ants (int): Number of ants running per iteration
                 n_best (int): Number of best ants who deposit pheromone
                 n_iteration (int): Number of iterations
@@ -578,12 +581,11 @@ class AntColony(object):
 
     def solve(self):
         """Main method used to solve the problem and call the different steps
-
         Returns:
             SolveResult: Object containing the solution and useful metrics
         """
         shortest_path = None
-        all_time_shortest_objective_value = ("placeholder", float('-inf'))
+        all_time_shortest_objective_value = ("placeholder", np.inf)
         for i in range(self.n_iterations):
             all_solutions = self.gen_all_paths()
             all_solutions = self.improve_best_ants(all_solutions)
@@ -602,14 +604,15 @@ class AntColony(object):
 
     def init_graph(self):
         """ Initialize the two stage graph with initial values of pheromone
-
         Returns:
-            list[list[int]]: list of the two stage graph consisting of array elements
+            list[np.array]: list of the two stage graph consisting of np.array elements
         """
         aco_graph = []
         # Initializing pheromone
-        pheromone_stage_1 = [[self.pheromone_init for j in range(self.instance.m)] for i in range(self.instance.n)] 
-        pheromone_stage_2 = [[[self.pheromone_init for k in range(self.instance.n)] for j in range(self.instance.n)] for i in range(self.instance.m)] 
+        pheromone_stage_1 = np.full(
+            (self.instance.n, self.instance.m), self.pheromone_init, dtype=float)
+        pheromone_stage_2 = np.full(
+            (self.instance.m, self.instance.n, self.instance.n), self.pheromone_init, dtype=float)
         aco_graph.append(pheromone_stage_1)
         aco_graph.append(pheromone_stage_2)
 
@@ -620,7 +623,6 @@ class AntColony(object):
 
     def spread_pheronome_global(self, all_solutions: List[pm.ParallelSolution]):
         """Update pheromone levels globally after finding new solutions
-
         Args:
             all_solutions (list[ParallelInstance_Solution]): list of generated solutions
         """
@@ -630,18 +632,16 @@ class AntColony(object):
             for k in range(solution.instance.m):
                 machine_k = solution.machines[k]
                 for i, task_i in enumerate(machine_k.job_schedule):
-                    self.aco_graph[0][task_i.id][k] += self.phi * self.LB / objective_value_i if objective_value_i > 0 else self.phi
+                    self.aco_graph[0][task_i.id,k] += self.phi * self.LB / objective_value_i if objective_value_i > 0 else self.phi
                     
                     if i > 0:
                         prev_task = machine_k.job_schedule[i-1]
-                        self.aco_graph[1][k][prev_task.id][task_i.id] += self.phi * self.LB / objective_value_i if objective_value_i > 0 else self.phi
+                        self.aco_graph[1][k, prev_task.id,task_i.id] += self.phi * self.LB / objective_value_i if objective_value_i > 0 else self.phi
 
     def improve_best_ants(self, all_solutions):
         """Apply local search to the best solution
-
         Args:
             all_solutions (_type_): list of all generated solutions
-
         Returns:
             list[RmSijkCmax_Solution]: list of updated solutions
         """
@@ -655,7 +655,6 @@ class AntColony(object):
 
     def gen_all_paths(self):
         """Calls the gen_path function to generate all solutions from ants paths
-
         Returns:
             list[RmSijkCmax_Solution]: list of new solutions  
         """
@@ -669,7 +668,6 @@ class AntColony(object):
 
     def gen_path(self):
         """Generate one new solution from one ant's path, it calls the two stages: affect_tasks and sequence_tasks
-
         Returns:
             RmSijkCmax_Solution: new solution from ant's path
         """
@@ -685,7 +683,6 @@ class AntColony(object):
 
     def affect_tasks(self):
         """Generates an affectation from the first stage graph and the path the ant went through
-
         Returns:
             list[list[int]]: List of tasks inside each machine 
         """
@@ -693,40 +690,38 @@ class AntColony(object):
         affectation = [[] for _ in range(self.instance.m)]
         for i in range(self.instance.n):
             q = random.random()
-            row = [(pheromone[i][j] ** self.alpha) * ((1 / self.instance.P[i][j]) ** self.beta) for j in range(self.instance.m) ]
-            if sum(row) == 0:
+            row = (pheromone[i] ** self.alpha) * \
+                ((1 / np.array(self.instance.P[i])) ** self.beta)
+            row = np.nan_to_num(row)
+            if row.sum() == 0:
                 for j in range(self.instance.m):
                     row[j] = len(affectation[j])
 
-                if sum(row) == 0:
+                if row.sum() == 0:
                     machine = random.randrange(0, self.instance.m)
                 else:
-                    sum_row = sum(row)
-                    norm_row = [elem / sum_row for elem in row]
+                    norm_row = row / row.sum()
                     all_inds = range(len(pheromone[i]))
-                    machine = random.choices(all_inds, weights=norm_row, k=1)[0] # np_choice(all_inds, 1, p=norm_row)[0]
+                    machine = np_choice(all_inds, 1, p=norm_row)[0]
 
             elif q < self.q0:
-                get_f = lambda i: row[i]
-                machine = max(range(len(row)), key=get_f)
+                machine = np.argmax(row)
             else:
-                sum_row = sum(row)
-                norm_row = [elem / sum_row for elem in row]
+                norm_row = row / row.sum()
                 all_inds = range(len(pheromone[i]))
-                machine = random.choices(all_inds, weights=norm_row, k=1)[0] #np_choice(all_inds, 1, p=norm_row)[0]
+                machine = np_choice(all_inds, 1, p=norm_row)[0]
 
             # Spread Pheromone Locally
-            pheromone[i][machine] = (1-self.evaporation) * pheromone[i][machine]
+            pheromone[i, machine] = (
+                1-self.evaporation) * pheromone[i, machine]
 
             affectation[machine].append(i)
         return affectation
 
     def sequence_tasks(self, affectation):
         """Uses the affectation from stage 1 to sequence tasks inside machines using stage 2 of the graph
-
         Args:
             affectation (list[list[int]]): affectation to machines
-
         Returns:
             ParallelMachines.ParallelSolution: complete solution of one ant
         """
@@ -742,7 +737,7 @@ class AntColony(object):
                 prev = first_task
 
                 for i in range(len(affectation[m]) - 1):
-                    pheromone_i = pheromone[m][prev]
+                    pheromone_i = pheromone[m, prev]
                     next_task = self.pick_task(prev, m, pheromone_i, affectation[m], [
                                                job.id for job in machine_schedule])
 
@@ -750,7 +745,8 @@ class AntColony(object):
                     pheromone_i[next_task] = (
                         1 - self.evaporation) * pheromone_i[next_task]
 
-                    machine_schedule.append(pm.Job(next_task, 0, 0))
+                    machine_schedule.append(
+                        pm.Job(next_task, 0, 0))
 
             current_machine = solution_path.machines[m]
             current_machine.job_schedule = machine_schedule
@@ -761,41 +757,37 @@ class AntColony(object):
 
     def pick_task(self, prev, m, pheromone, affected_tasks, visited):
         """Select a task to affect according to pheromone levels and the graph's state
-
         Args:
             prev (int): previous segment in the graph
             m (int): number of machines
-            pheromone (array): pheromone levels
+            pheromone (np.array): pheromone levels
             affected_tasks (list): list of affected tasks
             visited (list): list of visited segments
-
         Returns:
             int: next task to affect
         """
-        pheromone_cp = []
-        for i in range(len(pheromone)):
-            if i in affected_tasks and i not in visited and i != prev:
-                pheromone_cp.append(pheromone[i])
-            else:
-                pheromone_cp.append(0)
+        pheromone_cp = np.copy(pheromone)
 
-        setups = list(self.instance.S[m][prev])
+        pheromone_cp[:] = 0
+        pheromone_cp[affected_tasks] = pheromone[affected_tasks]
+        pheromone_cp[visited] = 0
+        pheromone_cp[prev] = 0
+
+        setups = np.array(self.instance.S[m][prev])
         setups[prev] = 1
-        for i in visited:
-            setups[i] = 1
+        setups[visited] = 1
 
         q = random.random()
-        jobs_row = [ (pheromone_cp[i] ** self.alpha) * ((1 / setups[j]) ** self.beta) for j in range(self.instance.n) ]
-        
         if q < self.q0:
-            get_f = lambda i: jobs_row[i]
-            next_task = max(range(len(jobs_row)), key=get_f)
-        
+            next_task = np.argmax(
+                pheromone_cp ** self.alpha * ((1.0 / setups) ** self.beta))
         else:
-            sum_row = sum(jobs_row)
-            norm_row = [elem / sum_row for elem in jobs_row]
-            all_inds = range(len(pheromone[i]))
-            next_task = random.choices(all_inds, weights=norm_row, k=1)[0] #np_choice(all_inds, 1, p=norm_row)[0]
+            row = pheromone_cp ** self.alpha * ((1.0 / setups) ** self.beta)
+            row = np.nan_to_num(row)
+
+            norm_row = row / row.sum()
+            all_inds = range(self.instance.n)
+            next_task = np_choice(all_inds, 1, p=norm_row)[0]
 
         return next_task
 
@@ -807,7 +799,7 @@ class AntColony(object):
             for k in range(self.instance.m):
                 r2 = random.random()
                 if r2 < r1:
-                    self.aco_graph[0][i][k] = self.pheromone_init
+                    self.aco_graph[0][i, k] = self.pheromone_init
 
         r3 = random.random()
         for k in range(self.instance.m):
@@ -815,4 +807,4 @@ class AntColony(object):
                 for j in range(self.instance.n):
                     r4 = random.random()
                     if r4 < r3:
-                        self.aco_graph[1][k][i][j] = self.pheromone_init
+                        self.aco_graph[1][k, i, j] = self.pheromone_init
