@@ -33,3 +33,7 @@
 ## v0.1.7 (02/03/2023)
 
 - Added all 4 categories' generic problems, downgraded to python3.8
+
+## v0.1.8 (05/04/2023)
+
+- Refactored constraints representation, used plotly for gantt

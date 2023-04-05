@@ -16,7 +16,7 @@ import pyscheduling.SMSP.interface as sm
 problem = sm.Problem()
 problem.add_constraints([sm.Constraints.W,sm.Constraints.D])
 problem.set_objective(sm.Objective.wiTi)
-problem.generate_random(jobs_number=20,Wmax=10)
+problem.generate_random(n=20,Wmax=10)
 solution = problem.solve(problem.heuristics["ACT"])
 print(solution)
 ```
