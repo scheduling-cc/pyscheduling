@@ -186,9 +186,9 @@ class BaseSolution(ABC):
             path (Path, optional): The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
         """
         barwidth = 0.2
-        colors = {'Idle': 'rgb(78, 110, 129)',
-                'Setup': 'rgb(246, 107, 14)',
-                'Processing': 'rgb(52, 152, 219)',
+        colors = {'Idle': 'rgb(238, 238, 238)',
+                'Setup': 'rgb(255, 178, 0)',
+                'Processing': 'rgb(39, 123, 192)',
                 'black': 'rgb(0, 0, 0)'}
         
         cmax_value = max(task["Finish"] for task in tasks_df)
@@ -200,12 +200,15 @@ class BaseSolution(ABC):
         fig.update_yaxes(autorange="reversed") #if not specified as 'reversed', the tasks will be listed from bottom up       
         fig.update_layout(
             xaxis_type='linear',
-            title='Gantt Chart',
+            title='<b>Gantt Chart</b>',
             #bargap=0.1,
             #width=850,
             #height=500,              
-            xaxis_title="Time", 
-            yaxis_title="Machine",
+            xaxis_title="<b>Time</b>", 
+            yaxis_title="<b>Machine</b>",
+            font=dict(
+                size=16,
+            ),
             hovermode = "x"
         )
         #fig.add_vline(x=cmax_value, line_width=4, line_dash="dashdot", line_color="Red")
@@ -217,6 +220,20 @@ class BaseSolution(ABC):
                     y_ref = int(task["Task"][1:])
                     fig.add_shape(type="rect", x0=task["Start"], x1=task["Finish"], y0=y_ref-barwidth, y1=y_ref+barwidth, line=dict(color=colors["black"])) 
         
+        # add annotations
+        annots = []
+        for task in tasks_df:
+            if task["Type"] == "Processing":
+                machine = task["Task"]
+                x_annot = task["Start"] + (task["Finish"] - task["Start"] + 1) // 2
+                y_annot = y_max - (int(machine[1:]) + 1)
+                annots.append( dict(x= x_annot,y=y_annot,text=task["Description"], showarrow=False, font=dict(color='white')) )
+
+        #print(annots)
+
+        # plot figure
+        fig['layout']['annotations'] = annots
+
         # Cmax value
         fig.add_annotation(x=cmax_value, y=-2*barwidth,
             text=f'Objective_value: {self.objective_value}',
@@ -226,6 +243,7 @@ class BaseSolution(ABC):
         if path is not None:
             fig.write_image(path)
         else:
+            print("Showing")
             fig.show()
 
     @abstractmethod
