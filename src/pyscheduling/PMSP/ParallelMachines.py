@@ -9,7 +9,7 @@ from typing import List
 import numpy as np
 
 import pyscheduling.Problem as Problem
-from pyscheduling.BaseConstraints import BaseConstraints as Constraints
+from pyscheduling.core.BaseConstraints import BaseConstraints as Constraints
 from pyscheduling.Problem import Job, Objective
 from pyscheduling.SMSP.SingleMachine import Machine as SMachine
 

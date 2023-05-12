@@ -1,5 +1,5 @@
 from typing import List
-from pyscheduling.BaseConstraints import BaseConstraints
+from pyscheduling.core.BaseConstraints import BaseConstraints
 
 class Constraints(BaseConstraints):
 

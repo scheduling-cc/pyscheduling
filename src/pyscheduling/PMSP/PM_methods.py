@@ -10,6 +10,7 @@ from numpy.random import choice as np_choice
 import pyscheduling.PMSP.ParallelMachines as pm
 import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job
+from pyscheduling.core.Solver import Solver
 
 
 class Heuristics():
@@ -54,7 +55,7 @@ class Heuristics():
         
         solution.fix_objective()
       
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, all_solutions=[solution])
 
     @staticmethod
     def BIBA(instance: pm.ParallelInstance):
@@ -90,7 +91,7 @@ class Heuristics():
         
         solution.fix_objective()
           
-        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, solutions=[solution])
+        return Problem.SolveResult(best_solution=solution, runtime=perf_counter()-start_time, all_solutions=[solution])
 
     @staticmethod
     def grasp(instance: pm.ParallelInstance, p: float = 0.5, r: float = 0.5, n_iterations: int = 5):
@@ -148,92 +149,88 @@ class Heuristics():
 
 class Metaheuristics():
 
-    @staticmethod
-    def lahc(instance: pm.ParallelInstance, **kwargs):
-        """ Returns the solution using the LAHC algorithm
+    class LAHC(Solver):
 
-        Args:
-            instance (ParallelInstance): Instance object to solve
-            Lfa (int, optional): Size of the candidates list. Defaults to 25.
-            n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
-            Non_improv (int, optional): LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
-            LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
-            time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
-            init_sol_method: The method used to get the initial solution. Defaults to "constructive"
-            seed (int, optional): Seed for the random operators to make the algo deterministic
+        def solve(self, instance: pm.ParallelInstance, **kwargs):
+            """ Returns the solution using the LAHC algorithm
 
-        Returns:
-            Problem.SolveResult: the solver result of the execution of the metaheuristic
-        """
-        # Extracting parameters
-        time_limit_factor = kwargs.get("time_limit_factor", None)
-        init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
-        Lfa = kwargs.get("Lfa", 30)
-        n_iterations = kwargs.get("n_iterations", 500000)
-        Non_improv = kwargs.get("Non_improv", 50000)
-        LS = kwargs.get("LS", True)
-        seed = kwargs.get("seed", None)
+            Args:
+                instance (ParallelInstance): Instance object to solve
+                Lfa (int, optional): Size of the candidates list. Defaults to 25.
+                n_iterations (int, optional): Number of iterations of LAHC. Defaults to 300.
+                Non_improv (int, optional): LAHC stops when the number of iterations without improvement is achieved. Defaults to 50.
+                LS (bool, optional): Flag to apply local search at each iteration or not. Defaults to True.
+                time_limit_factor: Fixes a time limit as follows: n*m*time_limit_factor if specified, else n_iterations is taken Defaults to None
+                init_sol_method: The method used to get the initial solution. Defaults to "constructive"
+                seed (int, optional): Seed for the random operators to make the algo deterministic
 
-        if seed:
-            random.seed(seed)
+            Returns:
+                Problem.SolveResult: the solver result of the execution of the metaheuristic
+            """
+            # Extracting parameters
+            time_limit_factor = kwargs.get("time_limit_factor", None)
+            init_sol_method = kwargs.get("init_sol_method", instance.init_sol_method())
+            Lfa = kwargs.get("Lfa", 30)
+            n_iterations = kwargs.get("n_iterations", 500000)
+            Non_improv = kwargs.get("Non_improv", 50000)
+            LS = kwargs.get("LS", True)
+            seed = kwargs.get("seed", None)
 
-        first_time = perf_counter()
-        if time_limit_factor:
-            time_limit = instance.m * instance.n * time_limit_factor
+            if seed:
+                random.seed(seed)
 
-        # Generate init solutoin using the initial solution method
-        solution_init = init_sol_method(instance).best_solution
-        
-        if not solution_init:
-            return Problem.SolveResult()
+            first_time = perf_counter()
+            if time_limit_factor:
+                time_limit = instance.m * instance.n * time_limit_factor
 
-        local_search = pm.PM_LocalSearch()
-        if LS: 
-            solution_init = local_search.improve(solution_init)  # Improve it with LS
-            solution_init.fix_solution()
-              
-        all_solutions = []
-        solution_best = solution_init.copy()  # Save the current best solution
-        all_solutions.append(solution_best)
-        lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
+            self.on_start()
 
-        N = 0
-        i = 0
-        time_to_best = perf_counter() - first_time
-        current_solution = solution_init.copy()
-        while i < n_iterations and N < Non_improv:
-            # check time limit if exists
-            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
-                break
-
-            solution_i = pm.NeighbourhoodGeneration.lahc_neighbour(current_solution)
-            solution_i.fix_solution()
-               
-            if LS:
-                solution_i = local_search.improve(solution_i)
-                solution_i.fix_solution()
+            # Generate init solutoin using the initial solution method
+            solution_init = init_sol_method(instance).best_solution
             
-            if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
+            if not solution_init:
+                return Problem.SolveResult()
 
-                current_solution = solution_i.copy()
-                if solution_i.objective_value < solution_best.objective_value:
-                    all_solutions.append(solution_i)
-                    solution_best = solution_i.copy()
-                    time_to_best = (perf_counter() - first_time)
-                    N = 0
-            lahc_list[i % Lfa] = solution_i.objective_value
-            i += 1
-            N += 1
-           
-        # Construct the solve result
-        solve_result = Problem.SolveResult(
-            best_solution=solution_best,
-            solutions=all_solutions,
-            runtime=(perf_counter() - first_time),
-            time_to_best=time_to_best,
-        )
-         
-        return solve_result
+            local_search = pm.PM_LocalSearch()
+            if LS: 
+                solution_init = local_search.improve(solution_init)  # Improve it with LS
+                solution_init.fix_solution()
+                
+            all_solutions = []
+            solution_best = solution_init.copy()  # Save the current best solution
+            all_solutions.append(solution_best)
+            lahc_list = [solution_init.objective_value] * Lfa  # Create LAHC list
+
+            N = 0
+            i = 0
+            current_solution = solution_init.copy()
+            while i < n_iterations and N < Non_improv:
+                # check time limit if exists
+                if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+                    break
+
+                solution_i = pm.NeighbourhoodGeneration.lahc_neighbour(current_solution)
+                solution_i.fix_solution()
+                
+                if LS:
+                    solution_i = local_search.improve(solution_i)
+                    solution_i.fix_solution()
+                
+                self.on_solution_found(solution_i)
+
+                if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
+
+                    current_solution = solution_i.copy()
+                    if solution_i.objective_value < solution_best.objective_value:
+                        all_solutions.append(solution_i)
+                        solution_best = solution_i.copy()
+                        N = 0
+                lahc_list[i % Lfa] = solution_i.objective_value
+                i += 1
+                N += 1
+            
+            self.on_complete()
+            return self.solve_result
 
     @staticmethod
     def SA(instance: pm.ParallelInstance, **kwargs):
@@ -343,7 +340,7 @@ class Metaheuristics():
             best_solution=solution_best,
             runtime=(perf_counter() - first_time),
             time_to_best=time_to_best,
-            solutions=all_solutions
+            all_solutions=all_solutions
         )
     
         return solve_result

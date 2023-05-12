@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import plotly.figure_factory as ff
 
@@ -265,40 +265,18 @@ class SolveStatus(Enum):
     INFEASIBLE = 1
     FEASIBLE = 2
     OPTIMAL = 3
+    UNKNOWN = 4
 
 
 @dataclass
 class SolveResult:
 
-    all_solutions: List[BaseSolution]
-    best_solution: BaseSolution  # Needs to be consistent with "all_solutions" list
-    time_to_best: float
-    solve_status: SolveStatus
-    runtime: float
-    kpis: Dict[str, object]  # Other metrics that are problem / solver specific
-
-    def __init__(self, best_solution: BaseSolution = None, runtime: float = -1,
-                 time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE,
-                 solutions: List[BaseSolution] = None, kpis: Dict[str, object] = None):
-        """constructor of SolveResult
-
-        Args:
-            best_solution (Solution, optional): Best solution among solutions. Defaults to None.
-            runtime (float, optional): Execution time. Defaults to -1.
-            time_to_best (float, optional): Estimated time left to find the best solution. Defaults to -1.
-            status (SolveStatus, optional): Status of the solution. Defaults to SolveStatus.FEASIBLE.
-            solutions (list[Solution], optional): All feasible solution of the problem. Defaults to None.
-            other_metrics (list[str,object], optional): Supplementary information. Defaults to None.
-        """
-        self.best_solution = best_solution
-        self.runtime = runtime
-        if best_solution:
-            self.solve_status = status
-        else:
-            self.solve_status = SolveStatus.INFEASIBLE
-        self.time_to_best = time_to_best
-        self.kpis = kpis
-        self.all_solutions = solutions if solutions is not None else []
+    all_solutions: List[BaseSolution] = field(default_factory=list)
+    best_solution: BaseSolution  = field(default=None) # Needs to be consistent with "all_solutions" list
+    time_to_best: float = field(default=-1)
+    solve_status: SolveStatus = field( default= SolveStatus.UNKNOWN )
+    runtime: float = field(default= -1)
+    kpis: Dict[str, object] = field(default_factory=dict)  # Other metrics that are problem / solver specific
 
     @property
     def nb_solutions(self) -> int:
@@ -467,38 +445,3 @@ class Branch_Bound():
     def get_solve_result(self):
         return SolveResult(best_solution=self.best_solution,status=SolveStatus.OPTIMAL,runtime=self.runtime,solutions=self.all_solution)   
 
-@dataclass
-class Solver(ABC):
-
-    method: object
-
-    def __init__(self, method: object) -> None:
-        """_summary_
-
-        Args:
-            method (object): the function (heuristic/metaheuristic) that will be used to solve the problem
-
-        Raises:
-            ValueError: if an element of methods is not a function
-        """
-        if not callable(method):
-            raise ValueError("Is not a function")
-        else:
-            self.method = method
-
-    def solve(self, instance: BaseInstance, **data) -> SolveResult:
-        """Solves the instance and returns the corresponding solve result
-
-        Args:
-            instance (Instance): instance to be solved
-
-        Returns:
-            SolveResult: object containing information about the solving process
-                        and result
-        """
-        try:
-            return self.method(instance, **data)
-        except:
-            print("Do correctly use the method as explained below :\n" +
-                  self.method.__doc__)
-        pass

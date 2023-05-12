@@ -8,7 +8,7 @@ import pyscheduling.PMSP.ParallelMachines as ParallelMachines
 import pyscheduling.PMSP.PM_methods as pm_methods
 import pyscheduling.Problem as Problem
 from pyscheduling.PMSP.ParallelMachines import Constraints
-from pyscheduling.Problem import Job, Objective, Solver
+from pyscheduling.Problem import Job, Objective
 
 try:
     import docplex
