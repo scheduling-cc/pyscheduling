@@ -1,5 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass, field
+from time import perf_counter
 from typing import List, Union
 
 from pyscheduling.Problem import SolveResult
@@ -20,6 +21,9 @@ class Solver(ABC):
         else:
             self.listeners.append(listener)
 
+    def add_solution(self, new_solution):
+        self.solve_result.all_solutions.append(new_solution)
+
     def on_start(self):
         for listener in self.listeners:
             listener.on_start(self.solve_result)
@@ -28,7 +32,8 @@ class Solver(ABC):
         for listener in self.listeners:
             listener.on_complete()
     
-    def on_solution_found(self, solution):
+    def on_solution_found(self, new_solution):
+        self.add_solution(new_solution)
         for listener in self.listeners:
-            listener.on_solution_found(solution)
+            listener.on_solution_found(new_solution)
 

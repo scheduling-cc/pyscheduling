@@ -1,10 +1,12 @@
+import csv
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from time import perf_counter
 from typing import TextIO
 
-from pyscheduling.Problem import SolveResult
+from pyscheduling.Problem import SolveResult, SolveStatus
+
 
 @dataclass
 class BaseListener(ABC):
@@ -13,10 +15,11 @@ class BaseListener(ABC):
     _start_time: int = field(init=False, repr=False)
     _end_time: int = field(init=False, repr=False)
     _total_time: int = field(init=False, repr=False)
+    _nb_sol: int = 0
     
-    def save_solution(self, solution, time_found):
-        self.solve_result.all_solutions.append(solution)
-        if self.solve_result.best_solution is None or solution.objective_value < self.solve_result.best_solution.objective_value:
+    def check_best_sol(self, solution, time_found):
+        
+        if self.solve_result.best_solution is None or solution.objective_value <= self.solve_result.best_solution.objective_value:
             self.solve_result.best_solution = solution
 
             if self.solve_result.time_to_best < time_found:
@@ -26,16 +29,20 @@ class BaseListener(ABC):
 
         return False
 
-    @abstractmethod
-    def on_start(self):
-        pass
+    def on_start(self, solve_result):
+        self.solve_result = solve_result
+        self._start_time = perf_counter()
     
-    @abstractmethod
     def on_complete(self):
-        pass
+        self._end_time = perf_counter()
+        self._total_time = self._end_time - self._start_time
+        self.solve_result.runtime = self._total_time
+        self._search_speed = self._nb_sol / self.solve_result.runtime
+        if self._nb_sol > 0:
+            self.solve_result.solve_status = SolveStatus.FEASIBLE
 
     @abstractmethod
-    def on_solution_found(self):
+    def on_solution_found(self, new_solution, time_found, found_new_best):
         pass
 
 @dataclass
@@ -43,11 +50,10 @@ class FileListener(BaseListener):
 
     file_path: Path = field(default=Path("solver_log.txt"))
     _file: TextIO = field(init=False, repr=False)
-    _nb_sol: int = 0 
 
     def on_start(self, solve_result):
-        self.solve_result = solve_result
-        self._start_time = perf_counter()
+        super().on_start(solve_result)
+
         try:
             self._file = open(self.file_path, "w+")
             self._file.write(
@@ -61,10 +67,7 @@ class FileListener(BaseListener):
             print(f"ERROR: cannot open the logging file {self.file_path}")
     
     def on_complete(self):
-        self._end_time = perf_counter()
-        self._total_time = self._end_time - self._start_time
-        self.solve_result.runtime = self._total_time
-        self._search_speed = self._nb_sol / self.solve_result.runtime
+        super().on_complete()
 
         self._file.write("\n" + '-' * (55 + 5) + "\n\n")
         
@@ -88,8 +91,8 @@ class FileListener(BaseListener):
     def on_solution_found(self, new_solution):
         self._nb_sol += 1
         time_found = perf_counter() - self._start_time
-        # Add the solution to solve result
-        found_new_best = self.save_solution(new_solution, time_found)
+        # Check if the new solution is the best one
+        found_new_best = self.check_best_sol(new_solution, time_found)
         
         # Log parts
         info = "##" if found_new_best else ''
@@ -108,3 +111,50 @@ class FileListener(BaseListener):
             self._file.flush()
 
 
+@dataclass
+class CSVListener(BaseListener):
+
+    file_path: Path = field(default=Path("solver_log.csv"))
+    _file: TextIO = field(init=False, repr=False)
+    
+    def on_start(self, solve_result):
+        super().on_start(solve_result)
+        self.columns = ["Info", "Iteration", "Time (s)", "Objective", "Best"]
+        
+        try:
+            self._file = open(self.file_path, "w+", newline='')
+            self.csv_writer = csv.DictWriter(self._file, fieldnames=self.columns)
+            self.csv_writer.writeheader()
+        except IOError:
+            print(f"ERROR: cannot open the logging file {self.file_path}")
+    
+    def on_complete(self):
+        super().on_complete()
+        if not self._file is None:
+            try:
+                self._file.close()
+            except IOError:
+                print(f"ERROR: cannot close the logging file {self.file_path}")
+
+    def on_solution_found(self, new_solution):
+        self._nb_sol += 1
+        time_found = perf_counter() - self._start_time
+        # Check if the new solution is the best one
+        found_new_best = self.check_best_sol(new_solution, time_found)
+        
+        # Log parts
+        info = "Found new best" if found_new_best else 'Found solution'
+        time_str = f"{time_found:.2f}"
+
+        new_row = {
+            "Info": info,
+            "Iteration": self._nb_sol,
+            "Time (s)": time_str,
+            "Objective": new_solution.objective_value,
+            "Best": self.solve_result.best_solution.objective_value
+        }
+
+        self.csv_writer.writerow(new_row)
+
+        if self._nb_sol % 10 == 0:
+            self._file.flush()
