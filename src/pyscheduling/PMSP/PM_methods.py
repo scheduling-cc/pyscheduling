@@ -183,7 +183,7 @@ class Metaheuristics():
             if time_limit_factor:
                 time_limit = instance.m * instance.n * time_limit_factor
 
-            self.on_start()
+            self.notify_on_start()
 
             # Generate init solutoin using the initial solution method
             solution_init = init_sol_method(instance).best_solution
@@ -216,7 +216,7 @@ class Metaheuristics():
                     solution_i = local_search.improve(solution_i)
                     solution_i.fix_solution()
                 
-                self.on_solution_found(solution_i)
+                self.notify_on_solution_found(solution_i)
 
                 if solution_i.objective_value < current_solution.objective_value or solution_i.objective_value < lahc_list[i % Lfa]:
 
@@ -229,7 +229,7 @@ class Metaheuristics():
                 i += 1
                 N += 1
             
-            self.on_complete()
+            self.notify_on_complete()
             return self.solve_result
 
     @staticmethod
