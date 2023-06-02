@@ -49,15 +49,14 @@ class LAHC(Solver):
 
         if self.use_local_search: 
             solution_init = self.ls_procedure.improve(solution_init)  # Improve it with LS
-            
-        all_solutions = []
-        solution_best = solution_init.copy()  # Save the current best solution
-        all_solutions.append(solution_best)
-        lahc_list = [solution_init.objective_value for _ in range(self.history_list_size)]  # Create LAHC list
+        
+        self.notify_on_solution_found(solution_init)
 
         N = 0
         i = 0
-        current_solution = solution_init.copy()
+        lahc_list = [solution_init.objective_value for _ in range(self.history_list_size)]  # Create LAHC list
+        current_solution = solution_init.copy()  # Save the current best solution
+        solution_best = current_solution
         while i < self.n_iterations and N < self.non_improv:
             # check time limit if exists
             if use_time_limit and (perf_counter() - first_time) >= time_limit:
@@ -74,8 +73,7 @@ class LAHC(Solver):
 
                 current_solution = solution_i.copy()
                 if solution_i.objective_value < solution_best.objective_value:
-                    all_solutions.append(solution_i)
-                    solution_best = solution_i.copy()
+                    solution_best = solution_i
                     N = 0
             
             lahc_list[i % self.use_local_search] = solution_i.objective_value
