@@ -10,7 +10,7 @@ from numpy.random import choice as np_choice
 import pyscheduling.PMSP.ParallelMachines as pm
 import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job
-from pyscheduling.core.Solver import Solver
+from pyscheduling.core.solvers.Solver import Solver
 
 
 class Heuristics():

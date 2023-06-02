@@ -1,9 +1,9 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from time import perf_counter
 from typing import List, Union
 
-from pyscheduling.Problem import SolveResult, BaseSolution
+from pyscheduling.Problem import BaseInstance, SolveResult, BaseSolution
 from pyscheduling.core.listeners import BaseListener
 
 
@@ -63,4 +63,8 @@ class Solver(ABC):
         self.add_solution(new_solution, time_found)
         for listener in self.listeners:
             listener.on_solution_found(new_solution, time_found)
+
+    @abstractmethod
+    def solve(self, instance: BaseInstance):
+        pass
 
