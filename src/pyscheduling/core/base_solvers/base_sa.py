@@ -4,14 +4,19 @@ from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Callable
 
-from pyscheduling.core.solvers import Solver
+from pyscheduling.core.base_solvers.base_solver import BaseSolver
 from pyscheduling.Problem import BaseInstance, LocalSearch, SolveResult
 
-class SA(Solver):
+@dataclass
+class BaseSA(BaseSolver):
+
+    # Required Operators
+    ls_procedure: LocalSearch
+    generate_neighbour: Callable
 
     # Params
     time_limit_factor : float = field(default=None) 
-    init_sol_method: Solver = field(repr=False, default=None)
+    init_sol_method: BaseSolver = field(repr=False, default=None)
     init_temp: float = field(default=1.4)
     final_temp: float = field(default=0.01)
     k: float = field(default=0.1)
@@ -21,10 +26,6 @@ class SA(Solver):
     use_local_search: bool = field(default=True)
     random_seed: int = field(default=None)
     
-    # Required Operators
-    ls_procedure: LocalSearch
-    generate_neighbour: Callable
-
     def solve(self, instance: BaseInstance):
         """ Returns the solution using the simulated annealing algorithm or the restricted simulated annealing algorithm
         
@@ -43,8 +44,12 @@ class SA(Solver):
 
         self.notify_on_start()
 
-        solution_init = self.init_sol_method(instance).best_solution
-
+        # Generate init solutoin using the initial solution method
+        if self.init_sol_method is None:
+            solution_init = instance.init_sol_method.solve(instance).best_solution
+        else:    
+            solution_init = self.init_sol_method.solve(instance).best_solution
+        
         if not solution_init:
             return SolveResult()
 

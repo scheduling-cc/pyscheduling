@@ -3,10 +3,10 @@ import sys
 
 import pytest
 
-from pyscheduling.FS import (FmridiSijkwiTi, FmriSijkCmax, FmriSijkwiCi,
-                             FmriSijkwiFi, FS_methods)
+from pyscheduling.FS import FmridiSijkwiTi, FmriSijkCmax, FmriSijkwiCi, FmriSijkwiFi
 from pyscheduling.FS.FlowShop import FlowShopSolution, FS_LocalSearch
 from pyscheduling.Problem import Objective, SolveResult, SolveStatus
+from pyscheduling.FS.solvers import BIBA, DispatchRule, GRASP, SA, LAHC
 
 
 # Helper functions
@@ -79,30 +79,35 @@ class TestFmriSijkCmax:
 
     # Testing methods
     def test_biba(self, instance_zero):
-        solve_result = FmriSijkCmax.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = FmriSijkCmax.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
+            solver = DispatchRule(rule = default_rule, reverse = reverse)
+            solve_result = solver.solve(instance_zero)
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = FmriSijkCmax.Heuristics.grasp(instance_zero, n_iterations = 5)
+        solver = GRASP(n_iterations = 5)
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = FmriSijkCmax.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = FmriSijkCmax.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = FmriSijkCmax.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
 
@@ -112,7 +117,8 @@ class TestFmriSijkCmax:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = FmriSijkCmax.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
 
@@ -171,30 +177,35 @@ class TestFmriSijkwiCi:
 
     # Testing methods
     def test_biba(self, instance_zero):
-        solve_result = FmriSijkwiCi.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = FmriSijkwiCi.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
+            solver = DispatchRule(rule = default_rule, reverse = reverse)
+            solve_result = solver.solve(instance_zero)
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = FmriSijkwiCi.Heuristics.grasp(instance_zero, n_iterations = 5)
+        solver = GRASP(n_iterations = 5)
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = FmriSijkwiCi.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = FmriSijkwiCi.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = FmriSijkwiCi.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
 
@@ -204,7 +215,8 @@ class TestFmriSijkwiCi:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = FmriSijkwiCi.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
 
@@ -263,30 +275,35 @@ class TestFmriSijkwiFi:
 
     # Testing methods
     def test_biba(self, instance_zero):
-        solve_result = FmriSijkwiFi.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = FmriSijkwiFi.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
+            solver = DispatchRule(rule = default_rule, reverse = reverse)
+            solve_result = solver.solve(instance_zero)
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = FmriSijkwiFi.Heuristics.grasp(instance_zero, n_iterations = 5)
+        solver = GRASP(n_iterations = 5)
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = FmriSijkwiFi.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = FmriSijkwiFi.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = FmriSijkwiFi.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
 
@@ -296,7 +313,8 @@ class TestFmriSijkwiFi:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = FmriSijkwiFi.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
 
@@ -355,30 +373,35 @@ class TestFmridiSijkwiTi:
 
     # Testing methods
     def test_biba(self, instance_zero):
-        solve_result = FmridiSijkwiTi.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = FmridiSijkwiTi.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
+            solver = DispatchRule(rule = default_rule, reverse = reverse)
+            solve_result = solver.solve(instance_zero)
             check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = FmridiSijkwiTi.Heuristics.grasp(instance_zero, n_iterations = 5)
+        solver = GRASP(n_iterations = 5)
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = FmridiSijkwiTi.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = FmridiSijkwiTi.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = FmridiSijkwiTi.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
 
@@ -388,7 +411,8 @@ class TestFmridiSijkwiTi:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = FmridiSijkwiTi.Heuristics.BIBA(instance_zero).best_solution
+        biba_solver = BIBA()
+        solution = biba_solver.solve(instance_zero).best_solution
         ls_proc = FS_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
 

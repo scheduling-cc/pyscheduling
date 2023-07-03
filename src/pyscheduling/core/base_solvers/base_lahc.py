@@ -3,26 +3,26 @@ from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Callable
 
-from pyscheduling.core.solvers import Solver
+from pyscheduling.core.base_solvers.base_solver import BaseSolver
 from pyscheduling.Problem import BaseInstance, LocalSearch, SolveResult
 
 
 @dataclass
-class LAHC(Solver):
+class BaseLAHC(BaseSolver):
+
+    # Required Operators
+    ls_procedure: LocalSearch
+    generate_neighbour: Callable
 
     # Params
     time_limit_factor : float = field(default=None) 
-    init_sol_method: Solver = field(repr=False, default=None)
+    init_sol_method: BaseSolver = field(repr=False, default=None)
     history_list_size: int = field(default=30)
     n_iterations: int = field(default=5000)
     non_improv: int = field(default=500)
     use_local_search: bool = field(default=True)
     random_seed: int = field(default=None)
     
-    # Required Operators
-    ls_procedure: LocalSearch
-    generate_neighbour: Callable
-
     def solve(self, instance: BaseInstance):
         """ Returns the solution using the LAHC algorithm
 
@@ -42,7 +42,10 @@ class LAHC(Solver):
         self.notify_on_start()
 
         # Generate init solutoin using the initial solution method
-        solution_init = self.init_sol_method(instance).best_solution
+        if self.init_sol_method is None:
+            solution_init = instance.init_sol_method.solve(instance).best_solution
+        else:    
+            solution_init = self.init_sol_method.solve(instance).best_solution
         
         if solution_init is None:
             return SolveResult()
