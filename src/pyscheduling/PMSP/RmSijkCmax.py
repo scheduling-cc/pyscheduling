@@ -1,14 +1,15 @@
 import sys
 from dataclasses import dataclass
 from statistics import mean
-from time import perf_counter
 from typing import ClassVar, List
 
 import pyscheduling.PMSP.ParallelMachines as ParallelMachines
-import pyscheduling.PMSP.PM_methods as pm_methods
 import pyscheduling.Problem as Problem
 from pyscheduling.PMSP.ParallelMachines import Constraints
-from pyscheduling.Problem import Job, Objective
+from pyscheduling.Problem import Objective
+from pyscheduling.core.base_solvers import BaseSolver
+from pyscheduling.PMSP.solvers import BIBA, OrderedConstructive
+
 
 try:
     import docplex
@@ -26,10 +27,8 @@ class RmSijkCmax_Instance(ParallelMachines.ParallelInstance):
     S: List[List[List[int]]]
     constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.S]
     objective: ClassVar[Objective] = Objective.Cmax
+    init_sol_method: BaseSolver = BIBA()
 
-    def init_sol_method(self):
-        return Heuristics.BIBA
-    
     def lower_bound(self):
         """Computes the lower bound of maximal completion time of the instance 
         by dividing the sum of minimal completion time between job pairs on the number of machines
@@ -253,177 +252,163 @@ class ExactSolvers():
             print("Docplex import error: you can not use this solver")
             return None
 
-class Heuristics(pm_methods.Heuristics):
+@dataclass
+class ListHeuristic(BaseSolver):
 
-    @staticmethod
-    def list_heuristic(instance: RmSijkCmax_Instance, rule=1, decreasing=False):
+    rule: int = 1
+    decreasing : bool = False
+
+    def solve(self, instance: RmSijkCmax_Instance):
         """list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution
 
         Args:
             instance (_type_): Instance to be solved by the heuristic
-            rule (int, optional): ID of the rule to follow by the heuristic. Defaults to 1.
-            decreasing (bool, optional): _description_. Defaults to False.
 
         Returns:
             Problem.SolveResult: the solver result of the execution of the heuristic
         """
-        start_time = perf_counter()
-        solution = ParallelMachines.ParallelSolution(instance=instance)
-        if rule == 1:  # Mean Processings
+        if self.rule == 1:  # Mean Processings
             remaining_jobs_list = [(i, mean(instance.P[i]))
                                    for i in range(instance.n)]
-        elif rule == 2:  # Min Processings
+        elif self.rule == 2:  # Min Processings
             remaining_jobs_list = [(i, min(instance.P[i]))
                                    for i in range(instance.n)]
-        elif rule == 3:  # Mean Processings + Mean Setups
+        elif self.rule == 3:  # Mean Processings + Mean Setups
             setup_means = [mean(means_list) for means_list in [
                 [mean(s[i]) for s in instance.S] for i in range(instance.n)]]
             remaining_jobs_list = [
                 (i, mean(instance.P[i])+setup_means[i]) for i in range(instance.n)]
-        elif rule == 4:  # Max Processings
+        elif self.rule == 4:  # Max Processings
             remaining_jobs_list = [(i, max(instance.P[i]))
                                    for i in range(instance.n)]
-        elif rule == 5:  # IS1
+        elif self.rule == 5:  # IS1
             max_setup = [max([max(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, max(max(instance.P[i]), max_setup[i][0])) for i in range(instance.n)]
-        elif rule == 6:  # IS2
+        elif self.rule == 6:  # IS2
             min_setup = [min([min(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, max(min(instance.P[i]), min_setup[i][0])) for i in range(instance.n)]
-        elif rule == 7:  # IS3
+        elif self.rule == 7:  # IS3
             min_setup = [min([min(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, min(min(instance.P[i]), min_setup[i][0])) for i in range(instance.n)]
-        elif rule == 8:  # IS4
+        elif self.rule == 8:  # IS4
             max_setup = [max([max(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, min(max(instance.P[i]), max_setup[i][0])) for i in range(instance.n)]
-        elif rule == 9:  # IS5
+        elif self.rule == 9:  # IS5
             max_setup = [max([max(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, max(instance.P[i])/max_setup[i][0]) for i in range(instance.n)]
-        elif rule == 10:  # IS6
+        elif self.rule == 10:  # IS6
             min_setup = [min([min(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, min(instance.P[i])/(min_setup[i][0]+1)) for i in range(instance.n)]
-        elif rule == 11:  # IS7
+        elif self.rule == 11:  # IS7
             max_setup = [max([max(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, max_setup[i][0]/max(instance.P[i])) for i in range(instance.n)]
-        elif rule == 12:  # IS8
+        elif self.rule == 12:  # IS8
             min_setup = [min([min(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, min_setup[i][0]/(min(instance.P[i])+1)) for i in range(instance.n)]
-        elif rule == 13:  # IS9
+        elif self.rule == 13:  # IS9
             min_setup = [min([min(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, min_setup[i][0]/max(instance.P[i])) for i in range(instance.n)]
-        elif rule == 14:  # IS10
+        elif self.rule == 14:  # IS10
             max_setup = [max([max(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, max_setup[i][0]/(min(instance.P[i])+1)) for i in range(instance.n)]
-        elif rule == 15:  # IS11
+        elif self.rule == 15:  # IS11
             max_setup = [max([max(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, max_setup[i][0] + max(instance.P[i])) for i in range(instance.n)]
-        elif rule == 16:  # IS12
+        elif self.rule == 16:  # IS12
             min_setup = [min([min(instance.S[k][i])]
                              for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [
                 (i, min_setup[i][0] + min(instance.P[i])) for i in range(instance.n)]
-        elif rule == 17:  # IS13
+        elif self.rule == 17:  # IS13
             proc_div_setup = [min([instance.P[i][k]/max(instance.S[k][i])]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 18:  # IS14
+        elif self.rule == 18:  # IS14
             proc_div_setup = [min([instance.P[i][k]/(min(instance.S[k][i])+1)]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 19:  # IS15
+        elif self.rule == 19:  # IS15
             proc_div_setup = [max([max(instance.S[k][i])/instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 20:  # IS16
+        elif self.rule == 20:  # IS16
             proc_div_setup = [max([min(instance.S[k][i])/instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 21:  # IS17
+        elif self.rule == 21:  # IS17
             proc_div_setup = [min([min(instance.S[k][i])/instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 22:  # IS18
+        elif self.rule == 22:  # IS18
             proc_div_setup = [min([max(instance.S[k][i])/instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 23:  # IS19
+        elif self.rule == 23:  # IS19
             proc_div_setup = [min([max(instance.S[k][i]) + instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 24:  # IS20
+        elif self.rule == 24:  # IS20
             proc_div_setup = [max([max(instance.S[k][i]) + instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 25:  # IS21
+        elif self.rule == 25:  # IS21
             proc_div_setup = [min([min(instance.S[k][i]) + instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 26:  # IS22
+        elif self.rule == 26:  # IS22
             proc_div_setup = [max([min(instance.S[k][i]) + instance.P[i][k]]
                                   for k in range(instance.m)) for i in range(instance.n)]
             remaining_jobs_list = [(i, proc_div_setup[i])
                                    for i in range(instance.n)]
-        elif rule == 27:  # Mean Setup
+        elif self.rule == 27:  # Mean Setup
             setup_means = [mean(means_list) for means_list in [
                 [mean(s[i]) for s in instance.S] for i in range(instance.n)]]
             remaining_jobs_list = [(i, setup_means[i])
                                    for i in range(instance.n)]
-        elif rule == 28:  # Min Setup
+        elif self.rule == 28:  # Min Setup
             setup_mins = [min(min_list) for min_list in [[min(s[i])
                                                           for s in instance.S] for i in range(instance.n)]]
             remaining_jobs_list = [(i, setup_mins[i])
                                    for i in range(instance.n)]
-        elif rule == 29:  # Max Setup
+        elif self.rule == 29:  # Max Setup
             setup_max = [max(max_list) for max_list in [[max(s[i])
                                                          for s in instance.S] for i in range(instance.n)]]
             remaining_jobs_list = [(i, setup_max[i])
                                    for i in range(instance.n)]
 
         remaining_jobs_list = sorted(
-            remaining_jobs_list, key=lambda job: job[1], reverse=decreasing)
+            remaining_jobs_list, key=lambda job: job[1], reverse=self.decreasing)
         jobs_list = [element[0] for element in remaining_jobs_list]
 
-        return Heuristics.ordered_constructive(instance, remaining_jobs_list=jobs_list)
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-
-class Metaheuristics(pm_methods.Metaheuristics):
-    pass
+        return OrderedConstructive(remaining_jobs_list=jobs_list).solve(instance)
