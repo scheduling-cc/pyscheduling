@@ -1,13 +1,13 @@
 import sys
 from dataclasses import dataclass
-from time import perf_counter
 from typing import ClassVar, List, Tuple
 
 import pyscheduling.JS.JobShop as JobShop
-import pyscheduling.JS.JS_methods as js_methods
+from pyscheduling.JS.solvers.dispatch_heuristic import DispatchHeuristic
 import pyscheduling.Problem as Problem
 from pyscheduling.JS.JobShop import Constraints
 from pyscheduling.Problem import Objective
+from pyscheduling.core.base_solvers import BaseSolver
 
 try:
     import docplex
@@ -26,13 +26,9 @@ class JmCmax_Instance(JobShop.JobShopInstance):
     constraints: ClassVar[List[Constraints]] = [Constraints.P]
     objective: ClassVar[Objective] = Objective.Cmax
 
+    @property
     def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.shifting_bottleneck
+        return ShiftingBottleneck()
     
 
 class ExactSolvers():
@@ -202,10 +198,13 @@ if DOCPLEX_IMPORTED:
             else:
                 print("Docplex import error: you can not use this solver")
 
-class Heuristics(js_methods.Heuristics):
+@dataclass
+class ListHeuristic(BaseSolver):
 
-    @staticmethod
-    def list_heuristic(instance: JmCmax_Instance, rule_number: int = 0, reverse = False) -> Problem.SolveResult:
+    rule_number: int = 1
+    reverse: bool = False
+
+    def solve(self, instance: JmCmax_Instance) -> Problem.SolveResult:
         """contains a list of static dispatching rules to be chosen from
 
         Args:
@@ -217,16 +216,18 @@ class Heuristics(js_methods.Heuristics):
         """
         default_rule = lambda instance, job_tuple: instance.P[job_tuple[0]][job_tuple[1][0]]
         rules_dict = {
-            0: default_rule,
-            1: lambda instance, job_tuple: sum(instance.P[job_tuple[0]][oper_idx] for oper_idx in job_tuple[1])
+            1: default_rule,
+            2: lambda instance, job_tuple: sum(instance.P[job_tuple[0]][oper_idx] for oper_idx in job_tuple[1])
         }
         
-        sorting_func = rules_dict.get(rule_number, default_rule)
+        sorting_func = rules_dict.get(self.rule_number, default_rule)
 
-        return Heuristics.dispatch_heuristic(instance, sorting_func, reverse)
+        return DispatchHeuristic(rule=sorting_func, reverse=self.reverse).solve(instance)
 
-    @staticmethod
-    def shifting_bottleneck(instance : JmCmax_Instance):
+@dataclass
+class ShiftingBottleneck(BaseSolver):
+
+    def solve(self, instance : JmCmax_Instance):
         """Shifting bottleneck heuristic, Pinedo page 193
 
         Args:
@@ -235,7 +236,7 @@ class Heuristics(js_methods.Heuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = JobShop.JobShopSolution(instance)
         solution.create_solution_graph()
         Cmax = solution.graph.critical_path()
@@ -281,14 +282,7 @@ class Heuristics(js_methods.Heuristics):
             solution.objective_value = solution.graph.critical_path()
 
         solution.compute_objective()
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
         
-        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+        return self.solve_result 

@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 from math import exp
-from time import perf_counter
 from typing import ClassVar, List
 
 import pyscheduling.JS.JobShop as JobShop
-import pyscheduling.JS.JS_methods as js_methods
-import pyscheduling.Problem as Problem
 from pyscheduling.JS.JobShop import Constraints
 from pyscheduling.Problem import Objective
+from pyscheduling.core.base_solvers import BaseSolver
 
 
 @dataclass(init=False)
@@ -21,19 +19,14 @@ class JmriwiTi_Instance(JobShop.JobShopInstance):
     constraints: ClassVar[Constraints] = [Constraints.P, Constraints.W, Constraints.R, Constraints.D, Constraints.S]
     objective: ClassVar[Objective] = Objective.wiTi
 
+    @property
     def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.shifting_bottleneck
+        return ShiftingBottleneck()
 
 
-class Heuristics(js_methods.Heuristics):
+class ShiftingBottleneck(BaseSolver):
 
-    @staticmethod
-    def shifting_bottleneck(instance : JmriwiTi_Instance):
+    def solve(self, instance : JmriwiTi_Instance):
         """Shifting bottleneck heuristic, Pinedo page 193
 
         Args:
@@ -42,7 +35,7 @@ class Heuristics(js_methods.Heuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = JobShop.JobShopSolution(instance)
         solution.create_solution_graph()
         jobs_completion_time = solution.graph.all_jobs_completion()
@@ -100,14 +93,8 @@ class Heuristics(js_methods.Heuristics):
         solution.compute_objective()
         solution.objective_value = solution.graph.wiTi(instance.W,instance.D)
         
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
 
-        return Problem.SolveResult(best_solution=solution,status=Problem.SolveStatus.FEASIBLE,runtime=perf_counter()-startTime,solutions=[solution])
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+        return self.solve_result 
+    

@@ -3,10 +3,10 @@ import sys
 
 import pytest
 
-from pyscheduling.JS import (JmridiSijkwiTi, JmriSijkCmax, JmriSijkwiCi,
-                             JmriSijkwiFi, JS_methods)
-from pyscheduling.JS.JobShop import JobShopInstance, JobShopSolution
+from pyscheduling.JS import JmridiSijkwiTi, JmriSijkCmax, JmriSijkwiCi,JmriSijkwiFi
+from pyscheduling.JS.JobShop import JobShopSolution
 from pyscheduling.Problem import Objective, SolveResult, SolveStatus
+from pyscheduling.JS.solvers import BIBA, DispatchHeuristic, GRASP
 
 
 # Helper functions
@@ -20,6 +20,9 @@ def check_solve_result(solve_result, expected_nb_sol=None):
             solve_result.all_solutions) == expected_nb_sol, f"This method should return {expected_nb_sol} solution instead of {len(solve_result.all_solutions)}"
     assert is_valid == True, f"The returned solution is not valid"
 
+def check_solver(solver, instance, expected_nb_sol=None):
+    solve_result = solver.solve(instance)
+    check_solve_result(solve_result, expected_nb_sol)
 
 def instance_check(instance, instance_class, attr_list, objective):
     assert isinstance(instance, instance_class), f'Instance is not of the right type'
@@ -78,19 +81,16 @@ class TestJmriSijkCmax:
             pass
 
     # Testing methods
-    def test_biba(self, instance_zero):
-        solve_result = JmriSijkCmax.Heuristics.BIBA(instance_zero)
-        check_solve_result(solve_result, expected_nb_sol=1)
-
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = JmriSijkCmax.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
-            check_solve_result(solve_result, expected_nb_sol=1)
+            check_solver(DispatchHeuristic( default_rule, reverse = reverse),
+                         instance_zero, 1)
+
+    def test_biba(self, instance_zero):
+        check_solver(BIBA(), instance_zero, 1)
 
     def test_grasp(self, instance_zero):
-        solve_results = JmriSijkCmax.Heuristics.grasp(instance_zero, n_iterations = 5)
-        check_solve_result(solve_results, expected_nb_sol=5)
+        check_solver(GRASP(), instance_zero, 5)
 
 class TestJmriSijkwiCi:
 
@@ -141,20 +141,16 @@ class TestJmriSijkwiCi:
             pass
 
     # Testing methods
-    def test_biba(self, instance_zero):
-        solve_result = JmriSijkwiCi.Heuristics.BIBA(instance_zero)
-        check_solve_result(solve_result, expected_nb_sol=1)
-
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = JmriSijkwiCi.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
-            check_solve_result(solve_result, expected_nb_sol=1)
+            check_solver(DispatchHeuristic( default_rule, reverse = reverse),
+                         instance_zero, 1)
+
+    def test_biba(self, instance_zero):
+        check_solver(BIBA(), instance_zero, 1)
 
     def test_grasp(self, instance_zero):
-        solve_results = JmriSijkwiCi.Heuristics.grasp(instance_zero, n_iterations = 5)
-        check_solve_result(solve_results, expected_nb_sol=5)
-
+        check_solver(GRASP(), instance_zero, 5)
 
 class TestJmriSijkwiFi:
 
@@ -204,19 +200,16 @@ class TestJmriSijkwiFi:
             pass
 
     # Testing methods
-    def test_biba(self, instance_zero):
-        solve_result = JmriSijkwiFi.Heuristics.BIBA(instance_zero)
-        check_solve_result(solve_result, expected_nb_sol=1)
-
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = JmriSijkwiFi.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
-            check_solve_result(solve_result, expected_nb_sol=1)
+            check_solver(DispatchHeuristic( default_rule, reverse = reverse),
+                         instance_zero, 1)
+
+    def test_biba(self, instance_zero):
+        check_solver(BIBA(), instance_zero, 1)
 
     def test_grasp(self, instance_zero):
-        solve_results = JmriSijkwiFi.Heuristics.grasp(instance_zero, n_iterations = 5)
-        check_solve_result(solve_results, expected_nb_sol=5)
+        check_solver(GRASP(), instance_zero, 5)
 
 
 class TestJmridiSijkwiTi:
@@ -268,16 +261,13 @@ class TestJmridiSijkwiTi:
             pass
 
     # Testing methods
-    def test_biba(self, instance_zero):
-        solve_result = JmridiSijkwiTi.Heuristics.BIBA(instance_zero)
-        check_solve_result(solve_result, expected_nb_sol=1)
-
     def test_list_heuristics(self, instance_zero):
         for reverse in [False, True]:
-            solve_result = JmridiSijkwiTi.Heuristics.dispatch_heuristic(
-                instance_zero, default_rule, reverse)
-            check_solve_result(solve_result, expected_nb_sol=1)
+            check_solver(DispatchHeuristic(default_rule, reverse = reverse),
+                         instance_zero, 1)
+
+    def test_biba(self, instance_zero):
+        check_solver(BIBA(), instance_zero, 1)
 
     def test_grasp(self, instance_zero):
-        solve_results = JmridiSijkwiTi.Heuristics.grasp(instance_zero, n_iterations = 5)
-        check_solve_result(solve_results, expected_nb_sol=5)
+        check_solver(GRASP(), instance_zero, 5)
