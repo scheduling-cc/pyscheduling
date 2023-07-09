@@ -1,14 +1,15 @@
+from dataclasses import dataclass, field
 from math import exp
 from typing import ClassVar, List
 
-import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
+from pyscheduling.core.base_solvers import BaseSolver
 from pyscheduling.Problem import Objective
 from pyscheduling.SMSP.SingleMachine import Constraints
-from pyscheduling.SMSP.SM_methods import ExactSolvers
+from pyscheduling.SMSP.solvers import BIBA, DispatchHeuristic
 
 
+@dataclass(init=False)
 class risijwiFi_Instance(SingleMachine.SingleInstance):
 
     P: List[int]
@@ -18,20 +19,16 @@ class risijwiFi_Instance(SingleMachine.SingleInstance):
     S: List[List[int]]
     constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.R, Constraints.S]
     objective: ClassVar[Objective] = Objective.wiFi
-
-    def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.BIBA
+    init_sol_method: BaseSolver = BIBA()
 
 
-class Heuristics(Methods.Heuristics):
-    
-    @staticmethod
-    def list_heuristic(instance: risijwiFi_Instance, rule_number: int = 0, reverse = False) -> Problem.SolveResult:
+@dataclass
+class ListHeuristic(BaseSolver):
+
+    rule_number: int = 1
+    reverse : bool = False
+
+    def solve(self, instance: risijwiFi_Instance):
         """contains a list of static dispatching rules to be chosen from
 
         Args:
@@ -50,27 +47,6 @@ class Heuristics(Methods.Heuristics):
             3: lambda instance, job_id : exp(-(sum(instance.S[l][job_id] for l in range(instance.n))) / ( 0.2 * s_bar) ) * instance.W[job_id] / (instance.R[job_id]+instance.P[job_id])
         }
         
-        sorting_func = rules_dict.get(rule_number, default_rule)
+        sorting_func = rules_dict.get(self.rule_number, default_rule)
 
-        return Methods.Heuristics.dispatch_heuristic(instance, sorting_func, reverse)
-
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-class Metaheuristics(Methods.Metaheuristics):
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
+        return DispatchHeuristic(rule=sorting_func, reverse=self.reverse).solve(instance)

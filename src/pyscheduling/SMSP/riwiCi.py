@@ -1,15 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from time import perf_counter
-from typing import ClassVar, List
+from typing import Callable, ClassVar, List
 
 import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
-from pyscheduling.Problem import Objective, Solver
+from pyscheduling.Problem import Objective
 from pyscheduling.SMSP.SingleMachine import Constraints
-from pyscheduling.SMSP.SM_methods import ExactSolvers
-
-from pyscheduling.SMSP.SingleMachine import Constraints
+from pyscheduling.core.base_solvers import BaseSolver
 
 
 @dataclass(init=False)
@@ -21,19 +18,15 @@ class riwiCi_Instance(SingleMachine.SingleInstance):
     constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.R]
     objective: ClassVar[Objective] = Objective.wiCi
 
+    @property
     def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.WSECi
+        return WSECi()
 
 
+@dataclass
+class WSECi(BaseSolver):
 
-class Heuristics():
-    @staticmethod
-    def WSECi(instance : riwiCi_Instance):
+    def solve(self, instance : riwiCi_Instance):
         """Weighted Shortest Expected Completion time, dynamic dispatching rule inspired from WSPT but adds release
         time to processing time
 
@@ -43,7 +36,7 @@ class Heuristics():
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiCi_cache = []
         ci = 0
@@ -61,10 +54,16 @@ class Heuristics():
             remaining_jobs_list.pop(0)
         solution.machine.objective_value=solution.machine.wiCi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    @staticmethod
-    def WSAPT(instance : riwiCi_Instance):
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
+
+        return self.solve_result 
+
+@dataclass
+class WSAPT(BaseSolver):
+
+    def solve(self, instance : riwiCi_Instance):
         """Weighted Shortest Available Processing time, dynamic dispatching rule inspired from WSPT but considers
         available jobs only at a given time t
 
@@ -74,7 +73,7 @@ class Heuristics():
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiCi_cache = []
         ci = min(instance.R)
@@ -100,34 +99,40 @@ class Heuristics():
 
         solution.machine.objective_value=solution.machine.wiCi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    @staticmethod
-    def list_heuristic(instance : riwiCi_Instance, rule : int = 1):
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
+
+        return self.solve_result 
+    
+
+@dataclass
+class ListHeuristic(BaseSolver):
+
+    rule_number : int = 1
+    reverse : bool = False
+
+    def solve(self, instance : riwiCi_Instance):
         """contains a list of static dispatching rules to be chosen from
 
         Args:
             instance (riwiCi_Instance): Instance to be solved
-            rule (int, optional) : Index of the rule to use. Defaults to 1.
 
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiCi_cache = []
-        if rule==1: # Increasing order of the release time
+        if self.rule_number==1: # Increasing order of the release time
             sorting_func = lambda job_id : instance.R[job_id]
-            reverse = False
-        elif rule==2: # WSPT
+        elif self.rule_number==2: # WSPT
             sorting_func = lambda job_id : float(instance.W[job_id])/float(instance.P[job_id])
-            reverse = True
-        elif rule ==3: #WSPT including release time in the processing time
+        elif self.rule_number ==3: #WSPT including release time in the processing time
             sorting_func = lambda job_id : float(instance.W[job_id])/float(instance.R[job_id]+instance.P[job_id])
-            reverse = True
 
         remaining_jobs_list = list(range(instance.n))
-        remaining_jobs_list.sort(reverse=reverse,key=sorting_func)
+        remaining_jobs_list.sort(reverse=self.reverse,key=sorting_func)
         
         ci = 0
         wiCi = 0
@@ -139,22 +144,21 @@ class Heuristics():
             solution.machine.wiCi_cache.append(wiCi)
         solution.machine.objective_value = solution.machine.wiCi_cache[instance.n - 1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
 
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+        return self.solve_result 
+    
+@dataclass
+class ILS(BaseSolver):
 
+    time_limit_factor: int = None
+    init_sol_method: Callable = field(default_factory=WSECi)
+    Nb_iter: int = 500000
+    Non_improv: int = 5000
 
-class Metaheuristics(Methods.Metaheuristics):
-
-    @staticmethod
-    def iterative_LS(instance : riwiCi_Instance, ** kwargs):
+    def solve(self, instance : riwiCi_Instance, ** kwargs):
         """Applies LocalSearch on the current solution iteratively
 
         Args:
@@ -163,22 +167,18 @@ class Metaheuristics(Methods.Metaheuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        time_limit_factor = kwargs.get("time_limit_factor", None)
-        init_sol_method = kwargs.get("init_sol_method", Heuristics.WSECi)
-        Nb_iter = kwargs.get("Nb_iter", 500000)
-        Non_improv = kwargs.get("Non_improv", 50000)
-
+        self.notify_on_start()
         first_time = perf_counter()
-        if time_limit_factor:
-            time_limit = instance.m * instance.n * time_limit_factor
+        if self.time_limit_factor:
+            time_limit = instance.n * self.time_limit_factor
 
         # Generate init solutoin using the initial solution method
-        solution_init = init_sol_method(instance).best_solution
+        solution_init = self.init_sol_method.solve(instance).best_solution
 
         if not solution_init:
             return Problem.SolveResult()
 
-        local_search = SingleMachine.SM_LocalSearch()
+        local_search = SingleMachine.SM_LocalSearch(copy_solution=True)
 
         all_solutions = []
         solution_best = solution_init.copy()  # Save the current best solution
@@ -187,38 +187,19 @@ class Metaheuristics(Methods.Metaheuristics):
 
         N = 0
         i = 0
-        time_to_best = perf_counter() - first_time
-        while i < Nb_iter and N < Non_improv:
+        while i < self.Nb_iter and N < self.Non_improv:
             # check time limit if exists
-            if time_limit_factor and (perf_counter() - first_time) >= time_limit:
+            if self.time_limit_factor and (perf_counter() - first_time) >= time_limit:
                 break
 
-            solution_i = local_search.improve(solution_i,solution_i.instance.get_objective())
+            solution_i = local_search.improve(solution_i)
+            self.notify_on_solution_found(solution_i)
 
             if solution_i.objective_value < solution_best.objective_value:
-                all_solutions.append(solution_i)
-                solution_best = solution_i.copy()
-                time_to_best = (perf_counter() - first_time)
                 N = 0
             i += 1
             N += 1
 
-        # Construct the solve result
-        solve_result = Problem.SolveResult(
-            best_solution=solution_best,
-            solutions=all_solutions,
-            runtime=(perf_counter() - first_time),
-            time_to_best=time_to_best,
-        )
+        self.notify_on_complete()
 
-        return solve_result
-
-    
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+        return self.solve_result

@@ -5,8 +5,6 @@ from typing import List
 
 import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
-
 
 @dataclass
 class riPrecLmax_Instance(SingleMachine.SingleInstance):
@@ -158,29 +156,6 @@ class riPrecLmax_Instance(SingleMachine.SingleInstance):
             object: default solving method
         """
         return None
-
-
-class Heuristics():
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-
-class Metaheuristics(Methods.Metaheuristics):
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
 
 class BB(Problem.Branch_Bound):
     def branch(self, node : Problem.Branch_Bound.Node):
