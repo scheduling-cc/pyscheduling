@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from time import perf_counter
 from typing import Dict, List, Union
+import queue
 
 import plotly.figure_factory as ff
 
@@ -383,21 +384,6 @@ class Branch_Bound():
         """
         pass
 
-    def discard(self, root: Node, best_solution: float, objective: Objective):
-        """prunes the search tree sections where we are certain a better solution will not be find there
-
-        Args:
-            root (Node): root node of the tree
-            best_solution (float): best objective value
-            objective (Objective): objective to be considered, to know if it's a minimization or a maximization problem
-        """
-        if root.lower_bound is not None:
-            if objective.value > 0 and root.lower_bound < best_solution : root = None
-            elif objective.value < 0 and root.lower_bound > best_solution : root = None
-        #for node in root.sub_nodes :
-        #    if objective.value > 0 and node.lower_bound < best_solution : node = None
-        #    elif objective.value < 0 and node.lower_bound > best_solution : node = None
-
     def objective(self, node : Node):
         """objective value evaluator, to be redefined
 
@@ -409,39 +395,28 @@ class Branch_Bound():
     def solution_format(self, partial_solution : object, objective_value) :
         pass
     
-    def solve(self, root : Node = None):
-        """recursive function to perform Branch&Bound on the instance attribute
-
-        Args:
-            root (Node, optional): starting node. Defaults to None.
-        """
-        if root is None:
-            root = self.Node()
-            self.root = root
-            self.start_time = perf_counter()
-        self.branch(root) 
-        if root.sub_nodes[0].if_solution is False :
-            for node in root.sub_nodes: self.bound(node)
-            sorted_sub_nodes = root.sub_nodes
-            sorted_sub_nodes.sort(reverse= self.instance.get_objective().value > 0, key = lambda node : node.lower_bound)
-            for node in sorted_sub_nodes :
-                if self.best_solution is not None : 
-                    if self.instance.get_objective().value > 0 and node.lower_bound < self.objective_value : node = None
-                    elif self.instance.get_objective().value < 0 and node.lower_bound > self.objective_value : node = None
-                if node is not None : self.solve(node)
-        else :
-            for node in root.sub_nodes: 
-                node.lower_bound = self.objective(node)
-                solution = self.solution_format(node.partial_solution,node.lower_bound)
-                self.all_solution.append(solution)
-                if self.best_solution is None or (self.instance.get_objective().value > 0 and self.objective_value < node.lower_bound) :
-                    self.objective_value = node.lower_bound
-                    self.best_solution = solution
-                elif self.best_solution is None or (self.instance.get_objective().value < 0 and node.lower_bound < self.objective_value) :
-                    self.objective_value = node.lower_bound
-                    self.best_solution = solution
+    def solve(self, lower_bound : callable, minimize = True, root : Node = None, max_time = float('inf'), upper_bound = float('+inf')):
+        reverse = 1 if minimize else -1
+        root = self.Node()
+        self.root = root
+        self.start_time = perf_counter()
+        Q = queue.LifoQueue()
+        Q.put(root)
+        while not Q.empty() and (self.objective_value is None or perf_counter()-self.start_time <= max_time):
+            node = Q.get()
+            self.branch(node)
+            for sub_node in sorted(node.sub_nodes, key= lambda x: lower_bound(self,x) if not x.if_solution else self.objective(x), reverse=minimize):
+                if sub_node.if_solution is True:
+                    solution = self.solution_format(sub_node.partial_solution, sub_node.lower_bound)
+                    if self.best_solution is None or (reverse * self.objective_value >= reverse * sub_node.lower_bound):
+                        self.objective_value = sub_node.lower_bound
+                        self.best_solution = solution
+                else:
+                    if self.best_solution is not None and ((reverse * self.objective_value < reverse * sub_node.lower_bound) or (reverse * upper_bound <= reverse * sub_node.lower_bound)):
+                        continue
+                    else: 
+                        Q.put(sub_node)
         self.runtime = perf_counter() - self.start_time
                 
     def get_solve_result(self):
         return SolveResult(best_solution=self.best_solution,status=SolveStatus.OPTIMAL,runtime=self.runtime,solutions=self.all_solution)   
-
