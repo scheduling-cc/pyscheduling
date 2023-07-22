@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 from math import exp
-from time import perf_counter
 from typing import ClassVar, List
 
-import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
+from pyscheduling.core.base_solvers import BaseSolver
 from pyscheduling.Problem import Objective
 from pyscheduling.SMSP.SingleMachine import Constraints
-from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
 @dataclass(init=False)
@@ -20,19 +17,14 @@ class wiTi_Instance(SingleMachine.SingleInstance):
     constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.D]
     objective: ClassVar[Objective] = Objective.wiTi
 
+    @property
     def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.ACT
+        return ACT()
 
 
-class Heuristics(Methods.Heuristics):
+class WSPT(BaseSolver):
 
-    @staticmethod
-    def WSPT(instance : wiTi_Instance):
+    def solve(self, instance : wiTi_Instance):
         """WSPT rule is efficient if the due dates are too tight (for overdue jobs)
 
         Args:
@@ -41,17 +33,22 @@ class Heuristics(Methods.Heuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         jobs = list(range(instance.n))
         jobs.sort(reverse=True,key=lambda job_id : float(instance.W[job_id])/float(instance.P[job_id]))
         solution = SingleMachine.SingleSolution(instance)
         for job in jobs:
             solution.machine.job_schedule.append(SingleMachine.Job(job,0,0)) 
         solution.compute_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    @staticmethod
-    def MS(instance : wiTi_Instance):
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
+
+        return self.solve_result 
+    
+class MS(BaseSolver):
+
+    def solve(self, instance : wiTi_Instance):
         """MS rule is efficient if the due dates are too loose (for not overdue jobs)
 
         Args:
@@ -60,7 +57,7 @@ class Heuristics(Methods.Heuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiTi_cache = []
         ci = 0
@@ -77,10 +74,15 @@ class Heuristics(Methods.Heuristics):
             remaining_jobs_list.pop(0)
         solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
+
+        return self.solve_result 
     
-    @staticmethod
-    def ACT(instance : wiTi_Instance):
+class ACT(BaseSolver):
+
+    def solve(self, instance : wiTi_Instance):
         """Appearant Cost Tardiness rule balances between WSPT and MS rules based on due dates tightness and range
 
         Args:
@@ -89,14 +91,14 @@ class Heuristics(Methods.Heuristics):
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiTi_cache = []
         ci = 0
         wiTi = 0
         remaining_jobs_list = list(range(instance.n))
         sumP = sum(instance.P)
-        K = Heuristics_Tuning.ACT(instance)
+        K = self.ACT_Tuning(instance)
         rule = lambda job_id : (float(instance.W[job_id])/float(instance.P[job_id]))*exp(-max(instance.D[job_id]-instance.P[job_id]-ci,0)/(K*sumP))
         while(len(remaining_jobs_list)>0):
             remaining_jobs_list.sort(reverse=True,key=rule)
@@ -108,32 +110,13 @@ class Heuristics(Methods.Heuristics):
             remaining_jobs_list.pop(0)
         solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
 
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
+        return self.solve_result 
 
-
-class Metaheuristics(Methods.Metaheuristics):
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-class Heuristics_Tuning():
-
-    @staticmethod
-    def ACT(instance : wiTi_Instance):
+    def ACT_Tuning(self, instance : wiTi_Instance):
         """Analyze the instance to consequently tune the ACT. For now, the tuning is static.
 
         Args:
@@ -145,3 +128,4 @@ class Heuristics_Tuning():
         Tightness = 1 - sum(instance.D)/(instance.n*sum(instance.P))
         Range = (max(instance.D)-min(instance.D))/sum(instance.P)
         return 0.2
+    

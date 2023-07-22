@@ -8,7 +8,6 @@ from typing import Callable, List
 
 import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
 from pyscheduling.SMSP.SingleMachine import Constraints
 
 
@@ -174,24 +173,3 @@ class Heuristics():
         K = 0.1
         sorting_rule = lambda instance,t,job_id : sum([(float(instance.W[k])/float(instance.P[job_id]))*exp(-max(instance.D[job_id][k]-instance.P[job_id]+(instance.R[job_id]-t),0)/(K*avgP)) for k in range(instance.external_params)])
         return Heuristics.dynamic_dispatch_rule_with_precedence(instance,sorting_rule,True)
-
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-
-class Metaheuristics(Methods.Metaheuristics):
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]

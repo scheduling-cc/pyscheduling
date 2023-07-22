@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar, List
 
 import pyscheduling.FS.FlowShop as FlowShop
-import pyscheduling.FS.FS_methods as FS_methods
 from pyscheduling.FS.FlowShop import Constraints
 from pyscheduling.Problem import Objective
+from pyscheduling.FS.solvers import BIBA
+from pyscheduling.core.base_solvers import BaseSolver
 
 
 @dataclass(init=False)
@@ -15,26 +16,6 @@ class FmriSijkCmax_Instance(FlowShop.FlowShopInstance):
     S: List[List[List[int]]]
     constraints: ClassVar[Constraints] = [Constraints.P, Constraints.R, Constraints.S]
     objective: ClassVar[Objective] = Objective.Cmax
-
-    def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.BIBA
+    init_sol_method: BaseSolver = BIBA()
 
 
-class Heuristics(FS_methods.Heuristics):
-
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-class Metaheuristics(FS_methods.Metaheuristics):
-    pass

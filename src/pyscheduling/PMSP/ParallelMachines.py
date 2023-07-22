@@ -894,7 +894,7 @@ class NeighbourhoodGeneration():
         return solution_copy
 
     @staticmethod
-    def RSA_neighbour(solution: ParallelInstance, q0: float):
+    def RSA_neighbour(solution: ParallelInstance, q0: float = 0.5):
         """Generates a neighbour solution of the given solution for the lahc metaheuristic
 
         Args:

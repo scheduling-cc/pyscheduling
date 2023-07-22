@@ -1,15 +1,11 @@
 from dataclasses import dataclass
 from math import exp
-from time import perf_counter
 from typing import ClassVar, List
 
-import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
+from pyscheduling.core.base_solvers import BaseSolver
 from pyscheduling.Problem import Objective
 from pyscheduling.SMSP.SingleMachine import Constraints
-from pyscheduling.SMSP.SM_methods import ExactSolvers
-
 
 @dataclass(init=False)
 class riwiTi_Instance(SingleMachine.SingleInstance):
@@ -21,19 +17,14 @@ class riwiTi_Instance(SingleMachine.SingleInstance):
     constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.R, Constraints.D]
     objective: ClassVar[Objective] = Objective.wiTi
 
+    @property
     def init_sol_method(self):
-        """Returns the default solving method
-
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.ACT_WSECi
+        return ACT_WSECi()
 
 
-class Heuristics():
+class ACT_WSECi(BaseSolver):
 
-    @staticmethod
-    def ACT_WSECi(instance : riwiTi_Instance):
+    def solve(self, instance : riwiTi_Instance):
         """Appearant Tardiness Cost heuristic using WSECi rule instead of WSPT.
 
         Args:
@@ -42,14 +33,14 @@ class Heuristics():
         Returns:
             RootProblem.SolveResult: Solve Result of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiTi_cache = []
         ci = 0
         wiTi = 0
         remaining_jobs_list = list(range(instance.n))
         sumP = sum(instance.P)
-        K = Heuristics_Tuning.ACT(instance)
+        K = self.ACT_Tuning(instance)
         rule = lambda job_id : (float(instance.W[job_id])/float(max(instance.R[job_id] - ci,0) + instance.P[job_id]))*exp(-max(instance.D[job_id]-instance.P[job_id]-ci,0)/(K*sumP))
         while(len(remaining_jobs_list)>0):
             remaining_jobs_list.sort(reverse=True,key=rule)
@@ -62,10 +53,30 @@ class Heuristics():
             remaining_jobs_list.pop(0)
         solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
+
+        return self.solve_result 
     
-    @staticmethod
-    def ACT_WSAPT(instance : riwiTi_Instance):
+    def ACT_Tuning(self, instance : riwiTi_Instance):
+        """Analyze the instance to consequently tune the ACT. For now, the tuning is static.
+
+        Args:
+            instance (riwiTi_Instance): Instance tackled by ACT heuristic
+
+        Returns:
+            int, int: K
+        """
+        Tightness = 1 - sum(instance.D)/(instance.n*sum(instance.P))
+        Range = (max(instance.D)-min(instance.D))/sum(instance.P)
+        return 0.2
+
+
+@dataclass
+class ACT_WSAPT(BaseSolver):
+
+    def solve(self, instance : riwiTi_Instance):
         """Appearant Tardiness Cost heuristic using WSAPT rule instead of WSPT
 
         Args:
@@ -74,14 +85,14 @@ class Heuristics():
         Returns:
             RootProblem.SolveResult: Solve Result of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiTi_cache = []
         ci = min(instance.R)
         wiTi = 0
         remaining_jobs_list = list(range(instance.n))
         sumP = sum(instance.P)
-        K = Heuristics_Tuning.ACT(instance)
+        K = self.ACT_Tuning(instance)
         rule = lambda job_id : (float(instance.W[job_id])/float(instance.P[job_id]))*exp(-max(instance.D[job_id]-instance.P[job_id]-ci,0)/(K*sumP))
         while(len(remaining_jobs_list)>0):
             filtered_remaining_jobs_list = list(filter(lambda job_id : instance.R[job_id]<=ci,remaining_jobs_list))
@@ -99,32 +110,13 @@ class Heuristics():
             remaining_jobs_list.pop(0)
         solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
+
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
+
+        return self.solve_result 
     
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-
-class Metaheuristics(Methods.Metaheuristics):
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-class Heuristics_Tuning():
-
-    @staticmethod
-    def ACT(instance : riwiTi_Instance):
+    def ACT_Tuning(self, instance : riwiTi_Instance):
         """Analyze the instance to consequently tune the ACT. For now, the tuning is static.
 
         Args:
@@ -136,3 +128,4 @@ class Heuristics_Tuning():
         Tightness = 1 - sum(instance.D)/(instance.n*sum(instance.P))
         Range = (max(instance.D)-min(instance.D))/sum(instance.P)
         return 0.2
+    

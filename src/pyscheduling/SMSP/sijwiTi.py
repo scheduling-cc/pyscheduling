@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 from math import exp
-from time import perf_counter
 from typing import ClassVar, List
 
-import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.SingleMachine as SingleMachine
-import pyscheduling.SMSP.SM_methods as Methods
+from pyscheduling.core.base_solvers import BaseSolver
 from pyscheduling.Problem import Objective
 from pyscheduling.SMSP.SingleMachine import Constraints
-from pyscheduling.SMSP.SM_methods import ExactSolvers
 
 
 @dataclass(init=False)
@@ -21,20 +18,14 @@ class sijwiTi_Instance(SingleMachine.SingleInstance):
     constraints: ClassVar[List[Constraints]] = [Constraints.P, Constraints.W, Constraints.D, Constraints.S]
     objective: ClassVar[Objective] = Objective.wiTi
 
+    @property
     def init_sol_method(self):
-        """Returns the default solving method
+        return ACTS()
 
-        Returns:
-            object: default solving method
-        """
-        return Heuristics.ACTS
-
-
-
-class Heuristics():
+@dataclass
+class ACTS(BaseSolver):
     
-    @staticmethod
-    def ACTS(instance : sijwiTi_Instance):
+    def solve(self, instance : sijwiTi_Instance):
         """Appearant Cost Tardiness with Setup
 
         Args:
@@ -43,7 +34,7 @@ class Heuristics():
         Returns:
             RootProblem.SolveResult: SolveResult of the instance by the method
         """
-        startTime = perf_counter()
+        self.notify_on_start()
         solution = SingleMachine.SingleSolution(instance)
         solution.machine.wiTi_cache = []
         ci = 0
@@ -51,7 +42,7 @@ class Heuristics():
         prev_job = -1
         remaining_jobs_list = list(range(instance.n))
         while(len(remaining_jobs_list)>0):
-            prev_job, taken_job = Heuristics_HelperFunctions.ACTS_Sorting(instance,remaining_jobs_list,ci,prev_job)
+            prev_job, taken_job = self.ACTS_Sorting(instance,remaining_jobs_list,ci,prev_job)
             solution.machine.job_schedule.append(SingleMachine.Job(taken_job,ci,ci+instance.S[prev_job][taken_job]+instance.P[taken_job]))
             ci += instance.S[prev_job][taken_job] + instance.P[taken_job]
             wiTi += instance.W[taken_job]*max(ci-instance.D[taken_job],0)
@@ -60,32 +51,13 @@ class Heuristics():
             prev_job = taken_job
         solution.machine.objective_value=solution.machine.wiTi_cache[instance.n-1]
         solution.fix_objective()
-        return Problem.SolveResult(best_solution=solution,runtime=perf_counter()-startTime,solutions=[solution])
 
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
+        self.notify_on_solution_found(solution)
+        self.notify_on_complete()
 
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-
-class Metaheuristics(Methods.Metaheuristics):
-    @classmethod
-    def all_methods(cls):
-        """returns all the methods of the given Heuristics class
-
-        Returns:
-            list[object]: list of functions
-        """
-        return [getattr(cls, func) for func in dir(cls) if not func.startswith("__") and not func == "all_methods"]
-
-class Heuristics_HelperFunctions():
-
-    @staticmethod
-    def ACTS_Sorting(instance : sijwiTi_Instance, remaining_jobs : List[int], t : int, prev_job : int):
+        return self.solve_result 
+    
+    def ACTS_Sorting(self, instance : sijwiTi_Instance, remaining_jobs : List[int], t : int, prev_job : int):
         """Returns the prev_job and the job to be scheduled next based on ACTS rule.
         It returns a couple of previous job scheduled and the new job to be scheduled. The previous job will be the
         same than the taken job if it's the first time when the rule is applied, is the same prev_job passed as
@@ -106,7 +78,7 @@ class Heuristics_HelperFunctions():
         for i in range(instance.n):
             sumSi = sum(instance.S[i])
             sumS += sumSi
-        K1, K2 = Heuristics_HelperFunctions.ACTS_Tuning(instance)
+        K1, K2 = self.ACTS_Tuning(instance)
         rule = lambda prev_j,job_id : (float(instance.W[job_id])/float(instance.P[job_id]))*exp(
             -max(instance.D[job_id]-instance.P[job_id]-t,0)/(K1*sumP))*exp(-instance.S[prev_j][job_id]/(K2*sumS))
         max_rule_value = -1
@@ -125,9 +97,7 @@ class Heuristics_HelperFunctions():
                     taken_job = job
             return prev_job, taken_job
         
-
-    @staticmethod
-    def ACTS_Tuning(instance : sijwiTi_Instance):
+    def ACTS_Tuning(self, instance : sijwiTi_Instance):
         """Analyze the instance to consequently tune the ACTS. For now, the tuning is static.
 
         Args:

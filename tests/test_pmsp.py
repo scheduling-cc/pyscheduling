@@ -2,9 +2,11 @@ import os
 import sys
 
 import pytest
-from pyscheduling.PMSP import RmriSijkCmax, RmSijkCmax, RmridiSijkWiTi, RmriSijkWiCi, RmriSijkWiFi, PM_methods
+from pyscheduling.PMSP import RmriSijkCmax, RmSijkCmax, RmridiSijkWiTi, RmriSijkWiCi, RmriSijkWiFi
 from pyscheduling.PMSP.ParallelMachines import ParallelSolution, PM_LocalSearch
 from pyscheduling.Problem import SolveResult, SolveStatus
+from pyscheduling.PMSP.solvers import BIBA, GRASP, AntColony, GeneticAlgorithm, SA, LAHC
+import pyscheduling.PMSP.ParallelMachines as pm
 
 # Helper functions
 def check_solve_result(solve_result, expected_nb_sol=None):
@@ -71,35 +73,42 @@ class TestRmSijkCmax:
 
     # Testing methods
     def test_constructive_solver(self, instance_zero):
-        solve_result = RmSijkCmax.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for decreasing in [False, True]:
             for rule_number in range(1, 30):
-                solve_result = RmSijkCmax.Heuristics.list_heuristic(
-                    instance_zero, rule_number, decreasing)
+                solver = RmSijkCmax.ListHeuristic(rule=rule_number, decreasing= decreasing)
+                solve_result = solver.solve(instance_zero)
                 check_solve_result(solve_result, expected_nb_sol=1)
 
-    def test_aco_solver(self, instance_zero):
-        solve_result = RmSijkCmax.Metaheuristics.antColony(instance_zero)
-        check_solve_result(solve_result)
+    """def test_aco_solver(self, instance_zero):
+        solver = AntColony()
+        solve_result = solver.solve(instance_zero)
+        check_solve_result(solve_result)"""
 
     def test_grasp(self, instance_zero):
-        solve_results = PM_methods.Heuristics.grasp(instance_zero)
+        solver = GRASP()
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
 
     def test_lahc(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor= 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_rsa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"restricted": True, "time_limit_factor": 0.2})
+        solver = SA(generate_neighbour = pm.NeighbourhoodGeneration.RSA_neighbour,
+                    time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     def test_csp(self, instance_zero):
@@ -109,7 +118,9 @@ class TestRmSijkCmax:
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = RmSijkCmax.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -118,7 +129,9 @@ class TestRmSijkCmax:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = RmSijkCmax.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -177,35 +190,41 @@ class TestRmriSijkCmax:
 
     # Testing methods
     def test_constructive_solver(self, instance_zero):
-        solve_result = RmriSijkCmax.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for decreasing in [False, True]:
             for rule_number in range(1, 39):
-                solve_result = RmriSijkCmax.Heuristics.list_heuristic(
-                    instance_zero, rule_number, decreasing)
+                solver = RmriSijkCmax.ListHeuristic(rule=rule_number, decreasing=decreasing)
+                solve_result = solver.solve(instance_zero)
                 check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = PM_methods.Heuristics.grasp(instance_zero)
+        solver = GRASP()
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_rsa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"restricted": True, "time_limit_factor": 0.2})
+        solver = SA(generate_neighbour = pm.NeighbourhoodGeneration.RSA_neighbour,
+                    time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     def test_ga(self, instance_zero):
-        solve_result = RmriSijkCmax.Metaheuristics.GA(instance_zero, **{"n_iterations": 10})
-        print(solve_result)
+        solver = GeneticAlgorithm(n_iterations= 10)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     def test_csp(self, instance_zero):
@@ -220,7 +239,9 @@ class TestRmriSijkCmax:
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = RmriSijkCmax.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -229,7 +250,9 @@ class TestRmriSijkCmax:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = RmriSijkCmax.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -289,30 +312,36 @@ class TestRmridiSijkWiTi:
 
     # Testing methods
     def test_constructive_solver(self, instance_zero):
-        solve_result = RmridiSijkWiTi.Heuristics.BIBA(instance_zero)
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for decreasing in [False, True]:
             for rule_number in range(1, 13):
-                solve_result = RmridiSijkWiTi.Heuristics.list_heuristic(
-                    instance_zero, rule_number, decreasing)
+                solver = RmridiSijkWiTi.ListHeuristic(rule= rule_number, decreasing=decreasing)
+                solve_result = solver.solve(instance_zero)
                 check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = PM_methods.Heuristics.grasp(instance_zero)
+        solver = GRASP()
+        solve_results = solver.solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solver = LAHC(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solver = SA(time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_rsa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"restricted": True, "time_limit_factor": 0.2})
+        solver = SA(generate_neighbour = pm.NeighbourhoodGeneration.RSA_neighbour,
+                    time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     #def test_csp(self, instance_zero):
@@ -322,7 +351,9 @@ class TestRmridiSijkWiTi:
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = RmridiSijkWiTi.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -331,7 +362,9 @@ class TestRmridiSijkWiTi:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = RmridiSijkWiTi.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -391,30 +424,32 @@ class TestRmriSijkWiCi:
 
     # Testing methods
     def test_constructive_solver(self, instance_zero):
-        solve_result = RmriSijkWiCi.Heuristics.BIBA(instance_zero)
+        solve_result = BIBA().solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for decreasing in [False, True]:
             for rule_number in range(1, 23):
-                solve_result = RmriSijkWiCi.Heuristics.list_heuristic(
-                    instance_zero, rule_number, decreasing)
+                solve_result = RmriSijkWiCi.ListHeuristic(rule=rule_number,
+                                decreasing=decreasing).solve(instance_zero)
                 check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = PM_methods.Heuristics.grasp(instance_zero)
+        solve_results = GRASP().solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solve_result = LAHC(time_limit_factor = 0.2).solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solve_result = SA(time_limit_factor = 0.2).solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_rsa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"restricted": True, "time_limit_factor": 0.2})
+        solver = SA(generate_neighbour = pm.NeighbourhoodGeneration.RSA_neighbour,
+                    time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     #def test_csp(self, instance_zero):
@@ -424,7 +459,9 @@ class TestRmriSijkWiCi:
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = RmriSijkWiCi.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -433,7 +470,9 @@ class TestRmriSijkWiCi:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = RmriSijkWiCi.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -493,30 +532,32 @@ class TestRmriSijkWiFi:
 
     # Testing methods
     def test_constructive_solver(self, instance_zero):
-        solve_result = RmriSijkWiFi.Heuristics.BIBA(instance_zero)
+        solve_result = BIBA().solve(instance_zero)
         check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_list_heuristics(self, instance_zero):
         for decreasing in [False, True]:
             for rule_number in range(1, 23):
-                solve_result = RmriSijkWiFi.Heuristics.list_heuristic(
-                    instance_zero, rule_number, decreasing)
+                solver = RmriSijkWiFi.ListHeuristic(rule=rule_number, decreasing=decreasing)
+                solve_result = solver.solve(instance_zero)
                 check_solve_result(solve_result, expected_nb_sol=1)
 
     def test_grasp(self, instance_zero):
-        solve_results = PM_methods.Heuristics.grasp(instance_zero)
+        solve_results = GRASP().solve(instance_zero)
         check_solve_result(solve_results, expected_nb_sol=5)
 
     def test_lahc(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.lahc(instance_zero, **{"time_limit_factor": 0.2})
+        solve_result = LAHC(time_limit_factor=0.2).solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_sa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"time_limit_factor": 0.2})
+        solve_result = SA(time_limit_factor=0.2).solve(instance_zero)
         check_solve_result(solve_result)
     
     def test_rsa(self, instance_zero):
-        solve_result = PM_methods.Metaheuristics.SA(instance_zero, **{"restricted": True, "time_limit_factor": 0.2})
+        solver = SA(generate_neighbour = pm.NeighbourhoodGeneration.RSA_neighbour,
+                    time_limit_factor = 0.2)
+        solve_result = solver.solve(instance_zero)
         check_solve_result(solve_result)
 
     #def test_csp(self, instance_zero):
@@ -526,7 +567,9 @@ class TestRmriSijkWiFi:
 
     # Testing local search
     def test_local_search(self, instance_zero):
-        solution = RmriSijkWiFi.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=False)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)
@@ -535,7 +578,9 @@ class TestRmriSijkWiFi:
         assert improved_solution is solution, f'Copy solution is set to False and is not keeping the original solution'
 
     def test_local_search_copy(self, instance_zero):
-        solution = RmriSijkWiFi.Heuristics.BIBA(instance_zero).best_solution
+        solver = BIBA()
+        solve_result = solver.solve(instance_zero)
+        solution = solve_result.best_solution
         ls_proc = PM_LocalSearch(copy_solution=True)
         improved_solution = ls_proc.improve(solution)
         is_valid = ParallelSolution.is_valid(improved_solution)

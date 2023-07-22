@@ -3,12 +3,12 @@ from dataclasses import dataclass, field
 from time import perf_counter
 from typing import List, Union
 
-from pyscheduling.Problem import BaseInstance, SolveResult, BaseSolution
+from pyscheduling.Problem import BaseInstance, SolveResult, BaseSolution, SolveStatus
 from pyscheduling.core.listeners import BaseListener
 
 
 @dataclass
-class Solver(ABC):
+class BaseSolver(ABC):
 
     listeners: List[BaseListener] = field(default_factory=list, init=False, repr=False)
     solve_result: SolveResult = field(default_factory=SolveResult, init=False)
@@ -37,6 +37,7 @@ class Solver(ABC):
             new_solution.objective_value <= self.solve_result.best_solution.objective_value:
             self.solve_result.best_solution = new_solution
             self.solve_result.time_to_best = time_found
+            self.solve_result.solve_status = SolveStatus.FEASIBLE
 
     def notify_on_start(self):
         """Notify the subscribed listeners of the start of the solve process
