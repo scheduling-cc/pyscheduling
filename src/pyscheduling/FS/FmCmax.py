@@ -1,13 +1,11 @@
 from dataclasses import dataclass, field
-from time import perf_counter
 from typing import ClassVar, List
 
 import pyscheduling.FS.FlowShop as FlowShop
 from pyscheduling.FS.solvers import BIBA
-import pyscheduling.Problem as Problem
 from pyscheduling.FS.FlowShop import Constraints
 from pyscheduling.Problem import Job, Objective
-from pyscheduling.core.base_solvers.base_solver import BaseSolver
+from pyscheduling.core.base_solvers import BaseSolver
 
 
 @dataclass

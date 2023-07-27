@@ -1,13 +1,9 @@
 import json
 import random
-import sys
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import List
-
-import numpy as np
 
 import pyscheduling.Problem as Problem
 from pyscheduling.Problem import Job

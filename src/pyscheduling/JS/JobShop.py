@@ -1,6 +1,5 @@
 import json
 import random
-import sys
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
@@ -8,12 +7,11 @@ from pathlib import Path
 from typing import List
 
 import networkx as nx
-import numpy as np
 
 import pyscheduling.Problem as Problem
 import pyscheduling.SMSP.rihiCi as rihiCi
 import pyscheduling.SMSP.riPrecLmax as riPrecLmax
-from pyscheduling.Problem import Objective, RandomDistrib, Job
+from pyscheduling.Problem import Objective, Job
 from pyscheduling.JS.Constraints import Constraints
 
 class GenerationProtocol(Enum):
@@ -87,7 +85,7 @@ class JobsGraph:
         nx.draw(self.DG, pos, with_labels=True)
         edge_labels = nx.get_edge_attributes(self.DG, 'weight')
         nx.draw_networkx_edge_labels(self.DG, pos, edge_labels=edge_labels)
-        plt.show()
+        #plt.show()
     
     def longest_path(self, u, v):
         #return -nx.shortest_path_length(self.DG, source=u, target=v, weight='weight')

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from time import perf_counter
-from typing import List, Union
+from typing import List
 
 from pyscheduling.Problem import BaseInstance, SolveResult, BaseSolution, SolveStatus
 from pyscheduling.core.listeners import BaseListener
