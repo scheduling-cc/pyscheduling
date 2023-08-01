@@ -1,0 +1,48 @@
+:py:mod:`pyscheduling.SMSP.solvers.dispatch_heuristic`
+======================================================
+
+.. py:module:: pyscheduling.SMSP.solvers.dispatch_heuristic
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.solvers.dispatch_heuristic.DispatchHeuristic
+
+
+
+
+.. py:class:: DispatchHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule
+      :annotation: :Callable
+
+      
+
+   .. py:attribute:: reverse
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.SMSP.SingleMachine.SingleInstance)
+
+      Orders the jobs according to the rule (lambda function) and returns the schedule accordignly
+
+      :param instance: Instance to be solved
+      :type instance: SingleInstance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

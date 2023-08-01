@@ -1,0 +1,26 @@
+:py:mod:`pyscheduling.core`
+===========================
+
+.. py:module:: pyscheduling.core
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   base_solvers/index.rst
+   listeners/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   BaseConstraints/index.rst
+   benchmark/index.rst
+
+

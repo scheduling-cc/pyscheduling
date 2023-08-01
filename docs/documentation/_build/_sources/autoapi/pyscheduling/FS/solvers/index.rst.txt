@@ -1,0 +1,21 @@
+:py:mod:`pyscheduling.FS.solvers`
+=================================
+
+.. py:module:: pyscheduling.FS.solvers
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   biba/index.rst
+   csp/index.rst
+   dispatch_rule/index.rst
+   grasp/index.rst
+   lahc/index.rst
+   minit/index.rst
+   sa/index.rst
+
+

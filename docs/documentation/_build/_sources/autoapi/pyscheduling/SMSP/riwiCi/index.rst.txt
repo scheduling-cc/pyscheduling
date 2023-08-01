@@ -1,0 +1,168 @@
+:py:mod:`pyscheduling.SMSP.riwiCi`
+==================================
+
+.. py:module:: pyscheduling.SMSP.riwiCi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.riwiCi.riwiCi_Instance
+   pyscheduling.SMSP.riwiCi.WSECi
+   pyscheduling.SMSP.riwiCi.WSAPT
+   pyscheduling.SMSP.riwiCi.ListHeuristic
+   pyscheduling.SMSP.riwiCi.ILS
+
+
+
+
+.. py:class:: riwiCi_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:method:: init_sol_method()
+      :property:
+
+
+
+.. py:class:: WSECi
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: riwiCi_Instance)
+
+      Weighted Shortest Expected Completion time, dynamic dispatching rule inspired from WSPT but adds release
+      time to processing time
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+
+.. py:class:: WSAPT
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: riwiCi_Instance)
+
+      Weighted Shortest Available Processing time, dynamic dispatching rule inspired from WSPT but considers
+      available jobs only at a given time t
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+
+.. py:class:: ListHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule_number
+      :annotation: :int = 1
+
+      
+
+   .. py:attribute:: reverse
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: riwiCi_Instance)
+
+      contains a list of static dispatching rules to be chosen from
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+
+.. py:class:: ILS
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: time_limit_factor
+      :annotation: :int
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :Callable
+
+      
+
+   .. py:attribute:: Nb_iter
+      :annotation: :int = 500000
+
+      
+
+   .. py:attribute:: Non_improv
+      :annotation: :int = 5000
+
+      
+
+   .. py:method:: solve(instance: riwiCi_Instance, **kwargs)
+
+      Applies LocalSearch on the current solution iteratively
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

@@ -1,0 +1,17 @@
+:py:mod:`pyscheduling.JS.solvers`
+=================================
+
+.. py:module:: pyscheduling.JS.solvers
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   biba/index.rst
+   dispatch_heuristic/index.rst
+   grasp/index.rst
+
+

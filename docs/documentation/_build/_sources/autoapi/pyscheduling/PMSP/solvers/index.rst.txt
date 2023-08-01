@@ -1,0 +1,21 @@
+:py:mod:`pyscheduling.PMSP.solvers`
+===================================
+
+.. py:module:: pyscheduling.PMSP.solvers
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   ant_colony/index.rst
+   biba/index.rst
+   genetic_algorithm/index.rst
+   grasp/index.rst
+   lahc/index.rst
+   ordered_constructive/index.rst
+   sa/index.rst
+
+

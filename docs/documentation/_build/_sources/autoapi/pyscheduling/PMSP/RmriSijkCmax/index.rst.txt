@@ -1,0 +1,230 @@
+:py:mod:`pyscheduling.PMSP.RmriSijkCmax`
+========================================
+
+.. py:module:: pyscheduling.PMSP.RmriSijkCmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmriSijkCmax.RmriSijkCmax_Instance
+   pyscheduling.PMSP.RmriSijkCmax.CSP
+   pyscheduling.PMSP.RmriSijkCmax.MILP
+   pyscheduling.PMSP.RmriSijkCmax.ExactSolvers
+   pyscheduling.PMSP.RmriSijkCmax.ListHeuristic
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmriSijkCmax.GUROBI_IMPORTED
+   pyscheduling.PMSP.RmriSijkCmax.DOCPLEX_IMPORTED
+
+
+.. py:data:: GUROBI_IMPORTED
+   
+
+   
+
+.. py:data:: DOCPLEX_IMPORTED
+   
+
+   
+
+.. py:class:: RmriSijkCmax_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.PMSP.ParallelMachines.ParallelInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[List[int]]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[pyscheduling.PMSP.ParallelMachines.Constraints]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+   .. py:method:: lower_bound()
+
+      Computes the lower bound of maximal completion time of the instance
+      by dividing the sum of minimal completion time between job pairs on the number of machines
+
+      :returns: Lower Bound of maximal completion time
+      :rtype: int
+
+
+
+.. py:class:: CSP
+
+   .. py:class:: MyCallback(stop_times=[300, 600, 3600, 7200])
+
+      Bases: :py:obj:`docplex.cp.solver.cpo_callback.CpoCallback`
+
+      CPO callback allows to be warned directly by the solver engine about different solving steps.
+
+      This class is an 'abstract' class that must be extended by actual listener implementation.
+      All method of this class are empty.
+
+      *New in version 2.10.*
+
+      .. py:method:: invoke(solver, event, jsol)
+
+         Notify the callback about a solver event.
+
+         This method is called every time an event is notified by the CPO solver.
+         Associated to the event, the solver information is provided as a an object of class
+         class:`~docplex.cp.solution.CpoSolveResult` that is instantiated with information available at this step.
+
+         :param solver: Originator CPO solver (object of class :class:`~docplex.cp.solver.solver.CpoSolver`)
+         :param event: Event id, string with value in ALL_CALLBACK_EVENTS
+         :param sres: Solver data, object of class :class:`~docplex.cp.solution.CpoSolveResult`
+
+
+
+   .. py:attribute:: CPO_STATUS
+      
+
+      
+
+   .. py:method:: _csp_transform_solution(msol, X_ij, instance)
+      :staticmethod:
+
+
+   .. py:method:: solve(instance, **kwargs)
+      :staticmethod:
+
+      Returns the solution using the Cplex - CP optimizer solver
+
+      :param instance: Instance object to solve
+      :type instance: Instance
+      :param log_path: Path to the log file to output cp optimizer log. Defaults to None to disable logging.
+      :type log_path: str, optional
+      :param time_limit: Time limit for executing the solver. Defaults to 300s.
+      :type time_limit: int, optional
+      :param threads: Number of threads to set for cp optimizer solver. Defaults to 1.
+      :type threads: int, optional
+
+      :returns: The object represeting the solving process result
+      :rtype: SolveResult
+
+
+
+.. py:class:: MILP
+
+   .. py:attribute:: GUROBI_STATUS
+      
+
+      
+
+   .. py:method:: format_matrices(instance)
+      :staticmethod:
+
+      Formats the matrices to add the dummy job and fix indices according to mip model
+
+      :param instance: instance to be solved
+      :type instance: RmSijkCmax_Instance
+
+      :returns: setup times matrices, processing times matrix
+      :rtype: (list[list[list[int]]], list[list[int]])
+
+
+   .. py:method:: build_callback(mycallback, stop_times=[300, 600, 3600, 7200])
+      :staticmethod:
+
+
+   .. py:method:: mycallback(model, where)
+      :staticmethod:
+
+
+   .. py:method:: transform_solution(Y_ij, C_j, instance)
+      :staticmethod:
+
+
+   .. py:method:: solve(instance, **kwargs)
+      :staticmethod:
+
+      Returns the solution using the MILP solver
+
+      :param instance: Instance object to solve
+      :type instance: Instance
+      :param log_path: Path to the log file to output gurobi log. Defaults to None to disable logging.
+      :type log_path: str, optional
+      :param time_limit: Time limit for executing the solver. Defaults to 300s.
+      :type time_limit: int, optional
+      :param threads: Number of threads to set for gurobi solver. Defaults to 1.
+      :type threads: int, optional
+
+      :returns: The object represeting the solving process result
+      :rtype: SolveResult
+
+
+
+.. py:class:: ExactSolvers
+
+
+.. py:class:: ListHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule
+      :annotation: :int = 1
+
+      
+
+   .. py:attribute:: decreasing
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: RmriSijkCmax_Instance)
+
+      list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution
+
+      :param instance: Instance to be solved by the heuristic
+      :type instance: RmriSijkCmax_Instance
+      :param rule: ID of the rule to follow by the heuristic. Defaults to 1.
+      :type rule: int, optional
+      :param decreasing: _description_. Defaults to False.
+      :type decreasing: bool, optional
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+

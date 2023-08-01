@@ -1,0 +1,118 @@
+:py:mod:`pyscheduling.SMSP.risijwiTi`
+=====================================
+
+.. py:module:: pyscheduling.SMSP.risijwiTi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.risijwiTi.risijwiTi_Instance
+   pyscheduling.SMSP.risijwiTi.ACTS_WSECi
+
+
+
+
+.. py:class:: risijwiTi_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: D
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:method:: init_sol_method()
+      :property:
+
+
+
+.. py:class:: ACTS_WSECi
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: risijwiTi_Instance)
+
+      Appearant Tardiness Cost with Setup heuristic using WSECi rule instead of WSPT
+
+      :param instance: Instance to be solved
+      :type instance: risijwiTi_Instance
+
+      :returns: Solve Result of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: ACTS_WSECi_Sorting(instance: risijwiTi_Instance, remaining_jobs: List[pyscheduling.SMSP.SingleMachine.Job], t: int, prev_job: int)
+
+      Returns the prev_job and the job to be scheduled next based on ACTS_WSECi rule.
+      It returns a couple of previous job scheduled and the new job to be scheduled. The previous job will be the
+      same than the taken job if it's the first time when the rule is applied, is the same prev_job passed as
+      argument to the function otherwise. This is to avoid extra-ifs and thus not slowing the execution of
+      the heuristic
+
+      :param instance: Instance tackled by the ACTS_WSECi heuristic
+      :type instance: risijwiTi_Instance
+      :param remaining_jobs: Remaining jobs list to be scheduled
+      :type remaining_jobs: list[SingleMachine.Job]
+      :param t: current time
+      :type t: int
+      :param prev_job: Previous scheduled job, necessary for setup time
+      :type prev_job: int
+
+      :returns: previous job scheduled, taken job to be scheduled
+      :rtype: int, int
+
+
+   .. py:method:: ACTS_WSECi_Tuning(instance: risijwiTi_Instance)
+
+      Analyze the instance to consequently tune the ACTS_WSECi. For now, the tuning is static.
+
+      :param instance: Instance tackled by ACTS_WSECi heuristic
+      :type instance: risijwiTi_Instance
+
+      :returns: K1 , K2
+      :rtype: int, int
+
+
+

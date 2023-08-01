@@ -1,0 +1,21 @@
+:py:mod:`pyscheduling.SMSP.solvers`
+===================================
+
+.. py:module:: pyscheduling.SMSP.solvers
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   biba/index.rst
+   csp/index.rst
+   dispatch_heuristic/index.rst
+   dynamic_dispatch_heuristic/index.rst
+   grasp/index.rst
+   lahc/index.rst
+   sa/index.rst
+
+

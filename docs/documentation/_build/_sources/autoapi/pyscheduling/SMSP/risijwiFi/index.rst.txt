@@ -1,0 +1,99 @@
+:py:mod:`pyscheduling.SMSP.risijwiFi`
+=====================================
+
+.. py:module:: pyscheduling.SMSP.risijwiFi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.risijwiFi.risijwiFi_Instance
+   pyscheduling.SMSP.risijwiFi.ListHeuristic
+
+
+
+
+.. py:class:: risijwiFi_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: D
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+
+.. py:class:: ListHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule_number
+      :annotation: :int = 1
+
+      
+
+   .. py:attribute:: reverse
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: risijwiFi_Instance)
+
+      contains a list of static dispatching rules to be chosen from
+
+      :param instance: Instance to be solved
+      :type instance: riwiCi_Instance
+      :param rule_number: Index of the rule to use. Defaults to 1.
+      :type rule_number: int, optional
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

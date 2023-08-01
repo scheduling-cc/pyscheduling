@@ -1,0 +1,241 @@
+:py:mod:`BaseConstraints`
+=========================
+
+.. py:module:: BaseConstraints
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   BaseConstraints.BaseConstraints
+
+
+
+
+.. py:class:: BaseConstraints
+
+   .. py:class:: BaseConstraint
+
+      .. py:method:: create(instance, var)
+         :classmethod:
+
+
+      .. py:method:: __lt__(other)
+
+         Return self<value.
+
+
+
+   .. py:class:: P
+
+      Bases: :py:obj:`BaseConstraints.BaseConstraint`
+
+      .. py:attribute:: _name
+         :annotation: = P
+
+         
+
+      .. py:attribute:: _value
+         :annotation: = 0
+
+         
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+   .. py:class:: W
+
+      Bases: :py:obj:`BaseConstraints.BaseConstraint`
+
+      .. py:attribute:: _name
+         :annotation: = W
+
+         
+
+      .. py:attribute:: _value
+         :annotation: = 10
+
+         
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+   .. py:class:: R
+
+      Bases: :py:obj:`BaseConstraints.BaseConstraint`
+
+      .. py:attribute:: _name
+         :annotation: = R
+
+         
+
+      .. py:attribute:: _value
+         :annotation: = 20
+
+         
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+   .. py:class:: D
+
+      Bases: :py:obj:`BaseConstraints.BaseConstraint`
+
+      .. py:attribute:: _name
+         :annotation: = D
+
+         
+
+      .. py:attribute:: _value
+         :annotation: = 30
+
+         
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+   .. py:class:: S
+
+      Bases: :py:obj:`BaseConstraints.BaseConstraint`
+
+      .. py:attribute:: _name
+         :annotation: = S
+
+         
+
+      .. py:attribute:: _value
+         :annotation: = 40
+
+         
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+   .. py:method:: read_1D(content: List[str], startIndex: int)
+      :staticmethod:
+
+      Read a table from a list of lines extracted from the file of the instance
+
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the vector
+      :type startIndex: int
+
+      :returns: (vector, index of the next section of the instance)
+      :rtype: (list[int],int)
+
+
+   .. py:method:: read_2D(dimension_i: int, content: List[str], startIndex: int)
+      :staticmethod:
+
+      Read a matrix from a list of lines extracted from the file of the instance
+
+      :param dimension_i: number of lines of the matrix, usually number of jobs 'n'.
+      :type dimension_i: int
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the matrix
+      :type startIndex: int
+
+      :returns: (Matrix, index of the next section of the instance)
+      :rtype: (list[list[int]],int)
+
+
+   .. py:method:: read_3D(dimension_i: int, dimension_j: int, content: List[str], startIndex: int)
+      :staticmethod:
+
+      Read the table of matrices from a list of lines extracted from the file of the instance
+
+      :param dimension_i: Dimension of the table, usually number of machines 'm'.
+      :type dimension_i: int
+      :param dimension_j: Dimension of the matrix, usually number of jobs 'n'.
+      :type dimension_j: int
+      :param content: lines of the file of the instance
+      :type content: list[str]
+      :param startIndex: Index from where starts the table of matrices
+      :type startIndex: int
+
+      :returns: (Table of matrices, index of the next section of the instance)
+      :rtype: (list[list[list[int]]],int)
+
+
+   .. py:method:: write_1D(array: List[int], file)
+      :staticmethod:
+
+
+   .. py:method:: write_2D(matrix: List[List[int]], file)
+      :staticmethod:
+
+
+   .. py:method:: generate_1D(nb_values: int, min_value: int = 1, max_value: int = 99, law: pyscheduling.Problem.RandomDistrib = RandomDistrib.UNIFORM)
+      :staticmethod:
+
+
+   .. py:method:: generate_2D(nb_lines: int, nb_columns: int, min_value: int = 1, max_value: int = 99, law: pyscheduling.Problem.RandomDistrib = RandomDistrib.UNIFORM)
+      :staticmethod:
+
+
+   .. py:method:: generate_3D(nb_matrices: int, nb_lines: int, nb_columns: int, min_value: int = 1, max_value: int = 99, law: pyscheduling.Problem.RandomDistrib = RandomDistrib.UNIFORM)
+      :staticmethod:
+
+
+   .. py:method:: flatten_list(array: List) -> List
+      :staticmethod:
+
+
+

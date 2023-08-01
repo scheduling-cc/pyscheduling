@@ -1,0 +1,119 @@
+:py:mod:`base_solvers.base_BB`
+==============================
+
+.. py:module:: base_solvers.base_BB
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   base_solvers.base_BB.Branch_Bound
+
+
+
+
+.. py:class:: Branch_Bound
+
+   .. py:class:: Node
+
+      .. py:attribute:: lower_bound
+         :annotation: :float
+
+         
+
+      .. py:attribute:: if_solution
+         :annotation: :bool = False
+
+         
+
+      .. py:attribute:: partial_solution
+         :annotation: :object
+
+         
+
+      .. py:attribute:: sub_nodes
+         :annotation: :List[object]
+
+         
+
+      .. py:method:: delete()
+
+         To delete the variable definitely
+
+
+
+
+   .. py:attribute:: instance
+      :annotation: :pyscheduling.Problem.BaseInstance
+
+      
+
+   .. py:attribute:: root
+      :annotation: :object
+
+      
+
+   .. py:attribute:: objective_value
+      
+
+      
+
+   .. py:attribute:: best_solution
+      :annotation: :pyscheduling.Problem.BaseSolution
+
+      
+
+   .. py:attribute:: all_solution
+      :annotation: :List[pyscheduling.Problem.BaseSolution]
+
+      
+
+   .. py:attribute:: start_time
+      :annotation: :float = 0
+
+      
+
+   .. py:attribute:: runtime
+      :annotation: :float = 0
+
+      
+
+   .. py:method:: branch(node: Node)
+
+      branching strategy, to be redefined
+
+      :param node: node to branch from
+      :type node: Node
+
+
+   .. py:method:: bound(node: Node)
+
+      bounding method, to be redefined
+
+      :param node: node to bound
+      :type node: Node
+
+
+   .. py:method:: objective(node: Node)
+
+      objective value evaluator, to be redefined
+
+      :param node: node to be evaluated as a complete solution
+      :type node: Node
+
+
+   .. py:method:: solution_format(partial_solution: object, objective_value)
+
+
+   .. py:method:: solve(lower_bound: callable, minimize=True, root: Node = None, max_time=float('inf'), upper_bound=float('+inf'))
+
+
+   .. py:method:: get_solve_result()
+
+
+

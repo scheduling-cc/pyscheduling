@@ -1,0 +1,38 @@
+:py:mod:`pyscheduling.FS.solvers.biba`
+======================================
+
+.. py:module:: pyscheduling.FS.solvers.biba
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.solvers.biba.BIBA
+
+
+
+
+.. py:class:: BIBA
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: pyscheduling.FS.FlowShop.FlowShopInstance)
+
+      the greedy constructive heuristic (Best Insertion Based approach) to find an initial solution of flowshop instances
+
+      :param instance: Instance to be solved by the heuristic
+      :type instance: FlowShopInstance
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+
