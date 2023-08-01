@@ -1,0 +1,38 @@
+:py:mod:`pyscheduling.SMSP`
+===========================
+
+.. py:module:: pyscheduling.SMSP
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   solvers/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   Constraints/index.rst
+   SingleMachine/index.rst
+   interface/index.rst
+   riPrecLmax/index.rst
+   rihiCi/index.rst
+   risijCmax/index.rst
+   risijwiCi/index.rst
+   risijwiFi/index.rst
+   risijwiTi/index.rst
+   riwiCi/index.rst
+   riwiTi/index.rst
+   sijCmax/index.rst
+   sijwiTi/index.rst
+   wiCi/index.rst
+   wiTi/index.rst
+
+

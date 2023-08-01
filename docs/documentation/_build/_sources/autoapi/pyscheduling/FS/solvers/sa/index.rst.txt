@@ -1,0 +1,37 @@
+:py:mod:`pyscheduling.FS.solvers.sa`
+====================================
+
+.. py:module:: pyscheduling.FS.solvers.sa
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.solvers.sa.SA
+
+
+
+
+.. py:class:: SA
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSA`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: ls_procedure
+      :annotation: :pyscheduling.Problem.LocalSearch
+
+      
+
+   .. py:attribute:: generate_neighbour
+      :annotation: :Callable
+
+      
+
+

@@ -1,0 +1,86 @@
+:py:mod:`benchmark`
+===================
+
+.. py:module:: benchmark
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   benchmark.Log
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   benchmark.write_excel
+   benchmark.run_solver_instance
+
+
+
+.. py:class:: Log
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: objective
+      :annotation: = objective_value
+
+      
+
+   .. py:attribute:: runtime
+      :annotation: = runtime
+
+      
+
+   .. py:attribute:: nb_solution
+      :annotation: = nb_solution
+
+      
+
+   .. py:attribute:: status
+      :annotation: = solve_status
+
+      
+
+
+.. py:function:: write_excel(fname: pathlib.Path, result)
+
+   Wrapper method to bypass pandas dependancy, mainly used in opale server
+   :param fname: path to the result excel file, without the .extension
+   :type fname: str
+   :param result_dict: (key, value) pairs of the results
+   :type result_dict: dict
+
+
+.. py:function:: run_solver_instance(fname: pathlib.Path, instances: List[pyscheduling.Problem.BaseInstance], methods_args: List[object], kwargs={}, log_param: List[Log] = [Log.objective, Log.runtime])
+
+   Performs the benchmark of a list of methods on a list of instances, creates a csv file of the results and
+   outputs the results
+
+   :param fname: output filename
+   :type fname: Path
+   :param instances: List of instances to solve
+   :type instances: list[Problem.Instance]
+   :param methods_args: List of either methods or couple of method and its extra-arguments.
+   :type methods_args: list[object]
+   :param kwargs: Extra-arguments for all methods. Defaults to {}.
+   :type kwargs: dict, optional
+   :param log_param: parameters to be logged. Defaults to [Log.objective,Log.runtime].
+   :type log_param: list[Log], optional
+
+   :returns: result of the benchmark
+   :rtype: dict
+
+

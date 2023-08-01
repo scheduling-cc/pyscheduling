@@ -1,0 +1,235 @@
+:py:mod:`pyscheduling.core.listeners`
+=====================================
+
+.. py:module:: pyscheduling.core.listeners
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   BaseListener/index.rst
+   CSVListener/index.rst
+   FileListener/index.rst
+   PlotListener/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.core.listeners.BaseListener
+   pyscheduling.core.listeners.FileListener
+   pyscheduling.core.listeners.CSVListener
+   pyscheduling.core.listeners.PlotListener
+
+
+
+
+.. py:class:: BaseListener
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: solve_result
+      :annotation: :pyscheduling.Problem.SolveResult
+
+      
+
+   .. py:attribute:: _start_time
+      :annotation: :int
+
+      
+
+   .. py:attribute:: _end_time
+      :annotation: :int
+
+      
+
+   .. py:attribute:: _total_time
+      :annotation: :int
+
+      
+
+   .. py:attribute:: _nb_sol
+      :annotation: :int
+
+      
+
+   .. py:method:: check_best_sol(solution)
+
+      Check if the new solution is the best found so far
+
+      :param solution: Found solution
+      :type solution: BaseSolution
+
+      :returns: True if it is the best so far. False otherwise.
+      :rtype: bool
+
+
+   .. py:method:: on_start(solve_result, start_time)
+
+      Start Listening to the solve provess
+
+      :param solve_result: Solve result containing the solutions and other metrics
+      :type solve_result: SolveResult
+      :param start_time: timestamp of the start of the solve process
+      :type start_time: int
+
+
+   .. py:method:: on_complete(end_time)
+
+      Finish listerning to the solve process
+
+      :param end_time: timestamp of the end of the solve process
+      :type end_time: int
+
+
+   .. py:method:: on_solution_found(new_solution, time_found)
+      :abstractmethod:
+
+      Callback to finding a solution
+
+      :param new_solution: Found solution
+      :type new_solution: BaseSolution
+      :param time_found: timestamp of the moment the solution was found
+      :type time_found: int
+
+
+
+.. py:class:: FileListener
+
+   Bases: :py:obj:`pyscheduling.core.listeners.BaseListener`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: file_path
+      :annotation: :pathlib.Path
+
+      
+
+   .. py:attribute:: _file
+      :annotation: :TextIO
+
+      
+
+   .. py:method:: on_start(solve_result, start_time)
+
+      Start Listening to the solve provess
+
+      :param solve_result: Solve result containing the solutions and other metrics
+      :type solve_result: SolveResult
+      :param start_time: timestamp of the start of the solve process
+      :type start_time: int
+
+
+   .. py:method:: on_complete(end_time)
+
+      Finish listerning to the solve process
+
+      :param end_time: timestamp of the end of the solve process
+      :type end_time: int
+
+
+   .. py:method:: on_solution_found(new_solution, time_found)
+
+      Callback to finding a solution
+
+      :param new_solution: Found solution
+      :type new_solution: BaseSolution
+      :param time_found: timestamp of the moment the solution was found
+      :type time_found: int
+
+
+
+.. py:class:: CSVListener
+
+   Bases: :py:obj:`pyscheduling.core.listeners.BaseListener`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: file_path
+      :annotation: :pathlib.Path
+
+      
+
+   .. py:attribute:: _file
+      :annotation: :TextIO
+
+      
+
+   .. py:method:: on_start(solve_result, start_time)
+
+      Start Listening to the solve provess
+
+      :param solve_result: Solve result containing the solutions and other metrics
+      :type solve_result: SolveResult
+      :param start_time: timestamp of the start of the solve process
+      :type start_time: int
+
+
+   .. py:method:: on_complete(end_time)
+
+      Finish listerning to the solve process
+
+      :param end_time: timestamp of the end of the solve process
+      :type end_time: int
+
+
+   .. py:method:: on_solution_found(new_solution, time_found)
+
+      Callback to finding a solution
+
+      :param new_solution: Found solution
+      :type new_solution: BaseSolution
+      :param time_found: timestamp of the moment the solution was found
+      :type time_found: int
+
+
+
+.. py:class:: PlotListener
+
+   Bases: :py:obj:`pyscheduling.core.listeners.BaseListener`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: on_start(solve_result, start_time)
+
+      Start Listening to the solve provess
+
+      :param solve_result: Solve result containing the solutions and other metrics
+      :type solve_result: SolveResult
+      :param start_time: timestamp of the start of the solve process
+      :type start_time: int
+
+
+   .. py:method:: on_complete(end_time)
+
+      Finish listerning to the solve process
+
+      :param end_time: timestamp of the end of the solve process
+      :type end_time: int
+
+
+   .. py:method:: on_solution_found(new_solution, time_found)
+
+      Callback to finding a solution
+
+      :param new_solution: Found solution
+      :type new_solution: BaseSolution
+      :param time_found: timestamp of the moment the solution was found
+      :type time_found: int
+
+
+

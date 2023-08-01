@@ -1,0 +1,168 @@
+:py:mod:`pyscheduling.PMSP.solvers.ant_colony`
+==============================================
+
+.. py:module:: pyscheduling.PMSP.solvers.ant_colony
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.solvers.ant_colony.AntColony
+
+
+
+
+.. py:class:: AntColony
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: n_ants
+      :annotation: :int = 10
+
+      
+
+   .. py:attribute:: n_best
+      :annotation: :int = [1]
+
+      
+
+   .. py:attribute:: n_iterations
+      :annotation: :int = 100
+
+      
+
+   .. py:attribute:: alpha
+      :annotation: :float = 1
+
+      
+
+   .. py:attribute:: beta
+      :annotation: :float = 1
+
+      
+
+   .. py:attribute:: phi
+      :annotation: :float = 0.081
+
+      
+
+   .. py:attribute:: evaporation
+      :annotation: :float = 0.01
+
+      
+
+   .. py:attribute:: q0
+      :annotation: :float = 0.5
+
+      
+
+   .. py:attribute:: best_ants
+      :annotation: :int = 5
+
+      
+
+   .. py:attribute:: pheromone_init
+      :annotation: :float = 10
+
+      
+
+   .. py:attribute:: instance
+      :annotation: :pyscheduling.PMSP.ParallelMachines.ParallelInstance
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance)
+
+      Main method used to solve the problem and call the different steps
+      :returns: Object containing the solution and useful metrics
+      :rtype: SolveResult
+
+
+   .. py:method:: init_graph()
+
+      Initialize the two stage graph with initial values of pheromone
+      :returns: list of the two stage graph consisting of np.array elements
+      :rtype: list[np.array]
+
+
+   .. py:method:: spread_pheronome_global(all_solutions: List[pyscheduling.PMSP.ParallelMachines.ParallelSolution])
+
+      Update pheromone levels globally after finding new solutions
+      :param all_solutions: list of generated solutions
+      :type all_solutions: list[ParallelInstance_Solution]
+
+
+   .. py:method:: improve_best_ants(all_solutions)
+
+      Apply local search to the best solution
+      :param all_solutions: list of all generated solutions
+      :type all_solutions: _type_
+
+      :returns: list of updated solutions
+      :rtype: list[RmSijkCmax_Solution]
+
+
+   .. py:method:: gen_all_paths()
+
+      Calls the gen_path function to generate all solutions from ants paths
+      :returns: list of new solutions
+      :rtype: list[RmSijkCmax_Solution]
+
+
+   .. py:method:: gen_path()
+
+      Generate one new solution from one ant's path, it calls the two stages: affect_tasks and sequence_tasks
+      :returns: new solution from ant's path
+      :rtype: RmSijkCmax_Solution
+
+
+   .. py:method:: affect_tasks()
+
+      Generates an affectation from the first stage graph and the path the ant went through
+      :returns: List of tasks inside each machine
+      :rtype: list[list[int]]
+
+
+   .. py:method:: sequence_tasks(affectation)
+
+      Uses the affectation from stage 1 to sequence tasks inside machines using stage 2 of the graph
+      :param affectation: affectation to machines
+      :type affectation: list[list[int]]
+
+      :returns: complete solution of one ant
+      :rtype: ParallelMachines.ParallelSolution
+
+
+   .. py:method:: pick_task(prev, m, pheromone, affected_tasks, visited)
+
+      Select a task to affect according to pheromone levels and the graph's state
+      :param prev: previous segment in the graph
+      :type prev: int
+      :param m: number of machines
+      :type m: int
+      :param pheromone: pheromone levels
+      :type pheromone: np.array
+      :param affected_tasks: list of affected tasks
+      :type affected_tasks: list
+      :param visited: list of visited segments
+      :type visited: list
+
+      :returns: next task to affect
+      :rtype: int
+
+
+   .. py:method:: reinit_graph()
+
+      Reinitialize the graph's pheromone levels when the premature convergence is detected
+
+
+
+

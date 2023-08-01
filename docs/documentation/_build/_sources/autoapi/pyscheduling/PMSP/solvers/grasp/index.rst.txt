@@ -1,0 +1,53 @@
+:py:mod:`pyscheduling.PMSP.solvers.grasp`
+=========================================
+
+.. py:module:: pyscheduling.PMSP.solvers.grasp
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.solvers.grasp.GRASP
+
+
+
+
+.. py:class:: GRASP
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: p
+      :annotation: :float = 0.5
+
+      
+
+   .. py:attribute:: r
+      :annotation: :int = 0.5
+
+      
+
+   .. py:attribute:: n_iterations
+      :annotation: :int = 5
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance)
+
+      Returns the solution using the Greedy randomized adaptive search procedure algorithm
+
+      :param instance: The instance to be solved by the metaheuristic
+      :type instance: ParallelInstance
+
+      :returns: the solver result of the execution of the metaheuristic
+      :rtype: Problem.SolveResult
+
+
+

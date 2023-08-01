@@ -1,0 +1,57 @@
+:py:mod:`pyscheduling.SMSP.risijCmax`
+=====================================
+
+.. py:module:: pyscheduling.SMSP.risijCmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.risijCmax.risijCmax_Instance
+
+
+
+
+.. py:class:: risijCmax_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+

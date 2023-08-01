@@ -1,6 +1,0 @@
-:py:mod:`pyscheduling.pyscheduling_cc`
-======================================
-
-.. py:module:: pyscheduling.pyscheduling_cc
-
-

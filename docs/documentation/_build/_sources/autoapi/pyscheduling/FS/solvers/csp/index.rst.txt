@@ -1,0 +1,113 @@
+:py:mod:`pyscheduling.FS.solvers.csp`
+=====================================
+
+.. py:module:: pyscheduling.FS.solvers.csp
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.solvers.csp.CSP
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.solvers.csp.DOCPLEX_IMPORTED
+
+
+.. py:data:: DOCPLEX_IMPORTED
+   
+
+   
+
+.. py:class:: CSP
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:class:: MyCallback(stop_times=[300, 600, 3600, 7200])
+
+      Bases: :py:obj:`docplex.cp.solver.cpo_callback.CpoCallback`
+
+      CPO callback allows to be warned directly by the solver engine about different solving steps.
+
+      This class is an 'abstract' class that must be extended by actual listener implementation.
+      All method of this class are empty.
+
+      *New in version 2.10.*
+
+      .. py:method:: invoke(solver, event, jsol)
+
+         Notify the callback about a solver event.
+
+         This method is called every time an event is notified by the CPO solver.
+         Associated to the event, the solver information is provided as a an object of class
+         class:`~docplex.cp.solution.CpoSolveResult` that is instantiated with information available at this step.
+
+         :param solver: Originator CPO solver (object of class :class:`~docplex.cp.solver.solver.CpoSolver`)
+         :param event: Event id, string with value in ALL_CALLBACK_EVENTS
+         :param sres: Solver data, object of class :class:`~docplex.cp.solution.CpoSolveResult`
+
+
+
+   .. py:attribute:: time_limit
+      :annotation: :int = 300
+
+      
+
+   .. py:attribute:: log_path
+      :annotation: :pathlib.Path
+
+      
+
+   .. py:attribute:: nb_threads
+      :annotation: :int = 1
+
+      
+
+   .. py:attribute:: stop_times
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: CPO_STATUS
+      
+
+      
+
+   .. py:method:: _csp_transform_solution(msol, E_i, instance: pyscheduling.FS.FlowShop.FlowShopInstance)
+      :staticmethod:
+
+
+   .. py:method:: solve(instance: pyscheduling.FS.FlowShop.FlowShopInstance)
+
+      Returns the solution using the Cplex - CP optimizer solver
+
+      :param instance: Instance object to solve
+      :type instance: Instance
+      :param objective: The objective to optimize. Defaults to wiCi
+      :type objective: str
+      :param log_path: Path to the log file to output cp optimizer log. Defaults to None to disable logging.
+      :type log_path: str, optional
+      :param time_limit: Time limit for executing the solver. Defaults to 300s.
+      :type time_limit: int, optional
+      :param threads: Number of threads to set for cp optimizer solver. Defaults to 1.
+      :type threads: int, optional
+
+      :returns: The object represeting the solving process result
+      :rtype: SolveResult
+
+
+

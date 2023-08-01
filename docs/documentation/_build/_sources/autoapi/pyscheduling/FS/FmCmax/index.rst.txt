@@ -1,0 +1,67 @@
+:py:mod:`pyscheduling.FS.FmCmax`
+================================
+
+.. py:module:: pyscheduling.FS.FmCmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.FmCmax.FmCmax_Instance
+   pyscheduling.FS.FmCmax.Slope
+
+
+
+
+.. py:class:: FmCmax_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.FS.FlowShop.FlowShopInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.FS.FlowShop.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+
+.. py:class:: Slope
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: FmCmax_Instance)
+
+      Inspired from Jonhson's rule, this heuristic schedules first the jobs with the smallest processing times on the first machines
+
+      :param instance: Instance to be solved by the heuristic
+      :type instance: FmCmax_Instance
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+

@@ -1,0 +1,38 @@
+:py:mod:`pyscheduling.SMSP.solvers.biba`
+========================================
+
+.. py:module:: pyscheduling.SMSP.solvers.biba
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.solvers.biba.BIBA
+
+
+
+
+.. py:class:: BIBA
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: pyscheduling.SMSP.SingleMachine.SingleInstance)
+
+      Returns the solution according to the best insertion based approach algorithm (GECCO Article)
+
+      :param instance: SMSP instance to be solved
+      :type instance: SingleMachine.SingleInstance
+
+      :returns: the solve result of the execution of the heuristic
+      :rtype: SolveResult
+
+
+

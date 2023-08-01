@@ -1,0 +1,173 @@
+:py:mod:`pyscheduling.PMSP.RmSijkCmax`
+======================================
+
+.. py:module:: pyscheduling.PMSP.RmSijkCmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmSijkCmax.RmSijkCmax_Instance
+   pyscheduling.PMSP.RmSijkCmax.CSP
+   pyscheduling.PMSP.RmSijkCmax.ExactSolvers
+   pyscheduling.PMSP.RmSijkCmax.ListHeuristic
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmSijkCmax.DOCPLEX_IMPORTED
+
+
+.. py:data:: DOCPLEX_IMPORTED
+   
+
+   
+
+.. py:class:: RmSijkCmax_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.PMSP.ParallelMachines.ParallelInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[List[int]]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.PMSP.ParallelMachines.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+   .. py:method:: lower_bound()
+
+      Computes the lower bound of maximal completion time of the instance
+      by dividing the sum of minimal completion time between job pairs on the number of machines
+
+      :returns: Lower Bound of maximal completion time
+      :rtype: int
+
+
+
+.. py:class:: CSP
+
+   .. py:class:: MyCallback(stop_times=[300, 600, 3600, 7200])
+
+      Bases: :py:obj:`docplex.cp.solver.cpo_callback.CpoCallback`
+
+      A callback used to log the value of cmax at different timestamps
+
+      :param CpoCallback: Inherits from CpoCallback
+      :type CpoCallback: _type_
+
+      .. py:method:: invoke(solver, event, jsol)
+
+         Notify the callback about a solver event.
+
+         This method is called every time an event is notified by the CPO solver.
+         Associated to the event, the solver information is provided as a an object of class
+         class:`~docplex.cp.solution.CpoSolveResult` that is instantiated with information available at this step.
+
+         :param solver: Originator CPO solver (object of class :class:`~docplex.cp.solver.solver.CpoSolver`)
+         :param event: Event id, string with value in ALL_CALLBACK_EVENTS
+         :param sres: Solver data, object of class :class:`~docplex.cp.solution.CpoSolveResult`
+
+
+
+   .. py:attribute:: CPO_STATUS
+      
+
+      
+
+   .. py:method:: _transform_csp_solution(msol, T_ki, instance)
+      :staticmethod:
+
+      Transforms cp optimizer interval variable into a solution
+
+      :param msol (): CPO solution
+      :param T_ki: Interval variables represening jobs
+      :type T_ki: list[list[interval_var]]
+      :param instance: instance corresponding to the solution
+      :type instance: RmSijkCmax_Instance
+
+      :returns: cpoptimizer's solution
+      :rtype: ParallelSolution
+
+
+   .. py:method:: solve(instance, **kwargs)
+      :staticmethod:
+
+      Returns the solution using the Cplex - CP optimizer solver
+
+      :param instance: Instance object to solve
+      :type instance: Instance
+      :param log_path: Path to the log file to output cp optimizer log. Defaults to None to disable logging.
+      :type log_path: str, optional
+      :param time_limit: Time limit for executing the solver. Defaults to 300s.
+      :type time_limit: int, optional
+      :param threads: Number of threads to set for cp optimizer solver. Defaults to 1.
+      :type threads: int, optional
+
+      :returns: The object represeting the solving process result
+      :rtype: SolveResult
+
+
+
+.. py:class:: ExactSolvers
+
+
+.. py:class:: ListHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule
+      :annotation: :int = 1
+
+      
+
+   .. py:attribute:: decreasing
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: RmSijkCmax_Instance)
+
+      list_heuristic gives the option to use different rules in order to consider given factors in the construction of the solution
+
+      :param instance: Instance to be solved by the heuristic
+      :type instance: _type_
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+

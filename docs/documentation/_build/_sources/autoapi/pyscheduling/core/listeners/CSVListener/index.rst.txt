@@ -1,0 +1,65 @@
+:py:mod:`pyscheduling.core.listeners.CSVListener`
+=================================================
+
+.. py:module:: pyscheduling.core.listeners.CSVListener
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.core.listeners.CSVListener.CSVListener
+
+
+
+
+.. py:class:: CSVListener
+
+   Bases: :py:obj:`pyscheduling.core.listeners.BaseListener`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: file_path
+      :annotation: :pathlib.Path
+
+      
+
+   .. py:attribute:: _file
+      :annotation: :TextIO
+
+      
+
+   .. py:method:: on_start(solve_result, start_time)
+
+      Start Listening to the solve provess
+
+      :param solve_result: Solve result containing the solutions and other metrics
+      :type solve_result: SolveResult
+      :param start_time: timestamp of the start of the solve process
+      :type start_time: int
+
+
+   .. py:method:: on_complete(end_time)
+
+      Finish listerning to the solve process
+
+      :param end_time: timestamp of the end of the solve process
+      :type end_time: int
+
+
+   .. py:method:: on_solution_found(new_solution, time_found)
+
+      Callback to finding a solution
+
+      :param new_solution: Found solution
+      :type new_solution: BaseSolution
+      :param time_found: timestamp of the moment the solution was found
+      :type time_found: int
+
+
+

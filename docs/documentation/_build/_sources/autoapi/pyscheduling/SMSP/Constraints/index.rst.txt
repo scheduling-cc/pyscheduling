@@ -1,0 +1,58 @@
+:py:mod:`pyscheduling.SMSP.Constraints`
+=======================================
+
+.. py:module:: pyscheduling.SMSP.Constraints
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.Constraints.Constraints
+
+
+
+
+.. py:class:: Constraints
+
+   Bases: :py:obj:`pyscheduling.core.BaseConstraints.BaseConstraints`
+
+   .. py:class:: P
+
+      Bases: :py:obj:`pyscheduling.core.BaseConstraints.BaseConstraints.P`
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+   .. py:class:: S
+
+      Bases: :py:obj:`pyscheduling.core.BaseConstraints.BaseConstraints.S`
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+
+
+

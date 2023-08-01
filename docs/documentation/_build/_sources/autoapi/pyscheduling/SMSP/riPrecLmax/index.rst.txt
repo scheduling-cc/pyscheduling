@@ -1,0 +1,160 @@
+:py:mod:`pyscheduling.SMSP.riPrecLmax`
+======================================
+
+.. py:module:: pyscheduling.SMSP.riPrecLmax
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.riPrecLmax.riPrecLmax_Instance
+   pyscheduling.SMSP.riPrecLmax.BB
+
+
+
+
+.. py:class:: riPrecLmax_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: D
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: Precedence
+      :annotation: :List[tuple]
+
+      
+
+   .. py:method:: copy()
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :returns: created instance
+      :rtype: riPrecLmax_Instance
+
+
+   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.RandomDistrib = SingleMachine.RandomDistrib.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha: float = 0.0, due_time_factor: float = 0.0, InstanceName: str = '')
+      :classmethod:
+
+      Random generation of riPrecLmax problem instance
+
+      :param jobs_number: number of jobs of the instance
+      :type jobs_number: int
+      :param protocol: given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
+      :type protocol: SingleMachine.GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+      :type law: SingleMachine.GenerationLaw, optional
+      :param Pmin: Minimal processing time. Defaults to 1.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to -1.
+      :type Pmax: int, optional
+      :param InstanceName: name to give to the instance. Defaults to "".
+      :type InstanceName: str, optional
+
+      :returns: the randomly generated instance
+      :rtype: riPrecLmax_Instance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: LB_preemptive_EDD(start_time: int = 0, jobs_list: List[int] = None)
+
+      returns the objective value returned by applying the preemptive EDD rule on the instance
+      object from a given starting time and remaining jobs list to be scheduled
+
+      :param start_time: Instant of the beginning of the schedule. Defaults to 0.
+      :type start_time: int, optional
+      :param jobs_list: Remaining jobs list to be scheduled. Defaults to None.
+      :type jobs_list: list[int], optional
+
+      :returns: lower bound of the instance
+      :rtype: int
+
+
+   .. py:method:: get_objective()
+
+      to get the objective tackled by the instance
+
+      :returns: Maximal Lateness
+      :rtype: RootProblem.Objective
+
+
+   .. py:method:: init_sol_method()
+
+      Returns the default solving method
+
+      :returns: default solving method
+      :rtype: object
+
+
+
+.. py:class:: BB
+
+   Bases: :py:obj:`pyscheduling.Problem.Branch_Bound`
+
+   .. py:method:: branch(node: pyscheduling.Problem.Branch_Bound.Node)
+
+      Branching rule from Pinedo book page 44
+
+      :param node: node to branch from
+      :type node: RootProblem.Branch_Bound.Node
+
+
+   .. py:method:: bound(node: pyscheduling.Problem.Branch_Bound.Node)
+
+      affects the preemptive_EDD value to the lower bound attribute of the node
+
+      :param node: the node to bound
+      :type node: RootProblem.Branch_Bound.Node
+
+
+   .. py:method:: objective(node: pyscheduling.Problem.Branch_Bound.Node)
+
+      Objective value evaluator
+
+      :param node: node to be evaluated as a solution
+      :type node: RootProblem.Branch_Bound.Node
+
+      :returns: maximum lateness
+      :rtype: int
+
+
+   .. py:method:: solution_format(partial_solution: object, objective_value)
+
+
+
