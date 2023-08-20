@@ -1,0 +1,328 @@
+:py:mod:`pyscheduling.FS.FlowShop`
+==================================
+
+.. py:module:: pyscheduling.FS.FlowShop
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.FlowShop.GenerationProtocol
+   pyscheduling.FS.FlowShop.FlowShopInstance
+   pyscheduling.FS.FlowShop.Machine
+   pyscheduling.FS.FlowShop.FlowShopSolution
+   pyscheduling.FS.FlowShop.FS_LocalSearch
+   pyscheduling.FS.FlowShop.NeighbourhoodGeneration
+
+
+
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: BASE
+      :annotation: = 1
+
+      
+
+
+.. py:class:: FlowShopInstance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.Problem.BaseInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+   .. py:attribute:: m
+      :annotation: :int
+
+      
+
+
+.. py:class:: Machine(machine_num: int, oper_schedule: List[pyscheduling.Problem.Job] = None, last_job: int = -1, objective_value: int = 0)
+
+   .. py:attribute:: objective_value
+      :annotation: :int = 0
+
+      
+
+   .. py:attribute:: last_job
+      :annotation: :int
+
+      
+
+   .. py:attribute:: oper_schedule
+      :annotation: :List[pyscheduling.Problem.Job]
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: __eq__(other)
+
+      Return self==value.
+
+
+   .. py:method:: copy()
+
+
+   .. py:method:: toJSON()
+
+
+   .. py:method:: fromDict(machine_dict)
+      :staticmethod:
+
+
+   .. py:method:: compute_current_ci(instance: FlowShopInstance, prev_machine_ci: int, prev_job_ci: int, job_prev_i: int, job_i: int)
+
+      Computes the current ci when job_i comes after job_prev_i.
+      This takes into account if we have setup times and release dates.
+
+      :param instance: the instance to be solved.
+      :type instance: SingelInstance
+      :param prev_machine_ci: the ci of the same job on the previous machine
+      :type prev_machine_ci: int
+      :param prev_ci: the completion time of the previous job on the same machine
+      :type prev_ci: int
+      :param job_prev_i: id of the job that precedes the inserted job
+      :type job_prev_i: int
+      :param job_i: id of the job to be inserted at the end
+      :type job_i: int
+
+      :returns: (ci, start_time), the new completion time and start_time of the inserted job.
+      :rtype: tuple
+
+
+   .. py:method:: fix_schedule(instance: FlowShopInstance, prev_machine, startIndex: int = 0)
+
+      Fills the job_schedule with the correct sequence of start_time and completion_time of each job
+
+      :param instance: The instance associated to the machine
+      :type instance: SingleInstance
+      :param startIndex: The job index the function starts operating from
+      :type startIndex: int
+
+      :returns: objective
+      :rtype: int
+
+
+   .. py:method:: idle_time()
+
+      returns the idle time on the machine
+
+      :returns: idle time of the machine
+      :rtype: int
+
+
+
+.. py:class:: FlowShopSolution(instance: FlowShopInstance = None, machines: List[Machine] = None, job_schedule: List[int] = None, objective_value: int = 0)
+
+   Bases: :py:obj:`pyscheduling.Problem.BaseSolution`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: machines
+      :annotation: :List[Machine]
+
+      
+
+   .. py:attribute:: job_schedule
+      
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: copy()
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+   .. py:method:: __lt__(other)
+
+      Return self<value.
+
+
+   .. py:method:: propagate_schedule(startIndex: int = 0)
+
+      Fills the job_schedule of every machine from job_schedule of Solution
+
+
+
+   .. py:method:: fix_objective()
+
+
+   .. py:method:: compute_objective(startIndex: int = 0)
+
+
+   .. py:method:: simulate_insert_last(job_id: int)
+
+      returns start_time and completion_time of job_id if scheduled at the end of job_schedule
+      at every stage (machine)
+
+      :param job_id: job to be scheduled at the end
+      :type job_id: int
+
+      :returns: start_time of job_id, completion_time of job_id
+      :rtype: int, int
+
+
+   .. py:method:: simulate_insert_objective(job_id, start_time, end_time)
+
+      Returns the new objective if job_id is inserted at the end with start_time and end_time
+
+      :param job_id: id of the inserted job
+      :type job_id: int
+      :param start_time: start time of the job
+      :type start_time: int
+      :param end_time: end time of the job
+      :type end_time: int
+
+      :returns: the new objective
+      :rtype: int
+
+
+   .. py:method:: idle_time()
+
+      returns the idle time of the last machine
+
+      :returns: idle time of the last machine
+      :rtype: int
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: plot(types: str = 'RSP', path: pathlib.Path = None)
+
+      Plot the solution into a gantt diagramm
+
+      :param types: The type of tasks to plot, a string where each letter corresponds to one type: R for release,
+
+                    S for setup and P for Processing. Defaults to "RSP".
+      :type types: str, optional
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
+
+
+   .. py:method:: is_valid()
+
+      Check if solution respects the constraints
+
+
+
+.. py:class:: FS_LocalSearch(methods: List[object] = None, copy_solution: bool = False)
+
+   Bases: :py:obj:`pyscheduling.Problem.LocalSearch`
+
+   .. py:method:: _iterative_best_insert(solution: FlowShopSolution, inplace: bool = True)
+      :staticmethod:
+
+
+   .. py:method:: _iterative_best_swap(solution: FlowShopSolution, inplace: bool = True)
+      :staticmethod:
+
+
+
+.. py:class:: NeighbourhoodGeneration
+
+   .. py:method:: random_insert(solution: FlowShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1)
+      :staticmethod:
+
+      Performs an insert of a random job in a random position
+
+      :param solution: Solution to be improved
+      :type solution: FlowShopSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: random_swap(solution: FlowShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1)
+      :staticmethod:
+
+      Performs a random swap between 2 jobs
+
+      :param solution: Solution to be improved
+      :type solution: FlowShopSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: random_neighbour(solution_i: FlowShopSolution)
+      :staticmethod:
+
+      Generates a random neighbour solution of the given solution
+
+      :param solution_i: Solution at iteration i
+      :type solution_i: FlowShopSolution
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: deconstruct_construct(solution_i: FlowShopSolution, d: float = 0.25)
+      :staticmethod:
+
+      Generates a random neighbour solution of the given solution using the deconstruct - construct strategy
+
+      The procedure removes a set of jobs and insert them using best insertion (greedy)
+
+      :param solution_i: Solution at iteration i
+      :type solution_i: FlowShopSolution
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+

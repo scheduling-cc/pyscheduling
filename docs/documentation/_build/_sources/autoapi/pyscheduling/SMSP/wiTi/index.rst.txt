@@ -1,0 +1,127 @@
+:py:mod:`pyscheduling.SMSP.wiTi`
+================================
+
+.. py:module:: pyscheduling.SMSP.wiTi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.wiTi.wiTi_Instance
+   pyscheduling.SMSP.wiTi.WSPT
+   pyscheduling.SMSP.wiTi.MS
+   pyscheduling.SMSP.wiTi.ACT
+
+
+
+
+.. py:class:: wiTi_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: D
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:method:: init_sol_method()
+      :property:
+
+
+
+.. py:class:: WSPT
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: wiTi_Instance)
+
+      WSPT rule is efficient if the due dates are too tight (for overdue jobs)
+
+      :param instance: Instance to be solved
+      :type instance: wiTi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+
+.. py:class:: MS
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: wiTi_Instance)
+
+      MS rule is efficient if the due dates are too loose (for not overdue jobs)
+
+      :param instance: Instance to be solved
+      :type instance: wiTi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+
+.. py:class:: ACT
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: wiTi_Instance)
+
+      Appearant Cost Tardiness rule balances between WSPT and MS rules based on due dates tightness and range
+
+      :param instance: Instance to be solved
+      :type instance: wiTi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: ACT_Tuning(instance: wiTi_Instance)
+
+      Analyze the instance to consequently tune the ACT. For now, the tuning is static.
+
+      :param instance: Instance tackled by ACT heuristic
+      :type instance: riwiTi_Instance
+
+      :returns: K
+      :rtype: int, int
+
+
+

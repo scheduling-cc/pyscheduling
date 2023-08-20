@@ -1,0 +1,98 @@
+:py:mod:`pyscheduling.SMSP.Constraints`
+=======================================
+
+.. py:module:: pyscheduling.SMSP.Constraints
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.Constraints.Constraints
+
+
+
+
+.. py:class:: Constraints
+
+   Bases: :py:obj:`pyscheduling.core.BaseConstraints.BaseConstraints`
+
+   .. py:class:: P
+
+      Bases: :py:obj:`pyscheduling.core.BaseConstraints.BaseConstraints.P`
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+         Read attribute of instance from a list of integers starting from an index
+
+         :param instance: instance
+         :type instance: BaseInstance
+         :param text_content: attribute in text format
+         :type text_content: List[str]
+         :param starting_index: index to start from
+         :type starting_index: int
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+         Write attribute of instance in a file
+
+         :param instance: instance
+         :type instance: BaseInstance
+         :param file: file path
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+         Generate attribute of instance
+
+         :param instance: instance
+         :type instance: BaseInstance
+
+
+
+   .. py:class:: S
+
+      Bases: :py:obj:`pyscheduling.core.BaseConstraints.BaseConstraints.S`
+
+      .. py:method:: read(instance, text_content: List[str], starting_index: int)
+         :classmethod:
+
+         Read attribute of instance from a list of integers starting from an index
+
+         :param instance: instance
+         :type instance: BaseInstance
+         :param text_content: attribute in text format
+         :type text_content: List[str]
+         :param starting_index: index to start from
+         :type starting_index: int
+
+
+      .. py:method:: write(instance, file)
+         :classmethod:
+
+         Write attribute of instance in a file
+
+         :param instance: instance
+         :type instance: BaseInstance
+         :param file: file path
+
+
+      .. py:method:: generate_random(instance, **kwargs)
+         :classmethod:
+
+         Generate attribute of instance
+
+         :param instance: instance
+         :type instance: BaseInstance
+
+
+
+

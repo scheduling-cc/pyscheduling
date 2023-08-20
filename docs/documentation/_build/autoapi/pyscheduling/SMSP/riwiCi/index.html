@@ -1,0 +1,1569 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>pyscheduling.SMSP.riwiCi &#8212; pyscheduling  documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/pyscheduling.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/clipboard.min.js"></script>
+    <script src="../../../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/pyscheduling/SMSP/riwiCi/index';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="pyscheduling.SMSP.riwiTi" href="../riwiTi/index.html" />
+    <link rel="prev" title="pyscheduling.SMSP.risijwiTi" href="../risijwiTi/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="None">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../_static/pyscheduling_navbar.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../../../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../../index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     pyscheduling
+    </span>
+   </code>
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../FS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.FS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../FS/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/csp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.csp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/dispatch_rule/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.dispatch_rule
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/minit/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.minit
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../FS/solvers/sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.sa
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FlowShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FlowShop
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmriSijkwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmriSijkwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmriSijkwiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmriSijkwiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../FS/FmridiSijkwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmridiSijkwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../JS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.JS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../JS/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-5">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../JS/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.JS.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../JS/solvers/dispatch_heuristic/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.JS.solvers.dispatch_heuristic
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../JS/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.JS.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/Constraints/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.Constraints
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmriSijkwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriSijkwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmriSijkwiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriSijkwiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmridiSijkwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmridiSijkwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JmriwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../JS/JobShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JobShop
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../PMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.PMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-6">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../PMSP/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/ant_colony/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.ant_colony
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/genetic_algorithm/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.genetic_algorithm
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/ordered_constructive/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.ordered_constructive
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../PMSP/solvers/sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.sa
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/ParallelMachines/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.ParallelMachines
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmriSijkWiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkWiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmriSijkWiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkWiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/RmridiSijkWiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmridiSijkWiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../PMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="../index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.SMSP
+      </span>
+     </code>
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-9">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/csp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.csp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/dispatch_heuristic/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.dispatch_heuristic
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/dynamic_dispatch_heuristic/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.dynamic_dispatch_heuristic
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../solvers/sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.sa
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../Constraints/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.Constraints
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../SingleMachine/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.SingleMachine
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../riPrecLmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riPrecLmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../rihiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.rihiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../risijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../risijwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../risijwiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../risijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../riwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../sijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../sijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../wiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../wiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../core/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.core
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-10">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../core/base_solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.core.base_solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-11">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/base_solvers/base_BB/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.base_solvers.base_BB
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/base_solvers/base_lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.base_solvers.base_lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/base_solvers/base_sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.base_solvers.base_sa
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/base_solvers/base_solver/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.base_solvers.base_solver
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../core/listeners/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.core.listeners
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-12">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/listeners/BaseListener/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.listeners.BaseListener
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/listeners/CSVListener/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.listeners.CSVListener
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/listeners/FileListener/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.listeners.FileListener
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../core/listeners/PlotListener/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.core.listeners.PlotListener
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../core/BaseConstraints/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.core.BaseConstraints
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../core/benchmark/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.core.benchmark
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../Problem/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.Problem
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../pyscheduling/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.pyscheduling
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="module-pyscheduling.SMSP.riwiCi">
+<span id="pyscheduling-smsp-riwici"></span><h1><a class="reference internal" href="#module-pyscheduling.SMSP.riwiCi" title="pyscheduling.SMSP.riwiCi"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.SMSP.riwiCi</span></code></a><a class="headerlink" href="#module-pyscheduling.SMSP.riwiCi" title="Permalink to this headline">#</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">riwiCi_Instance</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.WSECi" title="pyscheduling.SMSP.riwiCi.WSECi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WSECi</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.WSAPT" title="pyscheduling.SMSP.riwiCi.WSAPT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WSAPT</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.ListHeuristic" title="pyscheduling.SMSP.riwiCi.ListHeuristic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ListHeuristic</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.ILS" title="pyscheduling.SMSP.riwiCi.ILS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ILS</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.riwiCi.</span></span><span class="sig-name descname"><span class="pre">riwiCi_Instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Unknown'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../SingleMachine/index.html#pyscheduling.SMSP.SingleMachine.SingleInstance" title="pyscheduling.SMSP.SingleMachine.SingleInstance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.SMSP.SingleMachine.SingleInstance</span></code></a></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance.P">
+<span class="sig-name descname"><span class="pre">P</span></span><em class="property"><span class="w"> </span><span class="pre">:List[int]</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.P" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance.W">
+<span class="sig-name descname"><span class="pre">W</span></span><em class="property"><span class="w"> </span><span class="pre">:List[int]</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.W" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance.R">
+<span class="sig-name descname"><span class="pre">R</span></span><em class="property"><span class="w"> </span><span class="pre">:List[int]</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.R" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance.constraints">
+<span class="sig-name descname"><span class="pre">constraints</span></span><em class="property"><span class="w"> </span><span class="pre">:ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.constraints" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance.objective">
+<span class="sig-name descname"><span class="pre">objective</span></span><em class="property"><span class="w"> </span><span class="pre">:ClassVar[pyscheduling.Problem.Objective]</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.objective" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.riwiCi_Instance.init_sol_method">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_sol_method</span></span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.init_sol_method" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.WSECi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.riwiCi.</span></span><span class="sig-name descname"><span class="pre">WSECi</span></span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.WSECi" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.core.base_solvers.BaseSolver</span></code></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.WSECi.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><span class="pre">riwiCi_Instance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.WSECi.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>Weighted Shortest Expected Completion time, dynamic dispatching rule inspired from WSPT but adds release
+time to processing time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><em>riwiCi_Instance</em></a>) – Instance to be solved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SolveResult of the instance by the method</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>RootProblem.SolveResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.WSAPT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.riwiCi.</span></span><span class="sig-name descname"><span class="pre">WSAPT</span></span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.WSAPT" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.core.base_solvers.BaseSolver</span></code></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.WSAPT.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><span class="pre">riwiCi_Instance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.WSAPT.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>Weighted Shortest Available Processing time, dynamic dispatching rule inspired from WSPT but considers
+available jobs only at a given time t</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><em>riwiCi_Instance</em></a>) – Instance to be solved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SolveResult of the instance by the method</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>RootProblem.SolveResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ListHeuristic">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.riwiCi.</span></span><span class="sig-name descname"><span class="pre">ListHeuristic</span></span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ListHeuristic" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.core.base_solvers.BaseSolver</span></code></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ListHeuristic.rule_number">
+<span class="sig-name descname"><span class="pre">rule_number</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ListHeuristic.rule_number" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ListHeuristic.reverse">
+<span class="sig-name descname"><span class="pre">reverse</span></span><em class="property"><span class="w"> </span><span class="pre">:bool</span> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ListHeuristic.reverse" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ListHeuristic.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><span class="pre">riwiCi_Instance</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ListHeuristic.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>contains a list of static dispatching rules to be chosen from</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><em>riwiCi_Instance</em></a>) – Instance to be solved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SolveResult of the instance by the method</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>RootProblem.SolveResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ILS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyscheduling.SMSP.riwiCi.</span></span><span class="sig-name descname"><span class="pre">ILS</span></span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ILS" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyscheduling.core.base_solvers.BaseSolver</span></code></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ILS.time_limit_factor">
+<span class="sig-name descname"><span class="pre">time_limit_factor</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ILS.time_limit_factor" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ILS.init_sol_method">
+<span class="sig-name descname"><span class="pre">init_sol_method</span></span><em class="property"><span class="w"> </span><span class="pre">:Callable</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ILS.init_sol_method" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ILS.Nb_iter">
+<span class="sig-name descname"><span class="pre">Nb_iter</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span> <span class="pre">=</span> <span class="pre">500000</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ILS.Nb_iter" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ILS.Non_improv">
+<span class="sig-name descname"><span class="pre">Non_improv</span></span><em class="property"><span class="w"> </span><span class="pre">:int</span> <span class="pre">=</span> <span class="pre">5000</span></em><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ILS.Non_improv" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyscheduling.SMSP.riwiCi.ILS.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><span class="pre">riwiCi_Instance</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyscheduling.SMSP.riwiCi.ILS.solve" title="Permalink to this definition">#</a></dt>
+<dd><p>Applies LocalSearch on the current solution iteratively</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance" title="pyscheduling.SMSP.riwiCi.riwiCi_Instance"><em>riwiCi_Instance</em></a>) – Instance to be solved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SolveResult of the instance by the method</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>RootProblem.SolveResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../risijwiTi/index.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.SMSP.risijwiTi</span></code></p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="../riwiTi/index.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.SMSP.riwiTi</span></code></p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fas fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-contents">
+   Module Contents
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#classes">
+     Classes
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance">
+       riwiCi_Instance
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.P">
+         P
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.W">
+         W
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.R">
+         R
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.constraints">
+         constraints
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.objective">
+         objective
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.riwiCi_Instance.init_sol_method">
+         init_sol_method
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.WSECi">
+       WSECi
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.WSECi.solve">
+         solve
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.WSAPT">
+       WSAPT
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.WSAPT.solve">
+         solve
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ListHeuristic">
+       ListHeuristic
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ListHeuristic.rule_number">
+         rule_number
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ListHeuristic.reverse">
+         reverse
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ListHeuristic.solve">
+         solve
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ILS">
+       ILS
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ILS.time_limit_factor">
+         time_limit_factor
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ILS.init_sol_method">
+         init_sol_method
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ILS.Nb_iter">
+         Nb_iter
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ILS.Non_improv">
+         Non_improv
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pyscheduling.SMSP.riwiCi.ILS.solve">
+         solve
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../../../../_sources/autoapi/pyscheduling/SMSP/riwiCi/index.rst.txt">
+        <i class="fas fa-file-alt"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, scheduling-cc.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

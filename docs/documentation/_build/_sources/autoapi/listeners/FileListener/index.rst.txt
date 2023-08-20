@@ -1,0 +1,61 @@
+:py:mod:`listeners.FileListener`
+================================
+
+.. py:module:: listeners.FileListener
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   listeners.FileListener.FileListener
+
+
+
+
+.. py:class:: FileListener
+
+   Bases: :py:obj:`pyscheduling.core.listeners.BaseListener`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: file_path
+      :annotation: :pathlib.Path
+
+      
+
+   .. py:attribute:: _file
+      :annotation: :TextIO
+
+      
+
+   .. py:method:: on_start(solve_result, start_time)
+
+      Called at the start of the algorithm
+
+      :param start_time: time to start recording results
+      :type start_time: int
+
+
+   .. py:method:: on_complete(end_time)
+
+      Called at the end of the algorithm
+
+      :param end_time: time at the end of the algorithm
+      :type end_time: int
+
+
+   .. py:method:: on_solution_found(new_solution, time_found)
+
+      Called each time a new solution is found
+
+      :param new_solution: the solution found
+      :param time_found: the time a solution is found
+
+
+

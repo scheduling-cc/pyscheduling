@@ -1,0 +1,458 @@
+:py:mod:`pyscheduling.JS.JobShop`
+=================================
+
+.. py:module:: pyscheduling.JS.JobShop
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.JS.JobShop.GenerationProtocol
+   pyscheduling.JS.JobShop.JobsGraph
+   pyscheduling.JS.JobShop.JobShopInstance
+   pyscheduling.JS.JobShop.Machine
+   pyscheduling.JS.JobShop.JobShopSolution
+   pyscheduling.JS.JobShop.NeighbourhoodGeneration
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.JS.JobShop.Node
+
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: BASE
+      :annotation: = 1
+
+      
+
+
+.. py:data:: Node
+   
+
+   
+
+.. py:class:: JobsGraph(instance, invert_weights=True)
+
+   .. py:attribute:: source
+      :annotation: :Node
+
+      
+
+   .. py:attribute:: sink
+      :annotation: :Node
+
+      
+
+   .. py:attribute:: jobs_sinks
+      :annotation: :List[Node]
+
+      
+
+   .. py:attribute:: inverted_weights
+      :annotation: :bool
+
+      
+
+   .. py:attribute:: DG
+      :annotation: :networkx.DiGraph
+
+      
+
+   .. py:attribute:: jobs_times
+      :annotation: :dict
+
+      
+
+   .. py:method:: draw()
+
+
+   .. py:method:: longest_path(u, v)
+
+
+   .. py:method:: critical_path()
+
+
+   .. py:method:: get_operations_on_machine(machine_id: int)
+
+      returns the vertices corresponding to operations to be executed on machine_id
+
+      :param machine_id: id of a machine
+      :type machine_id: int
+
+      :returns: list of operations to be executed on machine_id
+      :rtype: list[tuple(int,int)]
+
+
+   .. py:method:: add_disdjunctive_arcs(instance, edges_to_add: List[tuple])
+
+      Add disjunctive arcs to the graph corresponding to the operations schedule on a machine
+
+      :param edges_to_add: list of operations couples where an edge will be added from the first element of a couple to the second element of the couple
+      :type edges_to_add: list[tuple(tuple(int,int),tuple(int,int))]
+
+
+   .. py:method:: generate_precedence_constraints(unscheduled_machines: List[int])
+
+
+   .. py:method:: generate_riPrecLmax(machine_id: int, Cmax: int, precedenceConstraints: List[tuple])
+
+      generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+      :param machine_id: id of the machine
+      :type machine_id: int
+      :param Cmax: current makespan
+      :type Cmax: int
+
+      :returns: generated 1|ri,prec|Lmax instance
+      :rtype: riPrecLmax_Instance
+
+
+   .. py:method:: job_completion(job_id)
+
+      returns the distance of the critical path which corresponds to the Makespan
+
+      :returns: critical path distance
+      :rtype: int
+
+
+   .. py:method:: all_jobs_completion()
+
+
+   .. py:method:: wiTi(external_weights: List[int], due_dates: List[int])
+
+
+   .. py:method:: temporary_job_completion(instance, temporary_edges: List[tuple])
+
+
+   .. py:method:: generate_rihiCi(machine_id: int, precedenceConstraints: List[tuple], exeternal_weights: List[int], external_due: List[int], jobs_completion: List[int])
+
+      generate an instance of 1|ri,prec|Lmax instance of the machine machine_id
+
+      :param machine_id: id of the machine
+      :type machine_id: int
+      :param Cmax: current makespan
+      :type Cmax: int
+
+      :returns: generated 1|ri,prec|Lmax instance
+      :rtype: riPrecLmax_Instance
+
+
+
+.. py:class:: JobShopInstance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.Problem.BaseInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+   .. py:attribute:: m
+      :annotation: :int
+
+      
+
+
+.. py:class:: Machine(machine_num: int, objective: int = 0, last_job: int = -1, job_schedule: List[pyscheduling.Problem.Job] = None)
+
+   .. py:attribute:: machine_num
+      :annotation: :int
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :int = 0
+
+      
+
+   .. py:attribute:: last_job
+      :annotation: :int
+
+      
+
+   .. py:attribute:: job_schedule
+      :annotation: :List[pyscheduling.Problem.Job]
+
+      
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: __eq__(other)
+
+      Return self==value.
+
+
+   .. py:method:: copy()
+
+
+   .. py:method:: toJSON()
+
+
+   .. py:method:: fromDict(machine_dict)
+      :staticmethod:
+
+
+
+.. py:class:: JobShopSolution(instance: JobShopInstance = None, machines: List[Machine] = None, objective_value: int = 0, graph: JobsGraph = None)
+
+   Bases: :py:obj:`pyscheduling.Problem.BaseSolution`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: machines
+      :annotation: :List[Machine]
+
+      
+
+   .. py:method:: _create_graph(invert_weights=True)
+
+      Create the conjunctive graph from the instance definition
+
+      :param invert_weights: convert the weights to negative to use shortest path algos for critical path. Defaults to True.
+      :type invert_weights: bool, optional
+
+      :returns: conjunctive graph from instance.
+      :rtype: nx.DiGraph
+
+
+   .. py:method:: create_solution_graph(invert_weights=True)
+
+      Create the graph containing both conjunctive and disjunctive arcs from the schedule
+
+      :param solution: the solution representing the schedule
+      :type solution: JobShopSolution
+      :param invert_weights: convert the weights to negative to use shortest path algos for critical path. Defaults to True.
+      :type invert_weights: bool, optional
+
+      :returns: graph representing the solution with a source and list of sinks
+      :rtype: nx.DiGraph
+
+
+   .. py:method:: check_graph()
+
+      Check whether the graph is built or not yet, build it if not.
+
+
+
+   .. py:method:: is_feasible()
+
+      Check if the schedule is feasible. i.e. the graph is acyclic
+
+      :returns: True if the schedule is feasible
+      :rtype: bool
+
+
+   .. py:method:: all_completion_times()
+
+      Computes completion times from the graph using bellman ford algorithm
+
+      :returns: dict of completion times for each job and the makespan (-1 key)
+      :rtype: dict
+
+
+   .. py:method:: completion_time(job_id: int, recompute_distances=False)
+
+      Return completion time for job with job_id
+
+      :param job_id: id of the job
+      :type job_id: int
+      :param recompute_distances: used to not compute distances if already computed. Defaults to False.
+      :type recompute_distances: bool, optional
+
+      :returns: completion time of job_id
+      :rtype: int
+
+
+   .. py:method:: compute_objective_graph(recompute_distances=False)
+
+      Compute the objective using the disjunctive graph. Build it if necessary
+
+      :param recompute_distances: used to not compute distances if already computed. Defaults to False.
+      :type recompute_distances: bool, optional
+
+      :returns: objective value
+      :rtype: int
+
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: copy()
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+   .. py:method:: __lt__(other)
+
+      Return self<value.
+
+
+   .. py:method:: simulate_insert_last(job_id: int, oper_idx: int, last_t: int)
+
+      returns start_time and completion_time of job_id-oper_idx if scheduled at the end of its machine's job_schedule
+      :param job_id: job to be scheduled at the end
+      :type job_id: int
+      :param oper_idx: index of the job's operation to be scheduled
+      :type oper_idx: int
+      :param last_t: latest timestamp of the job's previous operation
+      :type last_t: int
+
+      :returns: start_time of job_id-oper_idx, completion_time of job_id-oper_idx
+      :rtype: int, int
+
+
+   .. py:method:: simulate_insert_objective(job_id, start_time, end_time)
+
+      Returns the new objective if job_id is inserted at the end with start_time and end_time
+      :param job_id: id of the inserted job
+      :type job_id: int
+      :param start_time: start time of the job
+      :type start_time: int
+      :param end_time: end time of the job
+      :type end_time: int
+
+      :returns: the new objective
+      :rtype: int
+
+
+   .. py:method:: fix_objective()
+
+      Compute objective value of solution out of the jobs_times dict
+
+      :param jobs_times: dict of job_id: (start_time, end_time)
+      :type jobs_times: dict
+
+
+   .. py:method:: compute_objective()
+
+      Compute the machines correct schedules and sets the objective value
+
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: JobShopSolution
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: plot(types: str = 'RSP', path: pathlib.Path = None)
+
+      Plot the solution into a gantt diagramm
+
+      :param types: The type of tasks to plot, a string where each letter corresponds to one type: R for release,
+
+                    S for setup and P for Processing. Defaults to "RSP".
+      :type types: str, optional
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
+
+
+   .. py:method:: is_valid(verbosity: bool = False)
+
+      Check if solution respects the constraints
+
+
+
+.. py:class:: NeighbourhoodGeneration
+
+   .. py:method:: best_insert_oper(solution: JobShopSolution, m_id: int, job_id: int)
+      :staticmethod:
+
+
+   .. py:method:: random_insert(solution: JobShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1)
+      :staticmethod:
+
+      Performs an insert of a random job in a random position
+      :param solution: Solution to be improved
+      :type solution: JobShopSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: JobShopSolution
+
+
+   .. py:method:: random_swap(solution: JobShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1)
+      :staticmethod:
+
+      Performs a random swap between 2 jobs
+      :param solution: Solution to be improved
+      :type solution: JobShopSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: JobShopSolution
+
+
+   .. py:method:: random_neighbour(solution_i: JobShopSolution, nb_moves: int = 2)
+      :staticmethod:
+
+      Generates a random neighbour solution of the given solution
+      :param solution_i: Solution at iteration i
+      :type solution_i: JobShopSolution
+
+      :returns: New solution
+      :rtype: JobShopSolution
+
+
+   .. py:method:: deconstruct_construct(solution_i: JobShopSolution, d: float = 0.25)
+      :staticmethod:
+
+      Generates a random neighbour solution of the given solution using the deconstruct - construct strategy
+      The procedure removes a set of jobs and insert them using best insertion (greedy)
+      :param solution_i: Solution at iteration i
+      :type solution_i: FlowShopSolution
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+

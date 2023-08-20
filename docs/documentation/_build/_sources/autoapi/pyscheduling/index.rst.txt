@@ -1,0 +1,29 @@
+:py:mod:`pyscheduling`
+======================
+
+.. py:module:: pyscheduling
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   FS/index.rst
+   JS/index.rst
+   PMSP/index.rst
+   SMSP/index.rst
+   core/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   Problem/index.rst
+   pyscheduling/index.rst
+
+

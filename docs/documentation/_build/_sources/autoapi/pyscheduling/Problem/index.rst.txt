@@ -1,0 +1,476 @@
+:py:mod:`pyscheduling.Problem`
+==============================
+
+.. py:module:: pyscheduling.Problem
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.Problem.GenerationProtocol
+   pyscheduling.Problem.RandomDistrib
+   pyscheduling.Problem.Objective
+   pyscheduling.Problem.BaseInstance
+   pyscheduling.Problem.BaseSolution
+   pyscheduling.Problem.SolveStatus
+   pyscheduling.Problem.SolveResult
+   pyscheduling.Problem.LocalSearch
+   pyscheduling.Problem.Branch_Bound
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.Problem.Job
+
+
+.. py:data:: Job
+   
+
+   
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: BASE
+      :annotation: = 1
+
+      
+
+
+.. py:class:: RandomDistrib
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: UNIFORM
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: NORMAL
+      :annotation: = 2
+
+      
+
+
+.. py:class:: Objective
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: Cmax
+      
+
+      
+
+   .. py:attribute:: wiTi
+      
+
+      
+
+   .. py:attribute:: wiCi
+      
+
+      
+
+   .. py:attribute:: Lmax
+      
+
+      
+
+   .. py:attribute:: wiFi
+      
+
+      
+
+   .. py:method:: to_string()
+      :classmethod:
+
+      Print the available objective functions
+
+      :returns: name of every objective in different lines
+      :rtype: str
+
+
+
+.. py:class:: BaseInstance(n: int, m: int = 1, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: name
+      :annotation: :str
+
+      
+
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+   .. py:method:: generate_random(n: int, m: int = 1, name: str = 'Unknown', protocol: GenerationProtocol = GenerationProtocol.BASE, law: RandomDistrib = RandomDistrib.UNIFORM, Wmin: int = 1, Wmax: int = 4, Pmin: int = 10, Pmax: int = 50, alpha: float = 0.8, due_time_factor: float = 0.8, gamma: float = 0.5)
+      :classmethod:
+
+      Random generation of a problem instance
+
+      :param n: number of jobs of the instance
+      :type n: int
+      :param m: number of machines of the instance
+      :type m: int
+      :param instance_name: name to give to the instance. Defaults to "Unknown".
+      :type instance_name: str, optional
+      :param protocol: given protocol of generation of random instances. Defaults to GenerationProtocol.BASE.
+      :type protocol: GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to GenerationLaw.UNIFORM.
+      :type law: FlowShop.GenerationLaw, optional
+      :param Pmin: Minimal processing time. Defaults to 10.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to 50.
+      :type Pmax: int, optional
+      :param alpha: Release time factor. Defaults to 0.8.
+      :type alpha: float, optional
+      :param due_time_factor: Due time factor. Defaults to 0.8.
+      :type due_time_factor: float, optional
+      :param gamma: Setup time factor. Defaults to 0.5.
+      :type gamma: float, optional
+
+      :returns: the randomly generated instance
+      :rtype: BaseInstance
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :returns: the read instance
+      :rtype: BaseInstance
+
+
+   .. py:method:: to_txt(path: pathlib.Path)
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: get_objective()
+
+      getter to the objective class attribute
+
+      :returns: the objective of the problem
+      :rtype: Objective
+
+
+
+.. py:class:: BaseSolution
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: instance
+      :annotation: :BaseInstance
+
+      
+
+   .. py:attribute:: objective_value
+      :annotation: :int
+
+      
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+      :abstractmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: Solution
+
+
+   .. py:method:: get_objective() -> int
+      :property:
+
+      Return the objective value of the solution
+
+      :returns: objective value
+      :rtype: int
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+      :abstractmethod:
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: _plot_tasks(tasks_df: List[dict], path: pathlib.Path = None)
+
+      Plots the tasks (in plotly dict format), it can be called by all problems.
+
+      :param tasks_df: Tasks list of dicts specifying start and end dates and description
+      :type tasks_df: List[dict]
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
+
+
+   .. py:method:: plot() -> None
+      :abstractmethod:
+
+      Plot the solution in an appropriate diagram
+
+
+   .. py:method:: copy()
+      :abstractmethod:
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+
+.. py:class:: SolveStatus
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: INFEASIBLE
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: FEASIBLE
+      :annotation: = 2
+
+      
+
+   .. py:attribute:: OPTIMAL
+      :annotation: = 3
+
+      
+
+   .. py:attribute:: UNKNOWN
+      :annotation: = 4
+
+      
+
+
+.. py:class:: SolveResult
+
+   .. py:attribute:: all_solutions
+      :annotation: :List[BaseSolution]
+
+      
+
+   .. py:attribute:: best_solution
+      :annotation: :BaseSolution
+
+      
+
+   .. py:attribute:: time_to_best
+      :annotation: :float
+
+      
+
+   .. py:attribute:: solve_status
+      :annotation: :SolveStatus
+
+      
+
+   .. py:attribute:: runtime
+      :annotation: :float
+
+      
+
+   .. py:attribute:: kpis
+      :annotation: :Dict[str, object]
+
+      
+
+   .. py:method:: nb_solutions() -> int
+      :property:
+
+      Returns the number of solutions as an instance attribute (property)
+
+      :returns: number of solutions
+      :rtype: int
+
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+
+.. py:class:: LocalSearch(methods: List[object] = None, copy_solution: bool = False)
+
+   .. py:attribute:: methods
+      :annotation: :List[object]
+
+      
+
+   .. py:attribute:: copy_solution
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: all_methods()
+      :classmethod:
+
+      returns all the methods of a given LocalSearch class
+
+      :returns: list of functions
+      :rtype: list[object]
+
+
+   .. py:method:: improve(solution: BaseSolution) -> BaseSolution
+
+      Improves a solution by iteratively calling local search operators
+
+      :param solution: current solution
+      :type solution: Solution
+
+      :returns: improved solution
+      :rtype: Solution
+
+
+
+.. py:class:: Branch_Bound
+
+   .. py:class:: Node
+
+      .. py:attribute:: lower_bound
+         :annotation: :float
+
+         
+
+      .. py:attribute:: if_solution
+         :annotation: :bool = False
+
+         
+
+      .. py:attribute:: partial_solution
+         :annotation: :object
+
+         
+
+      .. py:attribute:: sub_nodes
+         :annotation: :List[object]
+
+         
+
+      .. py:method:: delete()
+
+         To delete the variable definitely
+
+
+
+
+   .. py:attribute:: instance
+      :annotation: :BaseInstance
+
+      
+
+   .. py:attribute:: root
+      :annotation: :object
+
+      
+
+   .. py:attribute:: objective_value
+      
+
+      
+
+   .. py:attribute:: best_solution
+      :annotation: :BaseSolution
+
+      
+
+   .. py:attribute:: all_solution
+      :annotation: :List[BaseSolution]
+
+      
+
+   .. py:attribute:: start_time
+      :annotation: :float = 0
+
+      
+
+   .. py:attribute:: runtime
+      :annotation: :float = 0
+
+      
+
+   .. py:method:: branch(node: Node)
+
+      branching strategy, to be redefined
+
+      :param node: node to branch from
+      :type node: Node
+
+
+   .. py:method:: bound(node: Node)
+
+      bounding method, to be redefined
+
+      :param node: node to bound
+      :type node: Node
+
+
+   .. py:method:: objective(node: Node)
+
+      objective value evaluator, to be redefined
+
+      :param node: node to be evaluated as a complete solution
+      :type node: Node
+
+
+   .. py:method:: solution_format(partial_solution: object, objective_value)
+
+
+   .. py:method:: solve(lower_bound: callable, minimize=True, root: Node = None, max_time=float('inf'), upper_bound=float('+inf'))
+
+
+   .. py:method:: get_solve_result()
+
+
+

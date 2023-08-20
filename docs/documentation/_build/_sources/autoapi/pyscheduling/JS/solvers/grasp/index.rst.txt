@@ -1,0 +1,58 @@
+:py:mod:`pyscheduling.JS.solvers.grasp`
+=======================================
+
+.. py:module:: pyscheduling.JS.solvers.grasp
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.JS.solvers.grasp.GRASP
+
+
+
+
+.. py:class:: GRASP
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: p
+      :annotation: :float = 0.5
+
+      
+
+   .. py:attribute:: r
+      :annotation: :float = 0.5
+
+      
+
+   .. py:attribute:: n_iterations
+      :annotation: :int = 5
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.JS.JobShop.JobShopInstance)
+
+      Returns the solution using the Greedy randomized adaptive search procedure algorithm
+      :param instance: The instance to be solved by the heuristic
+      :type instance: SingleInstance
+      :param p: probability of taking the greedy best solution
+      :type p: float
+      :param r: percentage of moves to consider to select the best move
+      :type r: int
+      :param nb_exec: Number of execution of the heuristic
+      :type nb_exec: int
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+

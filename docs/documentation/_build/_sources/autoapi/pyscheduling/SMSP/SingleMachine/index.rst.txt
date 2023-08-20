@@ -1,0 +1,462 @@
+:py:mod:`pyscheduling.SMSP.SingleMachine`
+=========================================
+
+.. py:module:: pyscheduling.SMSP.SingleMachine
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.SingleMachine.GenerationProtocol
+   pyscheduling.SMSP.SingleMachine.SingleInstance
+   pyscheduling.SMSP.SingleMachine.Machine
+   pyscheduling.SMSP.SingleMachine.SingleSolution
+   pyscheduling.SMSP.SingleMachine.SM_LocalSearch
+   pyscheduling.SMSP.SingleMachine.NeighbourhoodGeneration
+
+
+
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: BASE
+      :annotation: = 1
+
+      
+
+
+.. py:class:: SingleInstance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.Problem.BaseInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+
+.. py:class:: Machine(objective_value: int = 0, last_job: int = -1, job_schedule: List[pyscheduling.Problem.Job] = None, wiCi_cache: List[int] = None, wiTi_cache: List[int] = None, wiFi_cache: List[int] = None)
+
+   .. py:attribute:: objective_value
+      :annotation: :int = 0
+
+      
+
+   .. py:attribute:: last_job
+      :annotation: :int
+
+      
+
+   .. py:attribute:: job_schedule
+      :annotation: :List[pyscheduling.Problem.Job]
+
+      
+
+   .. py:attribute:: wiCi_cache
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: wiTi_cache
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: wiFi_cache
+      :annotation: :List[int]
+
+      
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: __eq__(other)
+
+      Return self==value.
+
+
+   .. py:method:: copy()
+
+
+   .. py:method:: toJSON()
+
+
+   .. py:method:: fromDict(machine_dict: dict)
+      :staticmethod:
+
+
+   .. py:method:: compute_current_ci(instance: SingleInstance, prev_ci: int, job_prev_i: int, job_i: int)
+
+      Computes the current ci when job_i comes after job_prev_i.
+      This takes into account if we have setup times and release dates.
+
+      :param instance: the instance to be solved.
+      :type instance: SingelInstance
+      :param prev_ci: the previous value of ci
+      :type prev_ci: int
+      :param job_prev_i: id of the job that precedes the inserted job
+      :type job_prev_i: int
+      :param job_i: id of the job to be inserted at the end
+      :type job_i: int
+
+      :returns: (ci, start_time), the new completion time and start_time of the inserted job.
+      :rtype: tuple
+
+
+   .. py:method:: init_cache(instance: SingleInstance, startIndex: int = 0)
+
+      Initialize the cache if it's not defined yet
+
+      :param startIndex: The index from which we start fixing the schedule. Defaults to 0.
+      :type startIndex: int, optional
+      :param obj_cache: The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
+      :type obj_cache: list[int]
+
+      :returns: (startIndex, obj_cache)
+      :rtype: tuple
+
+
+   .. py:method:: init_obj(startIndex: int = 0, obj_cache: List[int] = None)
+
+      This is a helper method to initialize the values of ci, prev_job and objective from the current schedule and the objective cache if present.
+
+      :param startIndex: The index from which we start fixing the schedule. Defaults to 0.
+      :type startIndex: int, optional
+      :param obj_cache: The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
+      :type obj_cache: list[int], optional
+
+      :returns: ci, job_prev_i, obj
+      :rtype: tuple
+
+
+   .. py:method:: compute_obj_from_ci(instance: SingleInstance, ci: int, job_i: int, curr_obj: int)
+
+      Helper method to compute the objective value from the current ci.
+      According to the objective set on the instance, the expression of the objective in function of ci changes
+
+      :param instance: the current problem instance
+      :type instance: SingleInstance
+      :param ci: the current completion time
+      :type ci: int
+      :param job_i: the job that was inserted
+      :type job_i: int
+      :param curr_obj: current objective before inserting the job (cumulative)
+      :type curr_obj: int
+
+      :returns: obj, the new objective
+      :rtype: int
+
+
+   .. py:method:: compute_objective(instance: SingleInstance, startIndex: int = 0)
+
+      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the objective
+
+      :param instance: The instance associated to the machine
+      :type instance: SingleInstance
+      :param startIndex: The job index the function starts operating from
+      :type startIndex: int
+
+      :returns: objective
+      :rtype: int
+
+
+   .. py:method:: simulate_remove_insert(pos_remove: int, job: int, pos_insert: int, instance: SingleInstance)
+
+      Computes the objective if we remove job at position "pos_remove"
+      and insert "job" at "pos" in the machine's job_schedule
+
+      :param pos_remove: position of the job to be removed
+      :type pos_remove: int
+      :param job: id of the inserted job
+      :type job: int
+      :param pos_insert: position where the job is inserted in the machine
+      :type pos_insert: int
+      :param instance: the current problem instance
+      :type instance: SingleInstance
+
+      :returns: total weighted completion time
+      :rtype: int
+
+
+   .. py:method:: simulate_swap(pos_i: int, pos_j: int, instance: SingleInstance)
+
+      Computes the objective if we insert swap jobs at position "pos_i" and "pos_j"
+      in the machine's job_schedule
+      :param pos_i: position of the first job to be swapped
+      :type pos_i: int
+      :param pos_j: position of the second job to be swapped
+      :type pos_j: int
+      :param instance: the current problem instance
+      :type instance: SingleInstance
+
+      :returns: total weighted completion time
+      :rtype: int
+
+
+   .. py:method:: maximum_lateness(instance: SingleInstance)
+
+
+
+.. py:class:: SingleSolution(instance: SingleInstance, machine: Machine = None, objective_value: int = 0)
+
+   Bases: :py:obj:`pyscheduling.Problem.BaseSolution`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: machine
+      :annotation: :Machine
+
+      
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+   .. py:method:: __str__()
+
+      Return str(self).
+
+
+   .. py:method:: copy()
+
+      Return a copy to the current solution
+
+      :returns: copy of the current solution
+      :rtype: Solution
+
+
+   .. py:method:: __lt__(other)
+
+      Return self<value.
+
+
+   .. py:method:: fix_objective()
+
+      Sets the objective_value attribute of the solution to the objective attribute of the machine
+
+
+
+   .. py:method:: compute_objective()
+
+      Computes the current solution's objective.
+      By calling the compute objective on the only existing machine and setting the returned value.
+
+
+   .. py:method:: Lmax()
+
+      Sets the job_schedule of the machine and affects the maximum lateness to the objective_value attribute
+
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read a solution from a txt file
+
+      :param path: path to the solution's txt file of type Path from pathlib
+      :type path: Path
+
+      :rtype: SingleSolution
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export the solution to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: plot(path: pathlib.Path = None)
+
+      Plot the solution into a gantt diagramm
+
+      :param types: The type of tasks to plot, a string where each letter corresponds to one type: R for release,
+
+                    S for setup and P for Processing. Defaults to "RSP".
+      :type types: str, optional
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
+
+
+   .. py:method:: is_valid(verbosity: bool = False)
+
+      Check if solution respects the constraints
+
+
+
+.. py:class:: SM_LocalSearch(methods: List[object] = None, copy_solution: bool = False)
+
+   Bases: :py:obj:`pyscheduling.Problem.LocalSearch`
+
+   .. py:method:: _intra_insertion(solution: SingleSolution)
+      :staticmethod:
+
+      Iterates through the job schedule and try to reschedule every job at a better position to improve the solution
+
+      :param solution: solution to improve
+      :type solution: SingleSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+
+      :returns: improved solution
+      :rtype: SingleSolution
+
+
+   .. py:method:: _swap(solution: SingleSolution)
+      :staticmethod:
+
+      Iterates through the job schedule and choose the best swap between 2 jobs to improve the solution
+
+      :param solution: solution to improve
+      :type solution: SingleSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+
+      :returns: improved solution
+      :rtype: SingleSolution
+
+
+   .. py:method:: improve(solution: SingleSolution) -> SingleSolution
+
+      Improves a solution by iteratively calling local search operators
+
+      :param solution: current solution
+      :type solution: Solution
+
+      :returns: improved solution
+      :rtype: Solution
+
+
+
+.. py:class:: NeighbourhoodGeneration
+
+   .. py:method:: select_least_effective(solution: SingleSolution)
+      :staticmethod:
+
+      Select the least effective job according to the objective
+
+      :param solution: solution to be inspected
+      :type solution: SingleSolution
+
+      :returns: (lej_pos, lej_id): the position and id of the least effective job
+      :rtype: tuple
+
+
+   .. py:method:: LEJ_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Applies the best insertion operator on the least effective job on the objective
+
+      :param solution: solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: if true, it applies the move only if it improved the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param inplace: Whether to modify the solution rather than creating a new one. Defaults to True.
+      :type inplace: bool, optional
+
+
+   .. py:method:: LEJ_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Applies the best insertion operator on the least effective job on the objective
+
+      :param solution: solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: if true, it applies the move only if it improved the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param inplace: Whether to modify the solution rather than creating a new one. Defaults to True.
+      :type inplace: bool, optional
+
+
+   .. py:method:: random_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Applies the best insertion operator on the least effective job
+
+      :param solution: solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: if true, it applies the move only if it improved the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param inplace: Whether to modify the solution rather than creating a new one. Defaults to True.
+      :type inplace: bool, optional
+
+
+   .. py:method:: random_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Performs a random swap between 2 jobs
+
+      :param solution: Solution to be improved
+      :type solution: SingleSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: SingleSolution
+
+
+   .. py:method:: passive_swap(solution: SingleSolution, force_improve: bool = True)
+      :staticmethod:
+
+      Performs a swap between the 2 least effective jobs in terms of WSPT rule
+
+      :param solution: Solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: SingleSolution
+
+
+   .. py:method:: LEJ_neighbour(solution: SingleSolution)
+      :staticmethod:
+
+      Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+      :param solution_i: Solution to be improved
+      :type solution_i: SingleSolution
+
+      :returns: New solution
+      :rtype: SingleSolution
+
+
+   .. py:method:: lahc_neighbour(solution: SingleSolution)
+      :staticmethod:
+
+      Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+      :param solution_i: Solution to be improved
+      :type solution_i: SingleSolution
+
+      :returns: New solution
+      :rtype: SingleSolution
+
+
+

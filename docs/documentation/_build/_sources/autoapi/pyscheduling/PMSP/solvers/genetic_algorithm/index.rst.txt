@@ -1,0 +1,78 @@
+:py:mod:`pyscheduling.PMSP.solvers.genetic_algorithm`
+=====================================================
+
+.. py:module:: pyscheduling.PMSP.solvers.genetic_algorithm
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.solvers.genetic_algorithm.GeneticAlgorithm
+
+
+
+
+.. py:class:: GeneticAlgorithm
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: pop_size
+      :annotation: :int = 50
+
+      
+
+   .. py:attribute:: p_cross
+      :annotation: :float = 0.7
+
+      
+
+   .. py:attribute:: p_mut
+      :annotation: :float = 0.5
+
+      
+
+   .. py:attribute:: p_ls
+      :annotation: :float = 1
+
+      
+
+   .. py:attribute:: pressure
+      :annotation: :int = 30
+
+      
+
+   .. py:attribute:: n_iterations
+      :annotation: :int = 100
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance)
+
+
+   .. py:method:: generate_population(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, pop_size=40, LS=True)
+
+
+   .. py:method:: selection(population, pressure)
+
+
+   .. py:method:: crossover(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, parent_1, parent_2)
+
+
+   .. py:method:: mutation(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, child: pyscheduling.PMSP.ParallelMachines.ParallelSolution)
+
+
+   .. py:method:: complete_solution(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance, parent, child: pyscheduling.PMSP.ParallelMachines.ParallelSolution)
+
+
+   .. py:method:: replacement(population, child)
+
+
+

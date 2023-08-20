@@ -37,7 +37,7 @@ class BaseConstraints():
            (list[list[int]],int): (Matrix, index of the next section of the instance)
         """
         i = startIndex
-        Matrix = []  # Matrix S_ijk : Setup time between jobs j and k
+        Matrix = [] 
         i += 1  # Skip SSD
         for k in range(dimension_i):
             line = content[i].strip().split('\t')
@@ -60,7 +60,7 @@ class BaseConstraints():
            (list[list[list[int]]],int): (Table of matrices, index of the next section of the instance)
         """
         i = startIndex
-        S = []  # Table of Matrix S_ijk : Setup time between jobs j and k on machine i
+        S = []  
         i += 1  # Skip SSD
         endIndex = startIndex+1+dimension_j*dimension_i+dimension_i
         while i != endIndex:
@@ -77,10 +77,22 @@ class BaseConstraints():
     # Output methods
     @staticmethod
     def write_1D(array: List[int], file):
+        """Writes a vector of integers in a file
+
+        Args:
+            array (List[int]): array of integers to be written on the file
+            file : the file path
+        """
         file.write("\t".join(map(str,array)))
 
     @staticmethod
     def write_2D(matrix: List[List[int]], file):
+        """Writes a matrix of integers in a file
+
+        Args:
+            array (List[int]): array of arrays of integers to be written on the file
+            file : the file path
+        """
         nb_lines = len(matrix)
         for i in range(nb_lines):
             BaseConstraints.write_1D(matrix[i], file)
@@ -91,6 +103,17 @@ class BaseConstraints():
     @staticmethod
     def generate_1D(nb_values: int, min_value: int = 1, max_value: int = 99,
                     law : RandomDistrib = RandomDistrib.UNIFORM):
+        """Generates a vector of integers following a distribution
+
+        Args:
+            nb_values (int): size of the vector
+            min_value (int, optional): minimum of generated values. Defaults to 1.
+            max_value (int, optional): maximum of generated values. Defaults to 99.
+            law (RandomDistrib, optional): distribution. Defaults to RandomDistrib.UNIFORM.
+
+        Returns:
+            List[int]: array of integers
+        """
         random_array = []
         for j in range(nb_values):
             if law == RandomDistrib.UNIFORM:  # Generate uniformly
@@ -107,6 +130,18 @@ class BaseConstraints():
     @staticmethod
     def generate_2D(nb_lines: int, nb_columns: int, min_value: int = 1,
                     max_value: int = 99, law: RandomDistrib = RandomDistrib.UNIFORM):
+        """Generates a matrix of integers following a distribution
+
+        Args:
+            nb_lines (int): number of rows
+            nb_columns (int): number of columns
+            min_value (int, optional): minimum of generated values. Defaults to 1.
+            max_value (int, optional): maximum of generated values. Defaults to 99.
+            law (RandomDistrib, optional): distribution. Defaults to RandomDistrib.UNIFORM.
+
+        Returns:
+            List[List[int]]: array of integers
+        """
         random_matrix = []
         for j in range(nb_lines):
             array_j = BaseConstraints.generate_1D(nb_columns, min_value, max_value, law)
@@ -117,6 +152,19 @@ class BaseConstraints():
     @staticmethod
     def generate_3D(nb_matrices: int, nb_lines: int, nb_columns: int,
             min_value: int = 1, max_value: int = 99, law: RandomDistrib = RandomDistrib.UNIFORM):
+        """Generates an array of matrices of integers following a distribution
+
+        Args:
+            nb_matrices (int) : number of matries
+            nb_lines (int): number of rows of each matrix
+            nb_columns (int): number of columns of each matrix
+            min_value (int, optional): minimum of generated values. Defaults to 1.
+            max_value (int, optional): maximum of generated values. Defaults to 99.
+            law (RandomDistrib, optional): distribution. Defaults to RandomDistrib.UNIFORM.
+
+        Returns:
+            List[List[List[int]]]: array of integers
+        """
         
         random_matrices = []
         for i in range(nb_matrices):
@@ -127,6 +175,8 @@ class BaseConstraints():
 
     @staticmethod
     def flatten_list(array: List) -> List:
+        """Flatten a list of lists into a list
+        """
         return list(itertools.chain.from_iterable(array)) \
             if isinstance(array[0], list) else array
 
@@ -136,6 +186,8 @@ class BaseConstraints():
         
         @classmethod
         def create(cls, instance,var):
+            """Creates an attribute to instance following the name of the class and assign var to it
+            """
             setattr(instance, cls._name ,var) if var is not None else setattr(instance, cls._name, list())
 
         def __lt__(self, other):
@@ -148,17 +200,35 @@ class BaseConstraints():
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
+            """Read attribute of instance from a list of integers starting from an index
+
+            Args:
+                instance (BaseInstance): instance
+                text_content (List[str]): attribute in text format
+                starting_index (int): index to start from
+            """
             P, i = BaseConstraints.read_2D(instance.n, text_content,starting_index)
             setattr(instance, cls._name, P)
             return i
             
         @classmethod
         def write(cls, instance, file):
+            """Write attribute of instance in a file
+
+            Args:
+                instance (BaseInstance): instance
+                file : file path
+            """
             P = getattr(instance, cls._name )
             BaseConstraints.write_2D(P, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
+            """Generate attribute of instance
+
+            Args:
+                instance (BaseInstance): instance
+            """
             law = kwargs.get("law")
             Pmin = kwargs.get("Pmin")
             Pmax = kwargs.get("Pmax")
@@ -173,18 +243,36 @@ class BaseConstraints():
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
+            """Read attribute of instance from a list of integers starting from an index
+
+            Args:
+                instance (BaseInstance): instance
+                text_content (List[str]): attribute in text format
+                starting_index (int): index to start from
+            """
             W, i = BaseConstraints.read_1D(text_content,starting_index)
             setattr(instance, cls._name, W)
             return i
             
         @classmethod
         def write(cls, instance, file):
+            """Write attribute of instance in a file
+
+            Args:
+                instance (BaseInstance): instance
+                file : file path
+            """
             W = getattr(instance, cls._name)
             file.write("\nWeights\n")
             BaseConstraints.write_1D(W, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
+            """Generate attribute of instance
+
+            Args:
+                instance (BaseInstance): instance
+            """
             law = kwargs.get("law")
             Wmin = kwargs.get("Wmin")
             Wmax = kwargs.get("Wmax")
@@ -199,18 +287,36 @@ class BaseConstraints():
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
+            """Read attribute of instance from a list of integers starting from an index
+
+            Args:
+                instance (BaseInstance): instance
+                text_content (List[str]): attribute in text format
+                starting_index (int): index to start from
+            """
             R, i = BaseConstraints.read_1D(text_content,starting_index)
             setattr(instance, cls._name ,R)
             return i
 
         @classmethod
         def write(cls, instance, file):
+            """Write attribute of instance in a file
+
+            Args:
+                instance (BaseInstance): instance
+                file : file path
+            """
             R = getattr(instance, cls._name)
             file.write("\nRelease time\n")
             BaseConstraints.write_1D(R, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
+            """Generate attribute of instance
+
+            Args:
+                instance (BaseInstance): instance
+            """
             law = kwargs.get("law")
             alpha = kwargs.get("alpha")
 
@@ -230,18 +336,36 @@ class BaseConstraints():
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
+            """Read attribute of instance from a list of integers starting from an index
+
+            Args:
+                instance (BaseInstance): instance
+                text_content (List[str]): attribute in text format
+                starting_index (int): index to start from
+            """
             D, i = BaseConstraints.read_1D(text_content,starting_index)
             setattr(instance, cls._name ,D)
             return i
 
         @classmethod
         def write(cls, instance, file):
+            """Write attribute of instance in a file
+
+            Args:
+                instance (BaseInstance): instance
+                file : file path
+            """
             D = getattr(instance, cls._name )
             file.write("\nDue time\n")
             BaseConstraints.write_1D(D, file)
 
         @classmethod
         def generate_random(cls, instance,**kwargs):
+            """Generate attribute of instance
+
+            Args:
+                instance (BaseInstance): instance
+            """
             law = kwargs.get("law")
             due_time_factor = kwargs.get("due_time_factor")
 
@@ -266,12 +390,25 @@ class BaseConstraints():
 
         @classmethod
         def read(cls, instance, text_content : List[str], starting_index : int):
+            """Read attribute of instance from a list of integers starting from an index
+
+            Args:
+                instance (BaseInstance): instance
+                text_content (List[str]): attribute in text format
+                starting_index (int): index to start from
+            """
             S, i = BaseConstraints.read_3D(instance.m, instance.n, text_content, starting_index)
             setattr(instance, cls._name, S)
             return i
 
         @classmethod
         def write(cls, instance, file):
+            """Write attribute of instance in a file
+
+            Args:
+                instance (BaseInstance): instance
+                file : file path
+            """
             S = getattr(instance, cls._name)
             file.write("\nSSD")
             for i in range(instance.m):
@@ -280,6 +417,11 @@ class BaseConstraints():
     
         @classmethod
         def generate_random(cls, instance,**kwargs):
+            """Generate attribute of instance
+
+            Args:
+                instance (BaseInstance): instance
+            """
             law = kwargs.get("law")
             gamma = kwargs.get("gamma")
 
