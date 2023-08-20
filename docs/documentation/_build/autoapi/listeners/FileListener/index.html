@@ -1155,10 +1155,20 @@ inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="listeners.FileListener.FileListener.on_start">
 <span class="sig-name descname"><span class="pre">on_start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solve_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#listeners.FileListener.FileListener.on_start" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
 <dd><p>Called at the start of the algorithm</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>start_time</strong> (<em>int</em>) – time to start recording results</p>
+=======
+<dd><p>Start Listening to the solve provess</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solve_result</strong> (<a class="reference internal" href="../../pyscheduling/Problem/index.html#pyscheduling.Problem.SolveResult" title="pyscheduling.Problem.SolveResult"><em>SolveResult</em></a>) – Solve result containing the solutions and other metrics</p></li>
+<li><p><strong>start_time</strong> (<em>int</em>) – timestamp of the start of the solve process</p></li>
+</ul>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 </dd>
 </dl>
 </dd></dl>
@@ -1166,10 +1176,17 @@ inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="listeners.FileListener.FileListener.on_complete">
 <span class="sig-name descname"><span class="pre">on_complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">end_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#listeners.FileListener.FileListener.on_complete" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
 <dd><p>Called at the end of the algorithm</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>end_time</strong> (<em>int</em>) – time at the end of the algorithm</p>
+=======
+<dd><p>Finish listerning to the solve process</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>end_time</strong> (<em>int</em>) – timestamp of the end of the solve process</p>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 </dd>
 </dl>
 </dd></dl>
@@ -1177,12 +1194,21 @@ inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="listeners.FileListener.FileListener.on_solution_found">
 <span class="sig-name descname"><span class="pre">on_solution_found</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_solution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_found</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#listeners.FileListener.FileListener.on_solution_found" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
 <dd><p>Called each time a new solution is found</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>new_solution</strong> – the solution found</p></li>
 <li><p><strong>time_found</strong> – the time a solution is found</p></li>
+=======
+<dd><p>Callback to finding a solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_solution</strong> (<a class="reference internal" href="../../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseSolution" title="pyscheduling.Problem.BaseSolution"><em>BaseSolution</em></a>) – Found solution</p></li>
+<li><p><strong>time_found</strong> (<em>int</em>) – timestamp of the moment the solution was found</p></li>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 </ul>
 </dd>
 </dl>

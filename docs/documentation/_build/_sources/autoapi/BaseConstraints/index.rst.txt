@@ -24,9 +24,12 @@ Classes
       .. py:method:: create(instance, var)
          :classmethod:
 
+<<<<<<< HEAD
          Creates an attribute to instance following the name of the class and assign var to it
 
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: __lt__(other)
 
@@ -51,6 +54,7 @@ Classes
       .. py:method:: read(instance, text_content: List[str], starting_index: int)
          :classmethod:
 
+<<<<<<< HEAD
          Read attribute of instance from a list of integers starting from an index
 
          :param instance: instance
@@ -60,25 +64,33 @@ Classes
          :param starting_index: index to start from
          :type starting_index: int
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: write(instance, file)
          :classmethod:
 
+<<<<<<< HEAD
          Write attribute of instance in a file
 
          :param instance: instance
          :type instance: BaseInstance
          :param file: file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: generate_random(instance, **kwargs)
          :classmethod:
 
+<<<<<<< HEAD
          Generate attribute of instance
 
          :param instance: instance
          :type instance: BaseInstance
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
 
    .. py:class:: W
@@ -98,6 +110,7 @@ Classes
       .. py:method:: read(instance, text_content: List[str], starting_index: int)
          :classmethod:
 
+<<<<<<< HEAD
          Read attribute of instance from a list of integers starting from an index
 
          :param instance: instance
@@ -107,25 +120,33 @@ Classes
          :param starting_index: index to start from
          :type starting_index: int
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: write(instance, file)
          :classmethod:
 
+<<<<<<< HEAD
          Write attribute of instance in a file
 
          :param instance: instance
          :type instance: BaseInstance
          :param file: file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: generate_random(instance, **kwargs)
          :classmethod:
 
+<<<<<<< HEAD
          Generate attribute of instance
 
          :param instance: instance
          :type instance: BaseInstance
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
 
    .. py:class:: R
@@ -145,6 +166,7 @@ Classes
       .. py:method:: read(instance, text_content: List[str], starting_index: int)
          :classmethod:
 
+<<<<<<< HEAD
          Read attribute of instance from a list of integers starting from an index
 
          :param instance: instance
@@ -154,25 +176,33 @@ Classes
          :param starting_index: index to start from
          :type starting_index: int
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: write(instance, file)
          :classmethod:
 
+<<<<<<< HEAD
          Write attribute of instance in a file
 
          :param instance: instance
          :type instance: BaseInstance
          :param file: file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: generate_random(instance, **kwargs)
          :classmethod:
 
+<<<<<<< HEAD
          Generate attribute of instance
 
          :param instance: instance
          :type instance: BaseInstance
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
 
    .. py:class:: D
@@ -192,6 +222,7 @@ Classes
       .. py:method:: read(instance, text_content: List[str], starting_index: int)
          :classmethod:
 
+<<<<<<< HEAD
          Read attribute of instance from a list of integers starting from an index
 
          :param instance: instance
@@ -201,25 +232,33 @@ Classes
          :param starting_index: index to start from
          :type starting_index: int
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: write(instance, file)
          :classmethod:
 
+<<<<<<< HEAD
          Write attribute of instance in a file
 
          :param instance: instance
          :type instance: BaseInstance
          :param file: file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: generate_random(instance, **kwargs)
          :classmethod:
 
+<<<<<<< HEAD
          Generate attribute of instance
 
          :param instance: instance
          :type instance: BaseInstance
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
 
    .. py:class:: S
@@ -239,6 +278,7 @@ Classes
       .. py:method:: read(instance, text_content: List[str], starting_index: int)
          :classmethod:
 
+<<<<<<< HEAD
          Read attribute of instance from a list of integers starting from an index
 
          :param instance: instance
@@ -248,25 +288,33 @@ Classes
          :param starting_index: index to start from
          :type starting_index: int
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: write(instance, file)
          :classmethod:
 
+<<<<<<< HEAD
          Write attribute of instance in a file
 
          :param instance: instance
          :type instance: BaseInstance
          :param file: file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
       .. py:method:: generate_random(instance, **kwargs)
          :classmethod:
 
+<<<<<<< HEAD
          Generate attribute of instance
 
          :param instance: instance
          :type instance: BaseInstance
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
 
    .. py:method:: read_1D(content: List[str], startIndex: int)
@@ -320,26 +368,33 @@ Classes
    .. py:method:: write_1D(array: List[int], file)
       :staticmethod:
 
+<<<<<<< HEAD
       Writes a vector of integers in a file
 
       :param array: array of integers to be written on the file
       :type array: List[int]
       :param file: the file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
    .. py:method:: write_2D(matrix: List[List[int]], file)
       :staticmethod:
 
+<<<<<<< HEAD
       Writes a matrix of integers in a file
 
       :param array: array of arrays of integers to be written on the file
       :type array: List[int]
       :param file: the file path
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
    .. py:method:: generate_1D(nb_values: int, min_value: int = 1, max_value: int = 99, law: pyscheduling.Problem.RandomDistrib = RandomDistrib.UNIFORM)
       :staticmethod:
 
+<<<<<<< HEAD
       Generates a vector of integers following a distribution
 
       :param nb_values: size of the vector
@@ -354,10 +409,13 @@ Classes
       :returns: array of integers
       :rtype: List[int]
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
    .. py:method:: generate_2D(nb_lines: int, nb_columns: int, min_value: int = 1, max_value: int = 99, law: pyscheduling.Problem.RandomDistrib = RandomDistrib.UNIFORM)
       :staticmethod:
 
+<<<<<<< HEAD
       Generates a matrix of integers following a distribution
 
       :param nb_lines: number of rows
@@ -374,10 +432,13 @@ Classes
       :returns: array of integers
       :rtype: List[List[int]]
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
    .. py:method:: generate_3D(nb_matrices: int, nb_lines: int, nb_columns: int, min_value: int = 1, max_value: int = 99, law: pyscheduling.Problem.RandomDistrib = RandomDistrib.UNIFORM)
       :staticmethod:
 
+<<<<<<< HEAD
       Generates an array of matrices of integers following a distribution
 
       :param nb_matrices: number of matries
@@ -396,12 +457,17 @@ Classes
       :returns: array of integers
       :rtype: List[List[List[int]]]
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
    .. py:method:: flatten_list(array: List) -> List
       :staticmethod:
 
+<<<<<<< HEAD
       Flatten a list of lists into a list
 
 
+=======
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
 
 

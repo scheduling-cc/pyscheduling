@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'pyscheduling'
-copyright = '2022, scheduling-cc'
+copyright = '2023, scheduling-cc'
 author = 'scheduling-cc'
 
 # -- General configuration ---------------------------------------------------

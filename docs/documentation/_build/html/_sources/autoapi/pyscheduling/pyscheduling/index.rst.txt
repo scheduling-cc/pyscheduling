@@ -1,6 +1,0 @@
-:py:mod:`pyscheduling.pyscheduling`
-===================================
-
-.. py:module:: pyscheduling.pyscheduling
-
-
