@@ -37,3 +37,7 @@
 ## v0.1.8 (05/04/2023)
 
 - Refactored constraints representation, used plotly for gantt
+
+## v0.2.0 (22/08/2023)
+
+- Generic solver classes, core package, listeners 
