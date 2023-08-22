@@ -1,0 +1,49 @@
+:py:mod:`pyscheduling.PMSP.solvers.ordered_constructive`
+========================================================
+
+.. py:module:: pyscheduling.PMSP.solvers.ordered_constructive
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.solvers.ordered_constructive.OrderedConstructive
+
+
+
+
+.. py:class:: OrderedConstructive
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: remaining_jobs_list
+      :annotation: :List
+
+      
+
+   .. py:attribute:: is_random
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.PMSP.ParallelMachines.ParallelInstance)
+
+      the ordered greedy constructive heuristic to find an initial solution of RmSijkCmax problem minimalizing the factor of (processing time + setup time) of
+      jobs in the given order on different machines
+
+      :param instance: Instance to be solved by the heuristic
+      :type instance: pm.ParallelInstance
+
+      :returns: the solver result of the execution of the heuristic
+      :rtype: Problem.SolveResult
+
+
+

@@ -13,14 +13,12 @@ Classes
 .. autoapisummary::
 
    pyscheduling.SMSP.riPrecLmax.riPrecLmax_Instance
-   pyscheduling.SMSP.riPrecLmax.Heuristics
-   pyscheduling.SMSP.riPrecLmax.Metaheuristics
    pyscheduling.SMSP.riPrecLmax.BB
 
 
 
 
-.. py:class:: riPrecLmax_Instance
+.. py:class:: riPrecLmax_Instance(n: int, name: str = 'Unknown', **kwargs)
 
    Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
 
@@ -28,17 +26,22 @@ Classes
    inheritance.
 
    .. py:attribute:: P
-      :annotation: :list[int]
+      :annotation: :List[int]
 
       
 
    .. py:attribute:: R
-      :annotation: :list[int]
+      :annotation: :List[int]
 
       
 
    .. py:attribute:: D
-      :annotation: :list[int]
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: Precedence
+      :annotation: :List[tuple]
 
       
 
@@ -59,7 +62,7 @@ Classes
       :rtype: riPrecLmax_Instance
 
 
-   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha: float = 0.0, due_time_factor: float = 0.0, InstanceName: str = '')
+   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.RandomDistrib = SingleMachine.RandomDistrib.UNIFORM, Pmin: int = 1, Pmax: int = -1, alpha: float = 0.0, due_time_factor: float = 0.0, InstanceName: str = '')
       :classmethod:
 
       Random generation of riPrecLmax problem instance
@@ -89,7 +92,7 @@ Classes
       :type path: Path
 
 
-   .. py:method:: LB_preemptive_EDD(start_time: int = 0, jobs_list: list[int] = None)
+   .. py:method:: LB_preemptive_EDD(start_time: int = 0, jobs_list: List[int] = None)
 
       returns the objective value returned by applying the preemptive EDD rule on the instance
       object from a given starting time and remaining jobs list to be scheduled
@@ -117,32 +120,6 @@ Classes
 
       :returns: default solving method
       :rtype: object
-
-
-
-.. py:class:: Heuristics
-
-   .. py:method:: all_methods()
-      :classmethod:
-
-      returns all the methods of the given Heuristics class
-
-      :returns: list of functions
-      :rtype: list[object]
-
-
-
-.. py:class:: Metaheuristics
-
-   Bases: :py:obj:`pyscheduling.SMSP.SM_Methods.Metaheuristics`
-
-   .. py:method:: all_methods()
-      :classmethod:
-
-      returns all the methods of the given Heuristics class
-
-      :returns: list of functions
-      :rtype: list[object]
 
 
 
@@ -175,6 +152,9 @@ Classes
 
       :returns: maximum lateness
       :rtype: int
+
+
+   .. py:method:: solution_format(partial_solution: object, objective_value)
 
 
 

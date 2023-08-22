@@ -1,0 +1,18 @@
+:py:mod:`pyscheduling.core.base_solvers`
+========================================
+
+.. py:module:: pyscheduling.core.base_solvers
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   base_BB/index.rst
+   base_lahc/index.rst
+   base_sa/index.rst
+   base_solver/index.rst
+
+

@@ -13,12 +13,12 @@ Classes
 .. autoapisummary::
 
    pyscheduling.FS.FmCmax.FmCmax_Instance
-   pyscheduling.FS.FmCmax.Heuristics
+   pyscheduling.FS.FmCmax.Slope
 
 
 
 
-.. py:class:: FmCmax_Instance
+.. py:class:: FmCmax_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
 
    Bases: :py:obj:`pyscheduling.FS.FlowShop.FlowShopInstance`
 
@@ -26,78 +26,34 @@ Classes
    inheritance.
 
    .. py:attribute:: P
-      :annotation: :list[list[int]]
+      :annotation: :List[List[int]]
 
       
 
-   .. py:method:: read_txt(path: pathlib.Path)
-      :classmethod:
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.FS.FlowShop.Constraints]]
 
-      Read an instance from a txt file according to the problem's format
+      
 
-      :param path: path to the txt file of type Path from the pathlib module
-      :type path: Path
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
 
-      :raises FileNotFoundError: when the file does not exist
+      
 
-      :rtype: FmCmax_Instance
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
 
-
-   .. py:method:: generate_random(jobs_number: int, configuration_number: int, protocol: pyscheduling.FS.FlowShop.GenerationProtocol = FlowShop.GenerationProtocol.VALLADA, law: pyscheduling.FS.FlowShop.GenerationLaw = FlowShop.GenerationLaw.UNIFORM, Pmin: int = -1, Pmax: int = -1, InstanceName: str = '')
-      :classmethod:
-
-      Random generation of FmCmax problem instance
-
-      :param jobs_number: number of jobs of the instance
-      :type jobs_number: int
-      :param configuration_number: number of machines of the instance
-      :type configuration_number: int
-      :param protocol: given protocol of generation of random instances. Defaults to FlowShop.GenerationProtocol.VALLADA.
-      :type protocol: FlowShop.GenerationProtocol, optional
-      :param law: probablistic law of generation. Defaults to FlowShop.GenerationLaw.UNIFORM.
-      :type law: FlowShop.GenerationLaw, optional
-      :param Pmin: Minimal processing time. Defaults to -1.
-      :type Pmin: int, optional
-      :param Pmax: Maximal processing time. Defaults to -1.
-      :type Pmax: int, optional
-      :param InstanceName: name to give to the instance. Defaults to "".
-      :type InstanceName: str, optional
-
-      :returns: the randomly generated instance
-      :rtype: FmCmax_Instance
+      
 
 
-   .. py:method:: to_txt(path: pathlib.Path) -> None
+.. py:class:: Slope
 
-      Export an instance to a txt file
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
 
-      :param path: path to the resulting txt file
-      :type path: Path
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
 
-
-   .. py:method:: init_sol_method()
-
-      Returns the default solving method
-
-      :returns: default solving method
-      :rtype: object
-
-
-   .. py:method:: get_objective()
-
-      to get the objective tackled by the instance
-
-      :returns: Makespan
-      :rtype: RootProblem.Objective
-
-
-
-.. py:class:: Heuristics
-
-   Bases: :py:obj:`pyscheduling.FS.FS_Methods.Heuristics_Cmax`
-
-   .. py:method:: slope(instance: FmCmax_Instance)
-      :staticmethod:
+   .. py:method:: solve(instance: FmCmax_Instance)
 
       Inspired from Jonhson's rule, this heuristic schedules first the jobs with the smallest processing times on the first machines
 
@@ -106,15 +62,6 @@ Classes
 
       :returns: the solver result of the execution of the heuristic
       :rtype: Problem.SolveResult
-
-
-   .. py:method:: all_methods()
-      :classmethod:
-
-      returns all the methods of the given Heuristics class
-
-      :returns: list of functions
-      :rtype: list[object]
 
 
 

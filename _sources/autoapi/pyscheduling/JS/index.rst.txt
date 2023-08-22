@@ -4,13 +4,28 @@
 .. py:module:: pyscheduling.JS
 
 
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   solvers/index.rst
+
+
 Submodules
 ----------
 .. toctree::
    :titlesonly:
    :maxdepth: 1
 
+   Constraints/index.rst
    JmCmax/index.rst
+   JmriSijkCmax/index.rst
+   JmriSijkwiCi/index.rst
+   JmriSijkwiFi/index.rst
+   JmridiSijkwiTi/index.rst
+   JmriwiTi/index.rst
    JobShop/index.rst
 
 

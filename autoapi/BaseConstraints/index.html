@@ -1,0 +1,2041 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>BaseConstraints &#8212; pyscheduling  documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/pyscheduling.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/BaseConstraints/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="benchmark" href="../benchmark/index.html" />
+    <link rel="prev" title="pyscheduling.pyscheduling" href="../pyscheduling/pyscheduling/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="None">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../_static/pyscheduling_navbar.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/pyscheduling_navbar.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                <li class="nav-item">
+                    <a class="nav-link" href="../../getting_started.html">
+                        Getting started
+                    </a>
+                </li>
+                
+
+                <li class="nav-item">
+                    <a class="nav-link" href="../../samples.html">
+                        Explore samples
+                    </a>
+                </li>
+                
+
+                <li class="nav-item current active">
+                    <a class="nav-link" href="../index.html">
+                        API Reference
+                    </a>
+                </li>
+                
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../pyscheduling/index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     pyscheduling
+    </span>
+   </code>
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../pyscheduling/FS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.FS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../pyscheduling/FS/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-3">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/csp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.csp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/dispatch_rule/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.dispatch_rule
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/minit/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.minit
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/FS/solvers/sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.FS.solvers.sa
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FlowShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FlowShop
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FmriSijkwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmriSijkwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FmriSijkwiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmriSijkwiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/FS/FmridiSijkwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.FS.FmridiSijkwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../pyscheduling/JS/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.JS
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../pyscheduling/JS/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-5">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/JS/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.JS.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/JS/solvers/dispatch_heuristic/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.JS.solvers.dispatch_heuristic
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/JS/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.JS.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/Constraints/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.Constraints
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JmCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JmriSijkwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriSijkwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JmriSijkwiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriSijkwiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JmridiSijkwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmridiSijkwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JmriwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JmriwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/JS/JobShop/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.JS.JobShop
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../pyscheduling/PMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.PMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-6">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../pyscheduling/PMSP/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-7">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/ant_colony/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.ant_colony
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/genetic_algorithm/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.genetic_algorithm
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/ordered_constructive/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.ordered_constructive
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/PMSP/solvers/sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.PMSP.solvers.sa
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/ParallelMachines/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.ParallelMachines
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/RmSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/RmriSijkCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/RmriSijkWiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkWiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/RmriSijkWiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmriSijkWiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/RmridiSijkWiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.RmridiSijkWiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/PMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.PMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../pyscheduling/SMSP/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.SMSP
+      </span>
+     </code>
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label class="toctree-toggle" for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../pyscheduling/SMSP/solvers/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.solvers
+        </span>
+       </code>
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+      <label class="toctree-toggle" for="toctree-checkbox-9">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/biba/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.biba
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/csp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.csp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/dispatch_heuristic/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.dispatch_heuristic
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/dynamic_dispatch_heuristic/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.dynamic_dispatch_heuristic
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/grasp/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.grasp
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/lahc/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.lahc
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../pyscheduling/SMSP/solvers/sa/index.html">
+         <code class="xref py py-mod docutils literal notranslate">
+          <span class="pre">
+           pyscheduling.SMSP.solvers.sa
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/Constraints/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.Constraints
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/SingleMachine/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.SingleMachine
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/interface/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.interface
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/riPrecLmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riPrecLmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/rihiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.rihiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/risijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/risijwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/risijwiFi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiFi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/risijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.risijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/riwiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/riwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.riwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/sijCmax/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijCmax
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/sijwiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.sijwiTi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/wiCi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiCi
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../pyscheduling/SMSP/wiTi/index.html">
+       <code class="xref py py-mod docutils literal notranslate">
+        <span class="pre">
+         pyscheduling.SMSP.wiTi
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../pyscheduling/Problem/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.Problem
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../pyscheduling/pyscheduling/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       pyscheduling.pyscheduling
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     BaseConstraints
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../benchmark/index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     benchmark
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../base_solvers/index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     base_solvers
+    </span>
+   </code>
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-10">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../base_solvers/base_BB/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       base_solvers.base_BB
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../base_solvers/base_lahc/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       base_solvers.base_lahc
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../base_solvers/base_sa/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       base_solvers.base_sa
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../base_solvers/base_solver/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       base_solvers.base_solver
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../listeners/index.html">
+   <code class="xref py py-mod docutils literal notranslate">
+    <span class="pre">
+     listeners
+    </span>
+   </code>
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+  <label class="toctree-toggle" for="toctree-checkbox-11">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../listeners/BaseListener/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       listeners.BaseListener
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../listeners/CSVListener/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       listeners.CSVListener
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../listeners/FileListener/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       listeners.FileListener
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../listeners/PlotListener/index.html">
+     <code class="xref py py-mod docutils literal notranslate">
+      <span class="pre">
+       listeners.PlotListener
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="module-BaseConstraints">
+<span id="baseconstraints"></span><h1><a class="reference internal" href="#module-BaseConstraints" title="BaseConstraints"><code class="xref py py-mod docutils literal notranslate"><span class="pre">BaseConstraints</span></code></a><a class="headerlink" href="#module-BaseConstraints" title="Permalink to this headline">#</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BaseConstraints.BaseConstraints" title="BaseConstraints.BaseConstraints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseConstraints</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BaseConstraints.</span></span><span class="sig-name descname"><span class="pre">BaseConstraints</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.BaseConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BaseConstraint</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.BaseConstraint" title="Permalink to this definition">#</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.BaseConstraint.create">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.BaseConstraint.create" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Creates an attribute to instance following the name of the class and assign var to it</p>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.BaseConstraint.__lt__">
+<span class="sig-name descname"><span class="pre">__lt__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.BaseConstraint.__lt__" title="Permalink to this definition">#</a></dt>
+<dd><p>Return self&lt;value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.P">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">P</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.P" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#BaseConstraints.BaseConstraints.BaseConstraint" title="BaseConstraints.BaseConstraints.BaseConstraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseConstraints.BaseConstraint</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.P._name">
+<span class="sig-name descname"><span class="pre">_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">P</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.P._name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.P._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.P._value" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.P.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.P.read" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Read attribute of instance from a list of integers starting from an index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>text_content</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – attribute in text format</p></li>
+<li><p><strong>starting_index</strong> (<em>int</em>) – index to start from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.P.write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.P.write" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Write attribute of instance in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>file</strong> – file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.P.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.P.generate_random" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generate attribute of instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.W">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">W</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.W" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#BaseConstraints.BaseConstraints.BaseConstraint" title="BaseConstraints.BaseConstraints.BaseConstraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseConstraints.BaseConstraint</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.W._name">
+<span class="sig-name descname"><span class="pre">_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">W</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.W._name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.W._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">10</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.W._value" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.W.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.W.read" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Read attribute of instance from a list of integers starting from an index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>text_content</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – attribute in text format</p></li>
+<li><p><strong>starting_index</strong> (<em>int</em>) – index to start from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.W.write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.W.write" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Write attribute of instance in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>file</strong> – file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.W.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.W.generate_random" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generate attribute of instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.R">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">R</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.R" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#BaseConstraints.BaseConstraints.BaseConstraint" title="BaseConstraints.BaseConstraints.BaseConstraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseConstraints.BaseConstraint</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.R._name">
+<span class="sig-name descname"><span class="pre">_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">R</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.R._name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.R._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">20</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.R._value" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.R.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.R.read" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Read attribute of instance from a list of integers starting from an index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>text_content</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – attribute in text format</p></li>
+<li><p><strong>starting_index</strong> (<em>int</em>) – index to start from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.R.write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.R.write" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Write attribute of instance in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>file</strong> – file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.R.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.R.generate_random" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generate attribute of instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">D</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.D" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#BaseConstraints.BaseConstraints.BaseConstraint" title="BaseConstraints.BaseConstraints.BaseConstraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseConstraints.BaseConstraint</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.D._name">
+<span class="sig-name descname"><span class="pre">_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">D</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.D._name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.D._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">30</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.D._value" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.D.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.D.read" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Read attribute of instance from a list of integers starting from an index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>text_content</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – attribute in text format</p></li>
+<li><p><strong>starting_index</strong> (<em>int</em>) – index to start from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.D.write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.D.write" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Write attribute of instance in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>file</strong> – file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.D.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.D.generate_random" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generate attribute of instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.S">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">S</span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.S" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#BaseConstraints.BaseConstraints.BaseConstraint" title="BaseConstraints.BaseConstraints.BaseConstraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseConstraints.BaseConstraint</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.S._name">
+<span class="sig-name descname"><span class="pre">_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">S</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.S._name" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.S._value">
+<span class="sig-name descname"><span class="pre">_value</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">40</span></em><a class="headerlink" href="#BaseConstraints.BaseConstraints.S._value" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.S.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.S.read" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Read attribute of instance from a list of integers starting from an index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>text_content</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – attribute in text format</p></li>
+<li><p><strong>starting_index</strong> (<em>int</em>) – index to start from</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.S.write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.S.write" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Write attribute of instance in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p></li>
+<li><p><strong>file</strong> – file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.S.generate_random">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.S.generate_random" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generate attribute of instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>instance</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.BaseInstance" title="pyscheduling.Problem.BaseInstance"><em>BaseInstance</em></a>) – instance</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.read_1D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.read_1D" title="Permalink to this definition">#</a></dt>
+<dd><p>Read a table from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the vector</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(vector, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[int],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.read_2D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.read_2D" title="Permalink to this definition">#</a></dt>
+<dd><p>Read a matrix from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimension_i</strong> (<em>int</em>) – number of lines of the matrix, usually number of jobs ‘n’.</p></li>
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the matrix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Matrix, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[list[int]],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.read_3D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension_j</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.read_3D" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the table of matrices from a list of lines extracted from the file of the instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimension_i</strong> (<em>int</em>) – Dimension of the table, usually number of machines ‘m’.</p></li>
+<li><p><strong>dimension_j</strong> (<em>int</em>) – Dimension of the matrix, usually number of jobs ‘n’.</p></li>
+<li><p><strong>content</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – lines of the file of the instance</p></li>
+<li><p><strong>startIndex</strong> (<em>int</em>) – Index from where starts the table of matrices</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Table of matrices, index of the next section of the instance)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[list[list[int]]],int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.write_1D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.write_1D" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Writes a vector of integers in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – array of integers to be written on the file</p></li>
+<li><p><strong>file</strong> – the file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.write_2D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.write_2D" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Writes a matrix of integers in a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – array of arrays of integers to be written on the file</p></li>
+<li><p><strong>file</strong> – the file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.generate_1D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.RandomDistrib" title="pyscheduling.Problem.RandomDistrib"><span class="pre">pyscheduling.Problem.RandomDistrib</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RandomDistrib.UNIFORM</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.generate_1D" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generates a vector of integers following a distribution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_values</strong> (<em>int</em>) – size of the vector</p></li>
+<li><p><strong>min_value</strong> (<em>int</em><em>, </em><em>optional</em>) – minimum of generated values. Defaults to 1.</p></li>
+<li><p><strong>max_value</strong> (<em>int</em><em>, </em><em>optional</em>) – maximum of generated values. Defaults to 99.</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.RandomDistrib" title="pyscheduling.Problem.RandomDistrib"><em>RandomDistrib</em></a><em>, </em><em>optional</em>) – distribution. Defaults to RandomDistrib.UNIFORM.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of integers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[int]</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.generate_2D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.RandomDistrib" title="pyscheduling.Problem.RandomDistrib"><span class="pre">pyscheduling.Problem.RandomDistrib</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RandomDistrib.UNIFORM</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.generate_2D" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generates a matrix of integers following a distribution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_lines</strong> (<em>int</em>) – number of rows</p></li>
+<li><p><strong>nb_columns</strong> (<em>int</em>) – number of columns</p></li>
+<li><p><strong>min_value</strong> (<em>int</em><em>, </em><em>optional</em>) – minimum of generated values. Defaults to 1.</p></li>
+<li><p><strong>max_value</strong> (<em>int</em><em>, </em><em>optional</em>) – maximum of generated values. Defaults to 99.</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.RandomDistrib" title="pyscheduling.Problem.RandomDistrib"><em>RandomDistrib</em></a><em>, </em><em>optional</em>) – distribution. Defaults to RandomDistrib.UNIFORM.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of integers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[List[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.generate_3D">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_matrices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">law</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.RandomDistrib" title="pyscheduling.Problem.RandomDistrib"><span class="pre">pyscheduling.Problem.RandomDistrib</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RandomDistrib.UNIFORM</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BaseConstraints.BaseConstraints.generate_3D" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Generates an array of matrices of integers following a distribution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_matrices</strong> (<em>int</em>) – number of matries</p></li>
+<li><p><strong>nb_lines</strong> (<em>int</em>) – number of rows of each matrix</p></li>
+<li><p><strong>nb_columns</strong> (<em>int</em>) – number of columns of each matrix</p></li>
+<li><p><strong>min_value</strong> (<em>int</em><em>, </em><em>optional</em>) – minimum of generated values. Defaults to 1.</p></li>
+<li><p><strong>max_value</strong> (<em>int</em><em>, </em><em>optional</em>) – maximum of generated values. Defaults to 99.</p></li>
+<li><p><strong>law</strong> (<a class="reference internal" href="../pyscheduling/Problem/index.html#pyscheduling.Problem.RandomDistrib" title="pyscheduling.Problem.RandomDistrib"><em>RandomDistrib</em></a><em>, </em><em>optional</em>) – distribution. Defaults to RandomDistrib.UNIFORM.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of integers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[List[List[int]]]</p>
+</dd>
+</dl>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BaseConstraints.BaseConstraints.flatten_list">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flatten_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="headerlink" href="#BaseConstraints.BaseConstraints.flatten_list" title="Permalink to this definition">#</a></dt>
+<<<<<<< HEAD
+<dd><p>Flatten a list of lists into a list</p>
+</dd></dl>
+=======
+<dd></dd></dl>
+>>>>>>> f367db6031b49a40aa83c253dadade2d60e5dc77
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../pyscheduling/pyscheduling/index.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyscheduling.pyscheduling</span></code></p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="../benchmark/index.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">benchmark</span></code></p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fas fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-contents">
+   Module Contents
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#classes">
+     Classes
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints">
+       BaseConstraints
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.BaseConstraint">
+         BaseConstraint
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.BaseConstraint.create">
+           create
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.BaseConstraint.__lt__">
+           __lt__
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.P">
+         P
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.P._name">
+           _name
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.P._value">
+           _value
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.P.read">
+           read
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.P.write">
+           write
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.P.generate_random">
+           generate_random
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.W">
+         W
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.W._name">
+           _name
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.W._value">
+           _value
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.W.read">
+           read
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.W.write">
+           write
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.W.generate_random">
+           generate_random
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.R">
+         R
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.R._name">
+           _name
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.R._value">
+           _value
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.R.read">
+           read
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.R.write">
+           write
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.R.generate_random">
+           generate_random
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.D">
+         D
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.D._name">
+           _name
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.D._value">
+           _value
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.D.read">
+           read
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.D.write">
+           write
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.D.generate_random">
+           generate_random
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.S">
+         S
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.S._name">
+           _name
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.S._value">
+           _value
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.S.read">
+           read
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.S.write">
+           write
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.S.generate_random">
+           generate_random
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.read_1D">
+         read_1D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.read_2D">
+         read_2D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.read_3D">
+         read_3D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.write_1D">
+         write_1D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.write_2D">
+         write_2D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.generate_1D">
+         generate_1D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.generate_2D">
+         generate_2D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.generate_3D">
+         generate_3D
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#BaseConstraints.BaseConstraints.flatten_list">
+         flatten_list
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../../_sources/autoapi/BaseConstraints/index.rst.txt">
+        <i class="fas fa-file-alt"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, scheduling-cc.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

@@ -4,15 +4,27 @@
 .. py:module:: pyscheduling.FS
 
 
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   solvers/index.rst
+
+
 Submodules
 ----------
 .. toctree::
    :titlesonly:
    :maxdepth: 1
 
-   FS_Methods/index.rst
    FlowShop/index.rst
    FmCmax/index.rst
    FmSijkCmax/index.rst
+   FmriSijkCmax/index.rst
+   FmriSijkwiCi/index.rst
+   FmriSijkwiFi/index.rst
+   FmridiSijkwiTi/index.rst
 
 

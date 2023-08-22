@@ -1,0 +1,86 @@
+:py:mod:`pyscheduling.JS.JmriwiTi`
+==================================
+
+.. py:module:: pyscheduling.JS.JmriwiTi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.JS.JmriwiTi.JmriwiTi_Instance
+   pyscheduling.JS.JmriwiTi.ShiftingBottleneck
+
+
+
+
+.. py:class:: JmriwiTi_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.JS.JobShop.JobShopInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: D
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[List[int]]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[pyscheduling.JS.JobShop.Constraints]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:method:: init_sol_method()
+      :property:
+
+
+
+.. py:class:: ShiftingBottleneck
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: JmriwiTi_Instance)
+
+      Shifting bottleneck heuristic, Pinedo page 193
+
+      :param instance: Instance to be solved
+      :type instance: JmCmax_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

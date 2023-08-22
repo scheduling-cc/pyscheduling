@@ -1,0 +1,145 @@
+:py:mod:`pyscheduling.SMSP.rihiCi`
+==================================
+
+.. py:module:: pyscheduling.SMSP.rihiCi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.rihiCi.rihiCi_Instance
+   pyscheduling.SMSP.rihiCi.Heuristics
+
+
+
+
+.. py:class:: rihiCi_Instance(n: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: Precedence
+      :annotation: :List[tuple]
+
+      
+
+   .. py:attribute:: external_params
+      :annotation: :int = 0
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: D
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:method:: copy()
+
+
+   .. py:method:: read_txt(path: pathlib.Path)
+      :classmethod:
+
+      Read an instance from a txt file according to the problem's format
+
+      :param path: path to the txt file of type Path from the pathlib module
+      :type path: Path
+
+      :raises FileNotFoundError: when the file does not exist
+
+      :returns: created instance
+      :rtype: riPrecLmax_Instance
+
+
+   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.RandomDistrib = SingleMachine.RandomDistrib.UNIFORM, Pmin: int = 1, Pmax: int = -1, Wmin: int = 1, Wmax: int = 1, alpha: float = 0.0, due_time_factor: float = 0.0, InstanceName: str = '')
+      :classmethod:
+
+      Random generation of riPrecLmax problem instance
+
+      :param jobs_number: number of jobs of the instance
+      :type jobs_number: int
+      :param protocol: given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
+      :type protocol: SingleMachine.GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
+      :type law: SingleMachine.GenerationLaw, optional
+      :param Pmin: Minimal processing time. Defaults to 1.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to -1.
+      :type Pmax: int, optional
+      :param InstanceName: name to give to the instance. Defaults to "".
+      :type InstanceName: str, optional
+
+      :returns: the randomly generated instance
+      :rtype: riPrecLmax_Instance
+
+
+   .. py:method:: to_txt(path: pathlib.Path) -> None
+
+      Export an instance to a txt file
+
+      :param path: path to the resulting txt file
+      :type path: Path
+
+
+   .. py:method:: get_objective()
+
+      to get the objective tackled by the instance
+
+      :returns: Maximal Lateness
+      :rtype: RootProblem.Objective
+
+
+   .. py:method:: init_sol_method()
+
+      Returns the default solving method
+
+      :returns: default solving method
+      :rtype: object
+
+
+
+.. py:class:: Heuristics
+
+   .. py:method:: dynamic_dispatch_rule_with_precedence(rule: Callable, reverse: bool = False)
+
+      Orders the jobs respecting the filter according to the rule.
+      The order is dynamic since it is determined each time a new job is inserted
+
+      :param instance: Instance to be solved
+      :type instance: SingleInstance
+      :param rule: a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+      :type rule: Callable
+      :param filter: a lambda function that defines a filter condition taking the instance, job_id and current time as the parameters
+      :type filter: Callable
+      :param reverse: flag to sort in decreasing order. Defaults to False.
+      :type reverse: bool, optional
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+   .. py:method:: ACT()
+
+
+

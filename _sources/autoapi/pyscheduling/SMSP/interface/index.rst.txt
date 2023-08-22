@@ -12,7 +12,6 @@ Classes
 
 .. autoapisummary::
 
-   pyscheduling.SMSP.interface.Constraints
    pyscheduling.SMSP.interface.Problem
 
 
@@ -24,55 +23,6 @@ Attributes
 .. autoapisummary::
 
    pyscheduling.SMSP.interface.problems
-
-
-.. py:class:: Constraints
-
-   Bases: :py:obj:`enum.Enum`
-
-   Generic enumeration.
-
-   Derive from this class to define new enumerations.
-
-   .. py:attribute:: W
-      :annotation: = weight
-
-      
-
-   .. py:attribute:: R
-      :annotation: = release
-
-      
-
-   .. py:attribute:: S
-      :annotation: = setup
-
-      
-
-   .. py:attribute:: D
-      :annotation: = due
-
-      
-
-   .. py:method:: to_string()
-      :classmethod:
-
-      Print the available constraints for Single Machine
-
-      :returns: name of every constraint in different lines
-      :rtype: str
-
-
-   .. py:method:: __lt__(other)
-
-      redefine less than operator alphabetically
-
-      :param other: Another constraint
-      :type other: Constraints
-
-      :returns: returns the comparison result
-      :rtype: bool
-
 
 
 .. py:data:: problems
@@ -93,7 +43,7 @@ Attributes
       
 
    .. py:attribute:: constraints
-      :annotation: :list[Constraints]
+      :annotation: :List[pyscheduling.Problem.Constraints]
 
       
 
@@ -146,7 +96,7 @@ Attributes
       :raises TypeError: If the constraints object is not a Constraints type object
 
 
-   .. py:method:: remove_constraint(constraint: Constraints)
+   .. py:method:: remove_constraint(constraint: pyscheduling.Problem.Constraints)
 
       to remove a constraint from constraints attribute
 

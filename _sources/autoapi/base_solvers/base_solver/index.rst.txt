@@ -1,0 +1,78 @@
+:py:mod:`base_solvers.base_solver`
+==================================
+
+.. py:module:: base_solvers.base_solver
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   base_solvers.base_solver.BaseSolver
+
+
+
+
+.. py:class:: BaseSolver
+
+   Bases: :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: listeners
+      :annotation: :List[pyscheduling.core.listeners.BaseListener]
+
+      
+
+   .. py:attribute:: solve_result
+      :annotation: :pyscheduling.Problem.SolveResult
+
+      
+
+   .. py:method:: attach_listeners(*listeners: pyscheduling.core.listeners.BaseListener)
+
+      Subscribe a list of listeners to the solving process
+
+      :raises TypeError: if one of the passed arguments is not a subclass of BaseListener
+
+
+   .. py:method:: add_solution(new_solution: pyscheduling.Problem.BaseSolution, time_found: int)
+
+      Adds the new found solution to the solve_result and compute the current timestamp
+
+      :param new_solution: Found solution
+      :type new_solution: Solution
+      :param time_found: Timestamp of the moment the solution was found
+      :type time_found: int
+
+
+   .. py:method:: notify_on_start()
+
+      Notify the subscribed listeners of the start of the solve process
+
+
+
+   .. py:method:: notify_on_complete()
+
+      Notify the subscribed listeners of the end of the solve process
+
+
+
+   .. py:method:: notify_on_solution_found(new_solution: pyscheduling.Problem.BaseSolution)
+
+      Notify the subscribe listeners of the new found solution
+
+      :param new_solution: Found solution
+      :type new_solution: BaseSolution
+
+
+   .. py:method:: solve(instance: pyscheduling.Problem.BaseInstance)
+      :abstractmethod:
+
+
+

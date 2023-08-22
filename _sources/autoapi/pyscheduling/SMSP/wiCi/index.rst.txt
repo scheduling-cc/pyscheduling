@@ -13,81 +13,51 @@ Classes
 .. autoapisummary::
 
    pyscheduling.SMSP.wiCi.wiCi_Instance
-   pyscheduling.SMSP.wiCi.Heuristics
-   pyscheduling.SMSP.wiCi.Metaheuristics
+   pyscheduling.SMSP.wiCi.WSPT
 
 
 
 
-.. py:class:: wiCi_Instance
+.. py:class:: wiCi_Instance(n: int, name: str = 'Unknown', **kwargs)
 
    Bases: :py:obj:`pyscheduling.SMSP.SingleMachine.SingleInstance`
 
    Helper class that provides a standard way to create an ABC using
    inheritance.
 
-   .. py:attribute:: W
-      :annotation: :list[int]
-
-      
-
    .. py:attribute:: P
-      :annotation: :list[int]
+      :annotation: :List[int]
 
       
 
-   .. py:method:: read_txt(path: pathlib.Path)
-      :classmethod:
+   .. py:attribute:: W
+      :annotation: :List[int]
 
-      Read an instance from a txt file according to the problem's format
+      
 
-      :param path: path to the txt file of type Path from the pathlib module
-      :type path: Path
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[List[pyscheduling.SMSP.SingleMachine.Constraints]]
 
-      :raises FileNotFoundError: when the file does not exist
+      
 
-      :rtype: wiCi_Instance
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
 
+      
 
-   .. py:method:: generate_random(jobs_number: int, protocol: pyscheduling.SMSP.SingleMachine.GenerationProtocol = SingleMachine.GenerationProtocol.BASE, law: pyscheduling.SMSP.SingleMachine.GenerationLaw = SingleMachine.GenerationLaw.UNIFORM, Wmin: int = 1, Wmax: int = 1, Pmin: int = 1, Pmax: int = -1, InstanceName: str = '')
-      :classmethod:
-
-      Random generation of wiCi problem instance
-
-      :param jobs_number: number of jobs of the instance
-      :type jobs_number: int
-      :param protocol: given protocol of generation of random instances. Defaults to SingleMachine.GenerationProtocol.VALLADA.
-      :type protocol: SingleMachine.GenerationProtocol, optional
-      :param law: probablistic law of generation. Defaults to SingleMachine.GenerationLaw.UNIFORM.
-      :type law: SingleMachine.GenerationLaw, optional
-      :param Wmin: Minimal weight. Defaults to 1.
-      :type Wmin: int, optional
-      :param Wmax: Maximal weight. Defaults to 1.
-      :type Wmax: int, optional
-      :param Pmin: Minimal processing time. Defaults to -1.
-      :type Pmin: int, optional
-      :param Pmax: Maximal processing time. Defaults to -1.
-      :type Pmax: int, optional
-      :param InstanceName: name to give to the instance. Defaults to "".
-      :type InstanceName: str, optional
-
-      :returns: the randomly generated instance
-      :rtype: wiCi_Instance
-
-
-   .. py:method:: to_txt(path: pathlib.Path) -> None
-
-      Export an instance to a txt file
-
-      :param path: path to the resulting txt file
-      :type path: Path
+   .. py:method:: init_sol_method()
+      :property:
 
 
 
-.. py:class:: Heuristics
+.. py:class:: WSPT
 
-   .. py:method:: WSPT(instance: wiCi_Instance)
-      :staticmethod:
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: wiCi_Instance)
 
       Weighted Shortest Processing Time is Optimal for wiCi problem. A proof by contradiction can simply be found
       by performing an adjacent jobs interchange
@@ -97,27 +67,6 @@ Classes
 
       :returns: SolveResult of the instance by the method.
       :rtype: RootProblem.SolveResult
-
-
-   .. py:method:: all_methods()
-      :classmethod:
-
-      returns all the methods of the given Heuristics class
-
-      :returns: list of functions
-      :rtype: list[object]
-
-
-
-.. py:class:: Metaheuristics
-
-   .. py:method:: all_methods()
-      :classmethod:
-
-      returns all the methods of the given Heuristics class
-
-      :returns: list of functions
-      :rtype: list[object]
 
 
 

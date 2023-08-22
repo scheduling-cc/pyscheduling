@@ -1,0 +1,62 @@
+:py:mod:`pyscheduling.JS.JmriSijkwiCi`
+======================================
+
+.. py:module:: pyscheduling.JS.JmriSijkwiCi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.JS.JmriSijkwiCi.JmriSijkwiCi_Instance
+
+
+
+
+.. py:class:: JmriSijkwiCi_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.JS.JobShop.JobShopInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[List[int]]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[pyscheduling.JS.JobShop.Constraints]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+

@@ -14,6 +14,7 @@ Subpackages
    JS/index.rst
    PMSP/index.rst
    SMSP/index.rst
+   core/index.rst
 
 
 Submodules
@@ -23,15 +24,6 @@ Submodules
    :maxdepth: 1
 
    Problem/index.rst
-   benchmark/index.rst
    pyscheduling/index.rst
 
-
-Package Contents
-----------------
-
-.. py:data:: __version__
-   
-
-   
 

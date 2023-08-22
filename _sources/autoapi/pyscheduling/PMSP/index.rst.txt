@@ -4,16 +4,27 @@
 .. py:module:: pyscheduling.PMSP
 
 
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   solvers/index.rst
+
+
 Submodules
 ----------
 .. toctree::
    :titlesonly:
    :maxdepth: 1
 
-   PM_methods/index.rst
    ParallelMachines/index.rst
    RmSijkCmax/index.rst
    RmriSijkCmax/index.rst
+   RmriSijkWiCi/index.rst
+   RmriSijkWiFi/index.rst
+   RmridiSijkWiTi/index.rst
    interface/index.rst
 
 

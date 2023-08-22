@@ -4,17 +4,29 @@
 .. py:module:: pyscheduling.SMSP
 
 
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   solvers/index.rst
+
+
 Submodules
 ----------
 .. toctree::
    :titlesonly:
    :maxdepth: 1
 
-   SM_Methods/index.rst
+   Constraints/index.rst
    SingleMachine/index.rst
    interface/index.rst
    riPrecLmax/index.rst
+   rihiCi/index.rst
    risijCmax/index.rst
+   risijwiCi/index.rst
+   risijwiFi/index.rst
    risijwiTi/index.rst
    riwiCi/index.rst
    riwiTi/index.rst

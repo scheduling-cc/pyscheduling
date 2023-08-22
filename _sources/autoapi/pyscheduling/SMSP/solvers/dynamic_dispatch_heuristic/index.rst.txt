@@ -1,0 +1,60 @@
+:py:mod:`pyscheduling.SMSP.solvers.dynamic_dispatch_heuristic`
+==============================================================
+
+.. py:module:: pyscheduling.SMSP.solvers.dynamic_dispatch_heuristic
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.SMSP.solvers.dynamic_dispatch_heuristic.DynamicDispatchHeuristic
+
+
+
+
+.. py:class:: DynamicDispatchHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule
+      :annotation: :Callable
+
+      
+
+   .. py:attribute:: filter
+      :annotation: :Callable
+
+      
+
+   .. py:attribute:: reverse
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.SMSP.SingleMachine.SingleInstance)
+
+      Orders the jobs respecting the filter according to the rule.
+      The order is dynamic since it is determined each time a new job is inserted
+
+      :param instance: Instance to be solved
+      :type instance: SingleInstance
+      :param rule: a lambda function that defines the sorting criteria taking the instance and job_id as the parameters
+      :type rule: Callable
+      :param filter: a lambda function that defines a filter condition taking the instance, job_id and current time as the parameters
+      :type filter: Callable
+      :param reverse: flag to sort in decreasing order. Defaults to False.
+      :type reverse: bool, optional
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

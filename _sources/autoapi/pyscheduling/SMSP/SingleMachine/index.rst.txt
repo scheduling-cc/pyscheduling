@@ -13,7 +13,6 @@ Classes
 .. autoapisummary::
 
    pyscheduling.SMSP.SingleMachine.GenerationProtocol
-   pyscheduling.SMSP.SingleMachine.GenerationLaw
    pyscheduling.SMSP.SingleMachine.SingleInstance
    pyscheduling.SMSP.SingleMachine.Machine
    pyscheduling.SMSP.SingleMachine.SingleSolution
@@ -22,19 +21,6 @@ Classes
 
 
 
-
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   pyscheduling.SMSP.SingleMachine.Job
-
-
-.. py:data:: Job
-   
-
-   
 
 .. py:class:: GenerationProtocol
 
@@ -50,28 +36,9 @@ Attributes
       
 
 
-.. py:class:: GenerationLaw
+.. py:class:: SingleInstance(n: int, name: str = 'Unknown', **kwargs)
 
-   Bases: :py:obj:`enum.Enum`
-
-   Generic enumeration.
-
-   Derive from this class to define new enumerations.
-
-   .. py:attribute:: UNIFORM
-      :annotation: = 1
-
-      
-
-   .. py:attribute:: NORMAL
-      :annotation: = 2
-
-      
-
-
-.. py:class:: SingleInstance
-
-   Bases: :py:obj:`pyscheduling.Problem.Instance`
+   Bases: :py:obj:`pyscheduling.Problem.BaseInstance`
 
    Helper class that provides a standard way to create an ABC using
    inheritance.
@@ -81,207 +48,10 @@ Attributes
 
       
 
-   .. py:method:: read_txt(path: pathlib.Path)
-      :classmethod:
-      :abstractmethod:
 
-      Read an instance from a txt file according to the problem's format
+.. py:class:: Machine(objective_value: int = 0, last_job: int = -1, job_schedule: List[pyscheduling.Problem.Job] = None, wiCi_cache: List[int] = None, wiTi_cache: List[int] = None, wiFi_cache: List[int] = None)
 
-      :param path: path to the txt file of type Path from the pathlib module
-      :type path: Path
-
-      :raises FileNotFoundError: when the file does not exist
-
-      :rtype: SingleInstance
-
-
-   .. py:method:: generate_random(protocol: str = None)
-      :classmethod:
-      :abstractmethod:
-
-      Generate a random instance according to a predefined protocol
-
-      :param protocol: represents the protocol used to generate the instance
-      :type protocol: string
-
-      :rtype: SingleInstance
-
-
-   .. py:method:: to_txt(path: pathlib.Path) -> None
-      :abstractmethod:
-
-      Export an instance to a txt file
-
-      :param path: path to the resulting txt file
-      :type path: Path
-
-
-   .. py:method:: read_P(content: list[str], startIndex: int)
-
-      Read the Processing time table from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the processing time table
-      :type startIndex: int
-
-      :returns: (Table of processing time, index of the next section of the instance)
-      :rtype: (list[int],int)
-
-
-   .. py:method:: read_W(content: list[str], startIndex: int)
-
-      Read the Processing time table from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the jobs weights table
-      :type startIndex: int
-
-      :returns: (Table of jobs weights, index of the next section of the instance)
-      :rtype: (list[int],int)
-
-
-   .. py:method:: read_R(content: list[str], startIndex: int)
-
-      Read the release time table from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the release time table
-      :type startIndex: int
-
-      :returns: (Table of release time, index of the next section of the instance)
-      :rtype: (list[int],int)
-
-
-   .. py:method:: read_S(content: list[str], startIndex: int)
-
-      Read the Setup time matrix from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the Setup time matrix
-      :type startIndex: int
-
-      :returns: (Matrix of setup time, index of the next section of the instance)
-      :rtype: (list[list[int]],int)
-
-
-   .. py:method:: read_D(content: list[str], startIndex: int)
-
-      Read the due time table from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the due time table
-      :type startIndex: int
-
-      :returns: (Table of due time, index of the next section of the instance)
-      :rtype: (list[int],int)
-
-
-   .. py:method:: generate_P(protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int)
-
-      Random generation of processing time table
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param Pmin: Minimal processing time
-      :type Pmin: int
-      :param Pmax: Maximal processing time
-      :type Pmax: int
-
-      :returns: Table of processing time
-      :rtype: list[int]
-
-
-   .. py:method:: generate_W(protocol: GenerationProtocol, law: GenerationLaw, Wmin: int, Wmax: int)
-
-      Random generation of jobs weights table
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param Wmin: Minimal weight
-      :type Wmin: int
-      :param Wmax: Maximal weight
-      :type Wmax: int
-
-      :returns: Table of jobs weights
-      :rtype: list[int]
-
-
-   .. py:method:: generate_R(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, alpha: float)
-
-      Random generation of release time table
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param PJobs: Table of processing time
-      :type PJobs: list[float]
-      :param Pmin: Minimal processing time
-      :type Pmin: int
-      :param Pmax: Maximal processing time
-      :type Pmax: int
-      :param alpha: release time factor
-      :type alpha: float
-
-      :returns: release time table
-      :rtype: list[int]
-
-
-   .. py:method:: generate_S(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], gamma: float, Smin: int = 0, Smax: int = 0)
-
-      Random generation of setup time matrix
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param PJobs: Table of processing time
-      :type PJobs: list[float]
-      :param gamma: Setup time factor
-      :type gamma: float
-      :param Smin: Minimal setup time . Defaults to 0.
-      :type Smin: int, optional
-      :param Smax: Maximal setup time. Defaults to 0.
-      :type Smax: int, optional
-
-      :returns: Setup time matrix
-      :rtype: list[list[int]]
-
-
-   .. py:method:: generate_D(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[float], Pmin: int, Pmax: int, due_time_factor: float, RJobs: list[float] = None)
-
-      Random generation of due time table
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param PJobs: Table of processing time
-      :type PJobs: list[float]
-      :param Pmin: Minimal processing time
-      :type Pmin: int
-      :param Pmax: Maximal processing time
-      :type Pmax: int
-      :param fraction: due time factor
-      :type fraction: float
-
-      :returns: due time table
-      :rtype: list[int]
-
-
-
-.. py:class:: Machine(objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None, wiCi_index: list[int] = None, wiTi_index: list[int] = None)
-
-   .. py:attribute:: objective
+   .. py:attribute:: objective_value
       :annotation: :int = 0
 
       
@@ -292,19 +62,29 @@ Attributes
       
 
    .. py:attribute:: job_schedule
-      :annotation: :list[Job]
+      :annotation: :List[pyscheduling.Problem.Job]
 
       
 
-   .. py:attribute:: wiCi_index
-      :annotation: :list[int]
+   .. py:attribute:: wiCi_cache
+      :annotation: :List[int]
 
       
 
-   .. py:attribute:: wiTi_index
-      :annotation: :list[int]
+   .. py:attribute:: wiTi_cache
+      :annotation: :List[int]
 
       
+
+   .. py:attribute:: wiFi_cache
+      :annotation: :List[int]
+
+      
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
 
    .. py:method:: __str__()
 
@@ -322,41 +102,88 @@ Attributes
    .. py:method:: toJSON()
 
 
-   .. py:method:: fromDict(machine_dict)
+   .. py:method:: fromDict(machine_dict: dict)
       :staticmethod:
 
 
-   .. py:method:: total_weighted_completion_time(instance: SingleInstance, startIndex: int = 0)
+   .. py:method:: compute_current_ci(instance: SingleInstance, prev_ci: int, job_prev_i: int, job_i: int)
 
-      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the total weighted completion time
+      Computes the current ci when job_i comes after job_prev_i.
+      This takes into account if we have setup times and release dates.
+
+      :param instance: the instance to be solved.
+      :type instance: SingelInstance
+      :param prev_ci: the previous value of ci
+      :type prev_ci: int
+      :param job_prev_i: id of the job that precedes the inserted job
+      :type job_prev_i: int
+      :param job_i: id of the job to be inserted at the end
+      :type job_i: int
+
+      :returns: (ci, start_time), the new completion time and start_time of the inserted job.
+      :rtype: tuple
+
+
+   .. py:method:: init_cache(instance: SingleInstance, startIndex: int = 0)
+
+      Initialize the cache if it's not defined yet
+
+      :param startIndex: The index from which we start fixing the schedule. Defaults to 0.
+      :type startIndex: int, optional
+      :param obj_cache: The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
+      :type obj_cache: list[int]
+
+      :returns: (startIndex, obj_cache)
+      :rtype: tuple
+
+
+   .. py:method:: init_obj(startIndex: int = 0, obj_cache: List[int] = None)
+
+      This is a helper method to initialize the values of ci, prev_job and objective from the current schedule and the objective cache if present.
+
+      :param startIndex: The index from which we start fixing the schedule. Defaults to 0.
+      :type startIndex: int, optional
+      :param obj_cache: The objective's cache, it can be wiCi, wiTi or other. Defaults to None.
+      :type obj_cache: list[int], optional
+
+      :returns: ci, job_prev_i, obj
+      :rtype: tuple
+
+
+   .. py:method:: compute_obj_from_ci(instance: SingleInstance, ci: int, job_i: int, curr_obj: int)
+
+      Helper method to compute the objective value from the current ci.
+      According to the objective set on the instance, the expression of the objective in function of ci changes
+
+      :param instance: the current problem instance
+      :type instance: SingleInstance
+      :param ci: the current completion time
+      :type ci: int
+      :param job_i: the job that was inserted
+      :type job_i: int
+      :param curr_obj: current objective before inserting the job (cumulative)
+      :type curr_obj: int
+
+      :returns: obj, the new objective
+      :rtype: int
+
+
+   .. py:method:: compute_objective(instance: SingleInstance, startIndex: int = 0)
+
+      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the objective
 
       :param instance: The instance associated to the machine
       :type instance: SingleInstance
       :param startIndex: The job index the function starts operating from
       :type startIndex: int
 
-      :returns: Total weighted lateness
+      :returns: objective
       :rtype: int
 
 
-   .. py:method:: total_weighted_completion_time_insert(job: int, pos: int, instance: SingleInstance)
+   .. py:method:: simulate_remove_insert(pos_remove: int, job: int, pos_insert: int, instance: SingleInstance)
 
-      Computes the machine's total wighted completion time if we insert "job" at "pos" in the machine's job_schedule
-
-      :param job: id of the inserted job
-      :type job: int
-      :param pos: position where the job is inserted in the machine
-      :type pos: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: total weighted completion time
-      :rtype: int
-
-
-   .. py:method:: total_weighted_completion_time_remove_insert(pos_remove: int, job: int, pos_insert: int, instance: SingleInstance)
-
-      Computes the machine's total weighted completion time if we remove job at position "pos_remove"
+      Computes the objective if we remove job at position "pos_remove"
       and insert "job" at "pos" in the machine's job_schedule
 
       :param pos_remove: position of the job to be removed
@@ -372,9 +199,9 @@ Attributes
       :rtype: int
 
 
-   .. py:method:: total_weighted_completion_time_swap(pos_i: int, pos_j: int, instance: SingleInstance)
+   .. py:method:: simulate_swap(pos_i: int, pos_j: int, instance: SingleInstance)
 
-      Computes the machine's total weighted completion time if we insert swap jobs at position "pos_i" and "pos_j"
+      Computes the objective if we insert swap jobs at position "pos_i" and "pos_j"
       in the machine's job_schedule
       :param pos_i: position of the first job to be swapped
       :type pos_i: int
@@ -387,131 +214,13 @@ Attributes
       :rtype: int
 
 
-   .. py:method:: total_weighted_lateness(instance: SingleInstance, startIndex: int = 0)
-
-      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the total weighted lateness
-
-      :param instance: The instance associated to the machine
-      :type instance: SingleInstance
-      :param startIndex: The job index the function starts operating from
-      :type startIndex: int
-
-      :returns: Total weighted lateness
-      :rtype: int
-
-
-   .. py:method:: total_weighted_lateness_insert(job: int, pos: int, instance: SingleInstance)
-
-      Computes the machine's total wighted lateness if we insert "job" at "pos" in the machine's job_schedule
-      :param job: id of the inserted job
-      :type job: int
-      :param pos: position where the job is inserted in the machine
-      :type pos: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: total weighted lateness
-      :rtype: int
-
-
-   .. py:method:: total_weighted_lateness_remove_insert(pos_remove: int, job: int, pos_insert: int, instance: SingleInstance)
-
-      Computes the machine's total weighted lateness if we remove job at position "pos_remove"
-      and insert "job" at "pos" in the machine's job_schedule
-      :param pos_remove: position of the job to be removed
-      :type pos_remove: int
-      :param job: id of the inserted job
-      :type job: int
-      :param pos_insert: position where the job is inserted in the machine
-      :type pos_insert: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: total weighted lateness
-      :rtype: int
-
-
-   .. py:method:: total_weighted_lateness_swap(pos_i: int, pos_j: int, instance: SingleInstance)
-
-      Computes the machine's total weighted lateness if we insert swap jobs at position "pos_i" and "pos_j"
-      in the machine's job_schedule
-      :param pos_i: position of the first job to be swapped
-      :type pos_i: int
-      :param pos_j: position of the second job to be swapped
-      :type pos_j: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: total weighted lateness
-      :rtype: int
-
-
-   .. py:method:: completion_time(instance: SingleInstance, startIndex: int = 0)
-
-      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the maximal completion time
-
-      :param instance: The instance associated to the machine
-      :type instance: SingleInstance
-      :param startIndex: The job index the function starts operating from
-      :type startIndex: int
-
-      :returns: Makespan
-      :rtype: int
-
-
-   .. py:method:: completion_time_insert(job: int, pos: int, instance: SingleInstance)
-
-      Computes the machine's completion time if we insert "job" at "pos" in the machine's job_schedule
-
-      :param job: id of the inserted job
-      :type job: int
-      :param pos: position where the job is inserted in the machine
-      :type pos: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: completion time
-      :rtype: int
-
-
-   .. py:method:: completion_time_remove_insert(pos_remove: int, job: int, pos_insert: int, instance: SingleInstance)
-
-      Computes the machine's completion time if we remove job at position "pos_remove"
-      and insert "job" at "pos" in the machine's job_schedule
-
-      :param pos_remove: position of the job to be removed
-      :type pos_remove: int
-      :param job: id of the inserted job
-      :type job: int
-      :param pos_insert: position where the job is inserted in the machine
-      :type pos_insert: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: Completion time
-      :rtype: int
-
-
-   .. py:method:: completion_time_swap(pos_i: int, pos_j: int, instance: SingleInstance)
-
-      Computes the machine's completion time if we insert swap jobs at position "pos_i" and "pos_j"
-      in the machine's job_schedule
-
-      :param pos_i: position of the first job to be swapped
-      :type pos_i: int
-      :param pos_j: position of the second job to be swapped
-      :type pos_j: int
-      :param instance: the current problem instance
-      :type instance: SingleInstance
-
-      :returns: completion time
-      :rtype: int
+   .. py:method:: maximum_lateness(instance: SingleInstance)
 
 
 
 .. py:class:: SingleSolution(instance: SingleInstance, machine: Machine = None, objective_value: int = 0)
 
-   Bases: :py:obj:`pyscheduling.Problem.Solution`
+   Bases: :py:obj:`pyscheduling.Problem.BaseSolution`
 
    Helper class that provides a standard way to create an ABC using
    inheritance.
@@ -520,6 +229,11 @@ Attributes
       :annotation: :Machine
 
       
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
 
    .. py:method:: __str__()
 
@@ -539,27 +253,21 @@ Attributes
       Return self<value.
 
 
-   .. py:method:: wiCi()
-
-      Sets the job_schedule of the machine and affects the total weighted completion time to the objective_value attribute
-
-
-
-   .. py:method:: wiTi()
-
-      Sets the job_schedule of the machine and affects the total weighted lateness to the objective_value attribute
-
-
-
-   .. py:method:: Cmax()
-
-      Sets the job_schedule of the machine and affects the makespan to the objective_value attribute
-
-
-
    .. py:method:: fix_objective()
 
       Sets the objective_value attribute of the solution to the objective attribute of the machine
+
+
+
+   .. py:method:: compute_objective()
+
+      Computes the current solution's objective.
+      By calling the compute objective on the only existing machine and setting the returned value.
+
+
+   .. py:method:: Lmax()
+
+      Sets the job_schedule of the machine and affects the maximum lateness to the objective_value attribute
 
 
 
@@ -582,22 +290,29 @@ Attributes
       :type path: Path
 
 
-   .. py:method:: plot(path: pathlib.Path = None) -> None
+   .. py:method:: plot(path: pathlib.Path = None)
 
-      Plot the solution in a gantt diagram
+      Plot the solution into a gantt diagramm
+
+      :param types: The type of tasks to plot, a string where each letter corresponds to one type: R for release,
+
+                    S for setup and P for Processing. Defaults to "RSP".
+      :type types: str, optional
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
 
 
-   .. py:method:: is_valid()
+   .. py:method:: is_valid(verbosity: bool = False)
 
       Check if solution respects the constraints
 
 
 
-.. py:class:: SM_LocalSearch(methods: list[object] = None, copy_solution: bool = False)
+.. py:class:: SM_LocalSearch(methods: List[object] = None, copy_solution: bool = False)
 
    Bases: :py:obj:`pyscheduling.Problem.LocalSearch`
 
-   .. py:method:: _intra_insertion(solution: SingleSolution, objective: pyscheduling.Problem.Objective)
+   .. py:method:: _intra_insertion(solution: SingleSolution)
       :staticmethod:
 
       Iterates through the job schedule and try to reschedule every job at a better position to improve the solution
@@ -611,7 +326,7 @@ Attributes
       :rtype: SingleSolution
 
 
-   .. py:method:: _swap(solution: SingleSolution, objective: pyscheduling.Problem.Objective)
+   .. py:method:: _swap(solution: SingleSolution)
       :staticmethod:
 
       Iterates through the job schedule and choose the best swap between 2 jobs to improve the solution
@@ -625,7 +340,7 @@ Attributes
       :rtype: SingleSolution
 
 
-   .. py:method:: improve(solution: SingleSolution, objective: pyscheduling.Problem.Objective) -> SingleSolution
+   .. py:method:: improve(solution: SingleSolution) -> SingleSolution
 
       Improves a solution by iteratively calling local search operators
 
@@ -639,7 +354,58 @@ Attributes
 
 .. py:class:: NeighbourhoodGeneration
 
-   .. py:method:: random_swap(solution: SingleSolution, objective: pyscheduling.Problem.Objective, force_improve: bool = True)
+   .. py:method:: select_least_effective(solution: SingleSolution)
+      :staticmethod:
+
+      Select the least effective job according to the objective
+
+      :param solution: solution to be inspected
+      :type solution: SingleSolution
+
+      :returns: (lej_pos, lej_id): the position and id of the least effective job
+      :rtype: tuple
+
+
+   .. py:method:: LEJ_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Applies the best insertion operator on the least effective job on the objective
+
+      :param solution: solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: if true, it applies the move only if it improved the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param inplace: Whether to modify the solution rather than creating a new one. Defaults to True.
+      :type inplace: bool, optional
+
+
+   .. py:method:: LEJ_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Applies the best insertion operator on the least effective job on the objective
+
+      :param solution: solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: if true, it applies the move only if it improved the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param inplace: Whether to modify the solution rather than creating a new one. Defaults to True.
+      :type inplace: bool, optional
+
+
+   .. py:method:: random_insert(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
+      :staticmethod:
+
+      Applies the best insertion operator on the least effective job
+
+      :param solution: solution to be improved
+      :type solution: SingleSolution
+      :param force_improve: if true, it applies the move only if it improved the solution. Defaults to True.
+      :type force_improve: bool, optional
+      :param inplace: Whether to modify the solution rather than creating a new one. Defaults to True.
+      :type inplace: bool, optional
+
+
+   .. py:method:: random_swap(solution: SingleSolution, force_improve: bool = True, inplace: bool = True)
       :staticmethod:
 
       Performs a random swap between 2 jobs
@@ -658,7 +424,7 @@ Attributes
    .. py:method:: passive_swap(solution: SingleSolution, force_improve: bool = True)
       :staticmethod:
 
-      Performs a swap between the 2 less effective jobs in terms of WSPT rule
+      Performs a swap between the 2 least effective jobs in terms of WSPT rule
 
       :param solution: Solution to be improved
       :type solution: SingleSolution
@@ -669,7 +435,19 @@ Attributes
       :rtype: SingleSolution
 
 
-   .. py:method:: lahc_neighbour(solution: SingleSolution, objective: pyscheduling.Problem.Objective)
+   .. py:method:: LEJ_neighbour(solution: SingleSolution)
+      :staticmethod:
+
+      Generates a neighbour solution of the given solution for the lahc metaheuristic
+
+      :param solution_i: Solution to be improved
+      :type solution_i: SingleSolution
+
+      :returns: New solution
+      :rtype: SingleSolution
+
+
+   .. py:method:: lahc_neighbour(solution: SingleSolution)
       :staticmethod:
 
       Generates a neighbour solution of the given solution for the lahc metaheuristic

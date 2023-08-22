@@ -1,0 +1,83 @@
+:py:mod:`pyscheduling.core.base_solvers.base_lahc`
+==================================================
+
+.. py:module:: pyscheduling.core.base_solvers.base_lahc
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.core.base_solvers.base_lahc.BaseLAHC
+
+
+
+
+.. py:class:: BaseLAHC
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.base_solver.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: ls_procedure
+      :annotation: :pyscheduling.Problem.LocalSearch
+
+      
+
+   .. py:attribute:: generate_neighbour
+      :annotation: :Callable
+
+      
+
+   .. py:attribute:: time_limit_factor
+      :annotation: :float
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.base_solver.BaseSolver
+
+      
+
+   .. py:attribute:: history_list_size
+      :annotation: :int
+
+      
+
+   .. py:attribute:: n_iterations
+      :annotation: :int
+
+      
+
+   .. py:attribute:: non_improv
+      :annotation: :int
+
+      
+
+   .. py:attribute:: use_local_search
+      :annotation: :bool
+
+      
+
+   .. py:attribute:: random_seed
+      :annotation: :int
+
+      
+
+   .. py:method:: solve(instance: pyscheduling.Problem.BaseInstance)
+
+      Returns the solution using the LAHC algorithm
+
+      :param instance: Instance object to solve
+      :type instance: ParallelInstance
+
+      :returns: the solver result of the execution of the metaheuristic
+      :rtype: Problem.SolveResult
+
+
+

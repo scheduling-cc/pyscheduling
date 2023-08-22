@@ -1,0 +1,101 @@
+:py:mod:`pyscheduling.PMSP.RmriSijkWiFi`
+========================================
+
+.. py:module:: pyscheduling.PMSP.RmriSijkWiFi
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.PMSP.RmriSijkWiFi.RmriSijkWiFi_Instance
+   pyscheduling.PMSP.RmriSijkWiFi.ListHeuristic
+
+
+
+
+.. py:class:: RmriSijkWiFi_Instance(n: int, m: int, name: str = 'Unknown', **kwargs)
+
+   Bases: :py:obj:`pyscheduling.PMSP.ParallelMachines.ParallelInstance`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: P
+      :annotation: :List[List[int]]
+
+      
+
+   .. py:attribute:: W
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: R
+      :annotation: :List[int]
+
+      
+
+   .. py:attribute:: S
+      :annotation: :List[List[List[int]]]
+
+      
+
+   .. py:attribute:: constraints
+      :annotation: :ClassVar[pyscheduling.PMSP.ParallelMachines.Constraints]
+
+      
+
+   .. py:attribute:: objective
+      :annotation: :ClassVar[pyscheduling.Problem.Objective]
+
+      
+
+   .. py:attribute:: init_sol_method
+      :annotation: :pyscheduling.core.base_solvers.BaseSolver
+
+      
+
+   .. py:method:: lower_bound()
+
+      Computes the lower bound of sum(WiTi) of the instance
+      from the minimal completion time between job pairs on the number of machines
+
+      :returns: Lower Bound of sum(WiTi)
+      :rtype: int
+
+
+
+.. py:class:: ListHeuristic
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:attribute:: rule
+      :annotation: :int = 1
+
+      
+
+   .. py:attribute:: decreasing
+      :annotation: :bool = False
+
+      
+
+   .. py:method:: solve(instance: RmriSijkWiFi_Instance)
+
+      contains a list of static dispatching rules to be chosen from
+
+      :param instance: Instance to be solved
+      :type instance: RmriSijkWiFi_Instance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+

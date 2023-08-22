@@ -93,7 +93,7 @@ Attributes
       
 
    .. py:attribute:: constraints
-      :annotation: :list[Constraints]
+      :annotation: :List[Constraints]
 
       
 

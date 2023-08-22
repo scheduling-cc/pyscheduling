@@ -12,16 +12,63 @@ Classes
 
 .. autoapisummary::
 
+   pyscheduling.Problem.GenerationProtocol
+   pyscheduling.Problem.RandomDistrib
    pyscheduling.Problem.Objective
-   pyscheduling.Problem.Instance
-   pyscheduling.Problem.Solution
+   pyscheduling.Problem.BaseInstance
+   pyscheduling.Problem.BaseSolution
    pyscheduling.Problem.SolveStatus
    pyscheduling.Problem.SolveResult
    pyscheduling.Problem.LocalSearch
    pyscheduling.Problem.Branch_Bound
-   pyscheduling.Problem.Solver
 
 
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.Problem.Job
+
+
+.. py:data:: Job
+   
+
+   
+
+.. py:class:: GenerationProtocol
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: BASE
+      :annotation: = 1
+
+      
+
+
+.. py:class:: RandomDistrib
+
+   Bases: :py:obj:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. py:attribute:: UNIFORM
+      :annotation: = 1
+
+      
+
+   .. py:attribute:: NORMAL
+      :annotation: = 2
+
+      
 
 
 .. py:class:: Objective
@@ -52,6 +99,11 @@ Classes
 
       
 
+   .. py:attribute:: wiFi
+      
+
+      
+
    .. py:method:: to_string()
       :classmethod:
 
@@ -62,7 +114,7 @@ Classes
 
 
 
-.. py:class:: Instance
+.. py:class:: BaseInstance(n: int, m: int = 1, name: str = 'Unknown', **kwargs)
 
    Bases: :py:obj:`abc.ABC`
 
@@ -74,9 +126,43 @@ Classes
 
       
 
+   .. py:attribute:: n
+      :annotation: :int
+
+      
+
+   .. py:method:: generate_random(n: int, m: int = 1, name: str = 'Unknown', protocol: GenerationProtocol = GenerationProtocol.BASE, law: RandomDistrib = RandomDistrib.UNIFORM, Wmin: int = 1, Wmax: int = 4, Pmin: int = 10, Pmax: int = 50, alpha: float = 0.8, due_time_factor: float = 0.8, gamma: float = 0.5)
+      :classmethod:
+
+      Random generation of a problem instance
+
+      :param n: number of jobs of the instance
+      :type n: int
+      :param m: number of machines of the instance
+      :type m: int
+      :param instance_name: name to give to the instance. Defaults to "Unknown".
+      :type instance_name: str, optional
+      :param protocol: given protocol of generation of random instances. Defaults to GenerationProtocol.BASE.
+      :type protocol: GenerationProtocol, optional
+      :param law: probablistic law of generation. Defaults to GenerationLaw.UNIFORM.
+      :type law: FlowShop.GenerationLaw, optional
+      :param Pmin: Minimal processing time. Defaults to 10.
+      :type Pmin: int, optional
+      :param Pmax: Maximal processing time. Defaults to 50.
+      :type Pmax: int, optional
+      :param alpha: Release time factor. Defaults to 0.8.
+      :type alpha: float, optional
+      :param due_time_factor: Due time factor. Defaults to 0.8.
+      :type due_time_factor: float, optional
+      :param gamma: Setup time factor. Defaults to 0.5.
+      :type gamma: float, optional
+
+      :returns: the randomly generated instance
+      :rtype: BaseInstance
+
+
    .. py:method:: read_txt(path: pathlib.Path)
       :classmethod:
-      :abstractmethod:
 
       Read an instance from a txt file according to the problem's format
 
@@ -85,23 +171,11 @@ Classes
 
       :raises FileNotFoundError: when the file does not exist
 
-      :rtype: Instance
+      :returns: the read instance
+      :rtype: BaseInstance
 
 
-   .. py:method:: generate_random(protocol: str = None)
-      :classmethod:
-      :abstractmethod:
-
-      Generate a random instance according to a predefined protocol
-
-      :param protocol: represents the protocol used to generate the instance
-      :type protocol: string
-
-      :rtype: Instance
-
-
-   .. py:method:: to_txt(path: pathlib.Path) -> None
-      :abstractmethod:
+   .. py:method:: to_txt(path: pathlib.Path)
 
       Export an instance to a txt file
 
@@ -109,8 +183,16 @@ Classes
       :type path: Path
 
 
+   .. py:method:: get_objective()
 
-.. py:class:: Solution
+      getter to the objective class attribute
+
+      :returns: the objective of the problem
+      :rtype: Objective
+
+
+
+.. py:class:: BaseSolution
 
    Bases: :py:obj:`abc.ABC`
 
@@ -118,7 +200,7 @@ Classes
    inheritance.
 
    .. py:attribute:: instance
-      :annotation: :Instance
+      :annotation: :BaseInstance
 
       
 
@@ -155,6 +237,16 @@ Classes
 
       :param path: path to the resulting txt file
       :type path: Path
+
+
+   .. py:method:: _plot_tasks(tasks_df: List[dict], path: pathlib.Path = None)
+
+      Plots the tasks (in plotly dict format), it can be called by all problems.
+
+      :param tasks_df: Tasks list of dicts specifying start and end dates and description
+      :type tasks_df: List[dict]
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
 
 
    .. py:method:: plot() -> None
@@ -196,16 +288,21 @@ Classes
 
       
 
+   .. py:attribute:: UNKNOWN
+      :annotation: = 4
 
-.. py:class:: SolveResult(best_solution: Solution = None, runtime: float = -1, time_to_best: float = -1, status: SolveStatus = SolveStatus.FEASIBLE, solutions: list[Solution] = None, kpis: list[str, object] = None)
+      
+
+
+.. py:class:: SolveResult
 
    .. py:attribute:: all_solutions
-      :annotation: :list[Solution]
+      :annotation: :List[BaseSolution]
 
       
 
    .. py:attribute:: best_solution
-      :annotation: :Solution
+      :annotation: :BaseSolution
 
       
 
@@ -225,7 +322,7 @@ Classes
       
 
    .. py:attribute:: kpis
-      :annotation: :dict[str, object]
+      :annotation: :Dict[str, object]
 
       
 
@@ -244,10 +341,10 @@ Classes
 
 
 
-.. py:class:: LocalSearch(methods: list[object] = None, copy_solution: bool = False)
+.. py:class:: LocalSearch(methods: List[object] = None, copy_solution: bool = False)
 
    .. py:attribute:: methods
-      :annotation: :list[object]
+      :annotation: :List[object]
 
       
 
@@ -265,7 +362,7 @@ Classes
       :rtype: list[object]
 
 
-   .. py:method:: improve(solution: Solution) -> Solution
+   .. py:method:: improve(solution: BaseSolution) -> BaseSolution
 
       Improves a solution by iteratively calling local search operators
 
@@ -297,7 +394,7 @@ Classes
          
 
       .. py:attribute:: sub_nodes
-         :annotation: :list[object]
+         :annotation: :List[object]
 
          
 
@@ -309,7 +406,7 @@ Classes
 
 
    .. py:attribute:: instance
-      :annotation: :Instance
+      :annotation: :BaseInstance
 
       
 
@@ -324,12 +421,22 @@ Classes
       
 
    .. py:attribute:: best_solution
-      :annotation: :Solution
+      :annotation: :BaseSolution
 
       
 
    .. py:attribute:: all_solution
-      :annotation: :list[Solution]
+      :annotation: :List[BaseSolution]
+
+      
+
+   .. py:attribute:: start_time
+      :annotation: :float = 0
+
+      
+
+   .. py:attribute:: runtime
+      :annotation: :float = 0
 
       
 
@@ -349,18 +456,6 @@ Classes
       :type node: Node
 
 
-   .. py:method:: discard(root: Node, best_solution: float, objective: Objective)
-
-      prunes the search tree sections where we are certain a better solution will not be find there
-
-      :param root: root node of the tree
-      :type root: Node
-      :param best_solution: best objective value
-      :type best_solution: float
-      :param objective: objective to be considered, to know if it's a minimization or a maximization problem
-      :type objective: Objective
-
-
    .. py:method:: objective(node: Node)
 
       objective value evaluator, to be redefined
@@ -369,39 +464,13 @@ Classes
       :type node: Node
 
 
-   .. py:method:: solve(root: Node = None)
-
-      recursive function to perform Branch&Bound on the instance attribute
-
-      :param root: starting node. Defaults to None.
-      :type root: Node, optional
+   .. py:method:: solution_format(partial_solution: object, objective_value)
 
 
+   .. py:method:: solve(lower_bound: callable, minimize=True, root: Node = None, max_time=float('inf'), upper_bound=float('+inf'))
 
-.. py:class:: Solver(method: object)
 
-   Bases: :py:obj:`abc.ABC`
-
-   Helper class that provides a standard way to create an ABC using
-   inheritance.
-
-   .. py:attribute:: method
-      :annotation: :object
-
-      
-
-   .. py:method:: solve(instance: Instance, **data) -> SolveResult
-
-      Solves the instance and returns the corresponding solve result
-
-      :param instance: instance to be solved
-      :type instance: Instance
-
-      :returns:
-
-                object containing information about the solving process
-                            and result
-      :rtype: SolveResult
+   .. py:method:: get_solve_result()
 
 
 

@@ -13,7 +13,6 @@ Classes
 .. autoapisummary::
 
    pyscheduling.FS.FlowShop.GenerationProtocol
-   pyscheduling.FS.FlowShop.GenerationLaw
    pyscheduling.FS.FlowShop.FlowShopInstance
    pyscheduling.FS.FlowShop.Machine
    pyscheduling.FS.FlowShop.FlowShopSolution
@@ -23,19 +22,6 @@ Classes
 
 
 
-Attributes
-~~~~~~~~~~
-
-.. autoapisummary::
-
-   pyscheduling.FS.FlowShop.Job
-
-
-.. py:data:: Job
-   
-
-   
-
 .. py:class:: GenerationProtocol
 
    Bases: :py:obj:`enum.Enum`
@@ -44,34 +30,15 @@ Attributes
 
    Derive from this class to define new enumerations.
 
-   .. py:attribute:: VALLADA
+   .. py:attribute:: BASE
       :annotation: = 1
 
       
 
 
-.. py:class:: GenerationLaw
+.. py:class:: FlowShopInstance(n: int, m: int, name: str = 'Unknown', **kwargs)
 
-   Bases: :py:obj:`enum.Enum`
-
-   Generic enumeration.
-
-   Derive from this class to define new enumerations.
-
-   .. py:attribute:: UNIFORM
-      :annotation: = 1
-
-      
-
-   .. py:attribute:: NORMAL
-      :annotation: = 2
-
-      
-
-
-.. py:class:: FlowShopInstance
-
-   Bases: :py:obj:`pyscheduling.Problem.Instance`
+   Bases: :py:obj:`pyscheduling.Problem.BaseInstance`
 
    Helper class that provides a standard way to create an ABC using
    inheritance.
@@ -86,173 +53,10 @@ Attributes
 
       
 
-   .. py:method:: read_txt(path: pathlib.Path)
-      :classmethod:
-      :abstractmethod:
 
-      Read an instance from a txt file according to the problem's format
+.. py:class:: Machine(machine_num: int, oper_schedule: List[pyscheduling.Problem.Job] = None, last_job: int = -1, objective_value: int = 0)
 
-      :param path: path to the txt file of type Path from the pathlib module
-      :type path: Path
-
-      :raises FileNotFoundError: when the file does not exist
-
-      :rtype: FlowShopInstance
-
-
-   .. py:method:: generate_random(protocol: str = None)
-      :classmethod:
-      :abstractmethod:
-
-      Generate a random instance according to a predefined protocol
-
-      :param protocol: represents the protocol used to generate the instance
-      :type protocol: string
-
-      :rtype: FlowShopInstance
-
-
-   .. py:method:: to_txt(path: pathlib.Path) -> None
-      :abstractmethod:
-
-      Export an instance to a txt file
-
-      :param path: path to the resulting txt file
-      :type path: Path
-
-
-   .. py:method:: read_P(content: list[str], startIndex: int)
-
-      Read the Processing time matrix from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the processing time matrix
-      :type startIndex: int
-
-      :returns: (Matrix of processing time, index of the next section of the instance)
-      :rtype: (list[list[int]],int)
-
-
-   .. py:method:: read_R(content: list[str], startIndex: int)
-
-      Read the release time table from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the release time table
-      :type startIndex: int
-
-      :returns: (Table of release time, index of the next section of the instance)
-      :rtype: (list[int],int)
-
-
-   .. py:method:: read_S(content: list[str], startIndex: int)
-
-      Read the Setup time table of matrices from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the Setup time table of matrices
-      :type startIndex: int
-
-      :returns: (Table of matrices of setup time, index of the next section of the instance)
-      :rtype: (list[list[list[int]]],int)
-
-
-   .. py:method:: read_D(content: list[str], startIndex: int)
-
-      Read the due time table from a list of lines extracted from the file of the instance
-
-      :param content: lines of the file of the instance
-      :type content: list[str]
-      :param startIndex: Index from where starts the due time table
-      :type startIndex: int
-
-      :returns: (Table of due time, index of the next section of the instance)
-      :rtype: (list[int],int)
-
-
-   .. py:method:: generate_P(protocol: GenerationProtocol, law: GenerationLaw, Pmin: int, Pmax: int)
-
-      Random generation of processing time matrix
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param Pmin: Minimal processing time
-      :type Pmin: int
-      :param Pmax: Maximal processing time
-      :type Pmax: int
-
-      :returns: Matrix of processing time
-      :rtype: list[list[int]]
-
-
-   .. py:method:: generate_R(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], Pmin: int, Pmax: int, alpha: float)
-
-      Random generation of release time table
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param PJobs: Matrix of processing time
-      :type PJobs: list[list[float]]
-      :param Pmin: Minimal processing time
-      :type Pmin: int
-      :param Pmax: Maximal processing time
-      :type Pmax: int
-      :param alpha: release time factor
-      :type alpha: float
-
-      :returns: release time table
-      :rtype: list[int]
-
-
-   .. py:method:: generate_S(protocol: GenerationProtocol, law: GenerationLaw, PJobs: list[list[float]], gamma: float, Smin: int = 0, Smax: int = 0)
-
-      Random generation of setup time table of matrices
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param PJobs: Matrix of processing time
-      :type PJobs: list[list[float]]
-      :param gamma: Setup time factor
-      :type gamma: float
-      :param Smin: Minimal setup time . Defaults to 0.
-      :type Smin: int, optional
-      :param Smax: Maximal setup time. Defaults to 0.
-      :type Smax: int, optional
-
-      :returns: Setup time table of matrix
-      :rtype: list[list[list[int]]]
-
-
-   .. py:method:: generate_D(protocol: GenerationProtocol, law: GenerationLaw, Pmin, Pmax)
-
-      Random generation of due time table
-
-      :param protocol: given protocol of generation of random instances
-      :type protocol: GenerationProtocol
-      :param law: probablistic law of generation
-      :type law: GenerationLaw
-      :param Pmin: Minimal processing time
-      :type Pmin: int
-      :param Pmax: Maximal processing time
-      :type Pmax: int
-
-      :returns: due time table
-      :rtype: list[int]
-
-
-
-.. py:class:: Machine(objective: int = 0, last_job: int = -1, job_schedule: list[Job] = None)
-
-   .. py:attribute:: objective
+   .. py:attribute:: objective_value
       :annotation: :int = 0
 
       
@@ -262,8 +66,8 @@ Attributes
 
       
 
-   .. py:attribute:: job_schedule
-      :annotation: :list[Job]
+   .. py:attribute:: oper_schedule
+      :annotation: :List[pyscheduling.Problem.Job]
 
       
 
@@ -287,29 +91,57 @@ Attributes
       :staticmethod:
 
 
-   .. py:method:: completion_time(instance: FlowShopInstance, startIndex: int = 0)
+   .. py:method:: compute_current_ci(instance: FlowShopInstance, prev_machine_ci: int, prev_job_ci: int, job_prev_i: int, job_i: int)
 
-      Fills the job_schedule with the correct sequence of start_time and completion_time of each job and returns the maximal completion time
+      Computes the current ci when job_i comes after job_prev_i.
+      This takes into account if we have setup times and release dates.
+
+      :param instance: the instance to be solved.
+      :type instance: SingelInstance
+      :param prev_machine_ci: the ci of the same job on the previous machine
+      :type prev_machine_ci: int
+      :param prev_ci: the completion time of the previous job on the same machine
+      :type prev_ci: int
+      :param job_prev_i: id of the job that precedes the inserted job
+      :type job_prev_i: int
+      :param job_i: id of the job to be inserted at the end
+      :type job_i: int
+
+      :returns: (ci, start_time), the new completion time and start_time of the inserted job.
+      :rtype: tuple
+
+
+   .. py:method:: fix_schedule(instance: FlowShopInstance, prev_machine, startIndex: int = 0)
+
+      Fills the job_schedule with the correct sequence of start_time and completion_time of each job
 
       :param instance: The instance associated to the machine
       :type instance: SingleInstance
       :param startIndex: The job index the function starts operating from
       :type startIndex: int
 
-      :returns: Makespan
+      :returns: objective
+      :rtype: int
+
+
+   .. py:method:: idle_time()
+
+      returns the idle time on the machine
+
+      :returns: idle time of the machine
       :rtype: int
 
 
 
-.. py:class:: FlowShopSolution(instance: FlowShopInstance = None, machines: list[Machine] = None, job_schedule: list[int] = None, objective_value: int = 0)
+.. py:class:: FlowShopSolution(instance: FlowShopInstance = None, machines: List[Machine] = None, job_schedule: List[int] = None, objective_value: int = 0)
 
-   Bases: :py:obj:`pyscheduling.Problem.Solution`
+   Bases: :py:obj:`pyscheduling.Problem.BaseSolution`
 
    Helper class that provides a standard way to create an ABC using
    inheritance.
 
    .. py:attribute:: machines
-      :annotation: :list[Machine]
+      :annotation: :List[Machine]
 
       
 
@@ -336,22 +168,19 @@ Attributes
       Return self<value.
 
 
-   .. py:method:: init_machines_schedule()
+   .. py:method:: propagate_schedule(startIndex: int = 0)
 
       Fills the job_schedule of every machine from job_schedule of Solution
 
 
 
-   .. py:method:: cmax(start_job_index: int = 0)
-
-      Fills the job_schedule with the correct sequence of start_time and completion_time of each job
-       at every machine and returns the maximal completion time which is the completion time of the last machine
-
-      :param start_job_index: starting index to update the job_schedule from for every stage (machine). Defaults to 0.
-      :type start_job_index: int, optional
+   .. py:method:: fix_objective()
 
 
-   .. py:method:: idle_time_cmax_insert_last_pos(job_id: int)
+   .. py:method:: compute_objective(startIndex: int = 0)
+
+
+   .. py:method:: simulate_insert_last(job_id: int)
 
       returns start_time and completion_time of job_id if scheduled at the end of job_schedule
       at every stage (machine)
@@ -361,6 +190,21 @@ Attributes
 
       :returns: start_time of job_id, completion_time of job_id
       :rtype: int, int
+
+
+   .. py:method:: simulate_insert_objective(job_id, start_time, end_time)
+
+      Returns the new objective if job_id is inserted at the end with start_time and end_time
+
+      :param job_id: id of the inserted job
+      :type job_id: int
+      :param start_time: start time of the job
+      :type start_time: int
+      :param end_time: end time of the job
+      :type end_time: int
+
+      :returns: the new objective
+      :rtype: int
 
 
    .. py:method:: idle_time()
@@ -390,9 +234,16 @@ Attributes
       :type path: Path
 
 
-   .. py:method:: plot(path: pathlib.Path = None) -> None
+   .. py:method:: plot(types: str = 'RSP', path: pathlib.Path = None)
 
-      Plot the solution in a gantt diagram
+      Plot the solution into a gantt diagramm
+
+      :param types: The type of tasks to plot, a string where each letter corresponds to one type: R for release,
+
+                    S for setup and P for Processing. Defaults to "RSP".
+      :type types: str, optional
+      :param path: The path to export the diagram, if not specified it is not exported but shown inline. Defaults to None.
+      :type path: Path, optional
 
 
    .. py:method:: is_valid()
@@ -401,11 +252,77 @@ Attributes
 
 
 
-.. py:class:: FS_LocalSearch(methods: list[object] = None, copy_solution: bool = False)
+.. py:class:: FS_LocalSearch(methods: List[object] = None, copy_solution: bool = False)
 
    Bases: :py:obj:`pyscheduling.Problem.LocalSearch`
 
+   .. py:method:: _iterative_best_insert(solution: FlowShopSolution, inplace: bool = True)
+      :staticmethod:
+
+
+   .. py:method:: _iterative_best_swap(solution: FlowShopSolution, inplace: bool = True)
+      :staticmethod:
+
+
 
 .. py:class:: NeighbourhoodGeneration
+
+   .. py:method:: random_insert(solution: FlowShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1)
+      :staticmethod:
+
+      Performs an insert of a random job in a random position
+
+      :param solution: Solution to be improved
+      :type solution: FlowShopSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: random_swap(solution: FlowShopSolution, force_improve: bool = False, inplace: bool = False, nb_moves: int = 1)
+      :staticmethod:
+
+      Performs a random swap between 2 jobs
+
+      :param solution: Solution to be improved
+      :type solution: FlowShopSolution
+      :param objective: objective to consider
+      :type objective: RootProblem.Objective
+      :param force_improve: If true, to apply the move, it must improve the solution. Defaults to True.
+      :type force_improve: bool, optional
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: random_neighbour(solution_i: FlowShopSolution)
+      :staticmethod:
+
+      Generates a random neighbour solution of the given solution
+
+      :param solution_i: Solution at iteration i
+      :type solution_i: FlowShopSolution
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
+
+   .. py:method:: deconstruct_construct(solution_i: FlowShopSolution, d: float = 0.25)
+      :staticmethod:
+
+      Generates a random neighbour solution of the given solution using the deconstruct - construct strategy
+
+      The procedure removes a set of jobs and insert them using best insertion (greedy)
+
+      :param solution_i: Solution at iteration i
+      :type solution_i: FlowShopSolution
+
+      :returns: New solution
+      :rtype: FlowShopSolution
+
 
 

@@ -1,0 +1,39 @@
+:py:mod:`pyscheduling.FS.solvers.minit`
+=======================================
+
+.. py:module:: pyscheduling.FS.solvers.minit
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   pyscheduling.FS.solvers.minit.MINIT
+
+
+
+
+.. py:class:: MINIT
+
+   Bases: :py:obj:`pyscheduling.core.base_solvers.BaseSolver`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: solve(instance: pyscheduling.FS.FlowShop.FlowShopInstance)
+
+      Gupta's MINIT heuristic which is based on iteratively scheduling a new job at the end
+      so that it minimizes the idle time at the last machine
+
+      :param instance: Instance to be solved
+      :type instance: FlowShop.FlowShopInstance
+
+      :returns: SolveResult of the instance by the method
+      :rtype: RootProblem.SolveResult
+
+
+
