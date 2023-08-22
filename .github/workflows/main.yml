@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: copy
         env:
-          SRC_FOLDER_PATH: 'docs/documentation/_build/html'
+          SRC_FOLDER_PATH: 'docs/documentation/_build'
           TARGET_BRANCH: 'gh-pages'
         run: |
           files=$(find $SRC_FOLDER_PATH -type f) # get the file list
@@ -24,8 +24,8 @@ jobs:
           git fetch                         # fetch branches
           git checkout $TARGET_BRANCH       # checkout to your branch
           git checkout ${GITHUB_REF##*/} -- $files # copy files from the source branch
-          cp -r docs/documentation/_build/html/* .
-          rm -r docs/documentation/_build/html
+          cp -r docs/documentation/_build/* .
+          rm -r docs/documentation/_build
           git add .
           git diff-index --quiet HEAD ||  git commit -am "deploy files"  # commit to the repository (ignore if no modification)
           git push origin $TARGET_BRANCH # push to remote branch
